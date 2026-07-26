@@ -7,6 +7,7 @@ import { ArrowLeft, Send, MapPin, Package, User } from "lucide-react";
 import { toast } from "sonner";
 import { STATUS_LABEL } from "@/lib/order-status";
 import { ShareTracking } from "@/components/share-tracking";
+import { FreightProgramPanel } from "@/components/freight-program-panel";
 
 export const Route = createFileRoute("/_authenticated/ops/pedidos/$id")({
   head: () => ({ meta: [{ title: "Pedido — InfinitLog" }, { name: "robots", content: "noindex" }] }),
@@ -15,6 +16,7 @@ export const Route = createFileRoute("/_authenticated/ops/pedidos/$id")({
 
 function OrderDetail() {
   const { id } = Route.useParams();
+  const [tab, setTab] = useState<"op" | "pf">("op");
 
   const orderQ = useQuery({
     queryKey: ["order", id],
@@ -55,79 +57,104 @@ function OrderDetail() {
     >
       {orderQ.isLoading && <div className="card-soft h-64 animate-pulse bg-surface-2" />}
       {order && (
-        <div className="grid gap-6 lg:grid-cols-3">
-          <div className="space-y-6 lg:col-span-2">
-            <Panel title="Cliente" icon={<User className="h-4 w-4" />}>
-              <Info k="Cliente" v={order.client_name} />
-              <Info k="Contato" v={order.contact_name} />
-              <Info k="Telefone" v={order.contact_phone} />
-            </Panel>
-
-            <Panel title="Rota" icon={<MapPin className="h-4 w-4" />}>
-              <Info k="Origem" v={`${order.origin_address}${order.origin_city ? ` · ${order.origin_city}` : ""}`} />
-              <Info k="Destino" v={`${order.destination_address}${order.destination_city ? ` · ${order.destination_city}` : ""}`} />
-              <Info
-                k="Janela de coleta"
-                v={fmtWindow(order.pickup_window_start, order.pickup_window_end)}
-              />
-              <Info
-                k="Janela de entrega"
-                v={fmtWindow(order.delivery_window_start, order.delivery_window_end)}
-              />
-            </Panel>
-
-            <Panel title="Carga" icon={<Package className="h-4 w-4" />}>
-              <Info k="Tipo" v={order.cargo_type} />
-              <Info k="Peso" v={order.cargo_weight_kg ? `${order.cargo_weight_kg} kg` : null} />
-              <Info k="Volumes" v={order.volumes} />
-              <Info k="Valor da carga" v={order.cargo_value ? brl(order.cargo_value) : null} />
-              <Info k="Valor negociado" v={order.price ? brl(order.price) : null} />
-              <Info k="Descrição" v={order.cargo_description} />
-              <Info k="Observações" v={order.notes} />
-            </Panel>
-
-            <Attachments orderId={id} />
-
-            <Panel title="Linha do tempo">
-              <ul className="space-y-3 text-sm">
-                {(eventsQ.data ?? []).map((e) => (
-                  <li key={e.id} className="flex items-start justify-between gap-3">
-                    <span>{STATUS_LABEL[e.to_status ?? ""] ?? e.event_type}</span>
-                    <span className="shrink-0 text-xs text-muted-foreground">
-                      {new Date(e.created_at).toLocaleString("pt-BR")}
-                    </span>
-                  </li>
-                ))}
-                {(eventsQ.data ?? []).length === 0 && (
-                  <li className="text-sm text-muted-foreground">Nenhum evento ainda.</li>
-                )}
-              </ul>
-            </Panel>
-          </div>
-
-          <div className="space-y-6">
-            <section className="card-soft p-6">
-              <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
-                Compartilhar rastreio
-              </h2>
-              <div className="mt-3 rounded-xl bg-surface-2 p-3 text-center font-mono text-sm">
-                {order.tracking_code}
-              </div>
-              <div className="mt-4">
-                <ShareTracking code={order.tracking_code} phone={order.contact_phone} />
-              </div>
-              <Link
-                to="/rastreio/$code"
-                params={{ code: order.tracking_code }}
-                target="_blank"
-                className="mt-4 block text-center text-xs text-muted-foreground hover:text-foreground"
+        <>
+          <div className="mb-6 inline-flex rounded-2xl bg-surface-2 p-1">
+            {[
+              { k: "op", l: "Operação" },
+              { k: "pf", l: "Programação de Frete" },
+            ].map((t) => (
+              <button
+                key={t.k}
+                onClick={() => setTab(t.k as "op" | "pf")}
+                className={`rounded-xl px-4 py-2 text-sm font-medium transition ${
+                  tab === t.k
+                    ? "bg-primary text-primary-foreground shadow"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
               >
-                Abrir portal público →
-              </Link>
-            </section>
-            <OfferPanel order={order} onChanged={() => { orderQ.refetch(); eventsQ.refetch(); }} />
+                {t.l}
+              </button>
+            ))}
           </div>
-        </div>
+
+          {tab === "op" && (
+            <div className="grid gap-6 lg:grid-cols-3">
+              <div className="space-y-6 lg:col-span-2">
+                <Panel title="Cliente" icon={<User className="h-4 w-4" />}>
+                  <Info k="Cliente" v={order.client_name} />
+                  <Info k="Contato" v={order.contact_name} />
+                  <Info k="Telefone" v={order.contact_phone} />
+                </Panel>
+
+                <Panel title="Rota" icon={<MapPin className="h-4 w-4" />}>
+                  <Info k="Origem" v={`${order.origin_address}${order.origin_city ? ` · ${order.origin_city}` : ""}`} />
+                  <Info k="Destino" v={`${order.destination_address}${order.destination_city ? ` · ${order.destination_city}` : ""}`} />
+                  <Info
+                    k="Janela de coleta"
+                    v={fmtWindow(order.pickup_window_start, order.pickup_window_end)}
+                  />
+                  <Info
+                    k="Janela de entrega"
+                    v={fmtWindow(order.delivery_window_start, order.delivery_window_end)}
+                  />
+                </Panel>
+
+                <Panel title="Carga" icon={<Package className="h-4 w-4" />}>
+                  <Info k="Tipo" v={order.cargo_type} />
+                  <Info k="Peso" v={order.cargo_weight_kg ? `${order.cargo_weight_kg} kg` : null} />
+                  <Info k="Volumes" v={order.volumes} />
+                  <Info k="Valor da carga" v={order.cargo_value ? brl(order.cargo_value) : null} />
+                  <Info k="Valor negociado" v={order.price ? brl(order.price) : null} />
+                  <Info k="Descrição" v={order.cargo_description} />
+                  <Info k="Observações" v={order.notes} />
+                </Panel>
+
+                <Attachments orderId={id} />
+
+                <Panel title="Linha do tempo">
+                  <ul className="space-y-3 text-sm">
+                    {(eventsQ.data ?? []).map((e) => (
+                      <li key={e.id} className="flex items-start justify-between gap-3">
+                        <span>{STATUS_LABEL[e.to_status ?? ""] ?? e.event_type}</span>
+                        <span className="shrink-0 text-xs text-muted-foreground">
+                          {new Date(e.created_at).toLocaleString("pt-BR")}
+                        </span>
+                      </li>
+                    ))}
+                    {(eventsQ.data ?? []).length === 0 && (
+                      <li className="text-sm text-muted-foreground">Nenhum evento ainda.</li>
+                    )}
+                  </ul>
+                </Panel>
+              </div>
+
+              <div className="space-y-6">
+                <section className="card-soft p-6">
+                  <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
+                    Compartilhar rastreio
+                  </h2>
+                  <div className="mt-3 rounded-xl bg-surface-2 p-3 text-center font-mono text-sm">
+                    {order.tracking_code}
+                  </div>
+                  <div className="mt-4">
+                    <ShareTracking code={order.tracking_code} phone={order.contact_phone} />
+                  </div>
+                  <Link
+                    to="/rastreio/$code"
+                    params={{ code: order.tracking_code }}
+                    target="_blank"
+                    className="mt-4 block text-center text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    Abrir portal público →
+                  </Link>
+                </section>
+                <OfferPanel order={order} onChanged={() => { orderQ.refetch(); eventsQ.refetch(); }} />
+              </div>
+            </div>
+          )}
+
+          {tab === "pf" && <FreightProgramPanel order={order} />}
+        </>
       )}
     </AppShell>
   );

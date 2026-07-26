@@ -87,35 +87,113 @@ export type Database = {
       }
       drivers: {
         Row: {
+          bank_account: string | null
+          bank_account_digit: string | null
+          bank_account_type:
+            | Database["public"]["Enums"]["bank_account_type"]
+            | null
+          bank_agency: string | null
+          bank_code: string | null
+          bank_name: string | null
+          city: string | null
+          cnh_expires_at: string | null
+          cpf: string | null
           created_at: string
           current_lat: number | null
           current_lng: number | null
           current_vehicle_id: string | null
+          default_price_per_km: number | null
+          favored_document: string | null
+          favored_name: string | null
+          financial_notes: string | null
+          financial_status: Database["public"]["Enums"]["driver_financial_status"]
           last_seen_at: string | null
           license_category: string | null
           license_number: string | null
+          min_freight_value: number | null
+          payment_term_days: number | null
+          phone: string | null
+          photo_url: string | null
+          pix_key: string | null
+          pix_key_type: Database["public"]["Enums"]["pix_key_type"] | null
+          preferred_payment_method:
+            | Database["public"]["Enums"]["payment_method_pref"]
+            | null
+          rntrc: string | null
           status: Database["public"]["Enums"]["driver_status"]
           user_id: string
         }
         Insert: {
+          bank_account?: string | null
+          bank_account_digit?: string | null
+          bank_account_type?:
+            | Database["public"]["Enums"]["bank_account_type"]
+            | null
+          bank_agency?: string | null
+          bank_code?: string | null
+          bank_name?: string | null
+          city?: string | null
+          cnh_expires_at?: string | null
+          cpf?: string | null
           created_at?: string
           current_lat?: number | null
           current_lng?: number | null
           current_vehicle_id?: string | null
+          default_price_per_km?: number | null
+          favored_document?: string | null
+          favored_name?: string | null
+          financial_notes?: string | null
+          financial_status?: Database["public"]["Enums"]["driver_financial_status"]
           last_seen_at?: string | null
           license_category?: string | null
           license_number?: string | null
+          min_freight_value?: number | null
+          payment_term_days?: number | null
+          phone?: string | null
+          photo_url?: string | null
+          pix_key?: string | null
+          pix_key_type?: Database["public"]["Enums"]["pix_key_type"] | null
+          preferred_payment_method?:
+            | Database["public"]["Enums"]["payment_method_pref"]
+            | null
+          rntrc?: string | null
           status?: Database["public"]["Enums"]["driver_status"]
           user_id: string
         }
         Update: {
+          bank_account?: string | null
+          bank_account_digit?: string | null
+          bank_account_type?:
+            | Database["public"]["Enums"]["bank_account_type"]
+            | null
+          bank_agency?: string | null
+          bank_code?: string | null
+          bank_name?: string | null
+          city?: string | null
+          cnh_expires_at?: string | null
+          cpf?: string | null
           created_at?: string
           current_lat?: number | null
           current_lng?: number | null
           current_vehicle_id?: string | null
+          default_price_per_km?: number | null
+          favored_document?: string | null
+          favored_name?: string | null
+          financial_notes?: string | null
+          financial_status?: Database["public"]["Enums"]["driver_financial_status"]
           last_seen_at?: string | null
           license_category?: string | null
           license_number?: string | null
+          min_freight_value?: number | null
+          payment_term_days?: number | null
+          phone?: string | null
+          photo_url?: string | null
+          pix_key?: string | null
+          pix_key_type?: Database["public"]["Enums"]["pix_key_type"] | null
+          preferred_payment_method?:
+            | Database["public"]["Enums"]["payment_method_pref"]
+            | null
+          rntrc?: string | null
           status?: Database["public"]["Enums"]["driver_status"]
           user_id?: string
         }
@@ -125,6 +203,44 @@ export type Database = {
             columns: ["current_vehicle_id"]
             isOneToOne: false
             referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      freight_costs: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          kind: Database["public"]["Enums"]["freight_cost_kind"]
+          label: string | null
+          notes: string | null
+          program_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          id?: string
+          kind: Database["public"]["Enums"]["freight_cost_kind"]
+          label?: string | null
+          notes?: string | null
+          program_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["freight_cost_kind"]
+          label?: string | null
+          notes?: string | null
+          program_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "freight_costs_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "freight_programs"
             referencedColumns: ["id"]
           },
         ]
@@ -181,6 +297,71 @@ export type Database = {
             foreignKeyName: "freight_offers_order_id_fkey"
             columns: ["order_id"]
             isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      freight_programs: {
+        Row: {
+          created_at: string
+          freight_value: number | null
+          id: string
+          order_id: string
+          payment_method:
+            | Database["public"]["Enums"]["freight_payment_method"]
+            | null
+          payment_notes: string | null
+          payment_term:
+            | Database["public"]["Enums"]["freight_payment_term"]
+            | null
+          pf_code: string
+          responsible_id: string | null
+          sent_at: string | null
+          status: Database["public"]["Enums"]["freight_program_status"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          freight_value?: number | null
+          id?: string
+          order_id: string
+          payment_method?:
+            | Database["public"]["Enums"]["freight_payment_method"]
+            | null
+          payment_notes?: string | null
+          payment_term?:
+            | Database["public"]["Enums"]["freight_payment_term"]
+            | null
+          pf_code?: string
+          responsible_id?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["freight_program_status"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          freight_value?: number | null
+          id?: string
+          order_id?: string
+          payment_method?:
+            | Database["public"]["Enums"]["freight_payment_method"]
+            | null
+          payment_notes?: string | null
+          payment_term?:
+            | Database["public"]["Enums"]["freight_payment_term"]
+            | null
+          pf_code?: string
+          responsible_id?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["freight_program_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "freight_programs_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
             referencedRelation: "orders"
             referencedColumns: ["id"]
           },
@@ -479,6 +660,8 @@ export type Database = {
           cargo_description: string | null
           cargo_type: string | null
           cargo_value: number | null
+          cargo_value_declared: number | null
+          cargo_volume_m3: number | null
           cargo_weight_kg: number | null
           client_id: string | null
           client_name: string | null
@@ -487,24 +670,33 @@ export type Database = {
           contact_phone: string | null
           created_at: string
           created_by: string | null
+          cte_number: string | null
           deleted_at: string | null
+          delivery_franchise_minutes: number | null
           delivery_window_end: string | null
           delivery_window_start: string | null
           destination_address: string
           destination_city: string | null
           destination_lat: number | null
           destination_lng: number | null
+          destination_state: string | null
+          destination_zip: string | null
           distance_km: number | null
           driver_id: string | null
           estimated_minutes: number | null
           id: string
           invoice_number: string | null
           invoice_url: string | null
+          invoice_value: number | null
+          mdfe_number: string | null
           notes: string | null
           origin_address: string
           origin_city: string | null
           origin_lat: number | null
           origin_lng: number | null
+          origin_state: string | null
+          origin_zip: string | null
+          pickup_franchise_minutes: number | null
           pickup_window_end: string | null
           pickup_window_start: string | null
           price: number | null
@@ -520,6 +712,8 @@ export type Database = {
           cargo_description?: string | null
           cargo_type?: string | null
           cargo_value?: number | null
+          cargo_value_declared?: number | null
+          cargo_volume_m3?: number | null
           cargo_weight_kg?: number | null
           client_id?: string | null
           client_name?: string | null
@@ -528,24 +722,33 @@ export type Database = {
           contact_phone?: string | null
           created_at?: string
           created_by?: string | null
+          cte_number?: string | null
           deleted_at?: string | null
+          delivery_franchise_minutes?: number | null
           delivery_window_end?: string | null
           delivery_window_start?: string | null
           destination_address: string
           destination_city?: string | null
           destination_lat?: number | null
           destination_lng?: number | null
+          destination_state?: string | null
+          destination_zip?: string | null
           distance_km?: number | null
           driver_id?: string | null
           estimated_minutes?: number | null
           id?: string
           invoice_number?: string | null
           invoice_url?: string | null
+          invoice_value?: number | null
+          mdfe_number?: string | null
           notes?: string | null
           origin_address: string
           origin_city?: string | null
           origin_lat?: number | null
           origin_lng?: number | null
+          origin_state?: string | null
+          origin_zip?: string | null
+          pickup_franchise_minutes?: number | null
           pickup_window_end?: string | null
           pickup_window_start?: string | null
           price?: number | null
@@ -561,6 +764,8 @@ export type Database = {
           cargo_description?: string | null
           cargo_type?: string | null
           cargo_value?: number | null
+          cargo_value_declared?: number | null
+          cargo_volume_m3?: number | null
           cargo_weight_kg?: number | null
           client_id?: string | null
           client_name?: string | null
@@ -569,24 +774,33 @@ export type Database = {
           contact_phone?: string | null
           created_at?: string
           created_by?: string | null
+          cte_number?: string | null
           deleted_at?: string | null
+          delivery_franchise_minutes?: number | null
           delivery_window_end?: string | null
           delivery_window_start?: string | null
           destination_address?: string
           destination_city?: string | null
           destination_lat?: number | null
           destination_lng?: number | null
+          destination_state?: string | null
+          destination_zip?: string | null
           distance_km?: number | null
           driver_id?: string | null
           estimated_minutes?: number | null
           id?: string
           invoice_number?: string | null
           invoice_url?: string | null
+          invoice_value?: number | null
+          mdfe_number?: string | null
           notes?: string | null
           origin_address?: string
           origin_city?: string | null
           origin_lat?: number | null
           origin_lng?: number | null
+          origin_state?: string | null
+          origin_zip?: string | null
+          pickup_franchise_minutes?: number | null
           pickup_window_end?: string | null
           pickup_window_start?: string | null
           price?: number | null
@@ -764,6 +978,7 @@ export type Database = {
         Args: { _order_id: string; _user_id: string }
         Returns: boolean
       }
+      generate_pf_code: { Args: never; Returns: string }
       generate_tracking_code: { Args: never; Returns: string }
       get_tracking: { Args: { _code: string }; Returns: Json }
       has_role: {
@@ -774,10 +989,40 @@ export type Database = {
         Returns: boolean
       }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
+      send_program_to_driver: {
+        Args: {
+          _driver_id: string
+          _expires_minutes?: number
+          _price: number
+          _program_id: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       app_role: "admin" | "logistics" | "driver" | "client"
+      bank_account_type: "corrente" | "poupanca"
+      driver_financial_status: "ativo" | "bloqueado" | "pagamento_pendente"
       driver_status: "offline" | "available" | "on_trip"
+      freight_cost_kind:
+        | "frete"
+        | "pedagio"
+        | "licenca"
+        | "batedor"
+        | "escolta"
+        | "combustivel"
+        | "ajudante"
+        | "estadia"
+        | "diaria"
+        | "outros"
+      freight_payment_method: "pix" | "ted" | "transferencia" | "boleto"
+      freight_payment_term: "a_vista" | "30d" | "45d" | "60d" | "90d"
+      freight_program_status:
+        | "draft"
+        | "sent"
+        | "accepted"
+        | "declined"
+        | "cancelled"
       message_kind: "text" | "photo" | "video" | "pdf" | "audio"
       negotiation_status: "proposed" | "accepted" | "declined" | "countered"
       offer_status:
@@ -804,6 +1049,8 @@ export type Database = {
         | "finalized"
         | "cancelled"
         | "incident"
+      payment_method_pref: "pix" | "ted" | "doc" | "boleto"
+      pix_key_type: "cpf" | "cnpj" | "email" | "phone" | "random"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -932,7 +1179,30 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "logistics", "driver", "client"],
+      bank_account_type: ["corrente", "poupanca"],
+      driver_financial_status: ["ativo", "bloqueado", "pagamento_pendente"],
       driver_status: ["offline", "available", "on_trip"],
+      freight_cost_kind: [
+        "frete",
+        "pedagio",
+        "licenca",
+        "batedor",
+        "escolta",
+        "combustivel",
+        "ajudante",
+        "estadia",
+        "diaria",
+        "outros",
+      ],
+      freight_payment_method: ["pix", "ted", "transferencia", "boleto"],
+      freight_payment_term: ["a_vista", "30d", "45d", "60d", "90d"],
+      freight_program_status: [
+        "draft",
+        "sent",
+        "accepted",
+        "declined",
+        "cancelled",
+      ],
       message_kind: ["text", "photo", "video", "pdf", "audio"],
       negotiation_status: ["proposed", "accepted", "declined", "countered"],
       offer_status: [
@@ -961,6 +1231,8 @@ export const Constants = {
         "cancelled",
         "incident",
       ],
+      payment_method_pref: ["pix", "ted", "doc", "boleto"],
+      pix_key_type: ["cpf", "cnpj", "email", "phone", "random"],
     },
   },
 } as const
