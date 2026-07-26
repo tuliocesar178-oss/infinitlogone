@@ -8,6 +8,9 @@ import { toast } from "sonner";
 import { STATUS_LABEL } from "@/lib/order-status";
 import { ShareTracking } from "@/components/share-tracking";
 import { FreightProgramPanel } from "@/components/freight-program-panel";
+import { DispatchPanel } from "@/components/orders/dispatch-panel";
+import { NegotiationPanel } from "@/components/orders/negotiation-panel";
+import { OrderChat } from "@/components/orders/order-chat";
 
 export const Route = createFileRoute("/_authenticated/ops/pedidos/$id")({
   head: () => ({ meta: [{ title: "Pedido — InfinitLog" }, { name: "robots", content: "noindex" }] }),
@@ -148,7 +151,11 @@ function OrderDetail() {
                     Abrir portal público →
                   </Link>
                 </section>
+                <DispatchPanel order={order} onSent={() => { orderQ.refetch(); eventsQ.refetch(); }} />
+                <NegotiationPanel orderId={id} onChanged={() => { orderQ.refetch(); eventsQ.refetch(); }} />
+                <OrderChat orderId={id} />
                 <OfferPanel order={order} onChanged={() => { orderQ.refetch(); eventsQ.refetch(); }} />
+
               </div>
             </div>
           )}
