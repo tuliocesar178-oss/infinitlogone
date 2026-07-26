@@ -19,6 +19,7 @@ import { Route as AuthenticatedOpsRouteImport } from './routes/_authenticated/op
 import { Route as AuthenticatedDriverRouteImport } from './routes/_authenticated/driver'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedOpsVeiculosRouteImport } from './routes/_authenticated/ops.veiculos'
 import { Route as AuthenticatedOpsMotoristasRouteImport } from './routes/_authenticated/ops.motoristas'
 import { Route as AuthenticatedOpsEquipeRouteImport } from './routes/_authenticated/ops.equipe'
 import { Route as AuthenticatedOpsPedidosNovoRouteImport } from './routes/_authenticated/ops.pedidos.novo'
@@ -74,6 +75,12 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedOpsVeiculosRoute =
+  AuthenticatedOpsVeiculosRouteImport.update({
+    id: '/veiculos',
+    path: '/veiculos',
+    getParentRoute: () => AuthenticatedOpsRoute,
+  } as any)
 const AuthenticatedOpsMotoristasRoute =
   AuthenticatedOpsMotoristasRouteImport.update({
     id: '/motoristas',
@@ -116,6 +123,7 @@ export interface FileRoutesByFullPath {
   '/rastreio/$code': typeof RastreioCodeRoute
   '/ops/equipe': typeof AuthenticatedOpsEquipeRoute
   '/ops/motoristas': typeof AuthenticatedOpsMotoristasRouteWithChildren
+  '/ops/veiculos': typeof AuthenticatedOpsVeiculosRoute
   '/ops/motoristas/$id': typeof AuthenticatedOpsMotoristasIdRoute
   '/ops/pedidos/$id': typeof AuthenticatedOpsPedidosIdRoute
   '/ops/pedidos/novo': typeof AuthenticatedOpsPedidosNovoRoute
@@ -132,6 +140,7 @@ export interface FileRoutesByTo {
   '/rastreio/$code': typeof RastreioCodeRoute
   '/ops/equipe': typeof AuthenticatedOpsEquipeRoute
   '/ops/motoristas': typeof AuthenticatedOpsMotoristasRouteWithChildren
+  '/ops/veiculos': typeof AuthenticatedOpsVeiculosRoute
   '/ops/motoristas/$id': typeof AuthenticatedOpsMotoristasIdRoute
   '/ops/pedidos/$id': typeof AuthenticatedOpsPedidosIdRoute
   '/ops/pedidos/novo': typeof AuthenticatedOpsPedidosNovoRoute
@@ -150,6 +159,7 @@ export interface FileRoutesById {
   '/rastreio/$code': typeof RastreioCodeRoute
   '/_authenticated/ops/equipe': typeof AuthenticatedOpsEquipeRoute
   '/_authenticated/ops/motoristas': typeof AuthenticatedOpsMotoristasRouteWithChildren
+  '/_authenticated/ops/veiculos': typeof AuthenticatedOpsVeiculosRoute
   '/_authenticated/ops/motoristas/$id': typeof AuthenticatedOpsMotoristasIdRoute
   '/_authenticated/ops/pedidos/$id': typeof AuthenticatedOpsPedidosIdRoute
   '/_authenticated/ops/pedidos/novo': typeof AuthenticatedOpsPedidosNovoRoute
@@ -168,6 +178,7 @@ export interface FileRouteTypes {
     | '/rastreio/$code'
     | '/ops/equipe'
     | '/ops/motoristas'
+    | '/ops/veiculos'
     | '/ops/motoristas/$id'
     | '/ops/pedidos/$id'
     | '/ops/pedidos/novo'
@@ -184,6 +195,7 @@ export interface FileRouteTypes {
     | '/rastreio/$code'
     | '/ops/equipe'
     | '/ops/motoristas'
+    | '/ops/veiculos'
     | '/ops/motoristas/$id'
     | '/ops/pedidos/$id'
     | '/ops/pedidos/novo'
@@ -201,6 +213,7 @@ export interface FileRouteTypes {
     | '/rastreio/$code'
     | '/_authenticated/ops/equipe'
     | '/_authenticated/ops/motoristas'
+    | '/_authenticated/ops/veiculos'
     | '/_authenticated/ops/motoristas/$id'
     | '/_authenticated/ops/pedidos/$id'
     | '/_authenticated/ops/pedidos/novo'
@@ -286,6 +299,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ops/veiculos': {
+      id: '/_authenticated/ops/veiculos'
+      path: '/veiculos'
+      fullPath: '/ops/veiculos'
+      preLoaderRoute: typeof AuthenticatedOpsVeiculosRouteImport
+      parentRoute: typeof AuthenticatedOpsRoute
+    }
     '/_authenticated/ops/motoristas': {
       id: '/_authenticated/ops/motoristas'
       path: '/motoristas'
@@ -341,6 +361,7 @@ const AuthenticatedOpsMotoristasRouteWithChildren =
 interface AuthenticatedOpsRouteChildren {
   AuthenticatedOpsEquipeRoute: typeof AuthenticatedOpsEquipeRoute
   AuthenticatedOpsMotoristasRoute: typeof AuthenticatedOpsMotoristasRouteWithChildren
+  AuthenticatedOpsVeiculosRoute: typeof AuthenticatedOpsVeiculosRoute
   AuthenticatedOpsPedidosIdRoute: typeof AuthenticatedOpsPedidosIdRoute
   AuthenticatedOpsPedidosNovoRoute: typeof AuthenticatedOpsPedidosNovoRoute
 }
@@ -348,6 +369,7 @@ interface AuthenticatedOpsRouteChildren {
 const AuthenticatedOpsRouteChildren: AuthenticatedOpsRouteChildren = {
   AuthenticatedOpsEquipeRoute: AuthenticatedOpsEquipeRoute,
   AuthenticatedOpsMotoristasRoute: AuthenticatedOpsMotoristasRouteWithChildren,
+  AuthenticatedOpsVeiculosRoute: AuthenticatedOpsVeiculosRoute,
   AuthenticatedOpsPedidosIdRoute: AuthenticatedOpsPedidosIdRoute,
   AuthenticatedOpsPedidosNovoRoute: AuthenticatedOpsPedidosNovoRoute,
 }
