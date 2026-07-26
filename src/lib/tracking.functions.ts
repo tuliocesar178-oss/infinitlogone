@@ -73,11 +73,14 @@ export const refreshTrackingEta = createServerFn({ method: "POST" })
       console.warn("[tracking] reverse geocode failed", e);
     }
 
-    const patch: Record<string, unknown> = { current_city };
-    if (eta_minutes != null) patch.eta_minutes = eta_minutes;
-    if (distance_km != null) patch.distance_to_destination_km = distance_km;
-
-    await context.supabase.from("orders").update(patch).eq("id", orderId);
+    await context.supabase
+      .from("orders")
+      .update({
+        current_city,
+        ...(eta_minutes != null ? { eta_minutes } : {}),
+        ...(distance_km != null ? { distance_to_destination_km: distance_km } : {}),
+      })
+      .eq("id", orderId);
     return { eta_minutes, distance_km, current_city };
   });
 

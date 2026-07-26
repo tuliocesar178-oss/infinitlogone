@@ -11,7 +11,7 @@ export type TripMapProps = {
   driver?: { lat: number; lng: number } | null;
   destination?: { lat: number; lng: number } | null;
   origin?: { lat: number; lng: number } | null;
-  routeGeoJSON?: GeoJSON.LineString | null;
+  routeGeoJSON?: { type: "LineString"; coordinates: [number, number][] } | null;
   className?: string;
   interactive?: boolean;
 };
