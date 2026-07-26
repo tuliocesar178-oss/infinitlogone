@@ -22,7 +22,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 
-export const Route = createFileRoute("/_authenticated/ops/veiculos")({
+export const Route = createFileRoute("/_authenticated/ops/veiculos/lista")({
   head: () => ({
     meta: [{ title: "Veículos — InfinitLog" }, { name: "robots", content: "noindex" }],
   }),
