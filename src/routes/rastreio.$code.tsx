@@ -72,7 +72,7 @@ function TrackingPage() {
       if (error) throw error;
       return (data as TrackingResult | null) ?? null;
     },
-    refetchInterval: 30_000,
+    refetchInterval: 10_000,
   });
 
   useEffect(() => {
