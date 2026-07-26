@@ -7,7 +7,7 @@ import { Plus, ArrowRight, Truck, AlertTriangle } from "lucide-react";
 import { StatusCards } from "@/components/orders/status-cards";
 import { DASHBOARD_CARDS, STATUS_LABEL, type DashboardCardKey } from "@/lib/order-status";
 
-export const Route = createFileRoute("/_authenticated/ops")({
+export const Route = createFileRoute("/_authenticated/ops/")({
   head: () => ({ meta: [{ title: "Gestão de Fretes — InfinitLog" }, { name: "robots", content: "noindex" }] }),
   component: FreightDashboard,
 });
