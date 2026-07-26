@@ -303,6 +303,59 @@ export type Database = {
           },
         ]
       }
+      notification_outbox: {
+        Row: {
+          body: string
+          channel: string
+          created_at: string
+          error: string | null
+          id: string
+          order_id: string
+          payload: Json | null
+          recipient: string | null
+          sent_at: string | null
+          status: string
+          subject: string | null
+          updated_at: string
+        }
+        Insert: {
+          body: string
+          channel: string
+          created_at?: string
+          error?: string | null
+          id?: string
+          order_id: string
+          payload?: Json | null
+          recipient?: string | null
+          sent_at?: string | null
+          status?: string
+          subject?: string | null
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          channel?: string
+          created_at?: string
+          error?: string | null
+          id?: string
+          order_id?: string
+          payload?: Json | null
+          recipient?: string | null
+          sent_at?: string | null
+          status?: string
+          subject?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_outbox_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           body: string | null

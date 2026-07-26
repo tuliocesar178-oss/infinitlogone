@@ -1,12 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
-import QRCode from "qrcode";
+import { useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Send, MapPin, Package, User } from "lucide-react";
 import { toast } from "sonner";
 import { STATUS_LABEL } from "@/lib/order-status";
+import { ShareTracking } from "@/components/share-tracking";
 
 export const Route = createFileRoute("/_authenticated/ops/pedidos/$id")({
   head: () => ({ meta: [{ title: "Pedido — InfinitLog" }, { name: "robots", content: "noindex" }] }),
@@ -106,7 +106,25 @@ function OrderDetail() {
           </div>
 
           <div className="space-y-6">
-            <TrackingCard code={order.tracking_code} />
+            <section className="card-soft p-6">
+              <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
+                Compartilhar rastreio
+              </h2>
+              <div className="mt-3 rounded-xl bg-surface-2 p-3 text-center font-mono text-sm">
+                {order.tracking_code}
+              </div>
+              <div className="mt-4">
+                <ShareTracking code={order.tracking_code} phone={order.contact_phone} />
+              </div>
+              <Link
+                to="/rastreio/$code"
+                params={{ code: order.tracking_code }}
+                target="_blank"
+                className="mt-4 block text-center text-xs text-muted-foreground hover:text-foreground"
+              >
+                Abrir portal público →
+              </Link>
+            </section>
             <OfferPanel order={order} onChanged={() => { orderQ.refetch(); eventsQ.refetch(); }} />
           </div>
         </div>
@@ -115,34 +133,6 @@ function OrderDetail() {
   );
 }
 
-function TrackingCard({ code }: { code: string }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  useEffect(() => {
-    if (!canvasRef.current) return;
-    const url = `${window.location.origin}/rastreio/${code}`;
-    QRCode.toCanvas(canvasRef.current, url, { width: 180, margin: 1 });
-  }, [code]);
-
-  return (
-    <section className="card-soft p-6">
-      <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
-        Rastreamento
-      </h2>
-      <div className="mt-4 grid place-items-center">
-        <canvas ref={canvasRef} className="rounded-xl bg-white p-2" />
-      </div>
-      <div className="mt-4 rounded-xl bg-surface-2 p-3 text-center font-mono text-sm">{code}</div>
-      <Link
-        to="/rastreio/$code"
-        params={{ code }}
-        target="_blank"
-        className="mt-3 block text-center text-xs text-muted-foreground hover:text-foreground"
-      >
-        Abrir portal público →
-      </Link>
-    </section>
-  );
-}
 
 function OfferPanel({ order, onChanged }: { order: any; onChanged: () => void }) {
   const [sending, setSending] = useState(false);
