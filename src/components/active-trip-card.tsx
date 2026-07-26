@@ -221,11 +221,8 @@ export function ActiveTripCard({ driverId }: { driverId: string }) {
           </div>
           <div className="font-mono text-sm font-semibold">{order.code}</div>
         </div>
-        <span
-          className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium"
-          style={{ background: statusMeta(order.status).tint, color: statusMeta(order.status).color }}
-        >
-          {statusMeta(order.status).label}
+        <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+          {STATUS_LABEL[order.status] ?? order.status}
         </span>
       </div>
 
