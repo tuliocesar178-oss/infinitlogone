@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { brl, labelOf, PAYMENT_METHODS, PAYMENT_TERMS } from "@/lib/pf";
 import { MapPin, Package, CircleDollarSign, Clock, Check, X } from "lucide-react";
+import { ActiveTripCard } from "@/components/active-trip-card";
 
 export const Route = createFileRoute("/_authenticated/driver")({
   head: () => ({ meta: [{ title: "Motorista — InfinitLog" }, { name: "robots", content: "noindex" }] }),
@@ -129,6 +130,8 @@ function DriverDashboard() {
             ))}
           </div>
         </div>
+        {userId && <ActiveTripCard driverId={userId} />}
+
 
         {(offersQ.data ?? []).length === 0 ? (
           <div className="card-soft grid place-items-center p-10 text-center">

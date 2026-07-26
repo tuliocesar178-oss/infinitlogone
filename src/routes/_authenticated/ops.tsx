@@ -94,6 +94,8 @@ function OpsDashboard() {
         </div>
       </div>
 
+      <NearDeliveriesPanel />
+
       <div className="mt-10 space-y-10">
         {OPS_CARDS.map((c) => {
           const list = grouped.get(c.key) ?? [];
@@ -164,5 +166,72 @@ function OpsDashboard() {
         )}
       </div>
     </AppShell>
+  );
+}
+
+function NearDeliveriesPanel() {
+  const { data } = useQuery({
+    queryKey: ["near-deliveries"],
+    refetchInterval: 15_000,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("orders")
+        .select(
+          "id, code, client_name, destination_city, distance_to_destination_km, eta_minutes, current_city, status, last_ping_at",
+        )
+        .is("deleted_at", null)
+        .not("distance_to_destination_km", "is", null)
+        .lte("distance_to_destination_km", 20)
+        .in("status", ["in_transit", "out_for_delivery", "near_destination"])
+        .order("distance_to_destination_km", { ascending: true })
+        .limit(10);
+      return data ?? [];
+    },
+  });
+
+  if (!data || data.length === 0) return null;
+
+  return (
+    <section className="mt-8">
+      <header className="mb-4 flex items-center gap-2">
+        <Truck className="h-4 w-4 text-primary" />
+        <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
+          Entregas próximas · ao vivo
+        </h2>
+      </header>
+      <div className="grid gap-3 sm:grid-cols-2">
+        {data.map((o) => {
+          const km = o.distance_to_destination_km ?? 0;
+          const near = km <= 5;
+          return (
+            <Link
+              key={o.id}
+              to="/ops/pedidos/$id"
+              params={{ id: o.id }}
+              className="card-soft flex items-center justify-between gap-4 p-4 transition hover:shadow-md"
+            >
+              <div className="min-w-0">
+                <div className="font-mono text-sm font-semibold">{o.code}</div>
+                <div className="truncate text-xs text-muted-foreground">
+                  {o.client_name ?? "—"} · {o.current_city ?? "—"} → {o.destination_city ?? "—"}
+                </div>
+              </div>
+              <div className="text-right">
+                <div
+                  className={`text-lg font-bold tabular-nums ${
+                    near ? "text-primary" : "text-foreground"
+                  }`}
+                >
+                  {km.toFixed(1)} km
+                </div>
+                <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                  {o.eta_minutes != null ? `~${o.eta_minutes} min` : "—"}
+                </div>
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+    </section>
   );
 }
