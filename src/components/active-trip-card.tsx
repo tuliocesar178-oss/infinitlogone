@@ -6,7 +6,7 @@ import { haversineKm } from "@/lib/geo";
 import { refreshTrackingEta, fetchDrivingRoute } from "@/lib/tracking.functions";
 import { toast } from "sonner";
 import { MapPin, Play, PackageCheck, CheckCircle2, Radio, Lock } from "lucide-react";
-import { statusMeta } from "@/lib/order-status";
+import { STATUS_LABEL } from "@/lib/order-status";
 
 type Order = {
   id: string;
@@ -60,7 +60,7 @@ export function ActiveTripCard({ driverId }: { driverId: string }) {
           "id, code, status, driver_id, origin_address, origin_lat, origin_lng, destination_address, destination_lat, destination_lng, distance_to_destination_km, eta_minutes, current_city, arrival_override_at",
         )
         .eq("driver_id", driverId)
-        .in("status", IN_TRIP)
+        .in("status", IN_TRIP as any)
         .order("updated_at", { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -192,13 +192,13 @@ export function ActiveTripCard({ driverId }: { driverId: string }) {
     try {
       const { error } = await supabase
         .from("orders")
-        .update({ status: next, ...patch })
+        .update({ status: next as any, ...(patch as any) })
         .eq("id", order.id);
       if (error) throw error;
       await supabase.from("order_events").insert({
         order_id: order.id,
         event_type: "driver_action",
-        to_status: next,
+        to_status: next as any,
         actor_id: driverId,
       });
       setOrder((p) => (p ? { ...p, status: next, ...(patch as any) } : p));
