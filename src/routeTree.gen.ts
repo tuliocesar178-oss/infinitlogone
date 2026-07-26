@@ -15,7 +15,6 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as RastreioCodeRouteImport } from './routes/rastreio.$code'
 import { Route as AuthenticatedOpsRouteImport } from './routes/_authenticated/ops'
-import { Route as AuthenticatedMeRouteImport } from './routes/_authenticated/me'
 import { Route as AuthenticatedDriverRouteImport } from './routes/_authenticated/driver'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
@@ -49,11 +48,6 @@ const AuthenticatedOpsRoute = AuthenticatedOpsRouteImport.update({
   path: '/ops',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedMeRoute = AuthenticatedMeRouteImport.update({
-  id: '/me',
-  path: '/me',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedDriverRoute = AuthenticatedDriverRouteImport.update({
   id: '/driver',
   path: '/driver',
@@ -77,7 +71,6 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRoute
   '/app': typeof AuthenticatedAppRoute
   '/driver': typeof AuthenticatedDriverRoute
-  '/me': typeof AuthenticatedMeRoute
   '/ops': typeof AuthenticatedOpsRoute
   '/rastreio/$code': typeof RastreioCodeRoute
 }
@@ -88,7 +81,6 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminRoute
   '/app': typeof AuthenticatedAppRoute
   '/driver': typeof AuthenticatedDriverRoute
-  '/me': typeof AuthenticatedMeRoute
   '/ops': typeof AuthenticatedOpsRoute
   '/rastreio/$code': typeof RastreioCodeRoute
 }
@@ -101,7 +93,6 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/app': typeof AuthenticatedAppRoute
   '/_authenticated/driver': typeof AuthenticatedDriverRoute
-  '/_authenticated/me': typeof AuthenticatedMeRoute
   '/_authenticated/ops': typeof AuthenticatedOpsRoute
   '/rastreio/$code': typeof RastreioCodeRoute
 }
@@ -114,7 +105,6 @@ export interface FileRouteTypes {
     | '/admin'
     | '/app'
     | '/driver'
-    | '/me'
     | '/ops'
     | '/rastreio/$code'
   fileRoutesByTo: FileRoutesByTo
@@ -125,7 +115,6 @@ export interface FileRouteTypes {
     | '/admin'
     | '/app'
     | '/driver'
-    | '/me'
     | '/ops'
     | '/rastreio/$code'
   id:
@@ -137,7 +126,6 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/_authenticated/app'
     | '/_authenticated/driver'
-    | '/_authenticated/me'
     | '/_authenticated/ops'
     | '/rastreio/$code'
   fileRoutesById: FileRoutesById
@@ -194,13 +182,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/me': {
-      id: '/_authenticated/me'
-      path: '/me'
-      fullPath: '/me'
-      preLoaderRoute: typeof AuthenticatedMeRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/driver': {
       id: '/_authenticated/driver'
       path: '/driver'
@@ -229,7 +210,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedAppRoute: typeof AuthenticatedAppRoute
   AuthenticatedDriverRoute: typeof AuthenticatedDriverRoute
-  AuthenticatedMeRoute: typeof AuthenticatedMeRoute
   AuthenticatedOpsRoute: typeof AuthenticatedOpsRoute
 }
 
@@ -237,7 +217,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedAppRoute: AuthenticatedAppRoute,
   AuthenticatedDriverRoute: AuthenticatedDriverRoute,
-  AuthenticatedMeRoute: AuthenticatedMeRoute,
   AuthenticatedOpsRoute: AuthenticatedOpsRoute,
 }
 
