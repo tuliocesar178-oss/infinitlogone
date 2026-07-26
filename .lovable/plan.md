@@ -1,82 +1,78 @@
-# Central Operacional — InfinitLog
+# Gestão de Fretes — Módulo completo
 
-Nova rota `/ops/central` que vira a **tela inicial de Admin e Logística** (redirect a partir de `/ops`). Layout estilo Uber Freight Dispatch: mapa dominante à esquerda, colunas operacionais à direita, KPIs no topo, alertas ao vivo.
+Reescreve `/ops` (dashboard de fretes), o wizard de novo frete e o fluxo do motorista para virar o **núcleo operacional** da InfinitLog. Reaproveita tudo que já existe: `orders`, `freight_programs`, `freight_offers`, `negotiations`, `deliveries`, `messages`, `order_events`, `order_attachments`, `driver_locations`, `send_program_to_driver()`, `on_offer_accepted()`, `generate_pf_code()`, `generate_tracking_code()`.
 
-Como é grande, entrego em **3 fases** — cada uma testável antes da próxima.
+Entrego em **4 fases** — cada uma testável antes da próxima.
 
 ---
 
-## Fase 1 — Estrutura, Mapa, KPIs, Fretes e Alertas ao vivo
+## Fase 1 — Dashboard de Fretes + Cards clicáveis + Detalhe
 
-Entrega o layout completo e todos os dados **em tempo real** (Supabase Realtime), reaproveitando o que já existe.
+Substitui o `/ops` atual pelo dashboard de fretes definido no spec.
 
-**Rota / navegação**
-- Nova rota `/ops/central` (nova página inicial pós-login p/ admin+logística).
-- Item "Central Operacional" no topo da sidebar; `/ops` continua como Dashboard secundário.
+- **Cards por estado** com contagem em tempo real (Preparando · Aguardando Motorista · Oferta Enviada · Em Deslocamento · Em Coleta · Em Trânsito · Próximo da Entrega · Entregues Hoje · Ocorrências).
+- Clique no card → `/ops/pedidos?status=<card>` (nova rota) que mostra a lista filtrada.
+- Botão fixo **NOVO FRETE** no topo.
+- Lista com busca por código/cliente/cidade e filtros de prioridade/data.
+- Sincronização realtime nas tabelas `orders`, `freight_offers`, `incidents`.
+- **Não** mexe no wizard nem no motorista nesta fase — reaproveita o que já roda.
 
-**Layout (grid 12 colunas)**
-```text
-┌───────────────────── KPIs (linha topo) ─────────────────────┐
-│ Fretes ativos · Motoristas online · Aguardando · Em coleta │
-│ Em trânsito · Próximos · Entregues hoje · KM · Ocorrências  │
-├──────────────────────────────┬──────────────────────────────┤
-│                              │  🚚 Aguardando Despacho      │
-│                              │  (cards + botão DESPACHAR)   │
-│      MAPA OPERACIONAL        ├──────────────────────────────┤
-│      (Mapbox, 70%)           │  🟦 Em Andamento             │
-│      + filtros flutuantes    │  (cards com ETA e %)         │
-│                              ├──────────────────────────────┤
-│                              │  🔔 Central de Alertas       │
-└──────────────────────────────┴──────────────────────────────┘
-```
+## Fase 2 — Wizard de Novo Frete em 6 etapas
 
-**Mapa** — reaproveita `FleetMap` (Fase 1 anterior) com:
-- Veículos coloridos por status (9 cores já definidas).
-- Camada de rotas ativas (linhas origem→destino usando `orders.origin/destination_lat/lng`).
-- Filtros flutuantes: cidade, motorista, cliente, status, veículo, equipe, data.
+Reconstrói `/ops/pedidos/novo` como stepper Uber-like com progresso, validação Zod por etapa e resumo lateral.
 
-**Colunas laterais**
-- **Aguardando Despacho**: pedidos em `preparing`/`awaiting_driver` sem `driver_id`. Cada card: cliente, cidade origem→destino, peso, janela de coleta, valor, prioridade, botão **DESPACHAR** (Fase 2 abrirá sugestão inteligente; Fase 1 já leva ao pedido).
-- **Fretes em Andamento**: pedidos em status ativos com motorista/veículo, distância restante, ETA, % concluído (barra), status; clique abre o pedido.
-- **Central de Alertas**: derivada em tempo real de `orders`, `driver_locations`, `incidents`, `freight_offers` e `drivers`. Regras (todas puramente derivadas, sem tabela nova nesta fase):
-  - Motorista recusou frete (`freight_offers.status='declined'` últimas 24h)
-  - Motorista negociando (`freight_offers.status='negotiating'` ou entrada em `negotiations`)
-  - Veículo parado >30min em rota ativa (último `driver_locations.speed_kmh < 3`)
-  - GPS desconectado (sem ping >10min em rota ativa)
-  - Ocorrência aberta (`incidents.resolved_at is null`)
-  - Entrega atrasada (`delivery_window_end < now()` e status ≠ delivered)
-  - Motorista offline em pedido ativo (`drivers.status='offline'`)
-  - Documentação vencendo (CNH/CRLV/ANTT em ≤30 dias)
-  - Cada alerta com severidade (info/warn/critical) e link para pedido/motorista.
+1. **Cliente** — cliente, contato, telefone, e-mail, empresa, OC, pedido, observações.
+2. **Coleta** — empresa, responsável, telefone, endereço, cidade/UF/CEP, data, hora, franquia (min).
+3. **Entrega** — mesmos campos, data/hora previstas, franquia.
+4. **Carga** — peso, volumes, cubagem, tipo, produto, valor NF, número NF, CT-e, MDF-e, obs.
+5. **Custos** — valor cliente, valor motorista, pedágio, combustível, escolta, licença, outros. Calcula em tempo real: **Custo Total**, **Lucro Previsto**, **Margem %**.
+6. **Documentos** — upload NF, CT-e, MDF-e, XML, fotos, PDF, vídeos → bucket `order-files` → grava em `order_attachments`.
 
-**KPIs (topo)** — agregados a partir de `orders`, `drivers`, `route_summaries`:
-- Fretes ativos, Motoristas online, Motoristas disponíveis, Veículos disponíveis, Em viagem, Aguardando motorista, Em coleta, Em trânsito, Próximos, Entregues hoje, Ocorrências abertas, Tempo médio de entrega (7 dias), KM rodados hoje.
+Ao salvar: cria `orders` (trigger já gera `tracking_code` e a `freight_programs` com `pf_code`), grava `freight_costs`, faz upload e mostra tela final com **QR Code**, **link de rastreio**, botões WhatsApp/Copiar/E-mail e **Despachar agora**.
 
-**Realtime** — 1 canal Supabase assinando `orders`, `driver_locations`, `incidents`, `freight_offers`, `drivers`, `vehicles` → invalida as queries relevantes. Refetch fallback a cada 20s.
+## Fase 3 — Despacho Inteligente + Oferta + Negociação
 
-## Fase 2 — Despacho Inteligente, Painel do Motorista, Painel do Frete
+Reaproveita `send_program_to_driver()` e a tabela `negotiations`.
 
-- **Modal de Despacho Inteligente** ao clicar em DESPACHAR: server function calcula top-5 motoristas ordenados por score (distância → tempo até coleta → disponibilidade → tipo/capacidade do veículo → rating → tempo parado → fretes do dia). Destaca ⭐ Melhor Opção. Usa Mapbox Matrix (via gateway) para distâncias/tempos reais e reaproveita `send_program_to_driver()` já existente.
-- **Painel lateral do Motorista** (clicar em marcador): foto, contatos (ligar/WhatsApp), status, veículo, frete atual + valor + tempo restante, última atualização/GPS, histórico recente, botão "Ver rota".
-- **Painel lateral do Frete** (clicar em card/marcador do pedido): timeline (`order_events`), mapa, cliente, motorista, equipe, carga/peso/volumes, documentos (`order_attachments`), ocorrências, fotos, chat resumido com link para o thread completo.
+- **Painel de Despacho** dentro do detalhe do pedido e no botão "Despachar" do dashboard.
+- Server function `suggestDrivers(orderId)`:
+  - Busca motoristas com `availability='disponivel'` e `status ≠ offline`.
+  - Filtra por capacidade do veículo × peso da carga e tipo.
+  - Calcula distância `driver.current_lat/lng → order.origin_lat/lng` (Haversine + Mapbox Matrix quando disponível).
+  - Score composto: distância (peso 40) + rating (20) + histórico de aceite (15) + tempo parado (10) + fretes do dia (10) + tipo do veículo compatível (5).
+  - Retorna top-N com ⭐ para o melhor.
+- Lista de motoristas: foto, nome, cidade, veículo/placa, KM até coleta, ETA, status, valor sugerido (editável), botão **Enviar oferta**.
+- Enviar oferta chama `send_program_to_driver()` → cria `freight_offers` e status vira `awaiting_driver`.
+- **Portal do motorista** (`/driver`) já mostra ofertas; adiciono botão **Negociar** que abre modal (valor + obs) e insere `negotiations{status='proposed'}`.
+- No detalhe do pedido, painel de negociações: cada proposta com **Aceitar** (atualiza `offered_price` e aceita a oferta) / **Contrapropor** (insere nova `negotiations{status='countered'}`) / **Recusar**.
+- Trigger `on_offer_accepted` já cuida: cancela demais ofertas, vincula motorista, muda status para `driver_assigned`.
 
-## Fase 3 — Financeiro rápido, Agenda, Chat operacional, Replay, Notificações
+## Fase 4 — Fluxo Automático do Motorista + Chat + Histórico
 
-- **Central Financeira Rápida** (cards): receitas do dia (`orders.price` entregues hoje), despesas do dia (`freight_costs`), lucro previsto, fretes faturados/pendentes, motoristas aguardando pagamento, clientes inadimplentes. Requer view SQL `v_ops_finance_daily`.
-- **Agenda Operacional**: timeline cronológica das próximas 24h por pedido (coleta → carga → saída → entrega → retorno) com edição inline das janelas.
-- **Chat Operacional**: um canal geral (nova tabela `channel_messages`) + link para o chat existente por pedido (`messages`).
-- **Replay**: player usando `route_summaries.replay_geojson` (saída/paradas/coleta/entrega/retorno com velocidade e tempo parado).
-- **Central de Notificações**: dropdown consumindo `notifications` já existente com filtros (nova, aceita, recusa, negociação, coleta, entrega, pagamento, ocorrência).
+Reescreve `/driver` para o fluxo de botões sequenciais (nenhum status manual).
+
+- **Máquina de estados por ação**:
+  - `driver_assigned` → botão **INICIAR DESLOCAMENTO** (`en_route_pickup`).
+  - `en_route_pickup` → **INICIAR NAVEGAÇÃO** (abre Google Maps + começa ping GPS).
+  - próximo (100m origem OU botão manual staff) → **CHEGUEI NA COLETA** (`at_pickup`).
+  - `at_pickup` → **ENVIAR FOTO DA CARGA** (form obrigatório: fotos carga, foto NF, volumes conferidos, obs) → `loaded` → automático `out_for_delivery`.
+  - `out_for_delivery` → **INICIAR ENTREGA** (`in_transit`).
+  - próximo destino → **ENVIAR COMPROVANTES** (form: canhoto, NF assinada, fotos, nome recebedor, doc recebedor, assinatura digital em canvas) → grava em `deliveries` + `delivered`.
+- Todas as ações gravam `order_events` com actor, from_status, to_status, GPS, payload.
+- **Chat por pedido** (`/ops/pedidos/$id` aba Chat + no /driver): usa `messages` com kinds `text/photo/video/pdf/audio` (bucket `order-files`) e Supabase Realtime.
+- **Histórico completo** no detalhe do pedido: timeline de `order_events` + negociações + entradas de custos + anexos + ocorrências, com actor, timestamp e GPS quando houver.
 
 ---
 
 ## Detalhes técnicos
 
-- Reaproveita: `FleetMap`, `driver_locations`, `orders`, `drivers`, `vehicles`, `incidents`, `freight_offers`, `route_summaries`, `notifications`, `STATUS_LABEL`, `FLEET_MAP_COLORS`.
-- Novos arquivos Fase 1: `src/routes/_authenticated/ops.central.tsx`, `src/components/ops/kpi-bar.tsx`, `src/components/ops/dispatch-queue.tsx`, `src/components/ops/active-freights.tsx`, `src/components/ops/alerts-panel.tsx`, `src/lib/ops-central.ts` (regras de alerta + agregadores).
-- Sem migração nova na Fase 1. Fase 2/3 podem introduzir `channel_messages` e a view `v_ops_finance_daily`.
-- Redirecionamento pós-login: ajustar `src/lib/roles.ts` para mandar admin/logistics para `/ops/central`.
+- Novas rotas: `ops.pedidos.tsx` (lista filtrável), `ops.pedidos.$id.chat.tsx` (opcional; inicialmente aba dentro do detalhe).
+- Reescreve: `ops.tsx` (dashboard cards), `ops.pedidos.novo.tsx` (wizard), `driver.tsx` (fluxo sequencial), `ops.pedidos.$id.tsx` (adiciona abas Despacho, Negociações, Chat, Histórico).
+- Novos componentes: `components/orders/status-cards.tsx`, `orders/order-list.tsx`, `orders/new-order-wizard.tsx`, `orders/step-*.tsx`, `orders/dispatch-panel.tsx`, `orders/driver-suggestions.tsx`, `orders/negotiation-panel.tsx`, `orders/history-timeline.tsx`, `orders/order-chat.tsx`, `driver/action-flow.tsx`, `driver/pickup-evidence-form.tsx`, `driver/delivery-evidence-form.tsx`.
+- Novas libs: `lib/orders.functions.ts` (createOrder, addCosts, suggestDrivers, respondNegotiation, driverAction), `lib/order-flow.ts` (mapa ação→transição).
+- Sem migração nova; se necessário na Fase 3 crio `driver_stats` view. Bucket `order-files` já existe.
+- Redirecionamento admin/logistics permanece `/ops/central`; `/ops` fica como Dashboard de Fretes (segundo item da sidebar).
 
 ---
 
-**Começo pela Fase 1.** Confirma essa ordem, ou prefere Despacho Inteligente (Fase 2) primeiro?
+**Começo pela Fase 1.** Alguma prioridade diferente ou confirmo essa ordem?

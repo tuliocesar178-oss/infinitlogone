@@ -1,47 +1,141 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState, type FormEvent } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, Save } from "lucide-react";
-import { Link } from "@tanstack/react-router";
+import { ArrowLeft, ArrowRight, Check, Upload, X, Copy, MessageCircle, Mail } from "lucide-react";
+import QRCode from "qrcode";
+import { shareMessage, trackingUrl } from "@/lib/order-status";
 
 export const Route = createFileRoute("/_authenticated/ops/pedidos/novo")({
-  head: () => ({ meta: [{ title: "Novo pedido — InfinitLog" }, { name: "robots", content: "noindex" }] }),
-  component: NewOrder,
+  head: () => ({ meta: [{ title: "Novo frete — InfinitLog" }, { name: "robots", content: "noindex" }] }),
+  component: NewOrderWizard,
 });
 
-function NewOrder() {
-  const navigate = useNavigate();
-  const [saving, setSaving] = useState(false);
-  const [f, setF] = useState({
-    client_name: "",
-    contact_name: "",
-    contact_phone: "",
-    origin_address: "",
-    origin_city: "",
-    destination_address: "",
-    destination_city: "",
-    cargo_description: "",
-    cargo_weight_kg: "",
-    cargo_value: "",
-    volumes: "",
-    cargo_type: "",
-    price: "",
-    pickup_window_start: "",
-    pickup_window_end: "",
-    delivery_window_start: "",
-    delivery_window_end: "",
-    priority: "normal",
-    notes: "",
-  });
+type Form = {
+  // 1 Cliente
+  client_name: string;
+  contact_name: string;
+  contact_phone: string;
+  contact_email: string;
+  company: string;
+  purchase_order: string;
+  order_number: string;
+  client_notes: string;
+  // 2 Coleta
+  pickup_company: string;
+  pickup_contact: string;
+  pickup_phone: string;
+  origin_address: string;
+  origin_city: string;
+  origin_state: string;
+  origin_zip: string;
+  pickup_date: string;
+  pickup_time: string;
+  pickup_franchise_minutes: string;
+  // 3 Entrega
+  delivery_company: string;
+  delivery_contact: string;
+  delivery_phone: string;
+  destination_address: string;
+  destination_city: string;
+  destination_state: string;
+  destination_zip: string;
+  delivery_date: string;
+  delivery_time: string;
+  delivery_franchise_minutes: string;
+  // 4 Carga
+  cargo_weight_kg: string;
+  volumes: string;
+  cargo_volume_m3: string;
+  cargo_type: string;
+  cargo_description: string;
+  invoice_value: string;
+  invoice_number: string;
+  cte_number: string;
+  mdfe_number: string;
+  cargo_notes: string;
+  // 5 Custos
+  price: string;            // valor cliente
+  driver_price: string;     // valor motorista
+  toll: string;
+  fuel: string;
+  escort: string;
+  license: string;
+  other_costs: string;
+  // 6 Docs — dinâmico
+  priority: string;
+};
 
-  function set<K extends keyof typeof f>(k: K, v: string) {
-    setF((s) => ({ ...s, [k]: v }));
+const EMPTY: Form = {
+  client_name: "", contact_name: "", contact_phone: "", contact_email: "", company: "",
+  purchase_order: "", order_number: "", client_notes: "",
+  pickup_company: "", pickup_contact: "", pickup_phone: "",
+  origin_address: "", origin_city: "", origin_state: "", origin_zip: "",
+  pickup_date: "", pickup_time: "", pickup_franchise_minutes: "",
+  delivery_company: "", delivery_contact: "", delivery_phone: "",
+  destination_address: "", destination_city: "", destination_state: "", destination_zip: "",
+  delivery_date: "", delivery_time: "", delivery_franchise_minutes: "",
+  cargo_weight_kg: "", volumes: "", cargo_volume_m3: "", cargo_type: "",
+  cargo_description: "", invoice_value: "", invoice_number: "", cte_number: "", mdfe_number: "",
+  cargo_notes: "",
+  price: "", driver_price: "", toll: "", fuel: "", escort: "", license: "", other_costs: "",
+  priority: "normal",
+};
+
+const STEPS = ["Cliente", "Coleta", "Entrega", "Carga", "Custos", "Documentos"] as const;
+
+function combineDateTime(d: string, t: string): string | null {
+  if (!d) return null;
+  const iso = t ? `${d}T${t}:00` : `${d}T00:00:00`;
+  return new Date(iso).toISOString();
+}
+
+function num(v: string): number | null {
+  if (!v) return null;
+  const n = Number(v.replace(",", "."));
+  return isNaN(n) ? null : n;
+}
+
+function NewOrderWizard() {
+  const navigate = useNavigate();
+  const [step, setStep] = useState(0);
+  const [f, setF] = useState<Form>(EMPTY);
+  const [files, setFiles] = useState<{ file: File; kind: string }[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [result, setResult] = useState<{
+    id: string;
+    code: string;
+    tracking_code: string;
+    qr: string;
+  } | null>(null);
+
+  function set<K extends keyof Form>(k: K, v: string) { setF((s) => ({ ...s, [k]: v })); }
+
+  const totalCost = ["driver_price", "toll", "fuel", "escort", "license", "other_costs"]
+    .reduce((s, k) => s + (num(f[k as keyof Form] as string) ?? 0), 0);
+  const revenue = num(f.price) ?? 0;
+  const profit = revenue - totalCost;
+  const margin = revenue > 0 ? (profit / revenue) * 100 : 0;
+
+  function canAdvance(): string | null {
+    if (step === 0 && !f.client_name.trim()) return "Informe o nome do cliente";
+    if (step === 1 && !f.origin_address.trim()) return "Informe o endereço de coleta";
+    if (step === 2 && !f.destination_address.trim()) return "Informe o endereço de entrega";
+    if (step === 4 && !f.price) return "Informe o valor negociado com o cliente";
+    return null;
   }
 
-  async function submit(e: FormEvent) {
-    e.preventDefault();
+  function next() {
+    const err = canAdvance();
+    if (err) return toast.error(err);
+    setStep((s) => Math.min(s + 1, STEPS.length - 1));
+  }
+  function prev() { setStep((s) => Math.max(s - 1, 0)); }
+
+  async function save() {
+    const err = canAdvance();
+    if (err) return toast.error(err);
     setSaving(true);
     try {
       const { data: u } = await supabase.auth.getUser();
@@ -51,193 +145,349 @@ function NewOrder() {
         contact_phone: f.contact_phone || null,
         origin_address: f.origin_address,
         origin_city: f.origin_city || null,
+        origin_state: f.origin_state || null,
+        origin_zip: f.origin_zip || null,
         destination_address: f.destination_address,
         destination_city: f.destination_city || null,
+        destination_state: f.destination_state || null,
+        destination_zip: f.destination_zip || null,
         cargo_description: f.cargo_description || null,
-        cargo_weight_kg: f.cargo_weight_kg ? Number(f.cargo_weight_kg) : null,
-        cargo_value: f.cargo_value ? Number(f.cargo_value) : null,
+        cargo_weight_kg: num(f.cargo_weight_kg),
+        cargo_volume_m3: num(f.cargo_volume_m3),
+        cargo_value: num(f.invoice_value),
+        cargo_value_declared: num(f.invoice_value),
+        invoice_value: num(f.invoice_value),
+        invoice_number: f.invoice_number || null,
+        cte_number: f.cte_number || null,
+        mdfe_number: f.mdfe_number || null,
         volumes: f.volumes ? Number(f.volumes) : null,
         cargo_type: f.cargo_type || null,
-        price: f.price ? Number(f.price) : null,
-        pickup_window_start: f.pickup_window_start || null,
-        pickup_window_end: f.pickup_window_end || null,
-        delivery_window_start: f.delivery_window_start || null,
-        delivery_window_end: f.delivery_window_end || null,
+        price: num(f.price),
+        pickup_window_start: combineDateTime(f.pickup_date, f.pickup_time),
+        pickup_window_end: combineDateTime(f.pickup_date, f.pickup_time),
+        delivery_window_start: combineDateTime(f.delivery_date, f.delivery_time),
+        delivery_window_end: combineDateTime(f.delivery_date, f.delivery_time),
+        pickup_franchise_minutes: f.pickup_franchise_minutes ? Number(f.pickup_franchise_minutes) : null,
+        delivery_franchise_minutes: f.delivery_franchise_minutes ? Number(f.delivery_franchise_minutes) : null,
         priority: f.priority,
-        notes: f.notes || null,
+        notes: [f.client_notes, f.cargo_notes].filter(Boolean).join("\n\n") || null,
         status: "preparing" as const,
         created_by: u.user?.id ?? null,
       };
-      const { data, error } = await supabase.from("orders").insert(payload).select("id, code").single();
+      const { data: order, error } = await supabase
+        .from("orders").insert(payload).select("id, code, tracking_code").single();
       if (error) throw error;
+
+      // Espera a PF ser criada pelo trigger e grava custos
+      const program = await supabase
+        .from("freight_programs").select("id").eq("order_id", order.id).maybeSingle();
+      if (program.data) {
+        const costs = [
+          { kind: "frete", amount: num(f.driver_price) },
+          { kind: "pedagio", amount: num(f.toll) },
+          { kind: "combustivel", amount: num(f.fuel) },
+          { kind: "escolta", amount: num(f.escort) },
+          { kind: "licenca", amount: num(f.license) },
+          { kind: "outros", amount: num(f.other_costs) },
+        ].filter((c) => c.amount != null && c.amount > 0)
+         .map((c) => ({ program_id: program.data!.id, kind: c.kind, amount: c.amount }));
+        if (costs.length) await supabase.from("freight_costs").insert(costs as never);
+        if (num(f.driver_price)) {
+          await supabase.from("freight_programs")
+            .update({ freight_value: num(f.driver_price) })
+            .eq("id", program.data.id);
+        }
+      }
+
+      // Upload de anexos
+      for (const it of files) {
+        const path = `${order.id}/${Date.now()}-${it.file.name.replace(/[^\w.\-]/g, "_")}`;
+        const up = await supabase.storage.from("order-files").upload(path, it.file, {
+          upsert: false, contentType: it.file.type,
+        });
+        if (up.error) continue;
+        await supabase.from("order_attachments").insert({
+          order_id: order.id, kind: it.kind, label: it.file.name,
+          file_path: path, mime_type: it.file.type, size_bytes: it.file.size,
+          uploaded_by: u.user?.id ?? null,
+        });
+      }
+
       await supabase.from("order_events").insert({
-        order_id: data.id,
-        event_type: "order_created",
-        to_status: "preparing",
-        actor_id: u.user?.id ?? null,
+        order_id: order.id, event_type: "order_created",
+        to_status: "preparing", actor_id: u.user?.id ?? null,
       });
-      toast.success(`Pedido ${data.code} criado`);
-      navigate({ to: "/ops/pedidos/$id", params: { id: data.id } });
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erro ao criar pedido");
+
+      const qr = await QRCode.toDataURL(trackingUrl(order.tracking_code), { margin: 1, width: 220 });
+      setResult({ id: order.id, code: order.code, tracking_code: order.tracking_code, qr });
+      toast.success(`Frete ${order.code} cadastrado`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro ao salvar frete");
     } finally {
       setSaving(false);
     }
   }
 
+  if (result) {
+    const link = trackingUrl(result.tracking_code);
+    const msg = shareMessage(result.tracking_code);
+    return (
+      <AppShell title="Frete criado" subtitle={`${result.code} · rastreio ${result.tracking_code}`}>
+        <div className="mx-auto max-w-2xl space-y-6">
+          <div className="card-soft p-8 text-center">
+            <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-emerald-100 text-emerald-600">
+              <Check className="h-7 w-7" />
+            </span>
+            <h2 className="mt-4 text-2xl font-semibold tracking-tight">Pronto para despachar</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Compartilhe o rastreio com o cliente ou envie oferta agora.</p>
+
+            <div className="mt-6 flex flex-col items-center gap-3">
+              <img src={result.qr} alt="QR Code" className="rounded-2xl border border-border p-3" />
+              <div className="font-mono text-sm">{result.tracking_code}</div>
+              <div className="break-all text-xs text-muted-foreground">{link}</div>
+            </div>
+
+            <div className="mt-6 grid gap-2 sm:grid-cols-3">
+              <button onClick={() => { navigator.clipboard.writeText(link); toast.success("Link copiado"); }}
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 py-2.5 text-sm font-medium hover:bg-accent">
+                <Copy className="h-4 w-4" /> Copiar link
+              </button>
+              <a href={`https://wa.me/?text=${encodeURIComponent(msg)}`} target="_blank" rel="noreferrer"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white hover:opacity-90">
+                <MessageCircle className="h-4 w-4" /> WhatsApp
+              </a>
+              <a href={`mailto:?subject=Rastreio do seu frete&body=${encodeURIComponent(msg)}`}
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 py-2.5 text-sm font-medium hover:bg-accent">
+                <Mail className="h-4 w-4" /> E-mail
+              </a>
+            </div>
+
+            <div className="mt-8 flex flex-col gap-2 sm:flex-row sm:justify-center">
+              <Link to="/ops/pedidos/$id" params={{ id: result.id }}
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-brand px-6 py-2.5 text-sm font-semibold text-brand-foreground hover:opacity-90">
+                Despachar agora <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link to="/ops"
+                className="inline-flex items-center justify-center gap-2 rounded-full border border-border bg-background px-6 py-2.5 text-sm font-semibold hover:bg-accent">
+                Voltar ao dashboard
+              </Link>
+            </div>
+          </div>
+        </div>
+      </AppShell>
+    );
+  }
+
   return (
     <AppShell
-      title="Novo pedido"
-      subtitle="Cadastre os dados do frete negociado com o cliente."
+      title="Novo frete"
+      subtitle={`Etapa ${step + 1} de ${STEPS.length} · ${STEPS[step]}`}
       actions={
-        <Link
-          to="/ops"
-          className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-4 py-2 text-sm hover:bg-accent"
-        >
+        <Link to="/ops" className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-4 py-2 text-sm hover:bg-accent">
           <ArrowLeft className="h-4 w-4" /> Voltar
         </Link>
       }
     >
-      <form onSubmit={submit} className="space-y-6">
-        <Section title="Cliente e contato">
-          <Grid>
-            <Text label="Cliente" required value={f.client_name} onChange={(v) => set("client_name", v)} />
-            <Text label="Contato" value={f.contact_name} onChange={(v) => set("contact_name", v)} />
-            <Text label="Telefone" value={f.contact_phone} onChange={(v) => set("contact_phone", v)} />
-          </Grid>
-        </Section>
+      {/* Stepper */}
+      <ol className="mb-6 flex flex-wrap items-center gap-2">
+        {STEPS.map((label, i) => (
+          <li key={label} className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => (i < step ? setStep(i) : null)}
+              className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium ${
+                i === step
+                  ? "bg-brand text-brand-foreground"
+                  : i < step
+                    ? "bg-brand/10 text-brand hover:bg-brand/20"
+                    : "bg-surface-2 text-muted-foreground"
+              }`}
+            >
+              <span className="grid h-5 w-5 place-items-center rounded-full bg-white/20 text-[10px] font-bold">
+                {i < step ? <Check className="h-3 w-3" /> : i + 1}
+              </span>
+              {label}
+            </button>
+            {i < STEPS.length - 1 && <span className="text-muted-foreground/40">›</span>}
+          </li>
+        ))}
+      </ol>
 
-        <Section title="Coleta">
+      <div className="card-soft p-6 sm:p-8">
+        {step === 0 && (
           <Grid>
-            <Text
-              label="Endereço completo da coleta"
-              required
-              value={f.origin_address}
-              onChange={(v) => set("origin_address", v)}
-              full
-            />
-            <Text label="Cidade de origem" value={f.origin_city} onChange={(v) => set("origin_city", v)} />
-            <Text
-              label="Janela — início"
-              type="datetime-local"
-              value={f.pickup_window_start}
-              onChange={(v) => set("pickup_window_start", v)}
-            />
-            <Text
-              label="Janela — fim"
-              type="datetime-local"
-              value={f.pickup_window_end}
-              onChange={(v) => set("pickup_window_end", v)}
-            />
+            <T label="Cliente" required value={f.client_name} onChange={(v) => set("client_name", v)} />
+            <T label="Empresa" value={f.company} onChange={(v) => set("company", v)} />
+            <T label="Contato" value={f.contact_name} onChange={(v) => set("contact_name", v)} />
+            <T label="Telefone" value={f.contact_phone} onChange={(v) => set("contact_phone", v)} />
+            <T label="E-mail" type="email" value={f.contact_email} onChange={(v) => set("contact_email", v)} />
+            <T label="Ordem de compra (OC)" value={f.purchase_order} onChange={(v) => set("purchase_order", v)} />
+            <T label="Nº do pedido" value={f.order_number} onChange={(v) => set("order_number", v)} />
+            <T label="Observações" value={f.client_notes} onChange={(v) => set("client_notes", v)} full />
           </Grid>
-        </Section>
+        )}
 
-        <Section title="Entrega">
+        {step === 1 && (
           <Grid>
-            <Text
-              label="Endereço completo da entrega"
-              required
-              value={f.destination_address}
-              onChange={(v) => set("destination_address", v)}
-              full
-            />
-            <Text label="Cidade de destino" value={f.destination_city} onChange={(v) => set("destination_city", v)} />
-            <Text
-              label="Janela — início"
-              type="datetime-local"
-              value={f.delivery_window_start}
-              onChange={(v) => set("delivery_window_start", v)}
-            />
-            <Text
-              label="Janela — fim"
-              type="datetime-local"
-              value={f.delivery_window_end}
-              onChange={(v) => set("delivery_window_end", v)}
-            />
+            <T label="Empresa da coleta" value={f.pickup_company} onChange={(v) => set("pickup_company", v)} />
+            <T label="Responsável" value={f.pickup_contact} onChange={(v) => set("pickup_contact", v)} />
+            <T label="Telefone" value={f.pickup_phone} onChange={(v) => set("pickup_phone", v)} />
+            <T label="Endereço" required value={f.origin_address} onChange={(v) => set("origin_address", v)} full />
+            <T label="Cidade" value={f.origin_city} onChange={(v) => set("origin_city", v)} />
+            <T label="UF" value={f.origin_state} onChange={(v) => set("origin_state", v)} />
+            <T label="CEP" value={f.origin_zip} onChange={(v) => set("origin_zip", v)} />
+            <T label="Data da coleta" type="date" value={f.pickup_date} onChange={(v) => set("pickup_date", v)} />
+            <T label="Hora" type="time" value={f.pickup_time} onChange={(v) => set("pickup_time", v)} />
+            <T label="Franquia para carregamento (min)" type="number" value={f.pickup_franchise_minutes} onChange={(v) => set("pickup_franchise_minutes", v)} />
           </Grid>
-        </Section>
+        )}
 
-        <Section title="Carga">
+        {step === 2 && (
           <Grid>
-            <Text label="Tipo da carga" value={f.cargo_type} onChange={(v) => set("cargo_type", v)} />
-            <Text label="Peso (kg)" type="number" value={f.cargo_weight_kg} onChange={(v) => set("cargo_weight_kg", v)} />
-            <Text label="Qtd. de volumes" type="number" value={f.volumes} onChange={(v) => set("volumes", v)} />
-            <Text label="Valor da carga (R$)" type="number" value={f.cargo_value} onChange={(v) => set("cargo_value", v)} />
-            <Text
-              label="Descrição da carga"
-              value={f.cargo_description}
-              onChange={(v) => set("cargo_description", v)}
-              full
-            />
+            <T label="Empresa da entrega" value={f.delivery_company} onChange={(v) => set("delivery_company", v)} />
+            <T label="Responsável" value={f.delivery_contact} onChange={(v) => set("delivery_contact", v)} />
+            <T label="Telefone" value={f.delivery_phone} onChange={(v) => set("delivery_phone", v)} />
+            <T label="Endereço" required value={f.destination_address} onChange={(v) => set("destination_address", v)} full />
+            <T label="Cidade" value={f.destination_city} onChange={(v) => set("destination_city", v)} />
+            <T label="UF" value={f.destination_state} onChange={(v) => set("destination_state", v)} />
+            <T label="CEP" value={f.destination_zip} onChange={(v) => set("destination_zip", v)} />
+            <T label="Data prevista" type="date" value={f.delivery_date} onChange={(v) => set("delivery_date", v)} />
+            <T label="Hora prevista" type="time" value={f.delivery_time} onChange={(v) => set("delivery_time", v)} />
+            <T label="Franquia para descarga (min)" type="number" value={f.delivery_franchise_minutes} onChange={(v) => set("delivery_franchise_minutes", v)} />
           </Grid>
-        </Section>
+        )}
 
-        <Section title="Comercial">
+        {step === 3 && (
           <Grid>
-            <Text label="Valor negociado (R$)" type="number" required value={f.price} onChange={(v) => set("price", v)} />
-            <Select
-              label="Prioridade"
-              value={f.priority}
-              onChange={(v) => set("priority", v)}
-              options={[
-                { value: "low", label: "Baixa" },
-                { value: "normal", label: "Normal" },
-                { value: "high", label: "Alta" },
-                { value: "urgent", label: "Urgente" },
-              ]}
-            />
-            <Text label="Observações" value={f.notes} onChange={(v) => set("notes", v)} full />
+            <T label="Peso (kg)" type="number" value={f.cargo_weight_kg} onChange={(v) => set("cargo_weight_kg", v)} />
+            <T label="Volumes" type="number" value={f.volumes} onChange={(v) => set("volumes", v)} />
+            <T label="Cubagem (m³)" type="number" value={f.cargo_volume_m3} onChange={(v) => set("cargo_volume_m3", v)} />
+            <T label="Tipo" value={f.cargo_type} onChange={(v) => set("cargo_type", v)} />
+            <T label="Produto" value={f.cargo_description} onChange={(v) => set("cargo_description", v)} full />
+            <T label="Valor da nota fiscal" type="number" value={f.invoice_value} onChange={(v) => set("invoice_value", v)} />
+            <T label="Nº da nota fiscal" value={f.invoice_number} onChange={(v) => set("invoice_number", v)} />
+            <T label="CT-e" value={f.cte_number} onChange={(v) => set("cte_number", v)} />
+            <T label="MDF-e" value={f.mdfe_number} onChange={(v) => set("mdfe_number", v)} />
+            <T label="Observações" value={f.cargo_notes} onChange={(v) => set("cargo_notes", v)} full />
           </Grid>
-        </Section>
+        )}
 
-        <div className="flex items-center justify-end gap-3">
-          <Link
-            to="/ops"
-            className="rounded-full border border-border bg-background px-5 py-2.5 text-sm font-semibold hover:bg-accent"
-          >
-            Cancelar
-          </Link>
-          <button
-            type="submit"
-            disabled={saving}
-            className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60"
-          >
-            <Save className="h-4 w-4" /> {saving ? "Salvando…" : "Salvar pedido"}
+        {step === 4 && (
+          <>
+            <Grid>
+              <T label="Valor negociado com cliente (R$)" required type="number" value={f.price} onChange={(v) => set("price", v)} />
+              <T label="Valor do motorista (R$)" type="number" value={f.driver_price} onChange={(v) => set("driver_price", v)} />
+              <T label="Pedágio (R$)" type="number" value={f.toll} onChange={(v) => set("toll", v)} />
+              <T label="Combustível (R$)" type="number" value={f.fuel} onChange={(v) => set("fuel", v)} />
+              <T label="Escolta (R$)" type="number" value={f.escort} onChange={(v) => set("escort", v)} />
+              <T label="Licença (R$)" type="number" value={f.license} onChange={(v) => set("license", v)} />
+              <T label="Outros custos (R$)" type="number" value={f.other_costs} onChange={(v) => set("other_costs", v)} />
+              <label className="block">
+                <span className="mb-1.5 block text-xs font-medium uppercase tracking-widest text-muted-foreground">Prioridade</span>
+                <select value={f.priority} onChange={(e) => set("priority", e.target.value)}
+                  className="h-11 w-full rounded-xl border border-border bg-surface px-3 text-sm outline-none focus:border-brand">
+                  <option value="low">Baixa</option>
+                  <option value="normal">Normal</option>
+                  <option value="high">Alta</option>
+                  <option value="urgent">Urgente</option>
+                </select>
+              </label>
+            </Grid>
+            <div className="mt-6 grid gap-3 sm:grid-cols-3">
+              <KPI label="Custo total" value={brl(totalCost)} />
+              <KPI label="Lucro previsto" value={brl(profit)} tone={profit >= 0 ? "positive" : "negative"} />
+              <KPI label="Margem" value={`${margin.toFixed(1)}%`} tone={margin >= 15 ? "positive" : margin >= 0 ? "neutral" : "negative"} />
+            </div>
+          </>
+        )}
+
+        {step === 5 && (
+          <div>
+            <p className="text-sm text-muted-foreground">Anexe NF, CT-e, MDF-e, XML, fotos, PDF ou vídeos. Os arquivos ficam vinculados ao frete.</p>
+            <label className="mt-4 flex cursor-pointer items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border bg-surface-2 px-6 py-10 hover:bg-accent">
+              <Upload className="h-5 w-5 text-brand" />
+              <span className="text-sm font-medium">Selecionar arquivos</span>
+              <input
+                type="file"
+                multiple
+                hidden
+                onChange={(e) => {
+                  const list = Array.from(e.target.files ?? []);
+                  setFiles((prev) => [...prev, ...list.map((file) => ({ file, kind: guessKind(file.name) }))]);
+                  e.target.value = "";
+                }}
+              />
+            </label>
+            <ul className="mt-4 divide-y divide-border">
+              {files.map((it, i) => (
+                <li key={i} className="flex items-center justify-between gap-3 py-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-medium">{it.file.name}</div>
+                    <div className="text-xs text-muted-foreground">{(it.file.size / 1024).toFixed(0)} KB</div>
+                  </div>
+                  <select
+                    value={it.kind}
+                    onChange={(e) => setFiles((prev) => prev.map((x, j) => (j === i ? { ...x, kind: e.target.value } : x)))}
+                    className="h-9 rounded-lg border border-border bg-surface px-2 text-xs"
+                  >
+                    <option value="nota_fiscal">NF</option>
+                    <option value="cte">CT-e</option>
+                    <option value="mdfe">MDF-e</option>
+                    <option value="xml">XML</option>
+                    <option value="foto">Foto</option>
+                    <option value="pdf">PDF</option>
+                    <option value="video">Vídeo</option>
+                    <option value="outro">Outro</option>
+                  </select>
+                  <button onClick={() => setFiles((prev) => prev.filter((_, j) => j !== i))}
+                    className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:bg-accent">
+                    <X className="h-4 w-4" />
+                  </button>
+                </li>
+              ))}
+              {files.length === 0 && <li className="py-4 text-sm text-muted-foreground">Nenhum arquivo selecionado (opcional).</li>}
+            </ul>
+          </div>
+        )}
+      </div>
+
+      <div className="mt-6 flex items-center justify-between">
+        <button onClick={prev} disabled={step === 0}
+          className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-5 py-2.5 text-sm font-semibold hover:bg-accent disabled:opacity-40">
+          <ArrowLeft className="h-4 w-4" /> Voltar
+        </button>
+        {step < STEPS.length - 1 ? (
+          <button onClick={next}
+            className="inline-flex items-center gap-2 rounded-full bg-brand px-6 py-2.5 text-sm font-semibold text-brand-foreground hover:opacity-90">
+            Avançar <ArrowRight className="h-4 w-4" />
           </button>
-        </div>
-      </form>
+        ) : (
+          <button onClick={save} disabled={saving}
+            className="inline-flex items-center gap-2 rounded-full bg-brand px-6 py-2.5 text-sm font-semibold text-brand-foreground hover:opacity-90 disabled:opacity-60">
+            <Check className="h-4 w-4" /> {saving ? "Salvando…" : "Salvar frete"}
+          </button>
+        )}
+      </div>
     </AppShell>
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section className="card-soft p-6">
-      <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">{title}</h2>
-      <div className="mt-4">{children}</div>
-    </section>
-  );
+function guessKind(name: string): string {
+  const ext = name.toLowerCase().split(".").pop() ?? "";
+  if (["xml"].includes(ext)) return "xml";
+  if (["pdf"].includes(ext)) return "pdf";
+  if (["jpg", "jpeg", "png", "webp", "heic"].includes(ext)) return "foto";
+  if (["mp4", "mov", "avi", "webm"].includes(ext)) return "video";
+  return "outro";
 }
 
 function Grid({ children }: { children: React.ReactNode }) {
   return <div className="grid gap-4 sm:grid-cols-2">{children}</div>;
 }
 
-function Text({
-  label,
-  value,
-  onChange,
-  required,
-  type = "text",
-  full,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  required?: boolean;
-  type?: string;
-  full?: boolean;
-}) {
+function T({
+  label, value, onChange, required, type = "text", full,
+}: { label: string; value: string; onChange: (v: string) => void; required?: boolean; type?: string; full?: boolean }) {
   return (
     <label className={`block ${full ? "sm:col-span-2" : ""}`}>
       <span className="mb-1.5 block text-xs font-medium uppercase tracking-widest text-muted-foreground">
@@ -248,37 +498,25 @@ function Text({
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="h-11 w-full rounded-xl border border-border bg-surface px-3 text-sm outline-none focus:border-primary"
+        className="h-11 w-full rounded-xl border border-border bg-surface px-3 text-sm outline-none focus:border-brand"
       />
     </label>
   );
 }
 
-function Select({
-  label,
-  value,
-  onChange,
-  options,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  options: { value: string; label: string }[];
-}) {
+function KPI({ label, value, tone = "neutral" }: { label: string; value: string; tone?: "positive" | "negative" | "neutral" }) {
+  const cls =
+    tone === "positive" ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+    : tone === "negative" ? "bg-red-50 text-red-700 border-red-200"
+    : "bg-surface-2 text-foreground border-border";
   return (
-    <label className="block">
-      <span className="mb-1.5 block text-xs font-medium uppercase tracking-widest text-muted-foreground">{label}</span>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="h-11 w-full rounded-xl border border-border bg-surface px-3 text-sm outline-none focus:border-primary"
-      >
-        {options.map((o) => (
-          <option key={o.value} value={o.value}>
-            {o.label}
-          </option>
-        ))}
-      </select>
-    </label>
+    <div className={`rounded-2xl border p-4 ${cls}`}>
+      <div className="text-[10px] font-semibold uppercase tracking-widest opacity-70">{label}</div>
+      <div className="mt-1 text-xl font-semibold tabular-nums">{value}</div>
+    </div>
   );
+}
+
+function brl(n: number) {
+  return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
