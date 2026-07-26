@@ -20,6 +20,7 @@ import { Route as AuthenticatedDriverRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedOpsMotoristasRouteImport } from './routes/_authenticated/ops.motoristas'
+import { Route as AuthenticatedOpsEquipeRouteImport } from './routes/_authenticated/ops.equipe'
 import { Route as AuthenticatedOpsPedidosNovoRouteImport } from './routes/_authenticated/ops.pedidos.novo'
 import { Route as AuthenticatedOpsPedidosIdRouteImport } from './routes/_authenticated/ops.pedidos.$id'
 import { Route as AuthenticatedOpsMotoristasIdRouteImport } from './routes/_authenticated/ops.motoristas.$id'
@@ -79,6 +80,11 @@ const AuthenticatedOpsMotoristasRoute =
     path: '/motoristas',
     getParentRoute: () => AuthenticatedOpsRoute,
   } as any)
+const AuthenticatedOpsEquipeRoute = AuthenticatedOpsEquipeRouteImport.update({
+  id: '/equipe',
+  path: '/equipe',
+  getParentRoute: () => AuthenticatedOpsRoute,
+} as any)
 const AuthenticatedOpsPedidosNovoRoute =
   AuthenticatedOpsPedidosNovoRouteImport.update({
     id: '/pedidos/novo',
@@ -108,6 +114,7 @@ export interface FileRoutesByFullPath {
   '/driver': typeof AuthenticatedDriverRoute
   '/ops': typeof AuthenticatedOpsRouteWithChildren
   '/rastreio/$code': typeof RastreioCodeRoute
+  '/ops/equipe': typeof AuthenticatedOpsEquipeRoute
   '/ops/motoristas': typeof AuthenticatedOpsMotoristasRouteWithChildren
   '/ops/motoristas/$id': typeof AuthenticatedOpsMotoristasIdRoute
   '/ops/pedidos/$id': typeof AuthenticatedOpsPedidosIdRoute
@@ -123,6 +130,7 @@ export interface FileRoutesByTo {
   '/driver': typeof AuthenticatedDriverRoute
   '/ops': typeof AuthenticatedOpsRouteWithChildren
   '/rastreio/$code': typeof RastreioCodeRoute
+  '/ops/equipe': typeof AuthenticatedOpsEquipeRoute
   '/ops/motoristas': typeof AuthenticatedOpsMotoristasRouteWithChildren
   '/ops/motoristas/$id': typeof AuthenticatedOpsMotoristasIdRoute
   '/ops/pedidos/$id': typeof AuthenticatedOpsPedidosIdRoute
@@ -140,6 +148,7 @@ export interface FileRoutesById {
   '/_authenticated/driver': typeof AuthenticatedDriverRoute
   '/_authenticated/ops': typeof AuthenticatedOpsRouteWithChildren
   '/rastreio/$code': typeof RastreioCodeRoute
+  '/_authenticated/ops/equipe': typeof AuthenticatedOpsEquipeRoute
   '/_authenticated/ops/motoristas': typeof AuthenticatedOpsMotoristasRouteWithChildren
   '/_authenticated/ops/motoristas/$id': typeof AuthenticatedOpsMotoristasIdRoute
   '/_authenticated/ops/pedidos/$id': typeof AuthenticatedOpsPedidosIdRoute
@@ -157,6 +166,7 @@ export interface FileRouteTypes {
     | '/driver'
     | '/ops'
     | '/rastreio/$code'
+    | '/ops/equipe'
     | '/ops/motoristas'
     | '/ops/motoristas/$id'
     | '/ops/pedidos/$id'
@@ -172,6 +182,7 @@ export interface FileRouteTypes {
     | '/driver'
     | '/ops'
     | '/rastreio/$code'
+    | '/ops/equipe'
     | '/ops/motoristas'
     | '/ops/motoristas/$id'
     | '/ops/pedidos/$id'
@@ -188,6 +199,7 @@ export interface FileRouteTypes {
     | '/_authenticated/driver'
     | '/_authenticated/ops'
     | '/rastreio/$code'
+    | '/_authenticated/ops/equipe'
     | '/_authenticated/ops/motoristas'
     | '/_authenticated/ops/motoristas/$id'
     | '/_authenticated/ops/pedidos/$id'
@@ -281,6 +293,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsMotoristasRouteImport
       parentRoute: typeof AuthenticatedOpsRoute
     }
+    '/_authenticated/ops/equipe': {
+      id: '/_authenticated/ops/equipe'
+      path: '/equipe'
+      fullPath: '/ops/equipe'
+      preLoaderRoute: typeof AuthenticatedOpsEquipeRouteImport
+      parentRoute: typeof AuthenticatedOpsRoute
+    }
     '/_authenticated/ops/pedidos/novo': {
       id: '/_authenticated/ops/pedidos/novo'
       path: '/pedidos/novo'
@@ -320,12 +339,14 @@ const AuthenticatedOpsMotoristasRouteWithChildren =
   )
 
 interface AuthenticatedOpsRouteChildren {
+  AuthenticatedOpsEquipeRoute: typeof AuthenticatedOpsEquipeRoute
   AuthenticatedOpsMotoristasRoute: typeof AuthenticatedOpsMotoristasRouteWithChildren
   AuthenticatedOpsPedidosIdRoute: typeof AuthenticatedOpsPedidosIdRoute
   AuthenticatedOpsPedidosNovoRoute: typeof AuthenticatedOpsPedidosNovoRoute
 }
 
 const AuthenticatedOpsRouteChildren: AuthenticatedOpsRouteChildren = {
+  AuthenticatedOpsEquipeRoute: AuthenticatedOpsEquipeRoute,
   AuthenticatedOpsMotoristasRoute: AuthenticatedOpsMotoristasRouteWithChildren,
   AuthenticatedOpsPedidosIdRoute: AuthenticatedOpsPedidosIdRoute,
   AuthenticatedOpsPedidosNovoRoute: AuthenticatedOpsPedidosNovoRoute,
