@@ -66,6 +66,55 @@ export const FIN_STATUS = [
   { value: "pagamento_pendente", label: "Pagamento pendente" },
 ] as const;
 
+export const AVAILABILITY = [
+  { value: "disponivel", label: "Disponível", tone: "emerald" },
+  { value: "em_frete", label: "Em Frete", tone: "sky" },
+  { value: "folga", label: "Folga", tone: "amber" },
+  { value: "ferias", label: "Férias", tone: "violet" },
+  { value: "bloqueado", label: "Bloqueado", tone: "red" },
+  { value: "offline", label: "Offline", tone: "slate" },
+] as const;
+export type Availability = (typeof AVAILABILITY)[number]["value"];
+
+export const DOCUMENT_KINDS = [
+  { value: "cnh_frente", label: "CNH — Frente" },
+  { value: "cnh_verso", label: "CNH — Verso" },
+  { value: "foto_motorista", label: "Foto do motorista" },
+  { value: "antt", label: "ANTT / RNTRC" },
+  { value: "residencia", label: "Comprovante de residência" },
+  { value: "doc_veiculo", label: "Documento do veículo" },
+  { value: "certificado", label: "Certificado" },
+  { value: "outros", label: "Outros" },
+] as const;
+
+export const CIVIL_STATUS = [
+  { value: "solteiro", label: "Solteiro(a)" },
+  { value: "casado", label: "Casado(a)" },
+  { value: "divorciado", label: "Divorciado(a)" },
+  { value: "viuvo", label: "Viúvo(a)" },
+  { value: "uniao_estavel", label: "União estável" },
+] as const;
+
+export const GENDER = [
+  { value: "masculino", label: "Masculino" },
+  { value: "feminino", label: "Feminino" },
+  { value: "outro", label: "Outro" },
+  { value: "nao_informar", label: "Prefiro não informar" },
+] as const;
+
+export const availabilityBadgeClass = (v?: string | null): string => {
+  const tone = AVAILABILITY.find((a) => a.value === v)?.tone ?? "slate";
+  const map: Record<string, string> = {
+    emerald: "bg-emerald-50 text-emerald-700 ring-emerald-200",
+    sky: "bg-sky-50 text-sky-700 ring-sky-200",
+    amber: "bg-amber-50 text-amber-700 ring-amber-200",
+    violet: "bg-violet-50 text-violet-700 ring-violet-200",
+    red: "bg-red-50 text-red-700 ring-red-200",
+    slate: "bg-slate-100 text-slate-700 ring-slate-200",
+  };
+  return `inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${map[tone]}`;
+};
+
 export function brl(value: number | null | undefined): string {
   if (value == null || Number.isNaN(Number(value))) return "—";
   return Number(value).toLocaleString("pt-BR", {
