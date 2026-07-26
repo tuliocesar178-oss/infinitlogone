@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          actor_name: string | null
+          created_at: string
+          description: string | null
+          entity_id: string | null
+          entity_type: string | null
+          id: string
+          ip: string | null
+          metadata: Json
+          user_agent: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          actor_name?: string | null
+          created_at?: string
+          description?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          ip?: string | null
+          metadata?: Json
+          user_agent?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          actor_name?: string | null
+          created_at?: string
+          description?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          ip?: string | null
+          metadata?: Json
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       app_settings: {
         Row: {
           key: string
@@ -105,6 +147,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      departments: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       driver_documents: {
         Row: {
@@ -1163,6 +1232,89 @@ export type Database = {
           },
         ]
       }
+      team_members: {
+        Row: {
+          address: string | null
+          admission_date: string | null
+          birth_date: string | null
+          city: string | null
+          cpf: string | null
+          created_at: string
+          created_by: string | null
+          department_id: string | null
+          email: string | null
+          full_name: string | null
+          last_seen_at: string | null
+          notes: string | null
+          phone: string | null
+          photo_url: string | null
+          position: string | null
+          rg: string | null
+          state: string | null
+          status: Database["public"]["Enums"]["team_status"]
+          updated_at: string
+          user_id: string
+          whatsapp: string | null
+          zip: string | null
+        }
+        Insert: {
+          address?: string | null
+          admission_date?: string | null
+          birth_date?: string | null
+          city?: string | null
+          cpf?: string | null
+          created_at?: string
+          created_by?: string | null
+          department_id?: string | null
+          email?: string | null
+          full_name?: string | null
+          last_seen_at?: string | null
+          notes?: string | null
+          phone?: string | null
+          photo_url?: string | null
+          position?: string | null
+          rg?: string | null
+          state?: string | null
+          status?: Database["public"]["Enums"]["team_status"]
+          updated_at?: string
+          user_id: string
+          whatsapp?: string | null
+          zip?: string | null
+        }
+        Update: {
+          address?: string | null
+          admission_date?: string | null
+          birth_date?: string | null
+          city?: string | null
+          cpf?: string | null
+          created_at?: string
+          created_by?: string | null
+          department_id?: string | null
+          email?: string | null
+          full_name?: string | null
+          last_seen_at?: string | null
+          notes?: string | null
+          phone?: string | null
+          photo_url?: string | null
+          position?: string | null
+          rg?: string | null
+          state?: string | null
+          status?: Database["public"]["Enums"]["team_status"]
+          updated_at?: string
+          user_id?: string
+          whatsapp?: string | null
+          zip?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_members_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -1399,6 +1551,7 @@ export type Database = {
         | "incident"
       payment_method_pref: "pix" | "ted" | "doc" | "boleto"
       pix_key_type: "cpf" | "cnpj" | "email" | "phone" | "random"
+      team_status: "ativo" | "bloqueado" | "convite_pendente" | "afastado"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1598,6 +1751,7 @@ export const Constants = {
       ],
       payment_method_pref: ["pix", "ted", "doc", "boleto"],
       pix_key_type: ["cpf", "cnpj", "email", "phone", "random"],
+      team_status: ["ativo", "bloqueado", "convite_pendente", "afastado"],
     },
   },
 } as const
