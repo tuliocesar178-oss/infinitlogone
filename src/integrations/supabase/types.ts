@@ -106,6 +106,48 @@ export type Database = {
           },
         ]
       }
+      driver_documents: {
+        Row: {
+          created_at: string
+          driver_id: string
+          expires_at: string | null
+          file_path: string
+          id: string
+          kind: string
+          label: string | null
+          mime_type: string | null
+          size_bytes: number | null
+          updated_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          driver_id: string
+          expires_at?: string | null
+          file_path: string
+          id?: string
+          kind: string
+          label?: string | null
+          mime_type?: string | null
+          size_bytes?: number | null
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          driver_id?: string
+          expires_at?: string | null
+          file_path?: string
+          id?: string
+          kind?: string
+          label?: string | null
+          mime_type?: string | null
+          size_bytes?: number | null
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: []
+      }
       driver_locations: {
         Row: {
           accuracy_m: number | null
@@ -153,8 +195,51 @@ export type Database = {
           },
         ]
       }
+      driver_ratings: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          driver_id: string
+          id: string
+          notes: string | null
+          order_id: string | null
+          score: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          driver_id: string
+          id?: string
+          notes?: string | null
+          order_id?: string | null
+          score: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          driver_id?: string
+          id?: string
+          notes?: string | null
+          order_id?: string | null
+          score?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_ratings_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       drivers: {
         Row: {
+          address: string | null
+          address_complement: string | null
+          address_number: string | null
+          antt_expires_at: string | null
+          availability: Database["public"]["Enums"]["driver_availability"]
           bank_account: string | null
           bank_account_digit: string | null
           bank_account_type:
@@ -163,22 +248,32 @@ export type Database = {
           bank_agency: string | null
           bank_code: string | null
           bank_name: string | null
+          birth_date: string | null
           city: string | null
+          civil_status: string | null
           cnh_expires_at: string | null
+          cnh_issued_at: string | null
           cpf: string | null
           created_at: string
           current_lat: number | null
           current_lng: number | null
           current_vehicle_id: string | null
+          daily_rate: number | null
           default_price_per_km: number | null
+          email: string | null
           favored_document: string | null
           favored_name: string | null
           financial_notes: string | null
           financial_status: Database["public"]["Enums"]["driver_financial_status"]
+          gender: string | null
+          hourly_wait_rate: number | null
           last_seen_at: string | null
           license_category: string | null
           license_number: string | null
           min_freight_value: number | null
+          neighborhood: string | null
+          notes: string | null
+          owns_vehicle: boolean
           payment_term_days: number | null
           phone: string | null
           photo_url: string | null
@@ -187,11 +282,21 @@ export type Database = {
           preferred_payment_method:
             | Database["public"]["Enums"]["payment_method_pref"]
             | null
+          rating: number | null
+          rg: string | null
           rntrc: string | null
+          state: string | null
           status: Database["public"]["Enums"]["driver_status"]
           user_id: string
+          whatsapp: string | null
+          zip: string | null
         }
         Insert: {
+          address?: string | null
+          address_complement?: string | null
+          address_number?: string | null
+          antt_expires_at?: string | null
+          availability?: Database["public"]["Enums"]["driver_availability"]
           bank_account?: string | null
           bank_account_digit?: string | null
           bank_account_type?:
@@ -200,22 +305,32 @@ export type Database = {
           bank_agency?: string | null
           bank_code?: string | null
           bank_name?: string | null
+          birth_date?: string | null
           city?: string | null
+          civil_status?: string | null
           cnh_expires_at?: string | null
+          cnh_issued_at?: string | null
           cpf?: string | null
           created_at?: string
           current_lat?: number | null
           current_lng?: number | null
           current_vehicle_id?: string | null
+          daily_rate?: number | null
           default_price_per_km?: number | null
+          email?: string | null
           favored_document?: string | null
           favored_name?: string | null
           financial_notes?: string | null
           financial_status?: Database["public"]["Enums"]["driver_financial_status"]
+          gender?: string | null
+          hourly_wait_rate?: number | null
           last_seen_at?: string | null
           license_category?: string | null
           license_number?: string | null
           min_freight_value?: number | null
+          neighborhood?: string | null
+          notes?: string | null
+          owns_vehicle?: boolean
           payment_term_days?: number | null
           phone?: string | null
           photo_url?: string | null
@@ -224,11 +339,21 @@ export type Database = {
           preferred_payment_method?:
             | Database["public"]["Enums"]["payment_method_pref"]
             | null
+          rating?: number | null
+          rg?: string | null
           rntrc?: string | null
+          state?: string | null
           status?: Database["public"]["Enums"]["driver_status"]
           user_id: string
+          whatsapp?: string | null
+          zip?: string | null
         }
         Update: {
+          address?: string | null
+          address_complement?: string | null
+          address_number?: string | null
+          antt_expires_at?: string | null
+          availability?: Database["public"]["Enums"]["driver_availability"]
           bank_account?: string | null
           bank_account_digit?: string | null
           bank_account_type?:
@@ -237,22 +362,32 @@ export type Database = {
           bank_agency?: string | null
           bank_code?: string | null
           bank_name?: string | null
+          birth_date?: string | null
           city?: string | null
+          civil_status?: string | null
           cnh_expires_at?: string | null
+          cnh_issued_at?: string | null
           cpf?: string | null
           created_at?: string
           current_lat?: number | null
           current_lng?: number | null
           current_vehicle_id?: string | null
+          daily_rate?: number | null
           default_price_per_km?: number | null
+          email?: string | null
           favored_document?: string | null
           favored_name?: string | null
           financial_notes?: string | null
           financial_status?: Database["public"]["Enums"]["driver_financial_status"]
+          gender?: string | null
+          hourly_wait_rate?: number | null
           last_seen_at?: string | null
           license_category?: string | null
           license_number?: string | null
           min_freight_value?: number | null
+          neighborhood?: string | null
+          notes?: string | null
+          owns_vehicle?: boolean
           payment_term_days?: number | null
           phone?: string | null
           photo_url?: string | null
@@ -261,9 +396,14 @@ export type Database = {
           preferred_payment_method?:
             | Database["public"]["Enums"]["payment_method_pref"]
             | null
+          rating?: number | null
+          rg?: string | null
           rntrc?: string | null
+          state?: string | null
           status?: Database["public"]["Enums"]["driver_status"]
           user_id?: string
+          whatsapp?: string | null
+          zip?: string | null
         }
         Relationships: [
           {
@@ -1047,34 +1187,61 @@ export type Database = {
       vehicles: {
         Row: {
           active: boolean
+          antt_expires_at: string | null
+          axles: number | null
           brand: string | null
           capacity_kg: number | null
+          color: string | null
           created_at: string
+          crlv_expires_at: string | null
           id: string
+          insurance_expires_at: string | null
+          max_weight_kg: number | null
           model: string | null
+          notes: string | null
+          owner_driver_id: string | null
           plate: string
+          renavam: string | null
           vehicle_type: string | null
           year: number | null
         }
         Insert: {
           active?: boolean
+          antt_expires_at?: string | null
+          axles?: number | null
           brand?: string | null
           capacity_kg?: number | null
+          color?: string | null
           created_at?: string
+          crlv_expires_at?: string | null
           id?: string
+          insurance_expires_at?: string | null
+          max_weight_kg?: number | null
           model?: string | null
+          notes?: string | null
+          owner_driver_id?: string | null
           plate: string
+          renavam?: string | null
           vehicle_type?: string | null
           year?: number | null
         }
         Update: {
           active?: boolean
+          antt_expires_at?: string | null
+          axles?: number | null
           brand?: string | null
           capacity_kg?: number | null
+          color?: string | null
           created_at?: string
+          crlv_expires_at?: string | null
           id?: string
+          insurance_expires_at?: string | null
+          max_weight_kg?: number | null
           model?: string | null
+          notes?: string | null
+          owner_driver_id?: string | null
           plate?: string
+          renavam?: string | null
           vehicle_type?: string | null
           year?: number | null
         }
@@ -1168,6 +1335,13 @@ export type Database = {
     Enums: {
       app_role: "admin" | "logistics" | "driver" | "client"
       bank_account_type: "corrente" | "poupanca"
+      driver_availability:
+        | "disponivel"
+        | "em_frete"
+        | "folga"
+        | "ferias"
+        | "bloqueado"
+        | "offline"
       driver_financial_status: "ativo" | "bloqueado" | "pagamento_pendente"
       driver_status: "offline" | "available" | "on_trip"
       freight_cost_kind:
@@ -1346,6 +1520,14 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "logistics", "driver", "client"],
       bank_account_type: ["corrente", "poupanca"],
+      driver_availability: [
+        "disponivel",
+        "em_frete",
+        "folga",
+        "ferias",
+        "bloqueado",
+        "offline",
+      ],
       driver_financial_status: ["ativo", "bloqueado", "pagamento_pendente"],
       driver_status: ["offline", "available", "on_trip"],
       freight_cost_kind: [
