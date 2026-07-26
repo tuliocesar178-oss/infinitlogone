@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          updated_by: string | null
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+          value: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Relationships: []
+      }
       clients: {
         Row: {
           company_name: string | null
@@ -80,6 +101,53 @@ export type Database = {
             foreignKeyName: "deliveries_order_id_fkey"
             columns: ["order_id"]
             isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      driver_locations: {
+        Row: {
+          accuracy_m: number | null
+          created_at: string
+          distance_to_destination_km: number | null
+          driver_id: string
+          heading: number | null
+          id: string
+          lat: number
+          lng: number
+          order_id: string
+          speed_kmh: number | null
+        }
+        Insert: {
+          accuracy_m?: number | null
+          created_at?: string
+          distance_to_destination_km?: number | null
+          driver_id: string
+          heading?: number | null
+          id?: string
+          lat: number
+          lng: number
+          order_id: string
+          speed_kmh?: number | null
+        }
+        Update: {
+          accuracy_m?: number | null
+          created_at?: string
+          distance_to_destination_km?: number | null
+          driver_id?: string
+          heading?: number | null
+          id?: string
+          lat?: number
+          lng?: number
+          order_id?: string
+          speed_kmh?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_locations_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
             referencedRelation: "orders"
             referencedColumns: ["id"]
           },
@@ -657,6 +725,11 @@ export type Database = {
       }
       orders: {
         Row: {
+          approach_notified_at: string | null
+          arrival_detected_at: string | null
+          arrival_override_at: string | null
+          arrival_override_by: string | null
+          arrived_at: string | null
           cargo_description: string | null
           cargo_type: string | null
           cargo_value: number | null
@@ -671,6 +744,9 @@ export type Database = {
           created_at: string
           created_by: string | null
           cte_number: string | null
+          current_city: string | null
+          current_lat: number | null
+          current_lng: number | null
           deleted_at: string | null
           delivery_franchise_minutes: number | null
           delivery_window_end: string | null
@@ -682,13 +758,18 @@ export type Database = {
           destination_state: string | null
           destination_zip: string | null
           distance_km: number | null
+          distance_to_destination_km: number | null
           driver_id: string | null
           estimated_minutes: number | null
+          eta_minutes: number | null
           id: string
+          initial_distance_km: number | null
           invoice_number: string | null
           invoice_url: string | null
           invoice_value: number | null
+          last_ping_at: string | null
           mdfe_number: string | null
+          near_notified_at: string | null
           notes: string | null
           origin_address: string
           origin_city: string | null
@@ -702,6 +783,7 @@ export type Database = {
           price: number | null
           priority: string
           scheduled_at: string | null
+          started_trip_at: string | null
           status: Database["public"]["Enums"]["order_status"]
           tracking_code: string
           updated_at: string
@@ -709,6 +791,11 @@ export type Database = {
           volumes: number | null
         }
         Insert: {
+          approach_notified_at?: string | null
+          arrival_detected_at?: string | null
+          arrival_override_at?: string | null
+          arrival_override_by?: string | null
+          arrived_at?: string | null
           cargo_description?: string | null
           cargo_type?: string | null
           cargo_value?: number | null
@@ -723,6 +810,9 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           cte_number?: string | null
+          current_city?: string | null
+          current_lat?: number | null
+          current_lng?: number | null
           deleted_at?: string | null
           delivery_franchise_minutes?: number | null
           delivery_window_end?: string | null
@@ -734,13 +824,18 @@ export type Database = {
           destination_state?: string | null
           destination_zip?: string | null
           distance_km?: number | null
+          distance_to_destination_km?: number | null
           driver_id?: string | null
           estimated_minutes?: number | null
+          eta_minutes?: number | null
           id?: string
+          initial_distance_km?: number | null
           invoice_number?: string | null
           invoice_url?: string | null
           invoice_value?: number | null
+          last_ping_at?: string | null
           mdfe_number?: string | null
+          near_notified_at?: string | null
           notes?: string | null
           origin_address: string
           origin_city?: string | null
@@ -754,6 +849,7 @@ export type Database = {
           price?: number | null
           priority?: string
           scheduled_at?: string | null
+          started_trip_at?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           tracking_code?: string
           updated_at?: string
@@ -761,6 +857,11 @@ export type Database = {
           volumes?: number | null
         }
         Update: {
+          approach_notified_at?: string | null
+          arrival_detected_at?: string | null
+          arrival_override_at?: string | null
+          arrival_override_by?: string | null
+          arrived_at?: string | null
           cargo_description?: string | null
           cargo_type?: string | null
           cargo_value?: number | null
@@ -775,6 +876,9 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           cte_number?: string | null
+          current_city?: string | null
+          current_lat?: number | null
+          current_lng?: number | null
           deleted_at?: string | null
           delivery_franchise_minutes?: number | null
           delivery_window_end?: string | null
@@ -786,13 +890,18 @@ export type Database = {
           destination_state?: string | null
           destination_zip?: string | null
           distance_km?: number | null
+          distance_to_destination_km?: number | null
           driver_id?: string | null
           estimated_minutes?: number | null
+          eta_minutes?: number | null
           id?: string
+          initial_distance_km?: number | null
           invoice_number?: string | null
           invoice_url?: string | null
           invoice_value?: number | null
+          last_ping_at?: string | null
           mdfe_number?: string | null
+          near_notified_at?: string | null
           notes?: string | null
           origin_address?: string
           origin_city?: string | null
@@ -806,6 +915,7 @@ export type Database = {
           price?: number | null
           priority?: string
           scheduled_at?: string | null
+          started_trip_at?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           tracking_code?: string
           updated_at?: string
@@ -862,6 +972,56 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      route_summaries: {
+        Row: {
+          arrived_at: string | null
+          avg_speed_kmh: number | null
+          created_at: string
+          driver_id: string | null
+          order_id: string
+          points_count: number | null
+          replay_geojson: Json | null
+          started_at: string | null
+          stops_count: number | null
+          total_distance_km: number | null
+          total_minutes: number | null
+        }
+        Insert: {
+          arrived_at?: string | null
+          avg_speed_kmh?: number | null
+          created_at?: string
+          driver_id?: string | null
+          order_id: string
+          points_count?: number | null
+          replay_geojson?: Json | null
+          started_at?: string | null
+          stops_count?: number | null
+          total_distance_km?: number | null
+          total_minutes?: number | null
+        }
+        Update: {
+          arrived_at?: string | null
+          avg_speed_kmh?: number | null
+          created_at?: string
+          driver_id?: string | null
+          order_id?: string
+          points_count?: number | null
+          replay_geojson?: Json | null
+          started_at?: string | null
+          stops_count?: number | null
+          total_distance_km?: number | null
+          total_minutes?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "route_summaries_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -978,6 +1138,7 @@ export type Database = {
         Args: { _order_id: string; _user_id: string }
         Returns: boolean
       }
+      finalize_route: { Args: { _order_id: string }; Returns: undefined }
       generate_pf_code: { Args: never; Returns: string }
       generate_tracking_code: { Args: never; Returns: string }
       get_tracking: { Args: { _code: string }; Returns: Json }
@@ -988,7 +1149,12 @@ export type Database = {
         }
         Returns: boolean
       }
+      haversine_km: {
+        Args: { lat1: number; lat2: number; lng1: number; lng2: number }
+        Returns: number
+      }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
+      override_arrival: { Args: { _order_id: string }; Returns: undefined }
       send_program_to_driver: {
         Args: {
           _driver_id: string
