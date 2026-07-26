@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
-import { ArrowLeft, ArrowRight, Search, Truck } from "lucide-react";
+import { ArrowLeft, ArrowRight, Search } from "lucide-react";
+import { Logo } from "@/components/logo";
 
 export const Route = createFileRoute("/rastreio")({
   head: () => ({
@@ -32,12 +33,9 @@ function TrackingSearch() {
           <Link to="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
             <ArrowLeft className="h-4 w-4" /> Voltar
           </Link>
-          <span className="flex items-center gap-2 font-semibold tracking-tight">
-            <span className="grid h-8 w-8 place-items-center rounded-xl bg-primary text-primary-foreground">
-              <Truck className="h-4 w-4" />
-            </span>
-            InfinitLog
-          </span>
+          <Link to="/" aria-label="InfinitLog">
+            <Logo size={30} />
+          </Link>
         </div>
       </header>
 

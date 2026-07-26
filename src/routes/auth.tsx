@@ -2,7 +2,8 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, Truck } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+import { logoUrl } from "@/components/logo";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -49,9 +50,9 @@ function AuthPage() {
           <ArrowLeft className="h-4 w-4" /> Voltar ao site
         </Link>
         <div>
-          <span className="grid h-12 w-12 place-items-center rounded-2xl bg-primary-foreground/10">
-            <Truck className="h-6 w-6" />
-          </span>
+          <div className="grid h-20 w-20 place-items-center rounded-3xl bg-primary-foreground/10 backdrop-blur">
+            <img src={logoUrl} alt="InfinitLog" className="h-14 w-14 object-contain" />
+          </div>
           <h1 className="mt-8 text-4xl font-semibold tracking-tight">
             Operação sob controle. Sempre.
           </h1>

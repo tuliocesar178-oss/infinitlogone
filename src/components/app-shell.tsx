@@ -1,8 +1,9 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
-import { LogOut, Truck } from "lucide-react";
+import { LogOut } from "lucide-react";
 import type { ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { Logo } from "@/components/logo";
 
 export function AppShell({
   title,
@@ -29,11 +30,8 @@ export function AppShell({
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-30 border-b border-border/60 bg-background/80 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-6">
-          <Link to="/" className="flex items-center gap-2 font-semibold tracking-tight">
-            <span className="grid h-8 w-8 place-items-center rounded-xl bg-primary text-primary-foreground">
-              <Truck className="h-4 w-4" />
-            </span>
-            InfinitLog
+          <Link to="/" aria-label="InfinitLog">
+            <Logo size={32} />
           </Link>
           <button
             onClick={signOut}

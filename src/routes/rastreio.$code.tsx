@@ -12,9 +12,9 @@ import {
   MapPin,
   PenLine,
   ShieldCheck,
-  Truck,
   User,
 } from "lucide-react";
+import { Logo } from "@/components/logo";
 import { PUBLIC_TIMELINE, publicStatus, STATUS_LABEL } from "@/lib/order-status";
 
 export const Route = createFileRoute("/rastreio/$code")({
@@ -102,11 +102,8 @@ function TrackingPage() {
           >
             <ArrowLeft className="h-4 w-4" /> Nova busca
           </Link>
-          <Link to="/" className="flex items-center gap-2 font-semibold tracking-tight">
-            <span className="grid h-8 w-8 place-items-center rounded-xl bg-primary text-primary-foreground">
-              <Truck className="h-4 w-4" />
-            </span>
-            InfinitLog
+          <Link to="/" aria-label="InfinitLog">
+            <Logo size={30} />
           </Link>
         </div>
       </header>

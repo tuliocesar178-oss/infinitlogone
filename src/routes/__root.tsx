@@ -80,7 +80,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content:
           "Plataforma InfinitLog: pedidos, motoristas e entregas em tempo real. Rastreie sua carga em segundos.",
       },
-      { name: "theme-color", content: "#ffffff" },
+      { name: "theme-color", content: "#0d1b4a" },
       { property: "og:title", content: "InfinitLog Transportes" },
       {
         property: "og:description",
@@ -91,7 +91,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "icon", href: "/favicon.png", type: "image/png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "" },
       {
