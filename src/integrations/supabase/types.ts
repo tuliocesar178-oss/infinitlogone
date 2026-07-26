@@ -308,6 +308,7 @@ export type Database = {
           address_complement: string | null
           address_number: string | null
           antt_expires_at: string | null
+          approval_status: Database["public"]["Enums"]["driver_approval_status"]
           availability: Database["public"]["Enums"]["driver_availability"]
           bank_account: string | null
           bank_account_digit: string | null
@@ -322,6 +323,7 @@ export type Database = {
           civil_status: string | null
           cnh_expires_at: string | null
           cnh_issued_at: string | null
+          correction_notes: string | null
           cpf: string | null
           created_at: string
           current_lat: number | null
@@ -352,10 +354,14 @@ export type Database = {
             | Database["public"]["Enums"]["payment_method_pref"]
             | null
           rating: number | null
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
           rg: string | null
           rntrc: string | null
           state: string | null
           status: Database["public"]["Enums"]["driver_status"]
+          submitted_at: string | null
           user_id: string
           whatsapp: string | null
           zip: string | null
@@ -365,6 +371,7 @@ export type Database = {
           address_complement?: string | null
           address_number?: string | null
           antt_expires_at?: string | null
+          approval_status?: Database["public"]["Enums"]["driver_approval_status"]
           availability?: Database["public"]["Enums"]["driver_availability"]
           bank_account?: string | null
           bank_account_digit?: string | null
@@ -379,6 +386,7 @@ export type Database = {
           civil_status?: string | null
           cnh_expires_at?: string | null
           cnh_issued_at?: string | null
+          correction_notes?: string | null
           cpf?: string | null
           created_at?: string
           current_lat?: number | null
@@ -409,10 +417,14 @@ export type Database = {
             | Database["public"]["Enums"]["payment_method_pref"]
             | null
           rating?: number | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           rg?: string | null
           rntrc?: string | null
           state?: string | null
           status?: Database["public"]["Enums"]["driver_status"]
+          submitted_at?: string | null
           user_id: string
           whatsapp?: string | null
           zip?: string | null
@@ -422,6 +434,7 @@ export type Database = {
           address_complement?: string | null
           address_number?: string | null
           antt_expires_at?: string | null
+          approval_status?: Database["public"]["Enums"]["driver_approval_status"]
           availability?: Database["public"]["Enums"]["driver_availability"]
           bank_account?: string | null
           bank_account_digit?: string | null
@@ -436,6 +449,7 @@ export type Database = {
           civil_status?: string | null
           cnh_expires_at?: string | null
           cnh_issued_at?: string | null
+          correction_notes?: string | null
           cpf?: string | null
           created_at?: string
           current_lat?: number | null
@@ -466,10 +480,14 @@ export type Database = {
             | Database["public"]["Enums"]["payment_method_pref"]
             | null
           rating?: number | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           rg?: string | null
           rntrc?: string | null
           state?: string | null
           status?: Database["public"]["Enums"]["driver_status"]
+          submitted_at?: string | null
           user_id?: string
           whatsapp?: string | null
           zip?: string | null
@@ -1617,6 +1635,10 @@ export type Database = {
       }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
       override_arrival: { Args: { _order_id: string }; Returns: undefined }
+      review_driver_signup: {
+        Args: { _decision: string; _driver_id: string; _reason?: string }
+        Returns: undefined
+      }
       send_program_to_driver: {
         Args: {
           _driver_id: string
@@ -1638,6 +1660,7 @@ export type Database = {
         | "comercial"
         | "operacional"
       bank_account_type: "corrente" | "poupanca"
+      driver_approval_status: "pending" | "active" | "correction" | "rejected"
       driver_availability:
         | "disponivel"
         | "em_frete"
@@ -1843,6 +1866,7 @@ export const Constants = {
         "operacional",
       ],
       bank_account_type: ["corrente", "poupanca"],
+      driver_approval_status: ["pending", "active", "correction", "rejected"],
       driver_availability: [
         "disponivel",
         "em_frete",
