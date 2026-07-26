@@ -1,55 +1,82 @@
-# Central Inteligente de Controle da Frota
+# Central Operacional — InfinitLog
 
-Transforma `/ops/veiculos` em um mapa Mapbox em tela cheia estilo Uber, com veículos, motoristas e entregas em tempo real, filtros, sugestão inteligente de veículos para novos fretes, heatmap, geofences, replay de rotas e alertas.
+Nova rota `/ops/central` que vira a **tela inicial de Admin e Logística** (redirect a partir de `/ops`). Layout estilo Uber Freight Dispatch: mapa dominante à esquerda, colunas operacionais à direita, KPIs no topo, alertas ao vivo.
 
-Como é uma entrega grande, proponho executar em **4 fases**, cada uma testável antes da próxima.
+Como é grande, entrego em **3 fases** — cada uma testável antes da próxima.
 
 ---
 
-## Fase 1 — Mapa em tempo real + Card de Disponibilidade
+## Fase 1 — Estrutura, Mapa, KPIs, Fretes e Alertas ao vivo
 
-Substitui a listagem atual por um mapa em tela cheia.
+Entrega o layout completo e todos os dados **em tempo real** (Supabase Realtime), reaproveitando o que já existe.
 
-- Nova rota principal: `/ops/veiculos` = mapa. A listagem atual vira `/ops/veiculos/lista`.
-- Marcadores coloridos por status (9 cores conforme especificado).
-- Painel lateral com card **Disponibilidade da Frota** (Total, Disponíveis, Em Viagem, Em Coleta, Carregando, Próximos, Retornando, Manutenção, Offline).
-- Filtros: cidade, estado, motorista, tipo de veículo, status, cliente.
-- Popup ao clicar no veículo com: foto, placa, modelo, motorista, telefone, cliente, origem/destino, status, velocidade, KM restantes, ETA, % da rota, carga/peso/volumes, última atualização.
-- Realtime: assinatura em `driver_locations` e `orders` via Supabase Realtime.
-- Rotas ativas desenhadas usando `orders.origin_lat/lng`, `current_lat/lng`, `destination_lat/lng`.
+**Rota / navegação**
+- Nova rota `/ops/central` (nova página inicial pós-login p/ admin+logística).
+- Item "Central Operacional" no topo da sidebar; `/ops` continua como Dashboard secundário.
 
-## Fase 2 — Sugestão Inteligente para Novos Fretes
+**Layout (grid 12 colunas)**
+```text
+┌───────────────────── KPIs (linha topo) ─────────────────────┐
+│ Fretes ativos · Motoristas online · Aguardando · Em coleta │
+│ Em trânsito · Próximos · Entregues hoje · KM · Ocorrências  │
+├──────────────────────────────┬──────────────────────────────┤
+│                              │  🚚 Aguardando Despacho      │
+│                              │  (cards + botão DESPACHAR)   │
+│      MAPA OPERACIONAL        ├──────────────────────────────┤
+│      (Mapbox, 70%)           │  🟦 Em Andamento             │
+│      + filtros flutuantes    │  (cards com ETA e %)         │
+│                              ├──────────────────────────────┤
+│                              │  🔔 Central de Alertas       │
+└──────────────────────────────┴──────────────────────────────┘
+```
 
-- No wizard `/ops/pedidos/novo`, ao definir coleta, chamar server function que:
-  - Busca veículos com `drivers.status='available'` e localização recente.
-  - Calcula distância haversine e ETA (Mapbox Directions via connector).
-  - Retorna top 5 veículos e top 5 motoristas com distância, tempo, situação e KM até coleta.
-- Bloqueia seleção de veículos indisponíveis.
-- Destaca no mapa (Fase 1) os candidatos com halo.
+**Mapa** — reaproveita `FleetMap` (Fase 1 anterior) com:
+- Veículos coloridos por status (9 cores já definidas).
+- Camada de rotas ativas (linhas origem→destino usando `orders.origin/destination_lat/lng`).
+- Filtros flutuantes: cidade, motorista, cliente, status, veículo, equipe, data.
 
-## Fase 3 — Heatmap, Geofences e Replay
+**Colunas laterais**
+- **Aguardando Despacho**: pedidos em `preparing`/`awaiting_driver` sem `driver_id`. Cada card: cliente, cidade origem→destino, peso, janela de coleta, valor, prioridade, botão **DESPACHAR** (Fase 2 abrirá sugestão inteligente; Fase 1 já leva ao pedido).
+- **Fretes em Andamento**: pedidos em status ativos com motorista/veículo, distância restante, ETA, % concluído (barra), status; clique abre o pedido.
+- **Central de Alertas**: derivada em tempo real de `orders`, `driver_locations`, `incidents`, `freight_offers` e `drivers`. Regras (todas puramente derivadas, sem tabela nova nesta fase):
+  - Motorista recusou frete (`freight_offers.status='declined'` últimas 24h)
+  - Motorista negociando (`freight_offers.status='negotiating'` ou entrada em `negotiations`)
+  - Veículo parado >30min em rota ativa (último `driver_locations.speed_kmh < 3`)
+  - GPS desconectado (sem ping >10min em rota ativa)
+  - Ocorrência aberta (`incidents.resolved_at is null`)
+  - Entrega atrasada (`delivery_window_end < now()` e status ≠ delivered)
+  - Motorista offline em pedido ativo (`drivers.status='offline'`)
+  - Documentação vencendo (CNH/CRLV/ANTT em ≤30 dias)
+  - Cada alerta com severidade (info/warn/critical) e link para pedido/motorista.
 
-- Camada Heatmap Mapbox: concentração de veículos + entregas (últimos 7 dias).
-- Nova tabela `geofences` (base, cliente, CD, coleta, entrega) com centro + raio; trigger que atualiza status/notifica ao entrar/sair (reaproveita `tg_after_driver_location`).
-- Replay de rota reaproveitando `route_summaries.replay_geojson` — player com timeline, velocidade, paradas.
+**KPIs (topo)** — agregados a partir de `orders`, `drivers`, `route_summaries`:
+- Fretes ativos, Motoristas online, Motoristas disponíveis, Veículos disponíveis, Em viagem, Aguardando motorista, Em coleta, Em trânsito, Próximos, Entregues hoje, Ocorrências abertas, Tempo médio de entrega (7 dias), KM rodados hoje.
 
-## Fase 4 — Alertas e Dashboard Operacional
+**Realtime** — 1 canal Supabase assinando `orders`, `driver_locations`, `incidents`, `freight_offers`, `drivers`, `vehicles` → invalida as queries relevantes. Refetch fallback a cada 20s.
 
-- Tabela `fleet_alerts` + job pg_cron chamando `/api/public/hooks/fleet-monitor` a cada 2 min.
-- Regras: veículo parado >30min, fora de rota (>500m do trajeto), atraso > previsto, GPS desconectado (sem ping >10min), perda de conexão.
-- Notifica admin/logística via `notifications` + toast realtime.
-- Dashboard operacional no topo do mapa: veículos ativos, motoristas ativos, fretes andando, entregas de hoje, tempo médio, KM rodados hoje, combustível estimado (KM × consumo médio do tipo), veículos parados.
+## Fase 2 — Despacho Inteligente, Painel do Motorista, Painel do Frete
+
+- **Modal de Despacho Inteligente** ao clicar em DESPACHAR: server function calcula top-5 motoristas ordenados por score (distância → tempo até coleta → disponibilidade → tipo/capacidade do veículo → rating → tempo parado → fretes do dia). Destaca ⭐ Melhor Opção. Usa Mapbox Matrix (via gateway) para distâncias/tempos reais e reaproveita `send_program_to_driver()` já existente.
+- **Painel lateral do Motorista** (clicar em marcador): foto, contatos (ligar/WhatsApp), status, veículo, frete atual + valor + tempo restante, última atualização/GPS, histórico recente, botão "Ver rota".
+- **Painel lateral do Frete** (clicar em card/marcador do pedido): timeline (`order_events`), mapa, cliente, motorista, equipe, carga/peso/volumes, documentos (`order_attachments`), ocorrências, fotos, chat resumido com link para o thread completo.
+
+## Fase 3 — Financeiro rápido, Agenda, Chat operacional, Replay, Notificações
+
+- **Central Financeira Rápida** (cards): receitas do dia (`orders.price` entregues hoje), despesas do dia (`freight_costs`), lucro previsto, fretes faturados/pendentes, motoristas aguardando pagamento, clientes inadimplentes. Requer view SQL `v_ops_finance_daily`.
+- **Agenda Operacional**: timeline cronológica das próximas 24h por pedido (coleta → carga → saída → entrega → retorno) com edição inline das janelas.
+- **Chat Operacional**: um canal geral (nova tabela `channel_messages`) + link para o chat existente por pedido (`messages`).
+- **Replay**: player usando `route_summaries.replay_geojson` (saída/paradas/coleta/entrega/retorno com velocidade e tempo parado).
+- **Central de Notificações**: dropdown consumindo `notifications` já existente com filtros (nova, aceita, recusa, negociação, coleta, entrega, pagamento, ocorrência).
 
 ---
 
 ## Detalhes técnicos
 
-- Mapbox GL JS via `VITE_LOVABLE_CONNECTOR_MAPBOX_PUBLIC_TOKEN` (já conectado).
-- Directions/Matrix via gateway `MAPBOX_API_KEY` em server functions.
-- Cores de status mapeadas em `src/lib/vehicles.ts` (novo `FLEET_MAP_COLORS`).
-- Reaproveita: `driver_locations`, `route_summaries`, `orders`, `drivers`, `vehicles`, `tg_after_driver_location`, `finalize_route`.
-- Migrations necessárias: `geofences`, `fleet_alerts`, colunas `vehicles.avg_fuel_kmL` e `vehicles.current_lat/lng/last_seen_at`.
+- Reaproveita: `FleetMap`, `driver_locations`, `orders`, `drivers`, `vehicles`, `incidents`, `freight_offers`, `route_summaries`, `notifications`, `STATUS_LABEL`, `FLEET_MAP_COLORS`.
+- Novos arquivos Fase 1: `src/routes/_authenticated/ops.central.tsx`, `src/components/ops/kpi-bar.tsx`, `src/components/ops/dispatch-queue.tsx`, `src/components/ops/active-freights.tsx`, `src/components/ops/alerts-panel.tsx`, `src/lib/ops-central.ts` (regras de alerta + agregadores).
+- Sem migração nova na Fase 1. Fase 2/3 podem introduzir `channel_messages` e a view `v_ops_finance_daily`.
+- Redirecionamento pós-login: ajustar `src/lib/roles.ts` para mandar admin/logistics para `/ops/central`.
 
 ---
 
-**Começo pela Fase 1 assim que você aprovar.** Confirma seguir nessa ordem, ou quer priorizar outra fase primeiro (ex.: sugestão inteligente antes do heatmap)?
+**Começo pela Fase 1.** Confirma essa ordem, ou prefere Despacho Inteligente (Fase 2) primeiro?

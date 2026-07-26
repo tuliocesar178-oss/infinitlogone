@@ -3,8 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 export type AppRole = "admin" | "logistics" | "driver" | "client";
 
 const roleHome: Record<AppRole, string> = {
-  admin: "/admin",
-  logistics: "/ops",
+  admin: "/ops/central",
+  logistics: "/ops/central",
   driver: "/driver",
   client: "/rastreio",
 };
