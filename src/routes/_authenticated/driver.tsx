@@ -228,7 +228,7 @@ function ActiveOrderPanel({ order, userId, onChanged }: { order: Order; userId: 
       } catch {}
       await supabase.from("order_events").insert({
         order_id: order.id, event_type: `driver_${action}`,
-        from_status: from, to_status: to, actor_id: userId,
+        from_status: from as never, to_status: to as never, actor_id: userId,
         payload: { lat, lng },
       });
       toast.success(ACTION_LABEL[action]);
