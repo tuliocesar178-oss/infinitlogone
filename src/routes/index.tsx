@@ -55,10 +55,16 @@ function LandingPage() {
               Rastrear
             </Link>
             <Link
+              to="/cadastro-motorista"
+              className="hidden rounded-full border border-border bg-background px-4 py-2 text-sm hover:bg-accent md:inline-flex"
+            >
+              Sou motorista
+            </Link>
+            <Link
               to="/auth"
               className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
             >
-              Área interna <ArrowRight className="h-3.5 w-3.5" />
+              Entrar <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
         </div>

@@ -104,10 +104,18 @@ function AuthPage() {
             </button>
           </form>
 
-          <p className="mt-6 text-center text-xs text-muted-foreground">
-            É cliente? Você não precisa entrar — use o{" "}
-            <Link to="/rastreio" className="underline hover:text-foreground">portal de rastreamento</Link>.
-          </p>
+          <div className="mt-6 space-y-2 text-center text-xs text-muted-foreground">
+            <div>
+              É motorista?{" "}
+              <Link to="/cadastro-motorista" className="font-medium text-primary underline hover:opacity-80">
+                Cadastre-se aqui
+              </Link>
+            </div>
+            <div>
+              É cliente? Você não precisa entrar — use o{" "}
+              <Link to="/rastreio" className="underline hover:text-foreground">portal de rastreamento</Link>.
+            </div>
+          </div>
 
           <style>{`
             .input {
