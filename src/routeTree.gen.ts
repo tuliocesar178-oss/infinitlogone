@@ -10,19 +10,26 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as RastreioRouteImport } from './routes/rastreio'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as RastreioCodeRouteImport } from './routes/rastreio.$code'
 import { Route as AuthenticatedOpsRouteImport } from './routes/_authenticated/ops'
-import { Route as AuthenticatedMeRouteImport } from './routes/_authenticated/me'
 import { Route as AuthenticatedDriverRouteImport } from './routes/_authenticated/driver'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedOpsPedidosNovoRouteImport } from './routes/_authenticated/ops.pedidos.novo'
+import { Route as AuthenticatedOpsPedidosIdRouteImport } from './routes/_authenticated/ops.pedidos.$id'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RastreioRoute = RastreioRouteImport.update({
+  id: '/rastreio',
+  path: '/rastreio',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -40,18 +47,13 @@ const IndexRoute = IndexRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const RastreioCodeRoute = RastreioCodeRouteImport.update({
-  id: '/rastreio/$code',
-  path: '/rastreio/$code',
-  getParentRoute: () => rootRouteImport,
+  id: '/$code',
+  path: '/$code',
+  getParentRoute: () => RastreioRoute,
 } as any)
 const AuthenticatedOpsRoute = AuthenticatedOpsRouteImport.update({
   id: '/ops',
   path: '/ops',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedMeRoute = AuthenticatedMeRouteImport.update({
-  id: '/me',
-  path: '/me',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedDriverRoute = AuthenticatedDriverRouteImport.update({
@@ -69,85 +71,109 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedOpsPedidosNovoRoute =
+  AuthenticatedOpsPedidosNovoRouteImport.update({
+    id: '/pedidos/novo',
+    path: '/pedidos/novo',
+    getParentRoute: () => AuthenticatedOpsRoute,
+  } as any)
+const AuthenticatedOpsPedidosIdRoute =
+  AuthenticatedOpsPedidosIdRouteImport.update({
+    id: '/pedidos/$id',
+    path: '/pedidos/$id',
+    getParentRoute: () => AuthenticatedOpsRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/rastreio': typeof RastreioRouteWithChildren
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/app': typeof AuthenticatedAppRoute
   '/driver': typeof AuthenticatedDriverRoute
-  '/me': typeof AuthenticatedMeRoute
-  '/ops': typeof AuthenticatedOpsRoute
+  '/ops': typeof AuthenticatedOpsRouteWithChildren
   '/rastreio/$code': typeof RastreioCodeRoute
+  '/ops/pedidos/$id': typeof AuthenticatedOpsPedidosIdRoute
+  '/ops/pedidos/novo': typeof AuthenticatedOpsPedidosNovoRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/rastreio': typeof RastreioRouteWithChildren
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/app': typeof AuthenticatedAppRoute
   '/driver': typeof AuthenticatedDriverRoute
-  '/me': typeof AuthenticatedMeRoute
-  '/ops': typeof AuthenticatedOpsRoute
+  '/ops': typeof AuthenticatedOpsRouteWithChildren
   '/rastreio/$code': typeof RastreioCodeRoute
+  '/ops/pedidos/$id': typeof AuthenticatedOpsPedidosIdRoute
+  '/ops/pedidos/novo': typeof AuthenticatedOpsPedidosNovoRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/rastreio': typeof RastreioRouteWithChildren
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/app': typeof AuthenticatedAppRoute
   '/_authenticated/driver': typeof AuthenticatedDriverRoute
-  '/_authenticated/me': typeof AuthenticatedMeRoute
-  '/_authenticated/ops': typeof AuthenticatedOpsRoute
+  '/_authenticated/ops': typeof AuthenticatedOpsRouteWithChildren
   '/rastreio/$code': typeof RastreioCodeRoute
+  '/_authenticated/ops/pedidos/$id': typeof AuthenticatedOpsPedidosIdRoute
+  '/_authenticated/ops/pedidos/novo': typeof AuthenticatedOpsPedidosNovoRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/auth'
+    | '/rastreio'
     | '/sitemap.xml'
     | '/admin'
     | '/app'
     | '/driver'
-    | '/me'
     | '/ops'
     | '/rastreio/$code'
+    | '/ops/pedidos/$id'
+    | '/ops/pedidos/novo'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
+    | '/rastreio'
     | '/sitemap.xml'
     | '/admin'
     | '/app'
     | '/driver'
-    | '/me'
     | '/ops'
     | '/rastreio/$code'
+    | '/ops/pedidos/$id'
+    | '/ops/pedidos/novo'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/rastreio'
     | '/sitemap.xml'
     | '/_authenticated/admin'
     | '/_authenticated/app'
     | '/_authenticated/driver'
-    | '/_authenticated/me'
     | '/_authenticated/ops'
     | '/rastreio/$code'
+    | '/_authenticated/ops/pedidos/$id'
+    | '/_authenticated/ops/pedidos/novo'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  RastreioRoute: typeof RastreioRouteWithChildren
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
-  RastreioCodeRoute: typeof RastreioCodeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -157,6 +183,13 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rastreio': {
+      id: '/rastreio'
+      path: '/rastreio'
+      fullPath: '/rastreio'
+      preLoaderRoute: typeof RastreioRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -182,23 +215,16 @@ declare module '@tanstack/react-router' {
     }
     '/rastreio/$code': {
       id: '/rastreio/$code'
-      path: '/rastreio/$code'
+      path: '/$code'
       fullPath: '/rastreio/$code'
       preLoaderRoute: typeof RastreioCodeRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof RastreioRoute
     }
     '/_authenticated/ops': {
       id: '/_authenticated/ops'
       path: '/ops'
       fullPath: '/ops'
       preLoaderRoute: typeof AuthenticatedOpsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/me': {
-      id: '/_authenticated/me'
-      path: '/me'
-      fullPath: '/me'
-      preLoaderRoute: typeof AuthenticatedMeRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/driver': {
@@ -222,45 +248,72 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ops/pedidos/novo': {
+      id: '/_authenticated/ops/pedidos/novo'
+      path: '/pedidos/novo'
+      fullPath: '/ops/pedidos/novo'
+      preLoaderRoute: typeof AuthenticatedOpsPedidosNovoRouteImport
+      parentRoute: typeof AuthenticatedOpsRoute
+    }
+    '/_authenticated/ops/pedidos/$id': {
+      id: '/_authenticated/ops/pedidos/$id'
+      path: '/pedidos/$id'
+      fullPath: '/ops/pedidos/$id'
+      preLoaderRoute: typeof AuthenticatedOpsPedidosIdRouteImport
+      parentRoute: typeof AuthenticatedOpsRoute
+    }
   }
 }
+
+interface AuthenticatedOpsRouteChildren {
+  AuthenticatedOpsPedidosIdRoute: typeof AuthenticatedOpsPedidosIdRoute
+  AuthenticatedOpsPedidosNovoRoute: typeof AuthenticatedOpsPedidosNovoRoute
+}
+
+const AuthenticatedOpsRouteChildren: AuthenticatedOpsRouteChildren = {
+  AuthenticatedOpsPedidosIdRoute: AuthenticatedOpsPedidosIdRoute,
+  AuthenticatedOpsPedidosNovoRoute: AuthenticatedOpsPedidosNovoRoute,
+}
+
+const AuthenticatedOpsRouteWithChildren =
+  AuthenticatedOpsRoute._addFileChildren(AuthenticatedOpsRouteChildren)
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedAppRoute: typeof AuthenticatedAppRoute
   AuthenticatedDriverRoute: typeof AuthenticatedDriverRoute
-  AuthenticatedMeRoute: typeof AuthenticatedMeRoute
-  AuthenticatedOpsRoute: typeof AuthenticatedOpsRoute
+  AuthenticatedOpsRoute: typeof AuthenticatedOpsRouteWithChildren
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedAppRoute: AuthenticatedAppRoute,
   AuthenticatedDriverRoute: AuthenticatedDriverRoute,
-  AuthenticatedMeRoute: AuthenticatedMeRoute,
-  AuthenticatedOpsRoute: AuthenticatedOpsRoute,
+  AuthenticatedOpsRoute: AuthenticatedOpsRouteWithChildren,
 }
 
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface RastreioRouteChildren {
+  RastreioCodeRoute: typeof RastreioCodeRoute
+}
+
+const RastreioRouteChildren: RastreioRouteChildren = {
+  RastreioCodeRoute: RastreioCodeRoute,
+}
+
+const RastreioRouteWithChildren = RastreioRoute._addFileChildren(
+  RastreioRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  RastreioRoute: RastreioRouteWithChildren,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
-  RastreioCodeRoute: RastreioCodeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

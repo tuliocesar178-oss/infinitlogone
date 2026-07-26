@@ -6,13 +6,13 @@ const roleHome: Record<AppRole, string> = {
   admin: "/admin",
   logistics: "/ops",
   driver: "/driver",
-  client: "/me",
+  client: "/rastreio",
 };
 
 const rolePriority: AppRole[] = ["admin", "logistics", "driver", "client"];
 
 export function homeForRole(role: AppRole | null | undefined): string {
-  if (!role) return "/me";
+  if (!role) return "/rastreio";
   return roleHome[role];
 }
 
