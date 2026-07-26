@@ -1,9 +1,54 @@
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
-import { LogOut } from "lucide-react";
-import type { ReactNode } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import {
+  AlertTriangle,
+  BarChart3,
+  Bell,
+  DollarSign,
+  LayoutGrid,
+  LogOut,
+  MapPin,
+  Package,
+  PanelLeft,
+  Settings,
+  Truck,
+  Users,
+  Wallet,
+} from "lucide-react";
+import { useEffect, useState, type ReactNode } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Logo } from "@/components/logo";
+
+type NavItem = {
+  label: string;
+  to?: string;
+  icon: React.ComponentType<{ className?: string }>;
+  match?: (path: string) => boolean;
+};
+
+const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
+  {
+    label: "Operacional",
+    items: [
+      { label: "Dashboard", to: "/ops", icon: LayoutGrid, match: (p) => p === "/ops" },
+      { label: "Entregas", to: "/ops", icon: Package, match: (p) => p.startsWith("/ops/pedidos") },
+      { label: "Motoristas", to: "/ops/motoristas", icon: Truck, match: (p) => p.startsWith("/ops/motoristas") },
+      { label: "Equipe", icon: Users },
+      { label: "Veículos", icon: Truck },
+      { label: "Rastreamento", icon: MapPin },
+      { label: "Ocorrências", icon: AlertTriangle },
+    ],
+  },
+  {
+    label: "Gestão",
+    items: [
+      { label: "Relatórios", icon: BarChart3 },
+      { label: "Faturamento", icon: DollarSign },
+      { label: "Financeiro", icon: Wallet },
+      { label: "Configurações", icon: Settings },
+    ],
+  },
+];
 
 export function AppShell({
   title,
@@ -18,6 +63,36 @@ export function AppShell({
 }) {
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const path = useRouterState({ select: (s) => s.location.pathname });
+  const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const { data: me } = useQuery({
+    queryKey: ["me-shell"],
+    queryFn: async () => {
+      const { data } = await supabase.auth.getUser();
+      const user = data.user;
+      if (!user) return null;
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", user.id)
+        .maybeSingle();
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id);
+      return {
+        email: user.email ?? "",
+        name: profile?.full_name ?? user.email?.split("@")[0] ?? "Usuário",
+        role: roles?.[0]?.role ?? "user",
+      };
+    },
+  });
+
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [path]);
 
   async function signOut() {
     await qc.cancelQueries();
@@ -26,33 +101,168 @@ export function AppShell({
     navigate({ to: "/auth", replace: true });
   }
 
+  const roleLabel: Record<string, string> = {
+    admin: "Administrador",
+    logistics: "Logística",
+    driver: "Motorista",
+    user: "Usuário",
+  };
+
+  const initials = (me?.name ?? "?")
+    .split(" ")
+    .map((s) => s[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+
   return (
-    <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-30 border-b border-border/60 bg-background/80 backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-6">
-          <Link to="/" aria-label="InfinitLog">
-            <Logo size={32} />
+    <div className="min-h-screen bg-surface-2 text-foreground">
+      {/* Sidebar */}
+      <aside
+        className={`fixed inset-y-0 left-0 z-40 flex flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-all duration-200 ${
+          collapsed ? "w-[76px]" : "w-64"
+        } ${mobileOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0`}
+      >
+        <div className="flex h-16 items-center gap-3 border-b border-sidebar-border/60 px-5">
+          <Link to="/" aria-label="InfinitLog" className="flex items-center gap-3">
+            <Logo size={30} withWordmark={false} />
+            {!collapsed && (
+              <div className="leading-tight">
+                <div className="text-[15px] font-semibold tracking-tight">InfinitLog</div>
+                <div className="text-[10px] font-medium uppercase tracking-[0.18em] text-sidebar-foreground/60">
+                  Transportes
+                </div>
+              </div>
+            )}
           </Link>
+        </div>
+
+        <nav className="flex-1 overflow-y-auto px-3 py-4">
+          {NAV_GROUPS.map((group) => (
+            <div key={group.label} className="mb-6">
+              {!collapsed && (
+                <div className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-sidebar-foreground/40">
+                  {group.label}
+                </div>
+              )}
+              <ul className="space-y-1">
+                {group.items.map((item) => {
+                  const active = item.match ? item.match(path) : false;
+                  const Icon = item.icon;
+                  const inner = (
+                    <span
+                      className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
+                        active
+                          ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                          : "text-sidebar-foreground/75 hover:bg-white/5 hover:text-sidebar-foreground"
+                      } ${collapsed ? "justify-center" : ""}`}
+                    >
+                      <Icon className="h-[18px] w-[18px] shrink-0" />
+                      {!collapsed && <span className="truncate">{item.label}</span>}
+                    </span>
+                  );
+                  return (
+                    <li key={item.label}>
+                      {item.to ? (
+                        <Link to={item.to}>{inner}</Link>
+                      ) : (
+                        <button
+                          type="button"
+                          className="w-full text-left opacity-60"
+                          title="Em breve"
+                        >
+                          {inner}
+                        </button>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
+        </nav>
+
+        <div className="border-t border-sidebar-border/60 p-3">
           <button
             onClick={signOut}
-            className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-4 py-2 text-sm hover:bg-accent"
+            className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-sidebar-foreground/75 hover:bg-white/5 hover:text-sidebar-foreground ${
+              collapsed ? "justify-center" : ""
+            }`}
           >
-            <LogOut className="h-4 w-4" /> Sair
+            <LogOut className="h-[18px] w-[18px]" />
+            {!collapsed && <span>Sair</span>}
           </button>
         </div>
-      </header>
-      <main className="mx-auto max-w-7xl px-6 py-10">
-        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 sm:flex sm:flex-wrap sm:justify-between">
-          <div className="min-w-0">
-            <h1 className="truncate text-3xl font-semibold tracking-tight sm:text-4xl">{title}</h1>
-            {subtitle && (
-              <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
-            )}
+      </aside>
+
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/40 lg:hidden"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
+      {/* Main */}
+      <div className={`${collapsed ? "lg:pl-[76px]" : "lg:pl-64"} transition-all duration-200`}>
+        <header className="sticky top-0 z-20 border-b border-border/60 bg-background/85 backdrop-blur">
+          <div className="flex h-16 items-center justify-between gap-4 px-4 sm:px-6">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setMobileOpen(true)}
+                className="grid h-9 w-9 place-items-center rounded-lg text-muted-foreground hover:bg-accent lg:hidden"
+                aria-label="Abrir menu"
+              >
+                <PanelLeft className="h-5 w-5" />
+              </button>
+              <button
+                onClick={() => setCollapsed((v) => !v)}
+                className="hidden h-9 w-9 place-items-center rounded-lg text-muted-foreground hover:bg-accent lg:grid"
+                aria-label="Alternar menu"
+              >
+                <PanelLeft className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                className="relative grid h-10 w-10 place-items-center rounded-full text-muted-foreground hover:bg-accent"
+                aria-label="Notificações"
+              >
+                <Bell className="h-5 w-5" />
+                <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-brand" />
+              </button>
+              <div className="flex items-center gap-3 rounded-full py-1 pl-1 pr-3 hover:bg-accent">
+                <span className="grid h-9 w-9 place-items-center rounded-full bg-brand text-[13px] font-semibold text-brand-foreground">
+                  {initials || "?"}
+                </span>
+                <div className="hidden text-left leading-tight sm:block">
+                  <div className="max-w-[140px] truncate text-sm font-semibold">
+                    {me?.name ?? "—"}
+                  </div>
+                  <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                    {roleLabel[me?.role ?? "user"]}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-          {actions && <div className="shrink-0">{actions}</div>}
-        </div>
-        <div className="mt-10">{children}</div>
-      </main>
+        </header>
+
+        <main className="px-4 py-8 sm:px-8 sm:py-10">
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 sm:flex sm:flex-wrap sm:items-center sm:justify-between">
+            <div className="min-w-0">
+              <h1 className="truncate text-2xl font-semibold tracking-tight sm:text-3xl">
+                {title}
+              </h1>
+              {subtitle && (
+                <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
+              )}
+            </div>
+            {actions && <div className="shrink-0">{actions}</div>}
+          </div>
+          <div className="mt-8">{children}</div>
+        </main>
+      </div>
     </div>
   );
 }

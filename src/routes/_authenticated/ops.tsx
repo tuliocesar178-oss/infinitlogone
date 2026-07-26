@@ -2,13 +2,48 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/app-shell";
-import { AlertTriangle, ArrowRight, Package, Plus, Truck, TruckIcon } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowRight,
+  CheckCircle2,
+  Clock,
+  MapPin,
+  Package,
+  Plus,
+  TrendingUp,
+  Truck,
+  TruckIcon,
+  XCircle,
+} from "lucide-react";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { OPS_CARDS, STATUS_LABEL } from "@/lib/order-status";
 
 export const Route = createFileRoute("/_authenticated/ops")({
   head: () => ({ meta: [{ title: "Logística — InfinitLog" }, { name: "robots", content: "noindex" }] }),
   component: OpsDashboard,
 });
+
+const TINTS: Record<
+  string,
+  { bg: string; fg: string; icon: React.ComponentType<{ className?: string }> }
+> = {
+  total: { bg: "bg-brand/10", fg: "text-brand", icon: Package },
+  today: { bg: "bg-sky-100", fg: "text-sky-600", icon: Clock },
+  transit: { bg: "bg-indigo-100", fg: "text-indigo-600", icon: Truck },
+  delivered: { bg: "bg-emerald-100", fg: "text-emerald-600", icon: CheckCircle2 },
+  waiting: { bg: "bg-amber-100", fg: "text-amber-700", icon: Clock },
+  incident: { bg: "bg-red-100", fg: "text-red-600", icon: AlertTriangle },
+  cancelled: { bg: "bg-rose-100", fg: "text-rose-600", icon: XCircle },
+  rate: { bg: "bg-emerald-100", fg: "text-emerald-600", icon: TrendingUp },
+};
 
 function OpsDashboard() {
   const { data: orders } = useQuery({
@@ -25,17 +60,6 @@ function OpsDashboard() {
     },
   });
 
-  const { data: driversAvailable } = useQuery({
-    queryKey: ["drivers-available"],
-    queryFn: async () => {
-      const { count } = await supabase
-        .from("drivers")
-        .select("*", { count: "exact", head: true })
-        .eq("status", "available");
-      return count ?? 0;
-    },
-  });
-
   const grouped = new Map<string, typeof orders>();
   for (const card of OPS_CARDS) grouped.set(card.key, []);
   for (const o of orders ?? []) {
@@ -47,55 +71,138 @@ function OpsDashboard() {
     }
   }
 
+  // Stats
+  const list = orders ?? [];
+  const today = new Date().toISOString().slice(0, 10);
+  const isSameDay = (d: string | null) => d?.slice(0, 10) === today;
+  const transitStatuses = ["in_transit", "out_for_delivery", "near_destination", "picked_up"];
+  const waitingStatuses = ["preparing", "awaiting_pickup", "offered"];
+  const deliveredCount = list.filter((o) => o.status === "delivered").length;
+  const cancelledCount = list.filter((o) => o.status === "cancelled").length;
+  const finished = deliveredCount + cancelledCount;
+  const deliveryRate = finished > 0 ? Math.round((deliveredCount / finished) * 100) : 0;
+
+  const stats = [
+    { key: "total", label: "Total", value: list.length },
+    { key: "today", label: "Hoje", value: list.filter((o) => isSameDay(o.created_at)).length },
+    { key: "transit", label: "Em trânsito", value: list.filter((o) => transitStatuses.includes(o.status)).length },
+    { key: "delivered", label: "Entregues", value: deliveredCount },
+    { key: "waiting", label: "Aguardando coleta", value: list.filter((o) => waitingStatuses.includes(o.status)).length },
+    { key: "incident", label: "Ocorrências", value: list.filter((o) => o.status === "incident").length },
+    { key: "cancelled", label: "Canceladas", value: cancelledCount },
+    { key: "rate", label: "Taxa de entrega", value: `${deliveryRate}%` },
+  ];
+
+  // 7-day chart
+  const days: { label: string; date: string; count: number }[] = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const iso = d.toISOString().slice(0, 10);
+    days.push({
+      date: iso,
+      label: d.toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", ""),
+      count: list.filter((o) => o.created_at?.slice(0, 10) === iso).length,
+    });
+  }
+
   return (
     <AppShell
-      title="Central de Logística"
-      subtitle="Cadastre pedidos, envie ofertas e acompanhe entregas."
+      title={`${greet()}, ${firstName()}`}
+      subtitle="Visão geral da operação em tempo real."
       actions={
-        <div className="flex gap-2">
-          <Link
-            to="/ops/motoristas"
-            className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-4 py-2.5 text-sm hover:bg-accent"
-          >
-            <TruckIcon className="h-4 w-4" /> Motoristas
-          </Link>
-          <Link
-            to="/ops/pedidos/novo"
-            className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90"
-          >
-            <Plus className="h-4 w-4" /> Novo pedido
-          </Link>
-        </div>
+        <Link
+          to="/ops/pedidos/novo"
+          className="inline-flex items-center gap-2 rounded-full bg-brand px-5 py-2.5 text-sm font-semibold text-brand-foreground shadow-sm hover:opacity-90"
+        >
+          <Plus className="h-4 w-4" /> Nova entrega
+        </Link>
       }
     >
+      {/* Stat cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {OPS_CARDS.map((c) => (
-          <a
-            key={c.key}
-            href={`#lista-${c.key}`}
-            className="card-soft p-6 transition hover:shadow-md"
-          >
-            <div className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-              {c.label}
+        {stats.map((s) => {
+          const tint = TINTS[s.key];
+          const Icon = tint.icon;
+          return (
+            <div key={s.key} className="card-soft p-5">
+              <div className="flex items-center gap-4">
+                <span className={`grid h-12 w-12 place-items-center rounded-2xl ${tint.bg} ${tint.fg}`}>
+                  <Icon className="h-5 w-5" />
+                </span>
+                <div className="min-w-0">
+                  <div className="text-xs font-medium text-muted-foreground">{s.label}</div>
+                  <div className="mt-1 text-2xl font-semibold tracking-tight tabular-nums">
+                    {s.value}
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="mt-3 text-3xl font-semibold tracking-tight">
-              {grouped.get(c.key)?.length ?? 0}
+          );
+        })}
+      </div>
+
+      {/* Chart + Map */}
+      <div className="mt-6 grid gap-4 lg:grid-cols-3">
+        <div className="card-soft p-6 lg:col-span-2">
+          <div className="flex items-baseline justify-between">
+            <div>
+              <h2 className="text-base font-semibold tracking-tight">Entregas nos últimos 7 dias</h2>
+              <p className="text-xs text-muted-foreground">Volume diário criado no sistema</p>
             </div>
-          </a>
-        ))}
-        <div className="card-soft p-6">
-          <div className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-            Motoristas disponíveis
           </div>
-          <div className="mt-3 flex items-center gap-2 text-3xl font-semibold tracking-tight">
-            <TruckIcon className="h-6 w-6 text-muted-foreground" />
-            {driversAvailable ?? 0}
+          <div className="mt-6 h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={days} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
+                <XAxis
+                  dataKey="label"
+                  tickLine={false}
+                  axisLine={false}
+                  tick={{ fill: "var(--color-muted-foreground)", fontSize: 12 }}
+                />
+                <YAxis
+                  tickLine={false}
+                  axisLine={false}
+                  allowDecimals={false}
+                  tick={{ fill: "var(--color-muted-foreground)", fontSize: 12 }}
+                />
+                <Tooltip
+                  cursor={{ fill: "var(--color-surface-2)" }}
+                  contentStyle={{
+                    background: "var(--color-card)",
+                    border: "1px solid var(--color-border)",
+                    borderRadius: 12,
+                    fontSize: 12,
+                  }}
+                />
+                <Bar dataKey="count" fill="var(--color-brand)" radius={[6, 6, 0, 0]} maxBarSize={44} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div className="card-soft p-6">
+          <div className="flex items-center gap-2">
+            <MapPin className="h-4 w-4 text-brand" />
+            <h2 className="text-base font-semibold tracking-tight">Mapa</h2>
+          </div>
+          <p className="text-xs text-muted-foreground">Visualização em tempo real</p>
+          <div className="mt-6 grid h-64 place-items-center rounded-2xl bg-surface-2 text-center">
+            <div>
+              <MapPin className="mx-auto h-8 w-8 text-brand" />
+              <div className="mt-3 text-sm font-medium">Abrir rastreamento ao vivo</div>
+              <p className="mx-auto mt-1 max-w-[220px] text-xs text-muted-foreground">
+                Acompanhe as entregas em andamento no mapa completo.
+              </p>
+            </div>
           </div>
         </div>
       </div>
 
       <NearDeliveriesPanel />
 
+      {/* Order lists */}
       <div className="mt-10 space-y-10">
         {OPS_CARDS.map((c) => {
           const list = grouped.get(c.key) ?? [];
@@ -120,14 +227,14 @@ function OpsDashboard() {
                     params={{ id: o.id }}
                     className="card-soft flex items-center gap-4 p-4 transition hover:shadow-md"
                   >
-                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-surface-2">
-                      <Truck className="h-5 w-5 text-muted-foreground" />
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-brand/10 text-brand">
+                      <Truck className="h-5 w-5" />
                     </span>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         <div className="truncate font-semibold">{o.code}</div>
                         {o.priority && o.priority !== "normal" && (
-                          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-primary">
+                          <span className="rounded-full bg-brand/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-brand">
                             {o.priority}
                           </span>
                         )}
@@ -149,7 +256,7 @@ function OpsDashboard() {
 
         {(orders?.length ?? 0) === 0 && (
           <div className="card-soft grid place-items-center p-16 text-center">
-            <span className="grid h-14 w-14 place-items-center rounded-2xl bg-surface-2 text-muted-foreground">
+            <span className="grid h-14 w-14 place-items-center rounded-2xl bg-brand/10 text-brand">
               <Package className="h-6 w-6" />
             </span>
             <h2 className="mt-6 text-xl font-semibold tracking-tight">Nenhum pedido ainda</h2>
@@ -158,15 +265,26 @@ function OpsDashboard() {
             </p>
             <Link
               to="/ops/pedidos/novo"
-              className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90"
+              className="mt-6 inline-flex items-center gap-2 rounded-full bg-brand px-5 py-2.5 text-sm font-semibold text-brand-foreground hover:opacity-90"
             >
-              <Plus className="h-4 w-4" /> Novo pedido
+              <Plus className="h-4 w-4" /> Nova entrega
             </Link>
           </div>
         )}
       </div>
     </AppShell>
   );
+}
+
+function greet() {
+  const h = new Date().getHours();
+  if (h < 12) return "Bom dia";
+  if (h < 18) return "Boa tarde";
+  return "Boa noite";
+}
+
+function firstName() {
+  return "operação";
 }
 
 function NearDeliveriesPanel() {
@@ -194,7 +312,7 @@ function NearDeliveriesPanel() {
   return (
     <section className="mt-8">
       <header className="mb-4 flex items-center gap-2">
-        <Truck className="h-4 w-4 text-primary" />
+        <TruckIcon className="h-4 w-4 text-brand" />
         <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
           Entregas próximas · ao vivo
         </h2>
@@ -219,7 +337,7 @@ function NearDeliveriesPanel() {
               <div className="text-right">
                 <div
                   className={`text-lg font-bold tabular-nums ${
-                    near ? "text-primary" : "text-foreground"
+                    near ? "text-brand" : "text-foreground"
                   }`}
                 >
                   {km.toFixed(1)} km
