@@ -1,80 +1,55 @@
-## Módulo Veículos — Plano de Execução
+# Central Inteligente de Controle da Frota
 
-Escopo enorme. Vou entregar em **4 fases**, cada uma funcional (sem telas "Em Breve"). Confirme fase a fase.
+Transforma `/ops/veiculos` em um mapa Mapbox em tela cheia estilo Uber, com veículos, motoristas e entregas em tempo real, filtros, sugestão inteligente de veículos para novos fretes, heatmap, geofences, replay de rotas e alertas.
 
----
-
-### Fase 1 — Fundação, Listagem, Cadastro e Documentos
-
-**Banco de dados** (migration única):
-- Extender `vehicles`: `photo_url`, `chassis`, `color`, `capacity_m3`, `axles`, `body_type`, `category`, `renavam`, `crlv_expires_at`, `licensing_expires_at`, `insurance_company`, `insurance_policy`, `insurance_expires_at`, `antt_number`, `antt_expires_at`, `ipva_expires_at`, `acquisition_date`, `owner_company`, `notes`, `current_km`, `current_city`, `current_state`, `current_lat`, `current_lng`, `current_speed_kmh`, `battery_level`, `last_location_at`, `status` (novo enum `vehicle_status`).
-- Novo enum `vehicle_status`: `disponivel, em_coleta, em_transito, em_entrega, retornando, manutencao, bloqueado, reserva, offline`.
-- Nova tabela `vehicle_types` (semeada com os 12 tipos + permite adicionar).
-- Nova tabela `vehicle_documents` (kind, label, file_path, expires_at, mime_type, size_bytes).
-- Bucket privado `vehicle-files` para fotos/docs.
-- RLS: staff (admin/logistics) gerencia tudo; motoristas leem apenas o veículo vinculado.
-
-**Frontend**:
-- `/ops/veiculos` — listagem com cards/tabela, busca, filtros (status/tipo/motorista), ordenação, paginação.
-- `/ops/veiculos/novo` e `/ops/veiculos/$id` — cadastro completo em abas: **Geral | Documentos | Manutenção | Abastecimentos | Multas | Histórico | Mapa**. Nas Fases 2–4 as abas ganham conteúdo real.
-- Aba **Geral** e **Documentos** entregues nesta fase, com upload de foto e anexos com validade.
-- Habilitar link "Veículos" no `app-shell.tsx`.
-- Constantes em `src/lib/vehicles.ts` (status, cores, tipos, badges).
+Como é uma entrega grande, proponho executar em **4 fases**, cada uma testável antes da próxima.
 
 ---
 
-### Fase 2 — Manutenções, Abastecimentos, Multas e Lembretes
+## Fase 1 — Mapa em tempo real + Card de Disponibilidade
 
-**Banco**:
-- `vehicle_maintenances` (kind, date, km, cost, supplier, notes, attachments)
-- `vehicle_refuelings` (date, station, city, liters, price_per_liter, total, km, driver_id, receipt_url) — trigger calcula consumo médio
-- `vehicle_fines` (number, agency, date, amount, driver_id, status: pago/pendente/recorrido, doc_url)
-- `vehicle_reminders` (view materializada / função que agrega vencimentos: seguro, IPVA, CNH motorista, licenciamento, ANTT, próxima manutenção por KM/tempo)
-- Job/função `notify_vehicle_reminders` que enfileira em `notifications` para staff.
+Substitui a listagem atual por um mapa em tela cheia.
 
-**Frontend**:
-- Abas de Manutenção, Abastecimento e Multas ativas com CRUD, upload de comprovantes/NFs.
-- Painel de **Lembretes** em `/ops/veiculos` (topo) e no dashboard operacional.
-- Cálculo automático de consumo médio exibido no header do veículo.
+- Nova rota principal: `/ops/veiculos` = mapa. A listagem atual vira `/ops/veiculos/lista`.
+- Marcadores coloridos por status (9 cores conforme especificado).
+- Painel lateral com card **Disponibilidade da Frota** (Total, Disponíveis, Em Viagem, Em Coleta, Carregando, Próximos, Retornando, Manutenção, Offline).
+- Filtros: cidade, estado, motorista, tipo de veículo, status, cliente.
+- Popup ao clicar no veículo com: foto, placa, modelo, motorista, telefone, cliente, origem/destino, status, velocidade, KM restantes, ETA, % da rota, carga/peso/volumes, última atualização.
+- Realtime: assinatura em `driver_locations` e `orders` via Supabase Realtime.
+- Rotas ativas desenhadas usando `orders.origin_lat/lng`, `current_lat/lng`, `destination_lat/lng`.
 
----
+## Fase 2 — Sugestão Inteligente para Novos Fretes
 
-### Fase 3 — Localização, Mapa da Frota, Checklist e Integrações
+- No wizard `/ops/pedidos/novo`, ao definir coleta, chamar server function que:
+  - Busca veículos com `drivers.status='available'` e localização recente.
+  - Calcula distância haversine e ETA (Mapbox Directions via connector).
+  - Retorna top 5 veículos e top 5 motoristas com distância, tempo, situação e KM até coleta.
+- Bloqueia seleção de veículos indisponíveis.
+- Destaca no mapa (Fase 1) os candidatos com halo.
 
-**Banco**:
-- `vehicle_checklists` (order_id, driver_id, itens JSON, photos, has_issue, opened_incident_id)
-- Trigger: `has_issue = true` → cria `incidents` automaticamente.
-- Trigger em `orders`: ao atribuir motorista, vincular veículo atual; ao mudar status do pedido, atualizar `vehicles.status` conforme mapeamento (Coleta→em_coleta, Trânsito→em_transito, Entrega→em_entrega, Finalizado→disponivel).
-- Trigger em `driver_locations` atualiza `vehicles.current_lat/lng/city/state/speed/last_location_at` do veículo vinculado.
+## Fase 3 — Heatmap, Geofences e Replay
 
-**Frontend**:
-- Aba **Mapa** do veículo com Mapbox: pino ao vivo, cidade/estado, velocidade, última atualização, bateria.
-- `/ops/veiculos/mapa` — mapa consolidado da frota com todos os pinos coloridos por status, filtros e cards laterais.
-- Checklist de saída no app do motorista (`ActiveTripCard`) — obrigatório antes de "INICIAR DESLOCAMENTO", com anexo de fotos e abertura automática de ocorrência.
+- Camada Heatmap Mapbox: concentração de veículos + entregas (últimos 7 dias).
+- Nova tabela `geofences` (base, cliente, CD, coleta, entrega) com centro + raio; trigger que atualiza status/notifica ao entrar/sair (reaproveita `tg_after_driver_location`).
+- Replay de rota reaproveitando `route_summaries.replay_geojson` — player com timeline, velocidade, paradas.
 
----
+## Fase 4 — Alertas e Dashboard Operacional
 
-### Fase 4 — Dashboard da Frota, Histórico e Financeiro
-
-**Banco**:
-- `vehicle_expenses` (unificada: origem = manutenção | abastecimento | multa | seguro | ipva | licenciamento | pedágio) — populada por triggers das tabelas correspondentes.
-- Views: `vehicle_stats` (km percorridos, tempo em operação, custo/km, receita associada via `orders.price`).
-
-**Frontend**:
-- Aba **Histórico** do veículo: fretes realizados, motoristas, KM, ocorrências, custos, receitas.
-- `/ops/veiculos/dashboard` — KPIs (total, por status, KM, consumo médio, custo/km), rankings (mais utilizados, maior custo), gráficos Recharts.
-- Integração com módulo Financeiro (quando existir) via `vehicle_expenses`.
+- Tabela `fleet_alerts` + job pg_cron chamando `/api/public/hooks/fleet-monitor` a cada 2 min.
+- Regras: veículo parado >30min, fora de rota (>500m do trajeto), atraso > previsto, GPS desconectado (sem ping >10min), perda de conexão.
+- Notifica admin/logística via `notifications` + toast realtime.
+- Dashboard operacional no topo do mapa: veículos ativos, motoristas ativos, fretes andando, entregas de hoje, tempo médio, KM rodados hoje, combustível estimado (KM × consumo médio do tipo), veículos parados.
 
 ---
 
-### Detalhes técnicos
+## Detalhes técnicos
 
-- Enums novos criados via migration; após aprovação da migration, tipos regenerados antes do código TypeScript que os consome.
-- Mapbox reutiliza `trip-map.tsx` e `MAPBOX_PUBLIC_TOKEN` já conectado.
-- Todos os uploads em bucket `vehicle-files` (privado) via signed URLs.
-- RLS consistente com `is_staff()` e `has_role()`.
-- Documentos com validade dispararão lembretes via mesma pipeline de `notification_outbox`.
+- Mapbox GL JS via `VITE_LOVABLE_CONNECTOR_MAPBOX_PUBLIC_TOKEN` (já conectado).
+- Directions/Matrix via gateway `MAPBOX_API_KEY` em server functions.
+- Cores de status mapeadas em `src/lib/vehicles.ts` (novo `FLEET_MAP_COLORS`).
+- Reaproveita: `driver_locations`, `route_summaries`, `orders`, `drivers`, `vehicles`, `tg_after_driver_location`, `finalize_route`.
+- Migrations necessárias: `geofences`, `fleet_alerts`, colunas `vehicles.avg_fuel_kmL` e `vehicles.current_lat/lng/last_seen_at`.
 
 ---
 
-**Próximo passo**: executar **Fase 1** completa (migration + listagem + cadastro Geral/Documentos + navegação). Confirma para eu iniciar?
+**Começo pela Fase 1 assim que você aprovar.** Confirma seguir nessa ordem, ou quer priorizar outra fase primeiro (ex.: sugestão inteligente antes do heatmap)?
