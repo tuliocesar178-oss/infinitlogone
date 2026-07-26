@@ -76,19 +76,36 @@ export const PUBLIC_TIMELINE = [
   { key: "delivered", label: "Entregue" },
 ];
 
-export const OPS_CARDS: { key: string; label: string; statuses: string[] }[] = [
-  { key: "preparing", label: "Preparando para coleta", statuses: ["preparing", "created"] },
-  { key: "awaiting_driver", label: "Aguardando aceite do motorista", statuses: ["awaiting_driver"] },
-  {
-    key: "pickup",
-    label: "Em coleta",
-    statuses: ["driver_assigned", "en_route_pickup", "in_transit_to_pickup", "at_pickup"],
-  },
-  { key: "in_transit", label: "Em trânsito", statuses: ["picked_up", "loaded", "out_for_delivery", "in_transit"] },
-  { key: "near_destination", label: "Próximos da entrega", statuses: ["near_destination"] },
-  { key: "delivered", label: "Entregues hoje", statuses: ["delivered", "finalized"] },
-  { key: "incident", label: "Ocorrências", statuses: ["incident"] },
+export type DashboardCardKey =
+  | "preparing"
+  | "awaiting_driver"
+  | "offer_sent"
+  | "en_route_pickup"
+  | "at_pickup"
+  | "in_transit"
+  | "near_destination"
+  | "delivered_today"
+  | "incident";
+
+export const DASHBOARD_CARDS: {
+  key: DashboardCardKey;
+  label: string;
+  short: string;
+  statuses: string[];
+  tint: string;
+}[] = [
+  { key: "preparing", label: "Preparando para coleta", short: "Preparando", statuses: ["preparing", "created"], tint: "sky" },
+  { key: "awaiting_driver", label: "Aguardando motorista", short: "Aguardando", statuses: ["awaiting_driver"], tint: "amber" },
+  { key: "offer_sent", label: "Oferta enviada", short: "Oferta enviada", statuses: ["awaiting_driver"], tint: "violet" },
+  { key: "en_route_pickup", label: "Em deslocamento", short: "Em deslocamento", statuses: ["driver_assigned", "en_route_pickup", "in_transit_to_pickup"], tint: "blue" },
+  { key: "at_pickup", label: "Em coleta", short: "Em coleta", statuses: ["at_pickup", "picked_up", "loaded"], tint: "indigo" },
+  { key: "in_transit", label: "Em trânsito", short: "Em trânsito", statuses: ["out_for_delivery", "in_transit"], tint: "cyan" },
+  { key: "near_destination", label: "Próximo da entrega", short: "Próximo", statuses: ["near_destination"], tint: "teal" },
+  { key: "delivered_today", label: "Entregues hoje", short: "Entregues hoje", statuses: ["delivered", "finalized"], tint: "emerald" },
+  { key: "incident", label: "Ocorrências", short: "Ocorrências", statuses: ["incident"], tint: "red" },
 ];
+
+export const OPS_CARDS = DASHBOARD_CARDS.map((c) => ({ key: c.key, label: c.label, statuses: c.statuses }));
 
 export function trackingUrl(code: string): string {
   if (typeof window !== "undefined") return `${window.location.origin}/rastreio/${code}`;
