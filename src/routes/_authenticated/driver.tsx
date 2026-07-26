@@ -185,13 +185,13 @@ function DriverDashboard() {
                 </div>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => respond(offer.id, order.id, "decline")}
+                    onClick={() => order && respond(offer.id, order.id, "decline")}
                     className="inline-flex items-center gap-1 rounded-full border border-border bg-background px-4 py-2 text-sm hover:bg-accent"
                   >
                     <X className="h-4 w-4" /> Recusar
                   </button>
                   <button
-                    onClick={() => respond(offer.id, order.id, "accept")}
+                    onClick={() => order && respond(offer.id, order.id, "accept")}
                     className="inline-flex items-center gap-1 rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
                   >
                     <Check className="h-4 w-4" /> Aceitar
