@@ -233,12 +233,68 @@ function TrackingPage() {
               </div>
             </div>
 
-            {/* Map placeholder */}
-            <div className="card-soft mt-6 overflow-hidden p-0">
-              <div className="grid h-56 place-items-center bg-surface-2 text-xs text-muted-foreground">
-                Mapa em tempo real disponível em breve.
+            {/* Live map + approach mode */}
+            {(data.driver_lat != null && data.driver_lng != null) ||
+            (data.destination_lat != null && data.destination_lng != null) ? (
+              <div className="card-soft mt-6 overflow-hidden p-0">
+                {data.distance_to_destination_km != null &&
+                  data.distance_to_destination_km <= 20 &&
+                  current.key !== "delivered" && (
+                    <div className="flex items-center justify-between gap-4 border-b border-primary/20 bg-primary/5 px-6 py-3">
+                      <div>
+                        <div className="text-[10px] font-bold uppercase tracking-widest text-primary">
+                          Modo aproximação
+                        </div>
+                        <div className="mt-0.5 text-sm">
+                          Motorista a{" "}
+                          <span className="font-semibold">
+                            {data.distance_to_destination_km.toFixed(1)} km
+                          </span>{" "}
+                          do destino
+                          {data.eta_minutes != null && (
+                            <> · chega em ~{data.eta_minutes} min</>
+                          )}
+                        </div>
+                      </div>
+                      <div className="hidden text-right sm:block">
+                        <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                          Progresso
+                        </div>
+                        <div className="text-sm font-semibold">
+                          {data.initial_distance_km && data.initial_distance_km > 0
+                            ? `${Math.min(
+                                100,
+                                Math.round(
+                                  ((data.initial_distance_km -
+                                    data.distance_to_destination_km) /
+                                    data.initial_distance_km) *
+                                    100,
+                                ),
+                              )}%`
+                            : "—"}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                <div className="h-72">
+                  <TripMap
+                    className="h-full w-full"
+                    driver={
+                      data.driver_lat != null && data.driver_lng != null
+                        ? { lat: data.driver_lat, lng: data.driver_lng }
+                        : null
+                    }
+                    destination={
+                      data.destination_lat != null && data.destination_lng != null
+                        ? { lat: data.destination_lat, lng: data.destination_lng }
+                        : null
+                    }
+                    interactive={true}
+                  />
+                </div>
               </div>
-            </div>
+            ) : null}
+
 
             {/* Delivery evidence */}
             {data.delivery && (
