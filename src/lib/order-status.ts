@@ -17,23 +17,72 @@ export type OrderStatus =
   | "incident";
 
 export const STATUS_LABEL: Record<string, string> = {
-  created: "Criado",
-  preparing: "Preparando para coleta",
-  awaiting_driver: "Aguardando aceite do motorista",
-  driver_assigned: "Motorista confirmado",
-  en_route_pickup: "Em deslocamento para coleta",
-  in_transit_to_pickup: "Em deslocamento para coleta",
-  at_pickup: "No local da coleta",
-  picked_up: "Carga coletada",
-  loaded: "Carga carregada",
-  out_for_delivery: "Saiu para entrega",
-  in_transit: "Em trânsito",
-  near_destination: "Próximo ao destino",
+  created: "Preparando para Coleta",
+  preparing: "Preparando para Coleta",
+  awaiting_driver: "Aguardando Motorista",
+  driver_assigned: "Motorista Confirmado",
+  en_route_pickup: "Em Deslocamento para Coleta",
+  in_transit_to_pickup: "Em Deslocamento para Coleta",
+  at_pickup: "Cheguei na Coleta",
+  loaded: "Carga Carregada",
+  picked_up: "Saiu para Entrega",
+  out_for_delivery: "Em Trânsito",
+  in_transit: "Em Trânsito",
+  near_destination: "Próximo da Entrega",
   delivered: "Entregue",
+  completed: "Finalizado",
   finalized: "Finalizado",
   cancelled: "Cancelado",
   incident: "Ocorrência",
 };
+
+// Tailwind badge classes per status (background + text)
+export const STATUS_BADGE_CLASS: Record<string, string> = {
+  created: "bg-yellow-100 text-yellow-800",
+  preparing: "bg-yellow-100 text-yellow-800",
+  awaiting_driver: "bg-orange-100 text-orange-800",
+  driver_assigned: "bg-blue-100 text-blue-800",
+  en_route_pickup: "bg-blue-200 text-blue-900",
+  in_transit_to_pickup: "bg-blue-200 text-blue-900",
+  at_pickup: "bg-purple-100 text-purple-800",
+  loaded: "bg-purple-200 text-purple-900",
+  picked_up: "bg-blue-100 text-blue-800",
+  out_for_delivery: "bg-blue-200 text-blue-900",
+  in_transit: "bg-blue-200 text-blue-900",
+  near_destination: "bg-green-100 text-green-700",
+  delivered: "bg-green-200 text-green-800",
+  completed: "bg-green-300 text-green-900",
+  finalized: "bg-green-300 text-green-900",
+  cancelled: "bg-red-100 text-red-700",
+  incident: "bg-red-200 text-red-900",
+};
+
+export function statusLabel(s?: string | null): string {
+  if (!s) return "—";
+  return STATUS_LABEL[s] ?? "—";
+}
+
+export function statusBadgeClass(s?: string | null): string {
+  if (!s) return "bg-muted text-muted-foreground";
+  return STATUS_BADGE_CLASS[s] ?? "bg-muted text-muted-foreground";
+}
+
+// Options for status filter dropdowns — deduplicated, user-facing only.
+export const STATUS_FILTER_OPTIONS: { value: string; label: string }[] = [
+  { value: "preparing", label: "Preparando para Coleta" },
+  { value: "awaiting_driver", label: "Aguardando Motorista" },
+  { value: "driver_assigned", label: "Motorista Confirmado" },
+  { value: "en_route_pickup", label: "Em Deslocamento para Coleta" },
+  { value: "at_pickup", label: "Cheguei na Coleta" },
+  { value: "loaded", label: "Carga Carregada" },
+  { value: "picked_up", label: "Saiu para Entrega" },
+  { value: "in_transit", label: "Em Trânsito" },
+  { value: "near_destination", label: "Próximo da Entrega" },
+  { value: "delivered", label: "Entregue" },
+  { value: "finalized", label: "Finalizado" },
+  { value: "cancelled", label: "Cancelado" },
+  { value: "incident", label: "Ocorrência" },
+];
 
 export function publicStatus(s: string): { key: string; label: string } {
   switch (s) {
