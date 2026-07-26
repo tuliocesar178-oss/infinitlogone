@@ -17,6 +17,16 @@ function RoleRouter() {
         navigate({ to: "/auth" });
         return;
       }
+      // Check if user is a driver awaiting approval
+      const { data: driver } = await supabase
+        .from("drivers")
+        .select("approval_status")
+        .eq("user_id", data.user.id)
+        .maybeSingle();
+      if (driver && driver.approval_status !== "active") {
+        navigate({ to: "/aguardando-aprovacao", replace: true });
+        return;
+      }
       const roles = await fetchUserRoles(data.user.id);
       const target = homeForRole(primaryRole(roles));
       navigate({ to: target, replace: true });
