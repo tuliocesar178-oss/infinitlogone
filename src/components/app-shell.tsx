@@ -32,7 +32,7 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
     items: [
       { label: "Central Operacional", to: "/ops/central", icon: LayoutGrid, match: (p) => p.startsWith("/ops/central") },
       { label: "Dashboard", to: "/ops", icon: BarChart3, match: (p) => p === "/ops" },
-      { label: "Entregas", to: "/ops", icon: Package, match: (p) => p.startsWith("/ops/pedidos") },
+      { label: "Fretes", to: "/ops/pedidos", icon: Package, match: (p) => p.startsWith("/ops/pedidos") },
       { label: "Motoristas", to: "/ops/motoristas", icon: Truck, match: (p) => p.startsWith("/ops/motoristas") },
       { label: "Equipe", to: "/ops/equipe", icon: Users, match: (p) => p.startsWith("/ops/equipe") },
       { label: "Veículos", to: "/ops/veiculos", icon: Truck, match: (p) => p.startsWith("/ops/veiculos") },
