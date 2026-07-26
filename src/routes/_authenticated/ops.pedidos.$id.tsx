@@ -1,12 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
-import QRCode from "qrcode";
+import { useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Send, MapPin, Package, User } from "lucide-react";
 import { toast } from "sonner";
 import { STATUS_LABEL } from "@/lib/order-status";
+import { ShareTracking } from "@/components/share-tracking";
 
 export const Route = createFileRoute("/_authenticated/ops/pedidos/$id")({
   head: () => ({ meta: [{ title: "Pedido — InfinitLog" }, { name: "robots", content: "noindex" }] }),
