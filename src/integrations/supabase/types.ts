@@ -336,6 +336,50 @@ export type Database = {
         }
         Relationships: []
       }
+      order_attachments: {
+        Row: {
+          created_at: string
+          file_path: string
+          id: string
+          kind: string
+          label: string | null
+          mime_type: string | null
+          order_id: string
+          size_bytes: number | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          file_path: string
+          id?: string
+          kind: string
+          label?: string | null
+          mime_type?: string | null
+          order_id: string
+          size_bytes?: number | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          file_path?: string
+          id?: string
+          kind?: string
+          label?: string | null
+          mime_type?: string | null
+          order_id?: string
+          size_bytes?: number | null
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_attachments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_events: {
         Row: {
           actor_id: string | null
@@ -380,13 +424,19 @@ export type Database = {
       orders: {
         Row: {
           cargo_description: string | null
+          cargo_type: string | null
           cargo_value: number | null
           cargo_weight_kg: number | null
           client_id: string | null
+          client_name: string | null
           code: string
+          contact_name: string | null
+          contact_phone: string | null
           created_at: string
           created_by: string | null
           deleted_at: string | null
+          delivery_window_end: string | null
+          delivery_window_start: string | null
           destination_address: string
           destination_city: string | null
           destination_lat: number | null
@@ -402,22 +452,32 @@ export type Database = {
           origin_city: string | null
           origin_lat: number | null
           origin_lng: number | null
+          pickup_window_end: string | null
+          pickup_window_start: string | null
           price: number | null
+          priority: string
           scheduled_at: string | null
           status: Database["public"]["Enums"]["order_status"]
           tracking_code: string
           updated_at: string
           vehicle_id: string | null
+          volumes: number | null
         }
         Insert: {
           cargo_description?: string | null
+          cargo_type?: string | null
           cargo_value?: number | null
           cargo_weight_kg?: number | null
           client_id?: string | null
+          client_name?: string | null
           code?: string
+          contact_name?: string | null
+          contact_phone?: string | null
           created_at?: string
           created_by?: string | null
           deleted_at?: string | null
+          delivery_window_end?: string | null
+          delivery_window_start?: string | null
           destination_address: string
           destination_city?: string | null
           destination_lat?: number | null
@@ -433,22 +493,32 @@ export type Database = {
           origin_city?: string | null
           origin_lat?: number | null
           origin_lng?: number | null
+          pickup_window_end?: string | null
+          pickup_window_start?: string | null
           price?: number | null
+          priority?: string
           scheduled_at?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           tracking_code?: string
           updated_at?: string
           vehicle_id?: string | null
+          volumes?: number | null
         }
         Update: {
           cargo_description?: string | null
+          cargo_type?: string | null
           cargo_value?: number | null
           cargo_weight_kg?: number | null
           client_id?: string | null
+          client_name?: string | null
           code?: string
+          contact_name?: string | null
+          contact_phone?: string | null
           created_at?: string
           created_by?: string | null
           deleted_at?: string | null
+          delivery_window_end?: string | null
+          delivery_window_start?: string | null
           destination_address?: string
           destination_city?: string | null
           destination_lat?: number | null
@@ -464,12 +534,16 @@ export type Database = {
           origin_city?: string | null
           origin_lat?: number | null
           origin_lng?: number | null
+          pickup_window_end?: string | null
+          pickup_window_start?: string | null
           price?: number | null
+          priority?: string
           scheduled_at?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           tracking_code?: string
           updated_at?: string
           vehicle_id?: string | null
+          volumes?: number | null
         }
         Relationships: [
           {
@@ -638,6 +712,7 @@ export type Database = {
         Returns: boolean
       }
       generate_tracking_code: { Args: never; Returns: string }
+      get_tracking: { Args: { _code: string }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
