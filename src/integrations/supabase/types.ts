@@ -662,12 +662,18 @@ export type Database = {
       order_status:
         | "created"
         | "preparing"
+        | "awaiting_driver"
         | "driver_assigned"
+        | "en_route_pickup"
+        | "at_pickup"
+        | "loaded"
         | "in_transit_to_pickup"
         | "picked_up"
         | "out_for_delivery"
+        | "in_transit"
         | "near_destination"
         | "delivered"
+        | "finalized"
         | "cancelled"
         | "incident"
     }
@@ -812,12 +818,18 @@ export const Constants = {
       order_status: [
         "created",
         "preparing",
+        "awaiting_driver",
         "driver_assigned",
+        "en_route_pickup",
+        "at_pickup",
+        "loaded",
         "in_transit_to_pickup",
         "picked_up",
         "out_for_delivery",
+        "in_transit",
         "near_destination",
         "delivered",
+        "finalized",
         "cancelled",
         "incident",
       ],
