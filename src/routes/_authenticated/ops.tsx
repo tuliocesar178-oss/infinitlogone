@@ -52,12 +52,20 @@ function OpsDashboard() {
       title="Central de Logística"
       subtitle="Cadastre pedidos, envie ofertas e acompanhe entregas."
       actions={
-        <Link
-          to="/ops/pedidos/novo"
-          className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90"
-        >
-          <Plus className="h-4 w-4" /> Novo pedido
-        </Link>
+        <div className="flex gap-2">
+          <Link
+            to="/ops/motoristas"
+            className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-4 py-2.5 text-sm hover:bg-accent"
+          >
+            <TruckIcon className="h-4 w-4" /> Motoristas
+          </Link>
+          <Link
+            to="/ops/pedidos/novo"
+            className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90"
+          >
+            <Plus className="h-4 w-4" /> Novo pedido
+          </Link>
+        </div>
       }
     >
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
