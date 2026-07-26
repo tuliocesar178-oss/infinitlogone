@@ -126,7 +126,7 @@ export function AppShell({
       >
         <div className="flex h-16 items-center gap-3 border-b border-sidebar-border/60 px-5">
           <Link to="/" aria-label="InfinitLog" className="flex items-center gap-3">
-            <Logo size={30} showWordmark={false} />
+            <Logo size={30} withWordmark={false} />
             {!collapsed && (
               <div className="leading-tight">
                 <div className="text-[15px] font-semibold tracking-tight">InfinitLog</div>
