@@ -193,9 +193,7 @@ function LandingPage() {
       <footer className="border-t border-border/60">
         <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-4 px-6 py-8 text-sm text-muted-foreground sm:flex-row sm:items-center">
           <div className="flex items-center gap-2">
-            <span className="grid h-6 w-6 place-items-center rounded-lg bg-primary text-primary-foreground">
-              <Truck className="h-3 w-3" />
-            </span>
+            <img src={logoUrl} alt="" width={20} height={20} className="h-5 w-5 object-contain" />
             © {new Date().getFullYear()} InfinitLog Transportes
           </div>
           <div className="flex gap-6">
