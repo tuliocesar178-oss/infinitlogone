@@ -56,45 +56,52 @@
 :root {
   --radius: 1rem;
 
-  --background: oklch(0.995 0 0);
-  --foreground: oklch(0.16 0.01 260);
+  /*
+   * Paleta inspirada na logo InfinitLog:
+   * · Azul-marinho profundo do wordmark  → primary
+   * · Azul elétrico das setas             → brand / accent
+   * · Fundos claros com leve tom frio     → background / surface
+   */
+
+  --background: oklch(0.995 0.003 250);
+  --foreground: oklch(0.18 0.06 265);
 
   --surface: oklch(1 0 0);
-  --surface-2: oklch(0.975 0.004 260);
+  --surface-2: oklch(0.968 0.012 250);
 
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.16 0.01 260);
+  --card-foreground: oklch(0.18 0.06 265);
 
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.16 0.01 260);
+  --popover-foreground: oklch(0.18 0.06 265);
 
-  /* Preto Uber-like */
-  --primary: oklch(0.18 0.005 260);
+  /* Azul-marinho InfinitLog (wordmark) */
+  --primary: oklch(0.24 0.12 266);
   --primary-foreground: oklch(0.995 0 0);
 
-  --secondary: oklch(0.97 0.004 260);
-  --secondary-foreground: oklch(0.2 0.01 260);
+  --secondary: oklch(0.955 0.018 250);
+  --secondary-foreground: oklch(0.24 0.12 266);
 
-  --muted: oklch(0.97 0.004 260);
-  --muted-foreground: oklch(0.52 0.02 260);
+  --muted: oklch(0.96 0.012 250);
+  --muted-foreground: oklch(0.5 0.04 258);
 
-  --accent: oklch(0.955 0.008 260);
-  --accent-foreground: oklch(0.2 0.01 260);
+  --accent: oklch(0.94 0.03 250);
+  --accent-foreground: oklch(0.24 0.12 266);
 
-  /* Verde ação — utilizado em CTAs positivos */
-  --brand: oklch(0.68 0.17 148);
-  --brand-foreground: oklch(0.99 0 0);
+  /* Azul elétrico das setas — CTAs de destaque e realces */
+  --brand: oklch(0.62 0.19 253);
+  --brand-foreground: oklch(0.995 0 0);
 
-  --success: oklch(0.68 0.17 148);
+  --success: oklch(0.68 0.17 152);
   --success-foreground: oklch(0.99 0 0);
   --warning: oklch(0.78 0.16 75);
   --warning-foreground: oklch(0.2 0.02 60);
   --destructive: oklch(0.6 0.22 27);
   --destructive-foreground: oklch(0.99 0 0);
 
-  --border: oklch(0.92 0.005 260);
-  --input: oklch(0.92 0.005 260);
-  --ring: oklch(0.5 0.02 260);
+  --border: oklch(0.9 0.015 250);
+  --input: oklch(0.9 0.015 250);
+  --ring: oklch(0.62 0.19 253);
 }
 
 @layer base {
