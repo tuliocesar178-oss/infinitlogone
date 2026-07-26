@@ -480,9 +480,9 @@ function CentralOperacional() {
           className="rounded-md border border-border bg-background px-2 py-1 text-xs"
         >
           <option value="all">Todos os status</option>
-          {ACTIVE_STATUSES.concat(AWAITING_STATUSES).map((s) => (
-            <option key={s} value={s}>
-              {s}
+          {STATUS_FILTER_OPTIONS.map((s) => (
+            <option key={s.value} value={s.value}>
+              {s.label}
             </option>
           ))}
         </select>
