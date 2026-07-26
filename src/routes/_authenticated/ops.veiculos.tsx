@@ -5,7 +5,7 @@ import { AppShell } from "@/components/app-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { FleetMap, type FleetVehicle } from "@/components/fleet-map";
 import { FLEET_MAP_COLORS, VEHICLE_STATUS, fleetColor } from "@/lib/vehicles";
-import { statusLabel } from "@/lib/order-status";
+import { STATUS_LABEL } from "@/lib/order-status";
 import { List, Plus, Search, X, Phone, MapPin, Truck } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/ops/veiculos")({
@@ -405,7 +405,7 @@ function FleetControlCenter() {
                       <div className="text-[11px] font-medium text-muted-foreground">Entrega ativa</div>
                       <div className="mt-1 font-semibold">{selected.order.tracking_code}</div>
                       <div className="text-[11px] text-muted-foreground">
-                        {statusLabel(selected.order.status)}
+                        {STATUS_LABEL[selected.order.status] ?? selected.order.status}
                       </div>
                     </div>
                     <Row label="Cliente" value={selected.order.client_name ?? "—"} />
