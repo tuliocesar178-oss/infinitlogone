@@ -35,7 +35,6 @@ export const STATUS_LABEL: Record<string, string> = {
   incident: "Ocorrência",
 };
 
-// What the public client sees (7 canonical states)
 export function publicStatus(s: string): { key: string; label: string } {
   switch (s) {
     case "preparing":
@@ -43,6 +42,7 @@ export function publicStatus(s: string): { key: string; label: string } {
     case "created":
       return { key: "preparing", label: "Preparando para coleta" };
     case "driver_assigned":
+      return { key: "driver_assigned", label: "Motorista confirmado" };
     case "en_route_pickup":
     case "in_transit_to_pickup":
     case "at_pickup":
@@ -69,7 +69,7 @@ export function publicStatus(s: string): { key: string; label: string } {
 
 export const PUBLIC_TIMELINE = [
   { key: "preparing", label: "Preparando para coleta" },
-  { key: "en_route_pickup", label: "Motorista a caminho da coleta" },
+  { key: "driver_assigned", label: "Motorista confirmado" },
   { key: "loaded", label: "Carga coletada" },
   { key: "in_transit", label: "Em trânsito" },
   { key: "near_destination", label: "Próximo ao destino" },
@@ -89,3 +89,23 @@ export const OPS_CARDS: { key: string; label: string; statuses: string[] }[] = [
   { key: "delivered", label: "Entregues hoje", statuses: ["delivered", "finalized"] },
   { key: "incident", label: "Ocorrências", statuses: ["incident"] },
 ];
+
+export function trackingUrl(code: string): string {
+  if (typeof window !== "undefined") return `${window.location.origin}/rastreio/${code}`;
+  return `https://rastreio.infinitlog.com.br/${code}`;
+}
+
+export function shareMessage(code: string): string {
+  const link = trackingUrl(code);
+  return `Olá!
+
+Seu frete foi cadastrado com sucesso na InfinitLog Transportes.
+
+Código de rastreio:
+${code}
+
+Você pode acompanhar sua carga em tempo real através do link abaixo:
+${link}
+
+Obrigado por escolher a InfinitLog Transportes.`;
+}
