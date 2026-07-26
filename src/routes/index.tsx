@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
-import { ArrowRight, MapPin, Phone, Search, ShieldCheck, Truck, Zap } from "lucide-react";
+import { ArrowRight, MapPin, Phone, Search, ShieldCheck, Zap } from "lucide-react";
+import { Logo, logoUrl } from "@/components/logo";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -38,11 +39,8 @@ function LandingPage() {
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-          <Link to="/" className="flex items-center gap-2 font-semibold tracking-tight">
-            <span className="grid h-8 w-8 place-items-center rounded-xl bg-primary text-primary-foreground">
-              <Truck className="h-4 w-4" />
-            </span>
-            InfinitLog
+          <Link to="/" aria-label="InfinitLog — início">
+            <Logo size={34} />
           </Link>
           <nav className="hidden items-center gap-8 text-sm text-muted-foreground sm:flex">
             <a href="#servicos" className="hover:text-foreground">Serviços</a>
