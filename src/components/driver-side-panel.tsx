@@ -173,7 +173,7 @@ export function DriverSidePanel({
             <div className="flex items-center gap-4">
               {d?.photo_url || p?.avatar_url ? (
                 <img
-                  src={d?.photo_url ?? p?.avatar_url}
+                  src={d?.photo_url ?? p?.avatar_url ?? undefined}
                   alt=""
                   className="h-20 w-20 rounded-2xl object-cover"
                 />
