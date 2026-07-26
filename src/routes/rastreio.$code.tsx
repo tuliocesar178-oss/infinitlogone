@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { PUBLIC_TIMELINE, publicStatus, STATUS_LABEL } from "@/lib/order-status";
+import { TripMap } from "@/components/trip-map";
 
 export const Route = createFileRoute("/rastreio/$code")({
   head: ({ params }) => ({
@@ -41,6 +42,13 @@ type TrackingResult = {
   driver_first_name: string | null;
   driver_lat: number | null;
   driver_lng: number | null;
+  destination_lat: number | null;
+  destination_lng: number | null;
+  distance_to_destination_km: number | null;
+  initial_distance_km: number | null;
+  eta_minutes: number | null;
+  current_city: string | null;
+  last_ping_at: string | null;
   last_update_at: string | null;
   events: { event_type: string; to_status: string | null; created_at: string }[];
   delivery: {
