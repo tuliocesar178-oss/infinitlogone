@@ -7,6 +7,7 @@ import { ArrowLeft, Send, MapPin, Package, User } from "lucide-react";
 import { toast } from "sonner";
 import { STATUS_LABEL } from "@/lib/order-status";
 import { ShareTracking } from "@/components/share-tracking";
+import { FreightProgramPanel } from "@/components/freight-program-panel";
 
 export const Route = createFileRoute("/_authenticated/ops/pedidos/$id")({
   head: () => ({ meta: [{ title: "Pedido — InfinitLog" }, { name: "robots", content: "noindex" }] }),
@@ -15,6 +16,7 @@ export const Route = createFileRoute("/_authenticated/ops/pedidos/$id")({
 
 function OrderDetail() {
   const { id } = Route.useParams();
+  const [tab, setTab] = useState<"op" | "pf">("op");
 
   const orderQ = useQuery({
     queryKey: ["order", id],
