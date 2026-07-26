@@ -34,7 +34,7 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
       { label: "Entregas", to: "/ops", icon: Package, match: (p) => p.startsWith("/ops/pedidos") },
       { label: "Motoristas", to: "/ops/motoristas", icon: Truck, match: (p) => p.startsWith("/ops/motoristas") },
       { label: "Equipe", to: "/ops/equipe", icon: Users, match: (p) => p.startsWith("/ops/equipe") },
-      { label: "Veículos", icon: Truck },
+      { label: "Veículos", to: "/ops/veiculos", icon: Truck, match: (p) => p.startsWith("/ops/veiculos") },
       { label: "Rastreamento", icon: MapPin },
       { label: "Ocorrências", icon: AlertTriangle },
     ],

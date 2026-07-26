@@ -1336,64 +1336,207 @@ export type Database = {
         }
         Relationships: []
       }
-      vehicles: {
+      vehicle_documents: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          file_path: string
+          id: string
+          kind: string
+          label: string | null
+          mime_type: string | null
+          size_bytes: number | null
+          updated_at: string
+          uploaded_by: string | null
+          vehicle_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          file_path: string
+          id?: string
+          kind: string
+          label?: string | null
+          mime_type?: string | null
+          size_bytes?: number | null
+          updated_at?: string
+          uploaded_by?: string | null
+          vehicle_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          file_path?: string
+          id?: string
+          kind?: string
+          label?: string | null
+          mime_type?: string | null
+          size_bytes?: number | null
+          updated_at?: string
+          uploaded_by?: string | null
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_documents_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vehicle_types: {
         Row: {
           active: boolean
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      vehicles: {
+        Row: {
+          acquisition_date: string | null
+          active: boolean
           antt_expires_at: string | null
+          antt_number: string | null
           axles: number | null
+          battery_level: number | null
+          body_type: string | null
           brand: string | null
           capacity_kg: number | null
+          capacity_m3: number | null
+          category: string | null
+          chassis: string | null
           color: string | null
           created_at: string
           crlv_expires_at: string | null
+          current_city: string | null
+          current_km: number | null
+          current_lat: number | null
+          current_lng: number | null
+          current_speed_kmh: number | null
+          current_state: string | null
           id: string
+          insurance_company: string | null
           insurance_expires_at: string | null
+          insurance_policy: string | null
+          ipva_expires_at: string | null
+          last_location_at: string | null
+          licensing_expires_at: string | null
           max_weight_kg: number | null
           model: string | null
           notes: string | null
+          owner_company: string | null
           owner_driver_id: string | null
+          photo_url: string | null
           plate: string
           renavam: string | null
+          status: Database["public"]["Enums"]["vehicle_status"]
+          updated_at: string
           vehicle_type: string | null
           year: number | null
         }
         Insert: {
+          acquisition_date?: string | null
           active?: boolean
           antt_expires_at?: string | null
+          antt_number?: string | null
           axles?: number | null
+          battery_level?: number | null
+          body_type?: string | null
           brand?: string | null
           capacity_kg?: number | null
+          capacity_m3?: number | null
+          category?: string | null
+          chassis?: string | null
           color?: string | null
           created_at?: string
           crlv_expires_at?: string | null
+          current_city?: string | null
+          current_km?: number | null
+          current_lat?: number | null
+          current_lng?: number | null
+          current_speed_kmh?: number | null
+          current_state?: string | null
           id?: string
+          insurance_company?: string | null
           insurance_expires_at?: string | null
+          insurance_policy?: string | null
+          ipva_expires_at?: string | null
+          last_location_at?: string | null
+          licensing_expires_at?: string | null
           max_weight_kg?: number | null
           model?: string | null
           notes?: string | null
+          owner_company?: string | null
           owner_driver_id?: string | null
+          photo_url?: string | null
           plate: string
           renavam?: string | null
+          status?: Database["public"]["Enums"]["vehicle_status"]
+          updated_at?: string
           vehicle_type?: string | null
           year?: number | null
         }
         Update: {
+          acquisition_date?: string | null
           active?: boolean
           antt_expires_at?: string | null
+          antt_number?: string | null
           axles?: number | null
+          battery_level?: number | null
+          body_type?: string | null
           brand?: string | null
           capacity_kg?: number | null
+          capacity_m3?: number | null
+          category?: string | null
+          chassis?: string | null
           color?: string | null
           created_at?: string
           crlv_expires_at?: string | null
+          current_city?: string | null
+          current_km?: number | null
+          current_lat?: number | null
+          current_lng?: number | null
+          current_speed_kmh?: number | null
+          current_state?: string | null
           id?: string
+          insurance_company?: string | null
           insurance_expires_at?: string | null
+          insurance_policy?: string | null
+          ipva_expires_at?: string | null
+          last_location_at?: string | null
+          licensing_expires_at?: string | null
           max_weight_kg?: number | null
           model?: string | null
           notes?: string | null
+          owner_company?: string | null
           owner_driver_id?: string | null
+          photo_url?: string | null
           plate?: string
           renavam?: string | null
+          status?: Database["public"]["Enums"]["vehicle_status"]
+          updated_at?: string
           vehicle_type?: string | null
           year?: number | null
         }
@@ -1552,6 +1695,16 @@ export type Database = {
       payment_method_pref: "pix" | "ted" | "doc" | "boleto"
       pix_key_type: "cpf" | "cnpj" | "email" | "phone" | "random"
       team_status: "ativo" | "bloqueado" | "convite_pendente" | "afastado"
+      vehicle_status:
+        | "disponivel"
+        | "em_coleta"
+        | "em_transito"
+        | "em_entrega"
+        | "retornando"
+        | "manutencao"
+        | "bloqueado"
+        | "reserva"
+        | "offline"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1752,6 +1905,17 @@ export const Constants = {
       payment_method_pref: ["pix", "ted", "doc", "boleto"],
       pix_key_type: ["cpf", "cnpj", "email", "phone", "random"],
       team_status: ["ativo", "bloqueado", "convite_pendente", "afastado"],
+      vehicle_status: [
+        "disponivel",
+        "em_coleta",
+        "em_transito",
+        "em_entrega",
+        "retornando",
+        "manutencao",
+        "bloqueado",
+        "reserva",
+        "offline",
+      ],
     },
   },
 } as const
