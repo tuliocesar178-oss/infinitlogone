@@ -1,368 +1,519 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  VEHICLE_STATUS,
-  vehicleStatusBadgeClass,
-  vehicleStatusMeta,
-  daysUntil,
-  expiryBadgeClass,
-} from "@/lib/vehicles";
-import {
-  ArrowUpDown,
-  LayoutGrid,
-  List,
-  Plus,
-  Search,
-  Truck,
-  MapPin,
-  Gauge,
-  AlertCircle,
-} from "lucide-react";
+import { FleetMap, type FleetVehicle } from "@/components/fleet-map";
+import { FLEET_MAP_COLORS, VEHICLE_STATUS, fleetColor } from "@/lib/vehicles";
+import { STATUS_LABEL } from "@/lib/order-status";
+import { List, Plus, Search, X, Phone, MapPin, Truck } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/ops/veiculos")({
   head: () => ({
-    meta: [{ title: "Veículos — InfinitLog" }, { name: "robots", content: "noindex" }],
+    meta: [
+      { title: "Central da Frota — InfinitLog" },
+      { name: "robots", content: "noindex" },
+    ],
   }),
-  component: VehiclesList,
+  component: FleetControlCenter,
 });
 
-type View = "cards" | "list";
-type SortKey = "created" | "plate" | "status" | "km";
-const PAGE_SIZE = 12;
+const ACTIVE_ORDER_STATUSES = [
+  "driver_assigned",
+  "en_route_pickup",
+  "in_transit_to_pickup",
+  "at_pickup",
+  "loaded",
+  "picked_up",
+  "out_for_delivery",
+  "in_transit",
+  "near_destination",
+];
 
-function VehiclesList() {
+function FleetControlCenter() {
+  const qc = useQueryClient();
   const navigate = useNavigate();
-  const [view, setView] = useState<View>("cards");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
-  const [sort, setSort] = useState<SortKey>("created");
-  const [page, setPage] = useState(0);
+  const [cityFilter, setCityFilter] = useState<string>("all");
+  const [stateFilter, setStateFilter] = useState<string>("all");
+  const [selected, setSelected] = useState<FleetVehicle | null>(null);
 
-  const q = useQuery({
-    queryKey: ["vehicles-list"],
+  const vehiclesQ = useQuery({
+    queryKey: ["fleet-vehicles"],
+    refetchInterval: 30000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("vehicles")
         .select(
-          "id, plate, model, brand, year, color, vehicle_type, capacity_kg, capacity_m3, status, photo_url, current_city, current_state, current_km, last_location_at, updated_at, active, owner_driver_id, crlv_expires_at, licensing_expires_at, insurance_expires_at, ipva_expires_at",
+          "id, plate, model, brand, status, vehicle_type, current_lat, current_lng, current_city, current_state, current_speed_kmh, last_location_at, photo_url, owner_driver_id",
+        );
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const ordersQ = useQuery({
+    queryKey: ["fleet-active-orders"],
+    refetchInterval: 20000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("orders")
+        .select(
+          "id, tracking_code, client_name, contact_phone, origin_city, destination_city, status, eta_minutes, distance_to_destination_km, initial_distance_km, cargo_description, cargo_weight_kg, volumes, last_ping_at, current_lat, current_lng, driver_id, vehicle_id",
         )
-        .order("created_at", { ascending: false });
+        .in("status", ACTIVE_ORDER_STATUSES as any)
+        .is("deleted_at", null);
       if (error) throw error;
       return data ?? [];
     },
   });
 
-  const types = useQuery({
-    queryKey: ["vehicle-types"],
+  const driverIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const v of vehiclesQ.data ?? []) if (v.owner_driver_id) ids.add(v.owner_driver_id);
+    for (const o of ordersQ.data ?? []) if (o.driver_id) ids.add(o.driver_id);
+    return Array.from(ids);
+  }, [vehiclesQ.data, ordersQ.data]);
+
+  const profilesQ = useQuery({
+    queryKey: ["fleet-driver-profiles", driverIds],
+    enabled: driverIds.length > 0,
     queryFn: async () => {
-      const { data, error } = await supabase.from("vehicle_types").select("id, name").eq("active", true).order("name");
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, full_name, phone")
+        .in("id", driverIds);
       if (error) throw error;
-      return data ?? [];
+      const map = new Map<string, { name?: string | null; phone?: string | null }>();
+      for (const p of data ?? []) map.set(p.id, { name: p.full_name, phone: p.phone });
+      return map;
     },
   });
 
-  const drivers = useQuery({
-    queryKey: ["drivers-quick"],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("drivers")
-        .select("user_id, profiles:profiles!inner(full_name)");
-      return data ?? [];
-    },
-  });
+  // Realtime: refresh on changes
+  useEffect(() => {
+    const ch = supabase
+      .channel("fleet-center")
+      .on("postgres_changes", { event: "*", schema: "public", table: "vehicles" }, () =>
+        qc.invalidateQueries({ queryKey: ["fleet-vehicles"] }),
+      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () =>
+        qc.invalidateQueries({ queryKey: ["fleet-active-orders"] }),
+      )
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "driver_locations" }, () => {
+        qc.invalidateQueries({ queryKey: ["fleet-vehicles"] });
+        qc.invalidateQueries({ queryKey: ["fleet-active-orders"] });
+      })
+      .subscribe();
+    return () => {
+      supabase.removeChannel(ch);
+    };
+  }, [qc]);
 
-  const driverName = (userId?: string | null) => {
-    if (!userId) return null;
-    const d: any = (drivers.data ?? []).find((x: any) => x.user_id === userId);
-    return d?.profiles?.full_name ?? null;
-  };
+  const fleet: FleetVehicle[] = useMemo(() => {
+    const orders = ordersQ.data ?? [];
+    const profiles = profilesQ.data ?? new Map();
+    const orderByVehicle = new Map<string, (typeof orders)[number]>();
+    for (const o of orders) if (o.vehicle_id) orderByVehicle.set(o.vehicle_id, o);
+
+    return (vehiclesQ.data ?? []).map((v) => {
+      const order = orderByVehicle.get(v.id) ?? null;
+      const lat = (order?.current_lat as number) ?? (v.current_lat as number);
+      const lng = (order?.current_lng as number) ?? (v.current_lng as number);
+      const driverId = order?.driver_id ?? v.owner_driver_id;
+      const p = driverId ? profiles.get(driverId) : null;
+      return {
+        id: v.id,
+        plate: v.plate,
+        model: [v.brand, v.model].filter(Boolean).join(" ") || null,
+        status: v.status,
+        lat,
+        lng,
+        speed: v.current_speed_kmh ?? null,
+        driverName: p?.name ?? null,
+        driverPhone: p?.phone ?? null,
+        photoUrl: v.photo_url ?? null,
+        order: order
+          ? {
+              id: order.id,
+              tracking_code: order.tracking_code,
+              client_name: order.client_name,
+              origin_city: order.origin_city,
+              destination_city: order.destination_city,
+              status: order.status,
+              eta_minutes: order.eta_minutes,
+              distance_km: order.distance_to_destination_km as number | null,
+              initial_distance_km: order.initial_distance_km as number | null,
+              cargo: order.cargo_description,
+              weight: order.cargo_weight_kg as number | null,
+              volumes: order.volumes,
+              last_ping_at: order.last_ping_at,
+            }
+          : null,
+      } as FleetVehicle;
+    });
+  }, [vehiclesQ.data, ordersQ.data, profilesQ.data]);
+
+  const cities = useMemo(() => {
+    const s = new Set<string>();
+    for (const v of vehiclesQ.data ?? []) if (v.current_city) s.add(v.current_city);
+    return Array.from(s).sort();
+  }, [vehiclesQ.data]);
+  const states = useMemo(() => {
+    const s = new Set<string>();
+    for (const v of vehiclesQ.data ?? []) if (v.current_state) s.add(v.current_state);
+    return Array.from(s).sort();
+  }, [vehiclesQ.data]);
+  const types = useMemo(() => {
+    const s = new Set<string>();
+    for (const v of vehiclesQ.data ?? []) if (v.vehicle_type) s.add(v.vehicle_type);
+    return Array.from(s).sort();
+  }, [vehiclesQ.data]);
 
   const filtered = useMemo(() => {
-    const rows = (q.data ?? []) as any[];
-    const s = search.trim().toLowerCase();
-    let out = rows.filter((r) => {
-      if (statusFilter !== "all" && r.status !== statusFilter) return false;
-      if (typeFilter !== "all" && r.vehicle_type !== typeFilter) return false;
-      if (!s) return true;
-      const hay = `${r.plate ?? ""} ${r.model ?? ""} ${r.brand ?? ""} ${r.vehicle_type ?? ""} ${r.current_city ?? ""}`.toLowerCase();
-      return hay.includes(s);
+    const q = search.trim().toLowerCase();
+    return fleet.filter((v) => {
+      if (statusFilter !== "all" && v.status !== statusFilter) return false;
+      if (typeFilter !== "all") {
+        const raw = (vehiclesQ.data ?? []).find((x) => x.id === v.id);
+        if (raw?.vehicle_type !== typeFilter) return false;
+      }
+      if (cityFilter !== "all") {
+        const raw = (vehiclesQ.data ?? []).find((x) => x.id === v.id);
+        if (raw?.current_city !== cityFilter) return false;
+      }
+      if (stateFilter !== "all") {
+        const raw = (vehiclesQ.data ?? []).find((x) => x.id === v.id);
+        if (raw?.current_state !== stateFilter) return false;
+      }
+      if (q) {
+        const hay = `${v.plate} ${v.model ?? ""} ${v.driverName ?? ""} ${v.order?.client_name ?? ""} ${v.order?.tracking_code ?? ""}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
     });
-    out = [...out].sort((a, b) => {
-      if (sort === "plate") return (a.plate ?? "").localeCompare(b.plate ?? "");
-      if (sort === "status") return (a.status ?? "").localeCompare(b.status ?? "");
-      if (sort === "km") return (b.current_km ?? 0) - (a.current_km ?? 0);
-      return new Date(b.updated_at ?? 0).getTime() - new Date(a.updated_at ?? 0).getTime();
-    });
-    return out;
-  }, [q.data, search, statusFilter, typeFilter, sort]);
-
-  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const currentPage = Math.min(page, pageCount - 1);
-  const paged = filtered.slice(currentPage * PAGE_SIZE, currentPage * PAGE_SIZE + PAGE_SIZE);
+  }, [fleet, search, statusFilter, typeFilter, cityFilter, stateFilter, vehiclesQ.data]);
 
   const counts = useMemo(() => {
-    const rows = (q.data ?? []) as any[];
-    return {
-      total: rows.length,
-      disponivel: rows.filter((r) => r.status === "disponivel").length,
-      em_viagem: rows.filter((r) => ["em_coleta", "em_transito", "em_entrega", "retornando"].includes(r.status)).length,
-      manutencao: rows.filter((r) => r.status === "manutencao").length,
-    };
-  }, [q.data]);
+    const c: Record<string, number> = { total: fleet.length };
+    for (const v of fleet) c[v.status] = (c[v.status] ?? 0) + 1;
+    return c;
+  }, [fleet]);
 
   return (
     <AppShell
-      title="Veículos"
-      subtitle={`${filtered.length} veículos · frota completa da InfinitLog`}
+      title="Central da Frota"
+      subtitle="Controle inteligente em tempo real"
       actions={
-        <button
-          onClick={() => navigate({ to: "/ops/veiculos/novo" })}
-          className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow hover:opacity-90"
-        >
-          <Plus className="h-4 w-4" /> Novo veículo
-        </button>
+        <div className="flex items-center gap-2">
+          <Link
+            to="/ops/veiculos/lista"
+            className="inline-flex items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-sm font-medium hover:bg-surface-2"
+          >
+            <List className="h-4 w-4" /> Lista
+          </Link>
+          <Link
+            to="/ops/veiculos/novo"
+            className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
+          >
+            <Plus className="h-4 w-4" /> Novo veículo
+          </Link>
+        </div>
       }
     >
-      {/* KPIs */}
-      <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Kpi label="Total" value={counts.total} icon={<Truck className="h-4 w-4" />} tint="bg-blue-50 text-blue-700" />
-        <Kpi label="Disponíveis" value={counts.disponivel} icon={<Gauge className="h-4 w-4" />} tint="bg-emerald-50 text-emerald-700" />
-        <Kpi label="Em viagem" value={counts.em_viagem} icon={<MapPin className="h-4 w-4" />} tint="bg-indigo-50 text-indigo-700" />
-        <Kpi label="Manutenção" value={counts.manutencao} icon={<AlertCircle className="h-4 w-4" />} tint="bg-amber-50 text-amber-700" />
-      </div>
+      <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
+        {/* Left rail: filters + availability card + list */}
+        <div className="flex flex-col gap-3 lg:h-[calc(100vh-180px)]">
+          <div className="rounded-2xl border border-border bg-surface p-3">
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Placa, motorista, cliente…"
+                className="w-full rounded-lg border border-border bg-surface-2 py-2 pl-9 pr-3 text-sm outline-none focus:border-primary"
+              />
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="rounded-lg border border-border bg-surface-2 px-2 py-1.5 text-xs"
+              >
+                <option value="all">Status</option>
+                {VEHICLE_STATUS.map((s) => (
+                  <option key={s.value} value={s.value}>
+                    {s.label}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value)}
+                className="rounded-lg border border-border bg-surface-2 px-2 py-1.5 text-xs"
+              >
+                <option value="all">Tipo</option>
+                {types.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={cityFilter}
+                onChange={(e) => setCityFilter(e.target.value)}
+                className="rounded-lg border border-border bg-surface-2 px-2 py-1.5 text-xs"
+              >
+                <option value="all">Cidade</option>
+                {cities.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={stateFilter}
+                onChange={(e) => setStateFilter(e.target.value)}
+                className="rounded-lg border border-border bg-surface-2 px-2 py-1.5 text-xs"
+              >
+                <option value="all">UF</option>
+                {states.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
 
-      {/* Toolbar */}
-      <div className="mb-6 flex flex-wrap items-center gap-3">
-        <div className="relative min-w-[220px] flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(0);
-            }}
-            placeholder="Buscar por placa, modelo, marca, cidade…"
-            className="h-11 w-full rounded-full border border-border bg-surface pl-10 pr-4 text-sm outline-none focus:border-brand"
-          />
-        </div>
-        <select
-          value={statusFilter}
-          onChange={(e) => { setStatusFilter(e.target.value); setPage(0); }}
-          className="h-11 rounded-full border border-border bg-surface px-4 text-sm"
-        >
-          <option value="all">Todos os status</option>
-          {VEHICLE_STATUS.map((s) => (
-            <option key={s.value} value={s.value}>{s.label}</option>
-          ))}
-        </select>
-        <select
-          value={typeFilter}
-          onChange={(e) => { setTypeFilter(e.target.value); setPage(0); }}
-          className="h-11 rounded-full border border-border bg-surface px-4 text-sm"
-        >
-          <option value="all">Todos os tipos</option>
-          {(types.data ?? []).map((t: any) => (
-            <option key={t.id} value={t.name}>{t.name}</option>
-          ))}
-        </select>
-        <div className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1.5 text-sm">
-          <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" />
-          <select value={sort} onChange={(e) => setSort(e.target.value as SortKey)} className="bg-transparent text-sm outline-none">
-            <option value="created">Mais recentes</option>
-            <option value="plate">Placa</option>
-            <option value="status">Status</option>
-            <option value="km">Quilometragem</option>
-          </select>
-        </div>
-        <div className="inline-flex rounded-full border border-border bg-surface p-1">
-          <button
-            onClick={() => setView("cards")}
-            className={`inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-xs font-medium ${view === "cards" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
-          >
-            <LayoutGrid className="h-3.5 w-3.5" /> Cards
-          </button>
-          <button
-            onClick={() => setView("list")}
-            className={`inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-xs font-medium ${view === "list" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
-          >
-            <List className="h-3.5 w-3.5" /> Lista
-          </button>
-        </div>
-      </div>
-
-      {q.isLoading ? (
-        <div className="grid place-items-center rounded-3xl border border-border bg-surface p-16 text-sm text-muted-foreground">
-          Carregando frota…
-        </div>
-      ) : filtered.length === 0 ? (
-        <EmptyState onNew={() => navigate({ to: "/ops/veiculos/novo" })} />
-      ) : view === "cards" ? (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {paged.map((v: any) => (
-            <VehicleCard key={v.id} v={v} driverName={driverName(v.owner_driver_id)} onOpen={() => navigate({ to: "/ops/veiculos/$id", params: { id: v.id } })} />
-          ))}
-        </div>
-      ) : (
-        <div className="overflow-hidden rounded-3xl border border-border bg-surface">
-          <table className="w-full text-sm">
-            <thead className="bg-surface-2 text-left text-xs uppercase tracking-widest text-muted-foreground">
-              <tr>
-                <th className="px-4 py-3">Veículo</th>
-                <th className="px-4 py-3">Tipo / Capacidade</th>
-                <th className="px-4 py-3">Motorista</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3">Cidade Atual</th>
-                <th className="px-4 py-3 text-right">KM · Atualizado</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paged.map((v: any) => (
-                <tr
-                  key={v.id}
-                  onClick={() => navigate({ to: "/ops/veiculos/$id", params: { id: v.id } })}
-                  className="cursor-pointer border-t border-border transition hover:bg-accent/40"
+          <div className="rounded-2xl border border-border bg-surface p-4">
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-sm font-semibold">Disponibilidade da Frota</h3>
+              <span className="text-xs text-muted-foreground">Total {counts.total ?? 0}</span>
+            </div>
+            <div className="grid gap-1.5">
+              {VEHICLE_STATUS.map((s) => (
+                <button
+                  key={s.value}
+                  onClick={() => setStatusFilter(statusFilter === s.value ? "all" : s.value)}
+                  className={`flex items-center justify-between rounded-lg px-2 py-1.5 text-xs transition ${
+                    statusFilter === s.value ? "bg-surface-2 ring-1 ring-primary/40" : "hover:bg-surface-2"
+                  }`}
                 >
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      {v.photo_url ? (
-                        <img src={v.photo_url} alt="" className="h-10 w-14 rounded-lg object-cover" />
-                      ) : (
-                        <span className="grid h-10 w-14 place-items-center rounded-lg bg-surface-2">
-                          <Truck className="h-5 w-5 text-muted-foreground" />
-                        </span>
-                      )}
-                      <div className="min-w-0">
-                        <div className="truncate font-semibold uppercase tracking-wide">{v.plate}</div>
-                        <div className="truncate text-xs text-muted-foreground">
-                          {[v.brand, v.model, v.year].filter(Boolean).join(" · ")}
-                        </div>
+                  <span className="flex items-center gap-2">
+                    <span
+                      className="inline-block h-2.5 w-2.5 rounded-full ring-2 ring-white"
+                      style={{ background: FLEET_MAP_COLORS[s.value].color }}
+                    />
+                    {s.label}
+                  </span>
+                  <span className="font-semibold tabular-nums">{counts[s.value] ?? 0}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="min-h-0 flex-1 overflow-auto rounded-2xl border border-border bg-surface p-2">
+            <div className="px-2 py-1 text-xs font-medium text-muted-foreground">
+              {filtered.length} veículo(s)
+            </div>
+            {filtered.map((v) => (
+              <button
+                key={v.id}
+                onClick={() => setSelected(v)}
+                className="w-full rounded-xl px-2 py-2 text-left hover:bg-surface-2"
+              >
+                <div className="flex items-center gap-2">
+                  <span
+                    className="inline-block h-2.5 w-2.5 rounded-full"
+                    style={{ background: fleetColor(v.status) }}
+                  />
+                  <span className="font-semibold text-sm">{v.plate}</span>
+                  <span className="ml-auto text-[11px] text-muted-foreground">
+                    {v.driverName ?? "—"}
+                  </span>
+                </div>
+                <div className="mt-0.5 truncate text-[11px] text-muted-foreground">
+                  {v.order
+                    ? `${v.order.origin_city ?? "—"} → ${v.order.destination_city ?? "—"}`
+                    : v.model ?? "Sem viagem ativa"}
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Map */}
+        <div className="relative rounded-2xl border border-border bg-surface p-0 lg:h-[calc(100vh-180px)]">
+          <FleetMap
+            vehicles={filtered}
+            onSelect={setSelected}
+            className="h-[520px] w-full overflow-hidden rounded-2xl lg:h-full"
+          />
+          {selected && (
+            <div className="pointer-events-auto absolute right-3 top-3 w-[320px] max-w-[calc(100%-24px)] rounded-2xl border border-border bg-surface shadow-xl">
+              <div className="flex items-start gap-3 p-3">
+                <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-surface-2">
+                  {selected.photoUrl ? (
+                    <img src={selected.photoUrl} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="grid h-full place-items-center text-muted-foreground">
+                      <Truck className="h-6 w-6" />
+                    </div>
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="inline-block h-2.5 w-2.5 rounded-full"
+                      style={{ background: fleetColor(selected.status) }}
+                    />
+                    <div className="truncate text-sm font-semibold">{selected.plate}</div>
+                  </div>
+                  <div className="truncate text-xs text-muted-foreground">
+                    {selected.model ?? "—"}
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSelected(null)}
+                  className="rounded-md p-1 text-muted-foreground hover:bg-surface-2"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="grid gap-2 border-t border-border p-3 text-xs">
+                <Row label="Motorista" value={selected.driverName ?? "—"} />
+                {selected.driverPhone && (
+                  <Row
+                    label="Telefone"
+                    value={
+                      <a
+                        href={`tel:${selected.driverPhone}`}
+                        className="inline-flex items-center gap-1 text-primary"
+                      >
+                        <Phone className="h-3 w-3" /> {selected.driverPhone}
+                      </a>
+                    }
+                  />
+                )}
+                <Row label="Velocidade" value={selected.speed ? `${Math.round(selected.speed)} km/h` : "—"} />
+                {selected.order ? (
+                  <>
+                    <div className="mt-1 rounded-lg bg-surface-2 p-2">
+                      <div className="text-[11px] font-medium text-muted-foreground">Entrega ativa</div>
+                      <div className="mt-1 font-semibold">{selected.order.tracking_code}</div>
+                      <div className="text-[11px] text-muted-foreground">
+                        {STATUS_LABEL[selected.order.status] ?? selected.order.status}
                       </div>
                     </div>
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground">
-                    <div>{v.vehicle_type ?? "—"}</div>
-                    <div className="text-xs">
-                      {v.capacity_kg ? `${v.capacity_kg} kg` : "—"}
-                      {v.capacity_m3 ? ` · ${v.capacity_m3} m³` : ""}
+                    <Row label="Cliente" value={selected.order.client_name ?? "—"} />
+                    <Row
+                      label="Rota"
+                      value={`${selected.order.origin_city ?? "—"} → ${selected.order.destination_city ?? "—"}`}
+                    />
+                    <Row
+                      label="KM restantes"
+                      value={
+                        selected.order.distance_km != null
+                          ? `${selected.order.distance_km.toFixed(1)} km`
+                          : "—"
+                      }
+                    />
+                    <Row
+                      label="ETA"
+                      value={
+                        selected.order.eta_minutes != null
+                          ? `${selected.order.eta_minutes} min`
+                          : "—"
+                      }
+                    />
+                    <Row
+                      label="% concluído"
+                      value={progressPct(selected.order)}
+                    />
+                    <Row label="Carga" value={selected.order.cargo ?? "—"} />
+                    <Row
+                      label="Peso / Vol."
+                      value={`${selected.order.weight ? `${selected.order.weight} kg` : "—"} · ${selected.order.volumes ?? "—"}`}
+                    />
+                    <Row
+                      label="Última atualização"
+                      value={formatWhen(selected.order.last_ping_at)}
+                    />
+                    <div className="mt-1 flex gap-2">
+                      <button
+                        onClick={() =>
+                          navigate({
+                            to: "/ops/pedidos/$id",
+                            params: { id: selected.order!.id },
+                          })
+                        }
+                        className="flex-1 rounded-lg bg-primary px-2 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90"
+                      >
+                        Abrir pedido
+                      </button>
                     </div>
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground">{driverName(v.owner_driver_id) ?? "—"}</td>
-                  <td className="px-4 py-3"><span className={vehicleStatusBadgeClass(v.status)}><span className={`h-1.5 w-1.5 rounded-full ${vehicleStatusMeta(v.status).dot}`} />{vehicleStatusMeta(v.status).label}</span></td>
-                  <td className="px-4 py-3 text-muted-foreground">{[v.current_city, v.current_state].filter(Boolean).join(", ") || "—"}</td>
-                  <td className="px-4 py-3 text-right text-xs text-muted-foreground">
-                    {v.current_km ? `${Number(v.current_km).toLocaleString("pt-BR")} km` : "—"}
-                    <div>{v.last_location_at ? new Date(v.last_location_at).toLocaleString("pt-BR") : (v.updated_at ? new Date(v.updated_at).toLocaleString("pt-BR") : "—")}</div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  </>
+                ) : (
+                  <div className="rounded-lg bg-surface-2 p-2 text-[11px] text-muted-foreground">
+                    Sem viagem ativa.
+                  </div>
+                )}
+                <button
+                  onClick={() => navigate({ to: "/ops/veiculos/$id", params: { id: selected.id } })}
+                  className="mt-1 rounded-lg border border-border px-2 py-1.5 text-xs font-medium hover:bg-surface-2"
+                >
+                  Detalhes do veículo
+                </button>
+              </div>
+            </div>
+          )}
+          <div className="pointer-events-none absolute bottom-3 left-3 flex flex-wrap gap-1.5 rounded-xl bg-surface/90 p-2 text-[10px] shadow backdrop-blur">
+            {VEHICLE_STATUS.map((s) => (
+              <span key={s.value} className="flex items-center gap-1 px-1">
+                <span
+                  className="inline-block h-2 w-2 rounded-full"
+                  style={{ background: FLEET_MAP_COLORS[s.value].color }}
+                />
+                {s.label}
+              </span>
+            ))}
+          </div>
         </div>
-      )}
-
-      {pageCount > 1 && (
-        <div className="mt-6 flex items-center justify-center gap-2">
-          <button onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={currentPage === 0} className="rounded-full border border-border bg-background px-4 py-1.5 text-sm disabled:opacity-40">Anterior</button>
-          <span className="text-xs text-muted-foreground">Página {currentPage + 1} de {pageCount}</span>
-          <button onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))} disabled={currentPage >= pageCount - 1} className="rounded-full border border-border bg-background px-4 py-1.5 text-sm disabled:opacity-40">Próxima</button>
-        </div>
-      )}
+      </div>
     </AppShell>
   );
 }
 
-function Kpi({ label, value, icon, tint }: { label: string; value: number; icon: React.ReactNode; tint: string }) {
+function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="card-soft flex items-center gap-4 p-5">
-      <span className={`grid h-10 w-10 place-items-center rounded-full ${tint}`}>{icon}</span>
-      <div>
-        <div className="text-2xl font-semibold tracking-tight">{value}</div>
-        <div className="text-xs uppercase tracking-widest text-muted-foreground">{label}</div>
-      </div>
+    <div className="flex items-start justify-between gap-2">
+      <span className="text-muted-foreground">{label}</span>
+      <span className="max-w-[60%] text-right font-medium">{value}</span>
     </div>
   );
 }
 
-function VehicleCard({ v, driverName, onOpen }: { v: any; driverName: string | null; onOpen: () => void }) {
-  const meta = vehicleStatusMeta(v.status);
-  const nextExp = [
-    { label: "CRLV", d: v.crlv_expires_at },
-    { label: "Licenc.", d: v.licensing_expires_at },
-    { label: "Seguro", d: v.insurance_expires_at },
-    { label: "IPVA", d: v.ipva_expires_at },
-  ]
-    .map((x) => ({ ...x, days: daysUntil(x.d) }))
-    .filter((x) => x.days !== null)
-    .sort((a, b) => (a.days as number) - (b.days as number))[0];
-
-  return (
-    <button onClick={onOpen} className="card-soft flex flex-col gap-4 p-5 text-left transition hover:shadow-md">
-      <div className="flex items-center gap-4">
-        {v.photo_url ? (
-          <img src={v.photo_url} alt="" className="h-16 w-24 rounded-xl object-cover" />
-        ) : (
-          <span className="grid h-16 w-24 place-items-center rounded-xl bg-surface-2">
-            <Truck className="h-7 w-7 text-muted-foreground" />
-          </span>
-        )}
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <span className="truncate text-lg font-semibold uppercase tracking-wide">{v.plate}</span>
-          </div>
-          <div className="truncate text-xs text-muted-foreground">
-            {[v.brand, v.model, v.year].filter(Boolean).join(" · ") || "—"}
-          </div>
-          <div className="truncate text-xs text-muted-foreground">
-            {v.vehicle_type ?? "—"}
-            {v.capacity_kg ? ` · ${v.capacity_kg} kg` : ""}
-            {v.capacity_m3 ? ` · ${v.capacity_m3} m³` : ""}
-          </div>
-        </div>
-      </div>
-      <div className="flex flex-wrap items-center gap-2">
-        <span className={vehicleStatusBadgeClass(v.status)}>
-          <span className={`h-1.5 w-1.5 rounded-full ${meta.dot}`} />
-          {meta.label}
-        </span>
-        {driverName && (
-          <span className="inline-flex rounded-full bg-surface-2 px-2.5 py-1 text-xs font-medium text-muted-foreground">
-            {driverName}
-          </span>
-        )}
-        {nextExp && (
-          <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${expiryBadgeClass(nextExp.days)}`}>
-            {nextExp.label}: {(nextExp.days as number) < 0 ? `vencido` : `${nextExp.days}d`}
-          </span>
-        )}
-      </div>
-      <div className="mt-auto flex items-center justify-between border-t border-border pt-3 text-xs text-muted-foreground">
-        <span>
-          <MapPin className="mr-1 inline h-3 w-3" />
-          {[v.current_city, v.current_state].filter(Boolean).join(", ") || "sem localização"}
-        </span>
-        <span>{v.current_km ? `${Number(v.current_km).toLocaleString("pt-BR")} km` : "—"}</span>
-      </div>
-    </button>
-  );
+function progressPct(o: NonNullable<FleetVehicle["order"]>) {
+  const total = o.initial_distance_km ?? null;
+  const left = o.distance_km ?? null;
+  if (total && left != null && total > 0) {
+    const pct = Math.max(0, Math.min(100, Math.round(((total - left) / total) * 100)));
+    return `${pct}%`;
+  }
+  return "—";
 }
 
-function EmptyState({ onNew }: { onNew: () => void }) {
-  return (
-    <div className="grid place-items-center rounded-3xl border border-border bg-surface p-16 text-center">
-      <span className="grid h-14 w-14 place-items-center rounded-2xl bg-surface-2 text-muted-foreground">
-        <Truck className="h-6 w-6" />
-      </span>
-      <h2 className="mt-6 text-xl font-semibold tracking-tight">Nenhum veículo cadastrado</h2>
-      <p className="mt-2 max-w-sm text-sm text-muted-foreground">
-        Cadastre o primeiro veículo da frota com documentação, capacidade e status operacional.
-      </p>
-      <button onClick={onNew} className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow hover:opacity-90">
-        <Plus className="h-4 w-4" /> Novo veículo
-      </button>
-    </div>
-  );
+function formatWhen(iso?: string | null) {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  const mins = Math.round((Date.now() - d.getTime()) / 60000);
+  if (mins < 1) return "agora";
+  if (mins < 60) return `há ${mins} min`;
+  const h = Math.round(mins / 60);
+  if (h < 24) return `há ${h} h`;
+  return d.toLocaleString("pt-BR");
 }

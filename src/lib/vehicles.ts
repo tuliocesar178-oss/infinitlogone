@@ -64,3 +64,21 @@ export function formatDate(d?: string | null) {
   if (Number.isNaN(dt.getTime())) return "—";
   return dt.toLocaleDateString("pt-BR");
 }
+
+// Fleet map marker colors (Uber-style) per vehicle status
+export const FLEET_MAP_COLORS: Record<VehicleStatus, { color: string; label: string }> = {
+  disponivel: { color: "#10b981", label: "Disponível" },
+  em_coleta: { color: "#3b82f6", label: "Em deslocamento p/ coleta" },
+  em_transito: { color: "#0d1b4a", label: "Em trânsito" },
+  em_entrega: { color: "#8b5cf6", label: "Próximo da entrega" },
+  retornando: { color: "#6b7280", label: "Retornando" },
+  manutencao: { color: "#ef4444", label: "Manutenção" },
+  bloqueado: { color: "#ef4444", label: "Bloqueado" },
+  reserva: { color: "#f59e0b", label: "Aguardando carregamento" },
+  offline: { color: "#e5e7eb", label: "Offline" },
+};
+
+export function fleetColor(status?: string | null) {
+  return (FLEET_MAP_COLORS as any)[status ?? "offline"]?.color ?? "#e5e7eb";
+}
+

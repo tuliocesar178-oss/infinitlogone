@@ -23,6 +23,7 @@ import { Route as AuthenticatedOpsVeiculosRouteImport } from './routes/_authenti
 import { Route as AuthenticatedOpsMotoristasRouteImport } from './routes/_authenticated/ops.motoristas'
 import { Route as AuthenticatedOpsEquipeRouteImport } from './routes/_authenticated/ops.equipe'
 import { Route as AuthenticatedOpsVeiculosNovoRouteImport } from './routes/_authenticated/ops.veiculos.novo'
+import { Route as AuthenticatedOpsVeiculosListaRouteImport } from './routes/_authenticated/ops.veiculos.lista'
 import { Route as AuthenticatedOpsVeiculosIdRouteImport } from './routes/_authenticated/ops.veiculos.$id'
 import { Route as AuthenticatedOpsPedidosNovoRouteImport } from './routes/_authenticated/ops.pedidos.novo'
 import { Route as AuthenticatedOpsPedidosIdRouteImport } from './routes/_authenticated/ops.pedidos.$id'
@@ -100,6 +101,12 @@ const AuthenticatedOpsVeiculosNovoRoute =
     path: '/novo',
     getParentRoute: () => AuthenticatedOpsVeiculosRoute,
   } as any)
+const AuthenticatedOpsVeiculosListaRoute =
+  AuthenticatedOpsVeiculosListaRouteImport.update({
+    id: '/lista',
+    path: '/lista',
+    getParentRoute: () => AuthenticatedOpsVeiculosRoute,
+  } as any)
 const AuthenticatedOpsVeiculosIdRoute =
   AuthenticatedOpsVeiculosIdRouteImport.update({
     id: '/$id',
@@ -142,6 +149,7 @@ export interface FileRoutesByFullPath {
   '/ops/pedidos/$id': typeof AuthenticatedOpsPedidosIdRoute
   '/ops/pedidos/novo': typeof AuthenticatedOpsPedidosNovoRoute
   '/ops/veiculos/$id': typeof AuthenticatedOpsVeiculosIdRoute
+  '/ops/veiculos/lista': typeof AuthenticatedOpsVeiculosListaRoute
   '/ops/veiculos/novo': typeof AuthenticatedOpsVeiculosNovoRoute
 }
 export interface FileRoutesByTo {
@@ -161,6 +169,7 @@ export interface FileRoutesByTo {
   '/ops/pedidos/$id': typeof AuthenticatedOpsPedidosIdRoute
   '/ops/pedidos/novo': typeof AuthenticatedOpsPedidosNovoRoute
   '/ops/veiculos/$id': typeof AuthenticatedOpsVeiculosIdRoute
+  '/ops/veiculos/lista': typeof AuthenticatedOpsVeiculosListaRoute
   '/ops/veiculos/novo': typeof AuthenticatedOpsVeiculosNovoRoute
 }
 export interface FileRoutesById {
@@ -182,6 +191,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/pedidos/$id': typeof AuthenticatedOpsPedidosIdRoute
   '/_authenticated/ops/pedidos/novo': typeof AuthenticatedOpsPedidosNovoRoute
   '/_authenticated/ops/veiculos/$id': typeof AuthenticatedOpsVeiculosIdRoute
+  '/_authenticated/ops/veiculos/lista': typeof AuthenticatedOpsVeiculosListaRoute
   '/_authenticated/ops/veiculos/novo': typeof AuthenticatedOpsVeiculosNovoRoute
 }
 export interface FileRouteTypes {
@@ -203,6 +213,7 @@ export interface FileRouteTypes {
     | '/ops/pedidos/$id'
     | '/ops/pedidos/novo'
     | '/ops/veiculos/$id'
+    | '/ops/veiculos/lista'
     | '/ops/veiculos/novo'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -222,6 +233,7 @@ export interface FileRouteTypes {
     | '/ops/pedidos/$id'
     | '/ops/pedidos/novo'
     | '/ops/veiculos/$id'
+    | '/ops/veiculos/lista'
     | '/ops/veiculos/novo'
   id:
     | '__root__'
@@ -242,6 +254,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/pedidos/$id'
     | '/_authenticated/ops/pedidos/novo'
     | '/_authenticated/ops/veiculos/$id'
+    | '/_authenticated/ops/veiculos/lista'
     | '/_authenticated/ops/veiculos/novo'
   fileRoutesById: FileRoutesById
 }
@@ -353,6 +366,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsVeiculosNovoRouteImport
       parentRoute: typeof AuthenticatedOpsVeiculosRoute
     }
+    '/_authenticated/ops/veiculos/lista': {
+      id: '/_authenticated/ops/veiculos/lista'
+      path: '/lista'
+      fullPath: '/ops/veiculos/lista'
+      preLoaderRoute: typeof AuthenticatedOpsVeiculosListaRouteImport
+      parentRoute: typeof AuthenticatedOpsVeiculosRoute
+    }
     '/_authenticated/ops/veiculos/$id': {
       id: '/_authenticated/ops/veiculos/$id'
       path: '/$id'
@@ -400,12 +420,14 @@ const AuthenticatedOpsMotoristasRouteWithChildren =
 
 interface AuthenticatedOpsVeiculosRouteChildren {
   AuthenticatedOpsVeiculosIdRoute: typeof AuthenticatedOpsVeiculosIdRoute
+  AuthenticatedOpsVeiculosListaRoute: typeof AuthenticatedOpsVeiculosListaRoute
   AuthenticatedOpsVeiculosNovoRoute: typeof AuthenticatedOpsVeiculosNovoRoute
 }
 
 const AuthenticatedOpsVeiculosRouteChildren: AuthenticatedOpsVeiculosRouteChildren =
   {
     AuthenticatedOpsVeiculosIdRoute: AuthenticatedOpsVeiculosIdRoute,
+    AuthenticatedOpsVeiculosListaRoute: AuthenticatedOpsVeiculosListaRoute,
     AuthenticatedOpsVeiculosNovoRoute: AuthenticatedOpsVeiculosNovoRoute,
   }
 
