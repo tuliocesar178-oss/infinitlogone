@@ -1,86 +1,99 @@
-# Plataforma InfinitLog — Reconstrução Completa
+# InfinitLog TMS — Reorientação da Plataforma
 
-Este é um projeto grande. Vou entregá-lo em fases incrementais, garantindo que cada uma resulte em um app funcional. Antes de começar, preciso confirmar o escopo da Fase 1.
+A plataforma deixa de ser marketplace e passa a ser um **TMS interno**: cliente não faz login para pedir frete, apenas rastreia. A equipe de logística cadastra o pedido, o sistema oferta a motoristas, e o motorista segue um fluxo guiado que atualiza o status automaticamente.
 
-## Visão do produto
+## Ajustes no modelo atual
 
-Um único aplicativo web (responsivo, tema claro, estética Uber/Apple) com login unificado. Após autenticar, o sistema detecta o perfil (Admin, Logística, Motorista, Cliente) e renderiza o painel correspondente. Landing pública + rastreio sem login.
+O schema criado na Fase 1 já cobre 90% do necessário. Vou apenas:
 
-## Arquitetura técnica
+- **Remover perfil `client`** do fluxo de login: cliente vira só um registro na tabela `clients` (dados de contato). Sem `auth.users` para cliente.
+- **Ampliar `orders`**: `contact_name`, `contact_phone`, `pickup_window_start/end`, `delivery_window_start/end`, `volumes`, `cargo_type`, `priority`, `negotiated_price` (renomear `price`), campo `qr_payload`.
+- **Novo enum `order_status`** com os passos operacionais:
+  `preparing → awaiting_driver → driver_assigned → en_route_pickup → at_pickup → loaded → out_for_delivery → in_transit → near_destination → delivered → finalized → incident → cancelled`.
+- **Mapeamento cliente-visível** (view/função): reduz para 7 status públicos.
+- **Tabela `order_attachments`** (NF, CT-e, MDF-e, fotos, PDFs, outros) com `kind` enum.
+- **Bucket Storage** `order-files` (privado) + policies por pedido/motorista.
+- **`freight_offers`**: já existe. Adiciono job de auto-broadcast/expiração via `pg_cron` + server function `/api/public/hooks/dispatch-offers`.
 
-- **Frontend**: TanStack Start (já configurado), React 19, Tailwind v4, shadcn.
-- **Backend**: Lovable Cloud (Supabase) — Auth, Postgres com RLS, Realtime, Storage.
-- **Mapa**: Mapbox (conector) — token público no browser, secreto no server.
-- **Notificações**: Realtime do Supabase + som/vibração no cliente. Push nativo fica fora (é web app).
-- **Estado**: TanStack Query + Realtime subscriptions.
-
-## Modelo de dados (resumo)
-
-```text
-profiles(id, full_name, phone, avatar_url, created_at)
-user_roles(user_id, role: admin|logistics|driver|client)
-drivers(user_id, status: available|on_trip|offline, vehicle_id, current_lat, current_lng)
-vehicles(id, plate, model, capacity_kg, driver_id)
-clients(user_id, company_name, doc)
-orders(id, code, client_id, origin, destination, status, price, km, eta, invoice_url, tracking_code, created_at)
-order_events(order_id, type, payload, actor_id, created_at)  -- timeline + auditoria
-freight_offers(id, order_id, driver_id, status, expires_at, accepted_at)
-negotiations(id, offer_id, proposed_by, amount, note, status, created_at)
-deliveries(order_id, pickup_photo_url, delivery_photo_url, signature_url, receiver_name, delivered_at)
-messages(id, order_id, sender_id, kind: text|photo|video|pdf|audio, content, url, created_at)
-notifications(id, user_id, type, title, body, read_at, created_at)
-incidents(id, order_id, type, description, created_at)
-financials -- visão computada sobre orders
-```
-
-RLS: cada perfil vê apenas o que lhe cabe (motorista → seus fretes; cliente → seus pedidos; logística → operação; admin → tudo). Papéis via tabela `user_roles` + função `has_role` (evita recursão).
-
-## Rotas
+## Rotas (nova estrutura)
 
 ```text
-/                       Landing pública (Quem somos, Serviços, Contato, Rastrear)
-/rastreio/$code         Rastreio público
-/auth                   Login unificado (magic link + senha)
-/_authenticated/app     Roteador de perfil (redireciona conforme role)
-/_authenticated/admin/* Dashboard admin, cadastros, financeiro, mapa
-/_authenticated/ops/*   Painel logística (pedidos, ofertas, chat, mapa)
-/_authenticated/driver  Painel motorista (fluxo Uber-like)
-/_authenticated/me      Painel cliente (encomendas, histórico, perfil)
+/                          Landing institucional
+/rastreio                  Busca pública (código ou nº pedido)
+/rastreio/$code            Timeline + mapa + status público
+/auth                      Login (apenas staff + motorista)
+/_authenticated/app        Redireciona por role
+/_authenticated/ops        Painel logística (cards operacionais, novo pedido, chat)
+/_authenticated/ops/pedidos/$id   Detalhe do pedido (edição, anexos, ofertas, chat, timeline)
+/_authenticated/ops/pedidos/novo  Cadastro guiado
+/_authenticated/admin      Igual ops + KPIs, cadastros, financeiro
+/_authenticated/driver     Home: oferta atual OU frete ativo
+/_authenticated/driver/frete/$id  Fluxo guiado (1 botão por vez)
 ```
 
-## Design system
+Rota `/_authenticated/me` (cliente) é removida.
 
-- Fundo `oklch(0.99 0 0)`, texto quase-preto, primário preto (Uber), acento âmbar sutil para CTAs de ação.
-- Cards grandes, radius 20px, sombras suaves, tipografia Inter/Geist.
-- Componentes: `StatusPill`, `OrderCard`, `BigActionButton`, `Timeline`, `MapCanvas`, `ChatThread`, `OfferCard` com countdown.
+## Fluxo do motorista (guiado, 1 ação por vez)
 
-## Fases sugeridas
+Cada botão dispara uma server function que insere `order_event` e transita o `orders.status`. Motorista nunca escolhe status.
 
-**Fase 1 — Fundação (o que proponho fazer agora)**
-1. Ativar Lovable Cloud + Mapbox (peço confirmação).
-2. Design system (styles.css) + shell da landing pública e rastreio (mock).
-3. Auth unificado + tabela `user_roles` + roteador de perfil.
-4. Schema completo com RLS.
-5. Dashboards vazios (esqueleto) para os 4 perfis.
+```text
+Aceitar oferta      → driver_assigned
+INICIAR DESLOCAMENTO → en_route_pickup
+CHEGUEI NA COLETA    → at_pickup
+ENVIAR FOTOS+NF+volumes → loaded → out_for_delivery
+INICIAR ENTREGA      → in_transit
+(GPS < X km)         → near_destination (automático)
+ENVIAR COMPROVANTES  → delivered
+(revisão staff)      → finalized
+```
 
-**Fase 2 — Pedidos & Motorista**
-- CRUD de pedidos (admin/logística), oferta de fretes, aceite/negociação, fluxo do motorista (Uber-like), timeline automática.
+Uploads obrigatórios validados no server antes de transitar.
 
-**Fase 3 — Mapa & Realtime**
-- Mapbox com posição do veículo em tempo real, ETA, rastreio público ao vivo.
+## Notificações
 
-**Fase 4 — Chat, Notificações, Documentos**
-- Chat por pedido (Storage para mídias), notificações realtime com som/vibração, upload de NF, foto e assinatura digital.
+Trigger em `orders` após update de status:
+- insere linhas em `notifications` para staff + admin + (futuro) cliente.
+- Chama server fn que envia e-mail (Resend/Lovable) para o cliente com link `/rastreio/$code`.
+- Estrutura pronta para WhatsApp (webhook `/api/public/hooks/whatsapp-out` stub).
 
-**Fase 5 — Financeiro & Auditoria**
-- Dashboard financeiro, exportação PDF/Excel, log de auditoria, soft delete.
+## Fases de entrega
 
-## Confirmações antes de começar
+**Fase 2A — Núcleo TMS (o que farei agora se aprovado)**
+1. Migração: novo enum de status, colunas extras em `orders`, tabela `order_attachments`, bucket + policies, trigger de auto-notificação.
+2. Cadastro de pedido (ops/admin) em wizard curto + upload de anexos + geração de QR/tracking.
+3. Painel de logística com os 8 cards operacionais reais + lista filtrada ao clicar.
+4. Detalhe do pedido: edição, anexos, timeline, chat, ações de admin (cancelar, marcar ocorrência, forçar reoferta).
+5. Portal público `/rastreio` + `/rastreio/$code` com status mapeados, timeline, QR code.
+6. Remoção do perfil client do login e da rota `/me`.
 
-1. Posso ativar **Lovable Cloud** (backend gerenciado com Auth, DB, Storage, Realtime)? É necessário para praticamente tudo.
-2. Posso conectar **Mapbox** agora? (Alternativa: Google Maps gerenciado pela Lovable, mais rápido de plugar mas sem estilos Mapbox custom.)
-3. Confirma seguir a divisão em **5 fases** começando pela Fase 1 (fundação + auth + schema + shells)? Se preferir, começo por outra fase (ex.: fluxo do motorista primeiro).
-4. **Idioma**: interface 100% pt-BR? (assumo que sim)
-5. **Push notifications nativas** ficam fora do escopo web (só possível via PWA/Web Push com service worker). Posso incluir Web Push (com permissão do browser) ou basta som+vibração+notificação in-app?
+**Fase 2B — Motorista guiado**
+7. Home do motorista: oferta ativa (aceitar/negociar/recusar com countdown) ou frete em andamento.
+8. Tela do frete com o "próximo passo" e formulários obrigatórios (fotos, NF, volumes, canhoto, assinatura, recebedor).
+9. Auto-broadcast de ofertas via `pg_cron` (expira e reoferta) mantendo a primeira oferta válida até alguém aceitar.
 
-Assim que confirmar esses pontos, começo a Fase 1.
+**Fase 3 — Mapa & Realtime (Mapbox)**
+10. Posição do motorista (upsert em `drivers.current_lat/lng`) + Realtime.
+11. Mapa no painel ops, no detalhe do pedido, no rastreio público, e cálculo de "próximo ao destino".
+
+**Fase 4 — Chat + notificações ricas**
+12. Chat por pedido com fotos/PDF/áudio/vídeo (Storage).
+13. E-mail transacional para cliente a cada mudança pública de status. Estrutura WhatsApp preparada.
+
+**Fase 5 — Financeiro, auditoria, exportações** (sem mudança em relação ao plano anterior).
+
+## Detalhes técnicos
+
+- Todas as transições de status são feitas por `createServerFn` com `requireSupabaseAuth`, verificando papel (`is_staff` ou driver dono do frete) e gravando `order_events` na mesma transação (RPC SQL).
+- Anexos: upload direto ao Storage via signed URL emitido por server fn (evita expor service role).
+- QR Code: gerado no cliente (`qrcode` npm) apontando para `https://<host>/rastreio/<code>`.
+- Auto-oferta: `freight_offers.expires_at` + cron a cada minuto chama `/api/public/hooks/dispatch-offers` (protegido por `apikey` anon) que oferta a próximo motorista disponível sem cancelar as anteriores; ao 1º aceite, cancela as demais via trigger.
+- `driver` e `logistics` continuam com RLS restrito; `admin` amplo.
+- i18n pt-BR em toda UI.
+
+## Confirmações antes de começar Fase 2A
+
+1. Posso **remover o perfil cliente do login** e a rota `/me`? Clientes viram apenas registros gerenciados pela logística.
+2. **E-mail transacional para o cliente**: posso habilitar Resend (Lovable) usando o e-mail em `clients.contact_email` para enviar link de rastreio a cada mudança de status pública?
+3. **Prioridade da execução**: começo por Fase 2A (núcleo TMS + rastreio público) e depois 2B (motorista)? Ou prefere motorista antes?
+4. **Mapbox** ainda não está conectado — mantenho para a Fase 3 conforme original, ok?
