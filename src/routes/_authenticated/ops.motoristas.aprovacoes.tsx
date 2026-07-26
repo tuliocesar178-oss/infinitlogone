@@ -40,7 +40,7 @@ function DriverApprovalsPage() {
   async function review(driverId: string, decision: "approve" | "reject" | "correction", reason?: string) {
     try {
       const { error } = await supabase.rpc("review_driver_signup", {
-        _driver_id: driverId, _decision: decision, _reason: reason ?? null,
+        _driver_id: driverId, _decision: decision, _reason: reason ?? undefined,
       });
       if (error) throw error;
       const msg = { approve: "Cadastro aprovado", reject: "Cadastro reprovado", correction: "Correção solicitada" }[decision];

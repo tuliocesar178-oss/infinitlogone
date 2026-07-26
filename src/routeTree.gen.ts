@@ -11,7 +11,9 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as RastreioRouteImport } from './routes/rastreio'
+import { Route as CadastroMotoristaRouteImport } from './routes/cadastro-motorista'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AguardandoAprovacaoRouteImport } from './routes/aguardando-aprovacao'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as RastreioCodeRouteImport } from './routes/rastreio.$code'
@@ -29,6 +31,7 @@ import { Route as AuthenticatedOpsVeiculosListaRouteImport } from './routes/_aut
 import { Route as AuthenticatedOpsVeiculosIdRouteImport } from './routes/_authenticated/ops.veiculos.$id'
 import { Route as AuthenticatedOpsPedidosNovoRouteImport } from './routes/_authenticated/ops.pedidos.novo'
 import { Route as AuthenticatedOpsPedidosIdRouteImport } from './routes/_authenticated/ops.pedidos.$id'
+import { Route as AuthenticatedOpsMotoristasAprovacoesRouteImport } from './routes/_authenticated/ops.motoristas.aprovacoes'
 import { Route as AuthenticatedOpsMotoristasIdRouteImport } from './routes/_authenticated/ops.motoristas.$id'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -41,9 +44,19 @@ const RastreioRoute = RastreioRouteImport.update({
   path: '/rastreio',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CadastroMotoristaRoute = CadastroMotoristaRouteImport.update({
+  id: '/cadastro-motorista',
+  path: '/cadastro-motorista',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AguardandoAprovacaoRoute = AguardandoAprovacaoRouteImport.update({
+  id: '/aguardando-aprovacao',
+  path: '/aguardando-aprovacao',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
@@ -137,6 +150,12 @@ const AuthenticatedOpsPedidosIdRoute =
     path: '/$id',
     getParentRoute: () => AuthenticatedOpsPedidosRoute,
   } as any)
+const AuthenticatedOpsMotoristasAprovacoesRoute =
+  AuthenticatedOpsMotoristasAprovacoesRouteImport.update({
+    id: '/aprovacoes',
+    path: '/aprovacoes',
+    getParentRoute: () => AuthenticatedOpsMotoristasRoute,
+  } as any)
 const AuthenticatedOpsMotoristasIdRoute =
   AuthenticatedOpsMotoristasIdRouteImport.update({
     id: '/$id',
@@ -146,7 +165,9 @@ const AuthenticatedOpsMotoristasIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/aguardando-aprovacao': typeof AguardandoAprovacaoRoute
   '/auth': typeof AuthRoute
+  '/cadastro-motorista': typeof CadastroMotoristaRoute
   '/rastreio': typeof RastreioRouteWithChildren
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin': typeof AuthenticatedAdminRoute
@@ -160,6 +181,7 @@ export interface FileRoutesByFullPath {
   '/ops/pedidos': typeof AuthenticatedOpsPedidosRouteWithChildren
   '/ops/veiculos': typeof AuthenticatedOpsVeiculosRouteWithChildren
   '/ops/motoristas/$id': typeof AuthenticatedOpsMotoristasIdRoute
+  '/ops/motoristas/aprovacoes': typeof AuthenticatedOpsMotoristasAprovacoesRoute
   '/ops/pedidos/$id': typeof AuthenticatedOpsPedidosIdRoute
   '/ops/pedidos/novo': typeof AuthenticatedOpsPedidosNovoRoute
   '/ops/veiculos/$id': typeof AuthenticatedOpsVeiculosIdRoute
@@ -168,7 +190,9 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/aguardando-aprovacao': typeof AguardandoAprovacaoRoute
   '/auth': typeof AuthRoute
+  '/cadastro-motorista': typeof CadastroMotoristaRoute
   '/rastreio': typeof RastreioRouteWithChildren
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin': typeof AuthenticatedAdminRoute
@@ -182,6 +206,7 @@ export interface FileRoutesByTo {
   '/ops/pedidos': typeof AuthenticatedOpsPedidosRouteWithChildren
   '/ops/veiculos': typeof AuthenticatedOpsVeiculosRouteWithChildren
   '/ops/motoristas/$id': typeof AuthenticatedOpsMotoristasIdRoute
+  '/ops/motoristas/aprovacoes': typeof AuthenticatedOpsMotoristasAprovacoesRoute
   '/ops/pedidos/$id': typeof AuthenticatedOpsPedidosIdRoute
   '/ops/pedidos/novo': typeof AuthenticatedOpsPedidosNovoRoute
   '/ops/veiculos/$id': typeof AuthenticatedOpsVeiculosIdRoute
@@ -192,7 +217,9 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/aguardando-aprovacao': typeof AguardandoAprovacaoRoute
   '/auth': typeof AuthRoute
+  '/cadastro-motorista': typeof CadastroMotoristaRoute
   '/rastreio': typeof RastreioRouteWithChildren
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
@@ -206,6 +233,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/pedidos': typeof AuthenticatedOpsPedidosRouteWithChildren
   '/_authenticated/ops/veiculos': typeof AuthenticatedOpsVeiculosRouteWithChildren
   '/_authenticated/ops/motoristas/$id': typeof AuthenticatedOpsMotoristasIdRoute
+  '/_authenticated/ops/motoristas/aprovacoes': typeof AuthenticatedOpsMotoristasAprovacoesRoute
   '/_authenticated/ops/pedidos/$id': typeof AuthenticatedOpsPedidosIdRoute
   '/_authenticated/ops/pedidos/novo': typeof AuthenticatedOpsPedidosNovoRoute
   '/_authenticated/ops/veiculos/$id': typeof AuthenticatedOpsVeiculosIdRoute
@@ -216,7 +244,9 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/aguardando-aprovacao'
     | '/auth'
+    | '/cadastro-motorista'
     | '/rastreio'
     | '/sitemap.xml'
     | '/admin'
@@ -230,6 +260,7 @@ export interface FileRouteTypes {
     | '/ops/pedidos'
     | '/ops/veiculos'
     | '/ops/motoristas/$id'
+    | '/ops/motoristas/aprovacoes'
     | '/ops/pedidos/$id'
     | '/ops/pedidos/novo'
     | '/ops/veiculos/$id'
@@ -238,7 +269,9 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/aguardando-aprovacao'
     | '/auth'
+    | '/cadastro-motorista'
     | '/rastreio'
     | '/sitemap.xml'
     | '/admin'
@@ -252,6 +285,7 @@ export interface FileRouteTypes {
     | '/ops/pedidos'
     | '/ops/veiculos'
     | '/ops/motoristas/$id'
+    | '/ops/motoristas/aprovacoes'
     | '/ops/pedidos/$id'
     | '/ops/pedidos/novo'
     | '/ops/veiculos/$id'
@@ -261,7 +295,9 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/aguardando-aprovacao'
     | '/auth'
+    | '/cadastro-motorista'
     | '/rastreio'
     | '/sitemap.xml'
     | '/_authenticated/admin'
@@ -275,6 +311,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/pedidos'
     | '/_authenticated/ops/veiculos'
     | '/_authenticated/ops/motoristas/$id'
+    | '/_authenticated/ops/motoristas/aprovacoes'
     | '/_authenticated/ops/pedidos/$id'
     | '/_authenticated/ops/pedidos/novo'
     | '/_authenticated/ops/veiculos/$id'
@@ -285,7 +322,9 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AguardandoAprovacaoRoute: typeof AguardandoAprovacaoRoute
   AuthRoute: typeof AuthRoute
+  CadastroMotoristaRoute: typeof CadastroMotoristaRoute
   RastreioRoute: typeof RastreioRouteWithChildren
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
 }
@@ -306,11 +345,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RastreioRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/cadastro-motorista': {
+      id: '/cadastro-motorista'
+      path: '/cadastro-motorista'
+      fullPath: '/cadastro-motorista'
+      preLoaderRoute: typeof CadastroMotoristaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/aguardando-aprovacao': {
+      id: '/aguardando-aprovacao'
+      path: '/aguardando-aprovacao'
+      fullPath: '/aguardando-aprovacao'
+      preLoaderRoute: typeof AguardandoAprovacaoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -432,6 +485,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsPedidosIdRouteImport
       parentRoute: typeof AuthenticatedOpsPedidosRoute
     }
+    '/_authenticated/ops/motoristas/aprovacoes': {
+      id: '/_authenticated/ops/motoristas/aprovacoes'
+      path: '/aprovacoes'
+      fullPath: '/ops/motoristas/aprovacoes'
+      preLoaderRoute: typeof AuthenticatedOpsMotoristasAprovacoesRouteImport
+      parentRoute: typeof AuthenticatedOpsMotoristasRoute
+    }
     '/_authenticated/ops/motoristas/$id': {
       id: '/_authenticated/ops/motoristas/$id'
       path: '/$id'
@@ -444,11 +504,14 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedOpsMotoristasRouteChildren {
   AuthenticatedOpsMotoristasIdRoute: typeof AuthenticatedOpsMotoristasIdRoute
+  AuthenticatedOpsMotoristasAprovacoesRoute: typeof AuthenticatedOpsMotoristasAprovacoesRoute
 }
 
 const AuthenticatedOpsMotoristasRouteChildren: AuthenticatedOpsMotoristasRouteChildren =
   {
     AuthenticatedOpsMotoristasIdRoute: AuthenticatedOpsMotoristasIdRoute,
+    AuthenticatedOpsMotoristasAprovacoesRoute:
+      AuthenticatedOpsMotoristasAprovacoesRoute,
   }
 
 const AuthenticatedOpsMotoristasRouteWithChildren =
@@ -541,7 +604,9 @@ const RastreioRouteWithChildren = RastreioRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AguardandoAprovacaoRoute: AguardandoAprovacaoRoute,
   AuthRoute: AuthRoute,
+  CadastroMotoristaRoute: CadastroMotoristaRoute,
   RastreioRoute: RastreioRouteWithChildren,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
 }
