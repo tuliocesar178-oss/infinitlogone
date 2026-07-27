@@ -474,11 +474,14 @@ function FileInput({ label, onChange, multiple, count }: { label: string; onChan
 function I({ k, v, icon }: { k: string; v: unknown; icon?: React.ReactNode }) {
   if (v === null || v === undefined || v === "" || v === "—") return null;
   return (
-    <div>
-      <div className="flex items-center gap-1.5 text-xs uppercase tracking-widest text-muted-foreground">
-        {icon} {k}
+    <div className="flex items-start gap-3">
+      {icon && <div className="mt-0.5 shrink-0 text-muted-foreground">{icon}</div>}
+      <div className="min-w-0 flex-1">
+        <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+          {k}
+        </div>
+        <div className="mt-0.5 truncate text-sm font-semibold">{String(v)}</div>
       </div>
-      <div className="mt-0.5 text-sm font-medium">{String(v)}</div>
     </div>
   );
 }
