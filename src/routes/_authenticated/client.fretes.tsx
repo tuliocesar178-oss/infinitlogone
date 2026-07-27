@@ -42,11 +42,12 @@ function ClientOrdersList() {
   });
 
   const filteredOrders = orders?.filter(o => 
-    o.order_number?.toLowerCase().includes(search.toLowerCase()) ||
+    o.code?.toLowerCase().includes(search.toLowerCase()) ||
     o.invoice_number?.toLowerCase().includes(search.toLowerCase()) ||
     o.origin_city?.toLowerCase().includes(search.toLowerCase()) ||
     o.destination_city?.toLowerCase().includes(search.toLowerCase())
   );
+
 
   return (
     <AppShell 
@@ -106,8 +107,9 @@ function ClientOrdersList() {
                   filteredOrders?.map((order) => (
                     <tr key={order.id} className="group hover:bg-surface-2/30 transition-colors">
                       <td className="px-6 py-4">
-                        <div className="font-semibold text-foreground">{order.order_number}</div>
+                        <div className="font-semibold text-foreground">{order.code}</div>
                         <div className="mt-1 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+
                           <Calendar className="h-3 w-3" />
                           {order.created_at && format(new Date(order.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
                         </div>
@@ -132,8 +134,9 @@ function ClientOrdersList() {
                             <span className="font-medium">{order.destination_city}</span>
                           </div>
                           <div className="text-[11px] text-muted-foreground">
-                            {order.total_km || 0} km · {order.total_weight || 0} kg
+                            {order.distance_km || 0} km · {order.cargo_weight_kg || 0} kg
                           </div>
+
                         </div>
                       </td>
                       <td className="px-6 py-4">
