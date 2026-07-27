@@ -180,6 +180,7 @@ function DriverOffers() {
           {items.map(({ offer, order, program }) => {
             const expMs = offer.expires_at ? new Date(offer.expires_at).getTime() - now : null;
             const isExpiring = offer.status === "pending" && expMs !== null && expMs > 0 && expMs <= EXPIRING_WINDOW_MS;
+            const fav = favorites.includes(routeKey(order?.origin_city, order?.destination_city));
             return (
               <li key={offer.id}>
                 <Link
@@ -192,6 +193,7 @@ function DriverOffers() {
                   <div className="flex items-center justify-between border-b border-border/60 bg-surface-2 px-4 py-2 text-[10px] uppercase tracking-widest text-muted-foreground">
                     <span className="inline-flex items-center gap-2">
                       {isExpiring && <AlertTriangle className="h-3 w-3 text-red-500" />}
+                      {fav && <Star className="h-3 w-3 fill-amber-500 stroke-amber-500" />}
                       {program?.pf_code ?? order?.code ?? "Nova oferta"}
                     </span>
                     <ExpireBadge expiresAt={offer.expires_at} now={now} negotiating={offer.status === "negotiating"} />
