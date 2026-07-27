@@ -150,6 +150,16 @@ function DriverFreights() {
                         {goingToPickup ? "Navegar até coleta" : "Navegar até entrega"}
                       </button>
                     ) : null}
+                    {isActive ? (
+                      <button
+                        onClick={() => setChatOrder({ id: o.id, code: o.code })}
+                        className="grid h-11 w-11 place-items-center rounded-xl border border-border bg-surface transition hover:bg-surface-2"
+                        aria-label="Chat"
+                        title="Chat com a logística"
+                      >
+                        <MessageCircle className="h-4 w-4" />
+                      </button>
+                    ) : null}
                     <Link
                       to="/driver"
                       className="flex items-center justify-center gap-1 rounded-xl border border-border bg-surface px-4 py-2.5 text-sm font-semibold transition hover:bg-surface-2"
