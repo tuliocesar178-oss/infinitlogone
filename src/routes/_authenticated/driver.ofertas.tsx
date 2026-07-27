@@ -11,7 +11,19 @@ export const Route = createFileRoute("/_authenticated/driver/ofertas")({
   component: DriverOffers,
 });
 
-type FilterKey = "novas" | "negociacao" | "expirando" | "todas";
+type FilterKey = "novas" | "negociacao" | "expirando" | "favoritas" | "todas";
+
+function subFavorites(cb: () => void) {
+  window.addEventListener("driver-favorites-changed", cb);
+  return () => window.removeEventListener("driver-favorites-changed", cb);
+}
+function useFavorites(): string[] {
+  return useSyncExternalStore(
+    subFavorites,
+    () => JSON.stringify(readFavorites()),
+    () => "[]",
+  ) as unknown as string[] extends never ? never : any, readFavorites();
+}
 
 const EXPIRING_WINDOW_MS = 5 * 60 * 1000;
 
