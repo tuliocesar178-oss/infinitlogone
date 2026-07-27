@@ -63,7 +63,7 @@ function TorreDeControle() {
       if (error) throw error;
 
       // Fetch driver profiles manually to avoid join issues
-      const driverIds = orders.map(o => o.driver_id).filter(Boolean);
+      const driverIds = orders.map(o => o.driver_id).filter((id): id is string => !!id);
       let driversMap: Record<string, any> = {};
       
       if (driverIds.length > 0) {
