@@ -975,19 +975,26 @@ export type Database = {
           current_lat: number | null
           current_lng: number | null
           deleted_at: string | null
+          delivery_dock: string | null
           delivery_franchise_minutes: number | null
+          delivery_gate: string | null
+          delivery_reference: string | null
+          delivery_whatsapp: string | null
           delivery_window_end: string | null
           delivery_window_start: string | null
           destination_address: string
           destination_city: string | null
           destination_lat: number | null
           destination_lng: number | null
+          destination_neighborhood: string | null
+          destination_number: string | null
           destination_state: string | null
           destination_zip: string | null
           distance_km: number | null
           distance_to_destination_km: number | null
           driver_id: string | null
           estimated_minutes: number | null
+          estimated_tolls: number | null
           eta_minutes: number | null
           id: string
           initial_distance_km: number | null
@@ -1002,13 +1009,23 @@ export type Database = {
           origin_city: string | null
           origin_lat: number | null
           origin_lng: number | null
+          origin_neighborhood: string | null
+          origin_number: string | null
           origin_state: string | null
           origin_zip: string | null
+          pickup_dock: string | null
           pickup_franchise_minutes: number | null
+          pickup_gate: string | null
+          pickup_instructions: string | null
+          pickup_phone_name: string | null
+          pickup_reference: string | null
+          pickup_whatsapp: string | null
           pickup_window_end: string | null
           pickup_window_start: string | null
           price: number | null
           priority: string
+          route_geometry: string | null
+          route_highways: string | null
           scheduled_at: string | null
           started_trip_at: string | null
           status: Database["public"]["Enums"]["order_status"]
@@ -1041,19 +1058,26 @@ export type Database = {
           current_lat?: number | null
           current_lng?: number | null
           deleted_at?: string | null
+          delivery_dock?: string | null
           delivery_franchise_minutes?: number | null
+          delivery_gate?: string | null
+          delivery_reference?: string | null
+          delivery_whatsapp?: string | null
           delivery_window_end?: string | null
           delivery_window_start?: string | null
           destination_address: string
           destination_city?: string | null
           destination_lat?: number | null
           destination_lng?: number | null
+          destination_neighborhood?: string | null
+          destination_number?: string | null
           destination_state?: string | null
           destination_zip?: string | null
           distance_km?: number | null
           distance_to_destination_km?: number | null
           driver_id?: string | null
           estimated_minutes?: number | null
+          estimated_tolls?: number | null
           eta_minutes?: number | null
           id?: string
           initial_distance_km?: number | null
@@ -1068,13 +1092,23 @@ export type Database = {
           origin_city?: string | null
           origin_lat?: number | null
           origin_lng?: number | null
+          origin_neighborhood?: string | null
+          origin_number?: string | null
           origin_state?: string | null
           origin_zip?: string | null
+          pickup_dock?: string | null
           pickup_franchise_minutes?: number | null
+          pickup_gate?: string | null
+          pickup_instructions?: string | null
+          pickup_phone_name?: string | null
+          pickup_reference?: string | null
+          pickup_whatsapp?: string | null
           pickup_window_end?: string | null
           pickup_window_start?: string | null
           price?: number | null
           priority?: string
+          route_geometry?: string | null
+          route_highways?: string | null
           scheduled_at?: string | null
           started_trip_at?: string | null
           status?: Database["public"]["Enums"]["order_status"]
@@ -1107,19 +1141,26 @@ export type Database = {
           current_lat?: number | null
           current_lng?: number | null
           deleted_at?: string | null
+          delivery_dock?: string | null
           delivery_franchise_minutes?: number | null
+          delivery_gate?: string | null
+          delivery_reference?: string | null
+          delivery_whatsapp?: string | null
           delivery_window_end?: string | null
           delivery_window_start?: string | null
           destination_address?: string
           destination_city?: string | null
           destination_lat?: number | null
           destination_lng?: number | null
+          destination_neighborhood?: string | null
+          destination_number?: string | null
           destination_state?: string | null
           destination_zip?: string | null
           distance_km?: number | null
           distance_to_destination_km?: number | null
           driver_id?: string | null
           estimated_minutes?: number | null
+          estimated_tolls?: number | null
           eta_minutes?: number | null
           id?: string
           initial_distance_km?: number | null
@@ -1134,13 +1175,23 @@ export type Database = {
           origin_city?: string | null
           origin_lat?: number | null
           origin_lng?: number | null
+          origin_neighborhood?: string | null
+          origin_number?: string | null
           origin_state?: string | null
           origin_zip?: string | null
+          pickup_dock?: string | null
           pickup_franchise_minutes?: number | null
+          pickup_gate?: string | null
+          pickup_instructions?: string | null
+          pickup_phone_name?: string | null
+          pickup_reference?: string | null
+          pickup_whatsapp?: string | null
           pickup_window_end?: string | null
           pickup_window_start?: string | null
           price?: number | null
           priority?: string
+          route_geometry?: string | null
+          route_highways?: string | null
           scheduled_at?: string | null
           started_trip_at?: string | null
           status?: Database["public"]["Enums"]["order_status"]

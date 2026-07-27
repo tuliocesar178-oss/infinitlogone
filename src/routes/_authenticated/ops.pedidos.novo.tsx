@@ -1,11 +1,14 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AppShell } from "@/components/app-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, ArrowRight, Check, Upload, X, Copy, MessageCircle, Mail } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Upload, X, Copy, MessageCircle, Mail, MapPin } from "lucide-react";
 import QRCode from "qrcode";
 import { shareMessage, trackingUrl } from "@/lib/order-status";
+import { MapboxAutocomplete, type MapboxLocation } from "@/components/mapbox-autocomplete";
+
+const MAPBOX_TOKEN = import.meta.env.VITE_LOVABLE_CONNECTOR_MAPBOX_PUBLIC_TOKEN;
 
 export const Route = createFileRoute("/_authenticated/ops/pedidos/novo")({
   head: () => ({ meta: [{ title: "Novo frete — InfinitLog" }, { name: "robots", content: "noindex" }] }),
@@ -26,24 +29,41 @@ type Form = {
   pickup_company: string;
   pickup_contact: string;
   pickup_phone: string;
+  pickup_whatsapp: string;
   origin_address: string;
   origin_city: string;
   origin_state: string;
   origin_zip: string;
+  origin_neighborhood: string;
+  origin_number: string;
+  origin_lat: string;
+  origin_lng: string;
   pickup_date: string;
   pickup_time: string;
   pickup_franchise_minutes: string;
+  pickup_reference: string;
+  pickup_dock: string;
+  pickup_gate: string;
+  pickup_instructions: string;
   // 3 Entrega
   delivery_company: string;
   delivery_contact: string;
   delivery_phone: string;
+  delivery_whatsapp: string;
   destination_address: string;
   destination_city: string;
   destination_state: string;
   destination_zip: string;
+  destination_neighborhood: string;
+  destination_number: string;
+  destination_lat: string;
+  destination_lng: string;
   delivery_date: string;
   delivery_time: string;
   delivery_franchise_minutes: string;
+  delivery_reference: string;
+  delivery_dock: string;
+  delivery_gate: string;
   // 4 Carga
   cargo_weight_kg: string;
   volumes: string;
@@ -56,26 +76,29 @@ type Form = {
   mdfe_number: string;
   cargo_notes: string;
   // 5 Custos
-  price: string;            // valor cliente
-  driver_price: string;     // valor motorista
+  price: string;
+  driver_price: string;
   toll: string;
   fuel: string;
   escort: string;
   license: string;
   other_costs: string;
-  // 6 Docs — dinâmico
   priority: string;
 };
 
 const EMPTY: Form = {
   client_name: "", contact_name: "", contact_phone: "", contact_email: "", company: "",
   purchase_order: "", order_number: "", client_notes: "",
-  pickup_company: "", pickup_contact: "", pickup_phone: "",
+  pickup_company: "", pickup_contact: "", pickup_phone: "", pickup_whatsapp: "",
   origin_address: "", origin_city: "", origin_state: "", origin_zip: "",
+  origin_neighborhood: "", origin_number: "", origin_lat: "", origin_lng: "",
   pickup_date: "", pickup_time: "", pickup_franchise_minutes: "",
-  delivery_company: "", delivery_contact: "", delivery_phone: "",
+  pickup_reference: "", pickup_dock: "", pickup_gate: "", pickup_instructions: "",
+  delivery_company: "", delivery_contact: "", delivery_phone: "", delivery_whatsapp: "",
   destination_address: "", destination_city: "", destination_state: "", destination_zip: "",
+  destination_neighborhood: "", destination_number: "", destination_lat: "", destination_lng: "",
   delivery_date: "", delivery_time: "", delivery_franchise_minutes: "",
+  delivery_reference: "", delivery_dock: "", delivery_gate: "",
   cargo_weight_kg: "", volumes: "", cargo_volume_m3: "", cargo_type: "",
   cargo_description: "", invoice_value: "", invoice_number: "", cte_number: "", mdfe_number: "",
   cargo_notes: "",
@@ -126,6 +149,64 @@ function NewOrderWizard() {
     return null;
   }
 
+  const [routeInfo, setRouteInfo] = useState<{
+    distance_km: number;
+    duration_minutes: number;
+    geometry: string;
+  } | null>(null);
+
+  useEffect(() => {
+    async function calc() {
+      if (f.origin_lat && f.origin_lng && f.destination_lat && f.destination_lng && MAPBOX_TOKEN) {
+        try {
+          const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${f.origin_lng},${f.origin_lat};${f.destination_lng},${f.destination_lat}?geometries=geojson&overview=full&access_token=${MAPBOX_TOKEN}`;
+          const res = await fetch(url);
+          const data = await res.json();
+          const route = data.routes?.[0];
+          if (route) {
+            setRouteInfo({
+              distance_km: Number((route.distance / 1000).toFixed(1)),
+              duration_minutes: Math.round(route.duration / 60),
+              geometry: JSON.stringify(route.geometry),
+            });
+            // Auto fill price/tolls if needed, but usually operators do this
+          }
+        } catch (e) {
+          console.error("Route calc error:", e);
+        }
+      }
+    }
+    calc();
+  }, [f.origin_lat, f.origin_lng, f.destination_lat, f.destination_lng]);
+
+  function handleLocationSelect(type: "origin" | "destination", loc: MapboxLocation) {
+    if (type === "origin") {
+      setF(s => ({
+        ...s,
+        origin_address: loc.address,
+        origin_city: loc.city,
+        origin_state: loc.state,
+        origin_zip: loc.zip,
+        origin_neighborhood: loc.neighborhood,
+        origin_number: loc.number,
+        origin_lat: String(loc.lat),
+        origin_lng: String(loc.lng),
+      }));
+    } else {
+      setF(s => ({
+        ...s,
+        destination_address: loc.address,
+        destination_city: loc.city,
+        destination_state: loc.state,
+        destination_zip: loc.zip,
+        destination_neighborhood: loc.neighborhood,
+        destination_number: loc.number,
+        destination_lat: String(loc.lat),
+        destination_lng: String(loc.lng),
+      }));
+    }
+  }
+
   function next() {
     const err = canAdvance();
     if (err) return toast.error(err);
@@ -147,10 +228,25 @@ function NewOrderWizard() {
         origin_city: f.origin_city || null,
         origin_state: f.origin_state || null,
         origin_zip: f.origin_zip || null,
+        origin_neighborhood: f.origin_neighborhood || null,
+        origin_number: f.origin_number || null,
+        origin_lat: num(f.origin_lat),
+        origin_lng: num(f.origin_lng),
         destination_address: f.destination_address,
         destination_city: f.destination_city || null,
         destination_state: f.destination_state || null,
         destination_zip: f.destination_zip || null,
+        destination_neighborhood: f.destination_neighborhood || null,
+        destination_number: f.destination_number || null,
+        destination_lat: num(f.destination_lat),
+        destination_lng: num(f.destination_lng),
+        pickup_reference: f.pickup_reference || null,
+        pickup_dock: f.pickup_dock || null,
+        pickup_gate: f.pickup_gate || null,
+        pickup_instructions: f.pickup_instructions || null,
+        delivery_reference: f.delivery_reference || null,
+        delivery_dock: f.delivery_dock || null,
+        delivery_gate: f.delivery_gate || null,
         cargo_description: f.cargo_description || null,
         cargo_weight_kg: num(f.cargo_weight_kg),
         cargo_volume_m3: num(f.cargo_volume_m3),
@@ -173,6 +269,10 @@ function NewOrderWizard() {
         notes: [f.client_notes, f.cargo_notes].filter(Boolean).join("\n\n") || null,
         status: "preparing" as const,
         created_by: u.user?.id ?? null,
+        distance_km: routeInfo?.distance_km ?? null,
+        estimated_minutes: routeInfo?.duration_minutes ?? null,
+        route_geometry: routeInfo?.geometry ?? null,
+        estimated_tolls: num(f.toll),
       };
       const { data: order, error } = await supabase
         .from("orders").insert(payload).select("id, code, tracking_code").single();
@@ -246,6 +346,44 @@ function NewOrderWizard() {
               <div className="font-mono text-sm">{result.tracking_code}</div>
               <div className="break-all text-xs text-muted-foreground">{link}</div>
             </div>
+
+            {routeInfo && (
+              <div className="mt-6 border-y border-border py-6 text-left">
+                <div className="flex items-start gap-4">
+                  <div className="flex flex-col items-center gap-1 mt-1">
+                    <div className="h-3 w-3 rounded-full bg-emerald-500" />
+                    <div className="h-10 w-px bg-border" />
+                    <div className="h-3 w-3 rounded-full bg-red-500" />
+                  </div>
+                  <div className="flex-1 space-y-4">
+                    <div>
+                      <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Coleta</div>
+                      <div className="font-semibold text-sm">{f.pickup_company || "Empresa"} · {f.origin_city}/{f.origin_state}</div>
+                      <div className="text-xs text-muted-foreground">{f.pickup_date} às {f.pickup_time}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Entrega</div>
+                      <div className="font-semibold text-sm">{f.delivery_company || "Empresa"} · {f.destination_city}/{f.destination_state}</div>
+                      <div className="text-xs text-muted-foreground">{f.delivery_date} às {f.delivery_time}</div>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-4 flex items-center justify-around rounded-xl bg-surface-2 p-3 text-center">
+                  <div>
+                    <div className="text-[9px] font-bold text-muted-foreground uppercase">Distância</div>
+                    <div className="text-sm font-bold">{routeInfo.distance_km} km</div>
+                  </div>
+                  <div>
+                    <div className="text-[9px] font-bold text-muted-foreground uppercase">Tempo</div>
+                    <div className="text-sm font-bold">{Math.floor(routeInfo.duration_minutes / 60)}h{routeInfo.duration_minutes % 60}m</div>
+                  </div>
+                  <div>
+                    <div className="text-[9px] font-bold text-muted-foreground uppercase">Pedágios</div>
+                    <div className="text-sm font-bold">{brl(num(f.toll) || 0)}</div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="mt-6 grid gap-2 sm:grid-cols-3">
               <button onClick={() => { navigator.clipboard.writeText(link); toast.success("Link copiado"); }}
@@ -331,14 +469,26 @@ function NewOrderWizard() {
           <Grid>
             <T label="Empresa da coleta" value={f.pickup_company} onChange={(v) => set("pickup_company", v)} />
             <T label="Responsável" value={f.pickup_contact} onChange={(v) => set("pickup_contact", v)} />
-            <T label="Telefone" value={f.pickup_phone} onChange={(v) => set("pickup_phone", v)} />
-            <T label="Endereço" required value={f.origin_address} onChange={(v) => set("origin_address", v)} full />
+            <T label="WhatsApp" value={f.pickup_whatsapp} onChange={(v) => set("pickup_whatsapp", v)} />
+            <div className="sm:col-span-2">
+              <MapboxAutocomplete
+                label="Endereço de coleta"
+                required
+                value={f.origin_address}
+                onChange={(v) => set("origin_address", v)}
+                onSelect={(loc) => handleLocationSelect("origin", loc)}
+              />
+            </div>
+            <T label="Número" value={f.origin_number} onChange={(v) => set("origin_number", v)} />
+            <T label="Bairro" value={f.origin_neighborhood} onChange={(v) => set("origin_neighborhood", v)} />
             <T label="Cidade" value={f.origin_city} onChange={(v) => set("origin_city", v)} />
             <T label="UF" value={f.origin_state} onChange={(v) => set("origin_state", v)} />
-            <T label="CEP" value={f.origin_zip} onChange={(v) => set("origin_zip", v)} />
             <T label="Data da coleta" type="date" value={f.pickup_date} onChange={(v) => set("pickup_date", v)} />
             <T label="Hora" type="time" value={f.pickup_time} onChange={(v) => set("pickup_time", v)} />
-            <T label="Franquia para carregamento (min)" type="number" value={f.pickup_franchise_minutes} onChange={(v) => set("pickup_franchise_minutes", v)} />
+            <T label="Referência" value={f.pickup_reference} onChange={(v) => set("pickup_reference", v)} />
+            <T label="Doca" value={f.pickup_dock} onChange={(v) => set("pickup_dock", v)} />
+            <T label="Portaria" value={f.pickup_gate} onChange={(v) => set("pickup_gate", v)} />
+            <T label="Instruções" value={f.pickup_instructions} onChange={(v) => set("pickup_instructions", v)} full />
           </Grid>
         )}
 
@@ -346,14 +496,25 @@ function NewOrderWizard() {
           <Grid>
             <T label="Empresa da entrega" value={f.delivery_company} onChange={(v) => set("delivery_company", v)} />
             <T label="Responsável" value={f.delivery_contact} onChange={(v) => set("delivery_contact", v)} />
-            <T label="Telefone" value={f.delivery_phone} onChange={(v) => set("delivery_phone", v)} />
-            <T label="Endereço" required value={f.destination_address} onChange={(v) => set("destination_address", v)} full />
+            <T label="WhatsApp" value={f.delivery_whatsapp} onChange={(v) => set("delivery_whatsapp", v)} />
+            <div className="sm:col-span-2">
+              <MapboxAutocomplete
+                label="Endereço de entrega"
+                required
+                value={f.destination_address}
+                onChange={(v) => set("destination_address", v)}
+                onSelect={(loc) => handleLocationSelect("destination", loc)}
+              />
+            </div>
+            <T label="Número" value={f.destination_number} onChange={(v) => set("destination_number", v)} />
+            <T label="Bairro" value={f.destination_neighborhood} onChange={(v) => set("destination_neighborhood", v)} />
             <T label="Cidade" value={f.destination_city} onChange={(v) => set("destination_city", v)} />
             <T label="UF" value={f.destination_state} onChange={(v) => set("destination_state", v)} />
-            <T label="CEP" value={f.destination_zip} onChange={(v) => set("destination_zip", v)} />
             <T label="Data prevista" type="date" value={f.delivery_date} onChange={(v) => set("delivery_date", v)} />
             <T label="Hora prevista" type="time" value={f.delivery_time} onChange={(v) => set("delivery_time", v)} />
-            <T label="Franquia para descarga (min)" type="number" value={f.delivery_franchise_minutes} onChange={(v) => set("delivery_franchise_minutes", v)} />
+            <T label="Referência" value={f.delivery_reference} onChange={(v) => set("delivery_reference", v)} />
+            <T label="Doca" value={f.delivery_dock} onChange={(v) => set("delivery_dock", v)} />
+            <T label="Portaria" value={f.delivery_gate} onChange={(v) => set("delivery_gate", v)} />
           </Grid>
         )}
 
@@ -393,6 +554,27 @@ function NewOrderWizard() {
                 </select>
               </label>
             </Grid>
+            {routeInfo && (
+              <div className="mt-6 mb-6 p-6 rounded-2xl bg-brand/5 border border-brand/10">
+                <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand mb-4">Resumo da Rota</div>
+                <div className="grid gap-6 sm:grid-cols-4">
+                  <div>
+                    <div className="text-[10px] font-semibold text-muted-foreground uppercase">Distância</div>
+                    <div className="text-xl font-bold">{routeInfo.distance_km} km</div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] font-semibold text-muted-foreground uppercase">Tempo</div>
+                    <div className="text-xl font-bold">{Math.floor(routeInfo.duration_minutes / 60)}h {routeInfo.duration_minutes % 60}m</div>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <div className="text-[10px] font-semibold text-muted-foreground uppercase">Trajeto</div>
+                    <div className="text-sm font-medium mt-1 truncate">
+                      {f.origin_city} ({f.origin_state}) → {f.destination_city} ({f.destination_state})
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
             <div className="mt-6 grid gap-3 sm:grid-cols-3">
               <KPI label="Custo total" value={brl(totalCost)} />
               <KPI label="Lucro previsto" value={brl(profit)} tone={profit >= 0 ? "positive" : "negative"} />

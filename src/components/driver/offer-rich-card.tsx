@@ -18,6 +18,7 @@ import {
   Truck,
   Weight,
   X,
+  CircleDollarSign,
 } from "lucide-react";
 
 type Offer = {
@@ -37,11 +38,15 @@ type Order = {
   origin_address: string;
   origin_lat: number | null;
   origin_lng: number | null;
+  origin_neighborhood: string | null;
+  origin_number: string | null;
   destination_city: string | null;
   destination_state: string | null;
   destination_address: string;
   destination_lat: number | null;
   destination_lng: number | null;
+  destination_neighborhood: string | null;
+  destination_number: string | null;
   cargo_type: string | null;
   cargo_weight_kg: number | null;
   volumes: number | null;
@@ -50,6 +55,15 @@ type Order = {
   pickup_window_start: string | null;
   delivery_window_end: string | null;
   priority: string | null;
+  invoice_value: number | null;
+  invoice_number: string | null;
+  pickup_company: string | null;
+  pickup_contact: string | null;
+  pickup_phone: string | null;
+  pickup_phone_name: string | null;
+  delivery_company: string | null;
+  delivery_contact: string | null;
+  delivery_phone: string | null;
 };
 
 const PRIORITY: Record<string, { label: string; cls: string }> = {
@@ -275,8 +289,22 @@ export function OfferRichCard({
         </div>
       </div>
 
+      {/* Detalhes da Operação */}
+      <div className="grid grid-cols-2 gap-4 border-b border-border/60 px-4 py-3 bg-surface-2/30">
+        <div className="space-y-1">
+          <div className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Coleta</div>
+          <div className="text-xs font-semibold truncate">{order.pickup_company || "—"}</div>
+          <div className="text-[10px] text-muted-foreground truncate">{order.pickup_contact} {order.pickup_phone}</div>
+        </div>
+        <div className="space-y-1 text-right">
+          <div className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Entrega</div>
+          <div className="text-xs font-semibold truncate">{order.delivery_company || "—"}</div>
+          <div className="text-[10px] text-muted-foreground truncate">{order.delivery_contact}</div>
+        </div>
+      </div>
+
       {/* Carga */}
-      <div className="grid grid-cols-3 gap-2 border-b border-border/60 px-4 py-3 text-center">
+      <div className="grid grid-cols-4 gap-2 border-b border-border/60 px-4 py-3 text-center">
         <MicroKPI
           icon={<Package className="h-3.5 w-3.5" />}
           label="Tipo"
@@ -291,6 +319,11 @@ export function OfferRichCard({
           icon={<Truck className="h-3.5 w-3.5" />}
           label="Volumes"
           value={order.volumes ? String(order.volumes) : "—"}
+        />
+        <MicroKPI
+          icon={<CircleDollarSign className="h-3.5 w-3.5" />}
+          label="Nota"
+          value={order.invoice_number ? `NF ${order.invoice_number}` : "—"}
         />
       </div>
 

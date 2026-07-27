@@ -221,17 +221,16 @@ export function ActiveOrderPanel({
     }
   }
 
-  function openNav() {
-    const q = order.destination_lat && order.destination_lng
-      ? `${order.destination_lat},${order.destination_lng}`
-      : encodeURIComponent(order.destination_address);
-    window.open(`https://www.google.com/maps/dir/?api=1&destination=${q}`, "_blank");
-  }
-  function openNavPickup() {
-    const q = order.origin_lat && order.origin_lng
-      ? `${order.origin_lat},${order.origin_lng}`
-      : encodeURIComponent(order.origin_address);
-    window.open(`https://www.google.com/maps/dir/?api=1&destination=${q}`, "_blank");
+  function openSmartNav() {
+    // Determina o destino baseado no status atual
+    const isHeadingToPickup = ["driver_assigned", "in_transit_pickup"].includes(order.status);
+    
+    const lat = isHeadingToPickup ? order.origin_lat : order.destination_lat;
+    const lng = isHeadingToPickup ? order.origin_lng : order.destination_lng;
+    const addr = isHeadingToPickup ? order.origin_address : order.destination_address;
+
+    const dest = lat && lng ? `${lat},${lng}` : encodeURIComponent(addr);
+    window.open(`https://www.google.com/maps/dir/?api=1&destination=${dest}&travelmode=driving`, "_blank");
   }
 
   return (
@@ -266,23 +265,34 @@ export function ActiveOrderPanel({
       )}
 
       {step === "idle" && nextAction && (
-        <div className="space-y-2 border-t border-border p-6">
+        <div className="space-y-3 border-t border-border p-6">
+          {(nextAction === "start_pickup" || nextAction === "arrived_pickup") && (
+            <ActionBtn 
+              onClick={openSmartNav} 
+              icon={<Navigation className="h-6 w-6" />} 
+              label="INICIAR NAVEGAÇÃO" 
+              className="py-6 text-lg ring-4 ring-brand/20 shadow-xl"
+            />
+          )}
+
           {nextAction === "start_pickup" && (
-            <ActionBtn onClick={() => runAction("start_pickup")} icon={<Navigation className="h-5 w-5" />} label="INICIAR DESLOCAMENTO" />
+            <ActionBtn onClick={() => runAction("start_pickup")} icon={<Navigation className="h-5 w-5" />} label="INICIAR DESLOCAMENTO" tone="ghost" />
           )}
           {nextAction === "arrived_pickup" && (
-            <>
-              <ActionBtn onClick={openNavPickup} tone="ghost" icon={<Navigation className="h-5 w-5" />} label="INICIAR NAVEGAÇÃO" />
-              <ActionBtn onClick={() => runAction("arrived_pickup")} icon={<Check className="h-5 w-5" />} label="CHEGUEI NA COLETA" />
-            </>
+            <ActionBtn onClick={() => runAction("arrived_pickup")} icon={<Check className="h-5 w-5" />} label="CHEGUEI NA COLETA" tone="ghost" />
           )}
           {nextAction === "loaded" && (
             <ActionBtn onClick={() => setStep("pickup")} icon={<Camera className="h-5 w-5" />} label="ENVIAR FOTO DA CARGA" />
           )}
           {nextAction === "start_delivery" && (
             <>
-              <ActionBtn onClick={openNav} tone="ghost" icon={<Navigation className="h-5 w-5" />} label="ABRIR NAVEGAÇÃO" />
-              <ActionBtn onClick={() => runAction("start_delivery")} icon={<Truck className="h-5 w-5" />} label="INICIAR ENTREGA" />
+              <ActionBtn 
+                onClick={openSmartNav} 
+                icon={<Navigation className="h-6 w-6" />} 
+                label="INICIAR NAVEGAÇÃO" 
+                className="py-6 text-lg ring-4 ring-brand/20 shadow-xl"
+              />
+              <ActionBtn onClick={() => runAction("start_delivery")} icon={<Truck className="h-5 w-5" />} label="INICIAR ENTREGA" tone="ghost" />
             </>
           )}
           {nextAction === "delivered" && (
@@ -302,12 +312,14 @@ export function ActiveOrderPanel({
   );
 }
 
-function ActionBtn({ onClick, icon, label, tone = "primary" }: { onClick: () => void; icon: React.ReactNode; label: string; tone?: "primary" | "ghost" }) {
+function ActionBtn({ 
+  onClick, icon, label, tone = "primary", className = "" 
+}: { onClick: () => void; icon: React.ReactNode; label: string; tone?: "primary" | "ghost"; className?: string }) {
   return (
     <button onClick={onClick}
-      className={`flex w-full items-center justify-center gap-2 rounded-2xl px-6 py-4 text-sm font-bold uppercase tracking-widest ${
-        tone === "primary" ? "bg-brand text-brand-foreground hover:opacity-90" : "border border-border bg-background hover:bg-accent"
-      }`}>
+      className={`flex w-full items-center justify-center gap-2 rounded-2xl px-6 py-4 text-sm font-bold uppercase tracking-widest transition-all active:scale-[0.98] ${
+        tone === "primary" ? "bg-brand text-brand-foreground hover:opacity-90 shadow-lg shadow-brand/20" : "border border-border bg-background hover:bg-accent"
+      } ${className}`}>
       {icon} {label}
     </button>
   );
