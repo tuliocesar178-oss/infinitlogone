@@ -17,6 +17,7 @@ const ICONS: Record<DashboardCardKey, React.ComponentType<{ className?: string }
   preparing: Package,
   awaiting_driver: Clock,
   offer_sent: Send,
+  negotiation: MessageSquare,
   en_route_pickup: Navigation,
   at_pickup: Truck,
   in_transit: Zap,

@@ -45,6 +45,7 @@ export const STATUS_BADGE_CLASS: Record<string, string> = {
   planning: "bg-slate-100 text-slate-800",
   created: "bg-yellow-100 text-yellow-800",
   preparing: "bg-yellow-100 text-yellow-800",
+  negotiating: "bg-amber-100 text-amber-800 font-bold animate-pulse",
   awaiting_driver: "bg-orange-100 text-orange-800",
   driver_assigned: "bg-blue-100 text-blue-800",
   en_route_pickup: "bg-blue-200 text-blue-900",
@@ -78,6 +79,7 @@ export const STATUS_FILTER_OPTIONS: { value: string; label: string }[] = [
   { value: "planning", label: "Planejamento" },
   { value: "preparing", label: "Preparando para Coleta" },
   { value: "awaiting_driver", label: "Aguardando Motorista" },
+  { value: "negotiating", label: "Em Negociação" },
   { value: "driver_assigned", label: "Motorista Confirmado" },
   { value: "en_route_pickup", label: "Em Deslocamento para Coleta" },
   { value: "at_pickup", label: "Cheguei na Coleta" },
@@ -100,6 +102,8 @@ export function publicStatus(s: string): { key: string; label: string } {
     case "awaiting_driver":
     case "created":
       return { key: "preparing", label: "Preparando para coleta" };
+    case "negotiating":
+      return { key: "negotiating", label: "Em negociação" };
     case "driver_assigned":
       return { key: "driver_assigned", label: "Motorista confirmado" };
     case "en_route_pickup":
