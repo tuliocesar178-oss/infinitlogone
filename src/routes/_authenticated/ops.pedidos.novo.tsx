@@ -429,14 +429,26 @@ function NewOrderWizard() {
           <Grid>
             <T label="Empresa da coleta" value={f.pickup_company} onChange={(v) => set("pickup_company", v)} />
             <T label="Responsável" value={f.pickup_contact} onChange={(v) => set("pickup_contact", v)} />
-            <T label="Telefone" value={f.pickup_phone} onChange={(v) => set("pickup_phone", v)} />
-            <T label="Endereço" required value={f.origin_address} onChange={(v) => set("origin_address", v)} full />
+            <T label="WhatsApp" value={f.pickup_whatsapp} onChange={(v) => set("pickup_whatsapp", v)} />
+            <div className="sm:col-span-2">
+              <MapboxAutocomplete
+                label="Endereço de coleta"
+                required
+                value={f.origin_address}
+                onChange={(v) => set("origin_address", v)}
+                onSelect={(loc) => handleLocationSelect("origin", loc)}
+              />
+            </div>
+            <T label="Número" value={f.origin_number} onChange={(v) => set("origin_number", v)} />
+            <T label="Bairro" value={f.origin_neighborhood} onChange={(v) => set("origin_neighborhood", v)} />
             <T label="Cidade" value={f.origin_city} onChange={(v) => set("origin_city", v)} />
             <T label="UF" value={f.origin_state} onChange={(v) => set("origin_state", v)} />
-            <T label="CEP" value={f.origin_zip} onChange={(v) => set("origin_zip", v)} />
             <T label="Data da coleta" type="date" value={f.pickup_date} onChange={(v) => set("pickup_date", v)} />
             <T label="Hora" type="time" value={f.pickup_time} onChange={(v) => set("pickup_time", v)} />
-            <T label="Franquia para carregamento (min)" type="number" value={f.pickup_franchise_minutes} onChange={(v) => set("pickup_franchise_minutes", v)} />
+            <T label="Referência" value={f.pickup_reference} onChange={(v) => set("pickup_reference", v)} />
+            <T label="Doca" value={f.pickup_dock} onChange={(v) => set("pickup_dock", v)} />
+            <T label="Portaria" value={f.pickup_gate} onChange={(v) => set("pickup_gate", v)} />
+            <T label="Instruções" value={f.pickup_instructions} onChange={(v) => set("pickup_instructions", v)} full />
           </Grid>
         )}
 
@@ -444,14 +456,25 @@ function NewOrderWizard() {
           <Grid>
             <T label="Empresa da entrega" value={f.delivery_company} onChange={(v) => set("delivery_company", v)} />
             <T label="Responsável" value={f.delivery_contact} onChange={(v) => set("delivery_contact", v)} />
-            <T label="Telefone" value={f.delivery_phone} onChange={(v) => set("delivery_phone", v)} />
-            <T label="Endereço" required value={f.destination_address} onChange={(v) => set("destination_address", v)} full />
+            <T label="WhatsApp" value={f.delivery_whatsapp} onChange={(v) => set("delivery_whatsapp", v)} />
+            <div className="sm:col-span-2">
+              <MapboxAutocomplete
+                label="Endereço de entrega"
+                required
+                value={f.destination_address}
+                onChange={(v) => set("destination_address", v)}
+                onSelect={(loc) => handleLocationSelect("destination", loc)}
+              />
+            </div>
+            <T label="Número" value={f.destination_number} onChange={(v) => set("destination_number", v)} />
+            <T label="Bairro" value={f.destination_neighborhood} onChange={(v) => set("destination_neighborhood", v)} />
             <T label="Cidade" value={f.destination_city} onChange={(v) => set("destination_city", v)} />
             <T label="UF" value={f.destination_state} onChange={(v) => set("destination_state", v)} />
-            <T label="CEP" value={f.destination_zip} onChange={(v) => set("destination_zip", v)} />
             <T label="Data prevista" type="date" value={f.delivery_date} onChange={(v) => set("delivery_date", v)} />
             <T label="Hora prevista" type="time" value={f.delivery_time} onChange={(v) => set("delivery_time", v)} />
-            <T label="Franquia para descarga (min)" type="number" value={f.delivery_franchise_minutes} onChange={(v) => set("delivery_franchise_minutes", v)} />
+            <T label="Referência" value={f.delivery_reference} onChange={(v) => set("delivery_reference", v)} />
+            <T label="Doca" value={f.delivery_dock} onChange={(v) => set("delivery_dock", v)} />
+            <T label="Portaria" value={f.delivery_gate} onChange={(v) => set("delivery_gate", v)} />
           </Grid>
         )}
 
@@ -491,6 +514,27 @@ function NewOrderWizard() {
                 </select>
               </label>
             </Grid>
+            {routeInfo && (
+              <div className="mt-6 mb-6 p-6 rounded-2xl bg-brand/5 border border-brand/10">
+                <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand mb-4">Resumo da Rota</div>
+                <div className="grid gap-6 sm:grid-cols-4">
+                  <div>
+                    <div className="text-[10px] font-semibold text-muted-foreground uppercase">Distância</div>
+                    <div className="text-xl font-bold">{routeInfo.distance_km} km</div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] font-semibold text-muted-foreground uppercase">Tempo</div>
+                    <div className="text-xl font-bold">{Math.floor(routeInfo.duration_minutes / 60)}h {routeInfo.duration_minutes % 60}m</div>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <div className="text-[10px] font-semibold text-muted-foreground uppercase">Trajeto</div>
+                    <div className="text-sm font-medium mt-1 truncate">
+                      {f.origin_city} ({f.origin_state}) → {f.destination_city} ({f.destination_state})
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
             <div className="mt-6 grid gap-3 sm:grid-cols-3">
               <KPI label="Custo total" value={brl(totalCost)} />
               <KPI label="Lucro previsto" value={brl(profit)} tone={profit >= 0 ? "positive" : "negative"} />
