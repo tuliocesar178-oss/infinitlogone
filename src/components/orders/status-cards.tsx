@@ -13,6 +13,7 @@ import {
 import { DASHBOARD_CARDS, type DashboardCardKey } from "@/lib/order-status";
 
 const ICONS: Record<DashboardCardKey, React.ComponentType<{ className?: string }>> = {
+  planning: Package,
   preparing: Package,
   awaiting_driver: Clock,
   offer_sent: Send,
