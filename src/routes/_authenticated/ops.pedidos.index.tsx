@@ -4,8 +4,9 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/app-shell";
-import { ArrowRight, Plus, Search, Truck } from "lucide-react";
+import { ArrowRight, Plus, Search, Trash2, Truck } from "lucide-react";
 import { DASHBOARD_CARDS, STATUS_LABEL, type DashboardCardKey } from "@/lib/order-status";
+import { toast } from "sonner";
 
 const searchSchema = z.object({
   card: z.string().optional(),
@@ -180,11 +181,12 @@ function OrdersList() {
 
       {/* List */}
       <div className="card-soft overflow-hidden">
-        <div className="grid grid-cols-[auto_1fr_auto_auto] gap-4 border-b border-border/60 px-5 py-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+        <div className="grid grid-cols-[auto_1fr_auto_auto_auto] gap-4 border-b border-border/60 px-5 py-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
           <span>Código</span>
           <span>Cliente / Rota</span>
           <span className="hidden sm:inline">Status</span>
-          <span></span>
+          <span className="w-8"></span>
+          <span className="w-8"></span>
         </div>
         {filtered.length === 0 && (
           <div className="grid place-items-center p-14 text-center">
@@ -196,32 +198,67 @@ function OrdersList() {
           </div>
         )}
         {filtered.map((o) => (
-          <Link
+          <div
             key={o.id}
-            to="/ops/pedidos/$id"
-            params={{ id: o.id }}
-            className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-4 border-b border-border/40 px-5 py-4 last:border-0 hover:bg-surface-2"
+            className="group grid grid-cols-[auto_1fr_auto_auto_auto] items-center gap-4 border-b border-border/40 px-5 py-4 last:border-0 hover:bg-surface-2"
           >
-            <div>
-              <div className="font-mono text-sm font-semibold">{o.code}</div>
-              <div className="font-mono text-[10px] text-muted-foreground">{o.tracking_code}</div>
-            </div>
-            <div className="min-w-0">
-              <div className="truncate text-sm font-medium">{o.client_name ?? "—"}</div>
-              <div className="truncate text-xs text-muted-foreground">
-                {o.origin_city ?? "—"} → {o.destination_city ?? "—"}
-                {o.priority && o.priority !== "normal" && (
-                  <span className="ml-2 rounded-full bg-brand/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-brand">
-                    {o.priority}
-                  </span>
-                )}
+            <Link
+              to="/ops/pedidos/$id"
+              params={{ id: o.id }}
+              className="contents"
+            >
+              <div>
+                <div className="font-mono text-sm font-semibold">{o.code}</div>
+                <div className="font-mono text-[10px] text-muted-foreground">{o.tracking_code}</div>
               </div>
-            </div>
-            <span className="hidden rounded-full bg-surface-2 px-3 py-1 text-xs text-muted-foreground sm:inline-block">
-              {STATUS_LABEL[o.status] ?? o.status}
-            </span>
-            <ArrowRight className="h-4 w-4 text-muted-foreground" />
-          </Link>
+              <div className="min-w-0">
+                <div className="truncate text-sm font-medium">{o.client_name ?? "—"}</div>
+                <div className="truncate text-xs text-muted-foreground">
+                  {o.origin_city ?? "—"} → {o.destination_city ?? "—"}
+                  {o.priority && o.priority !== "normal" && (
+                    <span className="ml-2 rounded-full bg-brand/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-brand">
+                      {o.priority}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <span className="hidden rounded-full bg-surface-2 px-3 py-1 text-xs text-muted-foreground sm:inline-block">
+                {STATUS_LABEL[o.status] ?? o.status}
+              </span>
+            </Link>
+            
+            <button
+              onClick={async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (window.confirm(`Deseja realmente excluir o frete ${o.code}? Esta ação não pode ser desfeita.`)) {
+                  try {
+                    const { error } = await supabase
+                      .from("orders")
+                      .update({ deleted_at: new Date().toISOString() })
+                      .eq("id", o.id);
+                    if (error) throw error;
+                    toast.success("Frete excluído com sucesso.");
+                    qc.invalidateQueries({ queryKey: ["orders-list"] });
+                  } catch (err) {
+                    toast.error("Erro ao excluir frete.");
+                  }
+                }
+              }}
+              className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:bg-red-500/10 hover:text-red-600 transition-colors"
+              title="Excluir frete"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+
+            <Link
+              to="/ops/pedidos/$id"
+              params={{ id: o.id }}
+              className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:bg-brand/10 hover:text-brand transition-colors"
+            >
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
         ))}
       </div>
     </AppShell>
