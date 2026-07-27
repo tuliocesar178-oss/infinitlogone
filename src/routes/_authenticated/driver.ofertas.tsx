@@ -170,7 +170,9 @@ function DriverOffers() {
               ? "Nenhuma oferta prestes a expirar."
               : filter === "negociacao"
                 ? "Nenhuma negociação aguardando resposta."
-                : "Nenhuma oferta aguardando sua resposta."}
+                : filter === "favoritas"
+                  ? "Nenhuma oferta em rotas favoritas."
+                  : "Nenhuma oferta aguardando sua resposta."}
           </p>
         </div>
       ) : (
