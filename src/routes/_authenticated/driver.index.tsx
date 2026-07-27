@@ -21,9 +21,16 @@ function DriverHome() {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) return;
       setUserId(u.user.id);
+      
       const { data: p } = await supabase.from("profiles").select("full_name").eq("id", u.user.id).maybeSingle();
       const n = p?.full_name ?? u.user.email ?? "Motorista";
       setFirstName(n.split(" ")[0]);
+
+      // Set driver as online when they access the dashboard
+      await supabase
+        .from("drivers")
+        .update({ status: 'online', last_seen_at: new Date().toISOString() })
+        .eq("user_id", u.user.id);
     })();
   }, []);
 
