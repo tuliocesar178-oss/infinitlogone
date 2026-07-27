@@ -123,9 +123,17 @@ function DriverOffers() {
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Ofertas de fretes</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Toque em uma oferta para ver a rota, valores e aceitar.</p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Ofertas de fretes</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Toque em uma oferta para ver a rota, valores e aceitar.</p>
+        </div>
+        <Link
+          to="/driver/ofertas/historico"
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-2 text-xs font-semibold hover:bg-accent"
+        >
+          <History className="h-3.5 w-3.5" /> Histórico
+        </Link>
       </div>
 
       <div className="flex gap-2 overflow-x-auto pb-1">
