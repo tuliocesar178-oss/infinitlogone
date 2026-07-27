@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { brl } from "@/lib/pf";
-import { isFavorite, readFavorites, routeKey, toggleFavorite } from "@/lib/driver-prefs";
+import { readFavorites, routeKey } from "@/lib/driver-prefs";
 import { Clock, MapPin, Package, ChevronRight, MessageCircle, AlertTriangle, Star, History } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/driver/ofertas")({
