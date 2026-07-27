@@ -29,6 +29,7 @@ type Form = {
   pickup_company: string;
   pickup_contact: string;
   pickup_phone: string;
+  pickup_whatsapp: string;
   origin_address: string;
   origin_city: string;
   origin_state: string;
@@ -48,6 +49,7 @@ type Form = {
   delivery_company: string;
   delivery_contact: string;
   delivery_phone: string;
+  delivery_whatsapp: string;
   destination_address: string;
   destination_city: string;
   destination_state: string;
