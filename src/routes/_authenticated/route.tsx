@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_authenticated")({
 });
 
 function AuthenticatedLayout() {
-  const { user } = Route.useLoaderData();
+  const { user } = Route.useRouteContext();
   const path = useRouterState({ select: (s) => s.location.pathname });
   
   const { data: role } = useQuery({
