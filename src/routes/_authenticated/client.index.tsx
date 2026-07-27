@@ -32,7 +32,7 @@ import {
   Cell
 } from "recharts";
 
-export const Route = createFileRoute("/_authenticated/client/index")({
+export const Route = createFileRoute("/_authenticated/client/")({
   component: ClientDashboard,
 });
 

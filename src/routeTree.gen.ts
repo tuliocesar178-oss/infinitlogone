@@ -24,6 +24,7 @@ import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/ap
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedOpsIndexRouteImport } from './routes/_authenticated/ops.index'
 import { Route as AuthenticatedDriverIndexRouteImport } from './routes/_authenticated/driver.index'
+import { Route as AuthenticatedClientIndexRouteImport } from './routes/_authenticated/client.index'
 import { Route as AuthenticatedOpsVeiculosRouteImport } from './routes/_authenticated/ops.veiculos'
 import { Route as AuthenticatedOpsEquipeRouteImport } from './routes/_authenticated/ops.equipe'
 import { Route as AuthenticatedOpsCentralRouteImport } from './routes/_authenticated/ops.central'
@@ -118,6 +119,12 @@ const AuthenticatedDriverIndexRoute =
     id: '/',
     path: '/',
     getParentRoute: () => AuthenticatedDriverRoute,
+  } as any)
+const AuthenticatedClientIndexRoute =
+  AuthenticatedClientIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedClientRoute,
   } as any)
 const AuthenticatedOpsVeiculosRoute =
   AuthenticatedOpsVeiculosRouteImport.update({
@@ -241,7 +248,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/app': typeof AuthenticatedAppRoute
-  '/client': typeof AuthenticatedClientRoute
+  '/client': typeof AuthenticatedClientRouteWithChildren
   '/driver': typeof AuthenticatedDriverRouteWithChildren
   '/ops': typeof AuthenticatedOpsRouteWithChildren
   '/rastreio/$code': typeof RastreioCodeRoute
@@ -253,6 +260,7 @@ export interface FileRoutesByFullPath {
   '/ops/central': typeof AuthenticatedOpsCentralRoute
   '/ops/equipe': typeof AuthenticatedOpsEquipeRoute
   '/ops/veiculos': typeof AuthenticatedOpsVeiculosRouteWithChildren
+  '/client/': typeof AuthenticatedClientIndexRoute
   '/driver/': typeof AuthenticatedDriverIndexRoute
   '/ops/': typeof AuthenticatedOpsIndexRoute
   '/driver/ofertas/$id': typeof AuthenticatedDriverOfertasIdRoute
@@ -276,7 +284,6 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/app': typeof AuthenticatedAppRoute
-  '/client': typeof AuthenticatedClientRoute
   '/rastreio/$code': typeof RastreioCodeRoute
   '/driver/faturamento': typeof AuthenticatedDriverFaturamentoRoute
   '/driver/fretes': typeof AuthenticatedDriverFretesRoute
@@ -286,6 +293,7 @@ export interface FileRoutesByTo {
   '/ops/central': typeof AuthenticatedOpsCentralRoute
   '/ops/equipe': typeof AuthenticatedOpsEquipeRoute
   '/ops/veiculos': typeof AuthenticatedOpsVeiculosRouteWithChildren
+  '/client': typeof AuthenticatedClientIndexRoute
   '/driver': typeof AuthenticatedDriverIndexRoute
   '/ops': typeof AuthenticatedOpsIndexRoute
   '/driver/ofertas/$id': typeof AuthenticatedDriverOfertasIdRoute
@@ -311,7 +319,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/app': typeof AuthenticatedAppRoute
-  '/_authenticated/client': typeof AuthenticatedClientRoute
+  '/_authenticated/client': typeof AuthenticatedClientRouteWithChildren
   '/_authenticated/driver': typeof AuthenticatedDriverRouteWithChildren
   '/_authenticated/ops': typeof AuthenticatedOpsRouteWithChildren
   '/rastreio/$code': typeof RastreioCodeRoute
@@ -323,6 +331,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/central': typeof AuthenticatedOpsCentralRoute
   '/_authenticated/ops/equipe': typeof AuthenticatedOpsEquipeRoute
   '/_authenticated/ops/veiculos': typeof AuthenticatedOpsVeiculosRouteWithChildren
+  '/_authenticated/client/': typeof AuthenticatedClientIndexRoute
   '/_authenticated/driver/': typeof AuthenticatedDriverIndexRoute
   '/_authenticated/ops/': typeof AuthenticatedOpsIndexRoute
   '/_authenticated/driver/ofertas/$id': typeof AuthenticatedDriverOfertasIdRoute
@@ -360,6 +369,7 @@ export interface FileRouteTypes {
     | '/ops/central'
     | '/ops/equipe'
     | '/ops/veiculos'
+    | '/client/'
     | '/driver/'
     | '/ops/'
     | '/driver/ofertas/$id'
@@ -383,7 +393,6 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/admin'
     | '/app'
-    | '/client'
     | '/rastreio/$code'
     | '/driver/faturamento'
     | '/driver/fretes'
@@ -393,6 +402,7 @@ export interface FileRouteTypes {
     | '/ops/central'
     | '/ops/equipe'
     | '/ops/veiculos'
+    | '/client'
     | '/driver'
     | '/ops'
     | '/driver/ofertas/$id'
@@ -429,6 +439,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/central'
     | '/_authenticated/ops/equipe'
     | '/_authenticated/ops/veiculos'
+    | '/_authenticated/client/'
     | '/_authenticated/driver/'
     | '/_authenticated/ops/'
     | '/_authenticated/driver/ofertas/$id'
@@ -560,6 +571,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/driver/'
       preLoaderRoute: typeof AuthenticatedDriverIndexRouteImport
       parentRoute: typeof AuthenticatedDriverRoute
+    }
+    '/_authenticated/client/': {
+      id: '/_authenticated/client/'
+      path: '/'
+      fullPath: '/client/'
+      preLoaderRoute: typeof AuthenticatedClientIndexRouteImport
+      parentRoute: typeof AuthenticatedClientRoute
     }
     '/_authenticated/ops/veiculos': {
       id: '/_authenticated/ops/veiculos'
@@ -697,6 +715,17 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedClientRouteChildren {
+  AuthenticatedClientIndexRoute: typeof AuthenticatedClientIndexRoute
+}
+
+const AuthenticatedClientRouteChildren: AuthenticatedClientRouteChildren = {
+  AuthenticatedClientIndexRoute: AuthenticatedClientIndexRoute,
+}
+
+const AuthenticatedClientRouteWithChildren =
+  AuthenticatedClientRoute._addFileChildren(AuthenticatedClientRouteChildren)
+
 interface AuthenticatedDriverOfertasRouteChildren {
   AuthenticatedDriverOfertasIdRoute: typeof AuthenticatedDriverOfertasIdRoute
   AuthenticatedDriverOfertasHistoricoRoute: typeof AuthenticatedDriverOfertasHistoricoRoute
@@ -786,7 +815,7 @@ const AuthenticatedOpsRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedAppRoute: typeof AuthenticatedAppRoute
-  AuthenticatedClientRoute: typeof AuthenticatedClientRoute
+  AuthenticatedClientRoute: typeof AuthenticatedClientRouteWithChildren
   AuthenticatedDriverRoute: typeof AuthenticatedDriverRouteWithChildren
   AuthenticatedOpsRoute: typeof AuthenticatedOpsRouteWithChildren
 }
@@ -794,7 +823,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedAppRoute: AuthenticatedAppRoute,
-  AuthenticatedClientRoute: AuthenticatedClientRoute,
+  AuthenticatedClientRoute: AuthenticatedClientRouteWithChildren,
   AuthenticatedDriverRoute: AuthenticatedDriverRouteWithChildren,
   AuthenticatedOpsRoute: AuthenticatedOpsRouteWithChildren,
 }
