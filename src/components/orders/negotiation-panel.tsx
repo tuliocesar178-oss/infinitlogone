@@ -19,6 +19,7 @@ export function NegotiationPanel({ orderId, onChanged }: { orderId: string; onCh
       if (error) throw error;
       return data ?? [];
     },
+    refetchInterval: 5000,
   });
 
   async function acceptCounter(offerId: string, negotiationId: string, amount: number) {

@@ -79,10 +79,11 @@ export function OfferCard({
     if (!amount || amount <= 0) return toast.error("Valor inválido");
     const note = window.prompt("Observação (opcional)") ?? "";
     try {
-      await supabase.from("freight_offers").update({ status: "negotiating" }).eq("id", offer.id);
+      await supabase.from("freight_offers").update({ status: "negotiating" as any }).eq("id", offer.id);
       await supabase.from("negotiations").insert({
         offer_id: offer.id, proposed_by: userId, amount, note: note || null, status: "proposed",
       });
+      await supabase.from("orders").update({ status: "negotiating" as any }).eq("id", offer.order_id);
       toast.success("Proposta enviada à logística");
       qc.invalidateQueries({ queryKey: ["driver-offers", userId] });
       onChanged?.();

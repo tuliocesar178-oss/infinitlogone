@@ -123,12 +123,28 @@ export function OfferRichCard({
   async function respond(action: "accept" | "decline") {
     setBusy(action);
     try {
+      if (!order) throw new Error("Pedido não encontrado");
+      const { data: userData } = await supabase.auth.getUser();
       const patch =
         action === "accept"
-          ? { status: "accepted" as const, accepted_at: new Date().toISOString() }
+          ? { 
+              status: "accepted" as const, 
+              accepted_at: new Date().toISOString(),
+              driver_id: userData.user?.id 
+            }
           : { status: "declined" as const };
+      
       const { error } = await supabase.from("freight_offers").update(patch).eq("id", offer.id);
       if (error) throw error;
+
+      if (action === "accept") {
+        await supabase.from("orders").update({
+          driver_id: userData.user?.id,
+          status: "driver_assigned" as any,
+          updated_at: new Date().toISOString()
+        }).eq("id", order.id);
+      }
+
       toast.success(action === "accept" ? "Frete aceito! Vá para Minhas Rotas." : "Oferta recusada");
       if (action === "accept") navigate({ to: "/driver" });
     } catch (e) {
