@@ -34,6 +34,7 @@ import { Route as AuthenticatedDriverOcorrenciasRouteImport } from './routes/_au
 import { Route as AuthenticatedDriverFretesRouteImport } from './routes/_authenticated/driver.fretes'
 import { Route as AuthenticatedDriverFaturamentoRouteImport } from './routes/_authenticated/driver.faturamento'
 import { Route as AuthenticatedClientFretesRouteImport } from './routes/_authenticated/client.fretes'
+import { Route as AuthenticatedClientDocumentosRouteImport } from './routes/_authenticated/client.documentos'
 import { Route as AuthenticatedOpsPedidosIndexRouteImport } from './routes/_authenticated/ops.pedidos.index'
 import { Route as AuthenticatedOpsMotoristasIndexRouteImport } from './routes/_authenticated/ops.motoristas.index'
 import { Route as AuthenticatedOpsVeiculosNovoRouteImport } from './routes/_authenticated/ops.veiculos.novo'
@@ -179,6 +180,12 @@ const AuthenticatedClientFretesRoute =
     path: '/fretes',
     getParentRoute: () => AuthenticatedClientRoute,
   } as any)
+const AuthenticatedClientDocumentosRoute =
+  AuthenticatedClientDocumentosRouteImport.update({
+    id: '/documentos',
+    path: '/documentos',
+    getParentRoute: () => AuthenticatedClientRoute,
+  } as any)
 const AuthenticatedOpsPedidosIndexRoute =
   AuthenticatedOpsPedidosIndexRouteImport.update({
     id: '/pedidos/',
@@ -259,6 +266,7 @@ export interface FileRoutesByFullPath {
   '/driver': typeof AuthenticatedDriverRouteWithChildren
   '/ops': typeof AuthenticatedOpsRouteWithChildren
   '/rastreio/$code': typeof RastreioCodeRoute
+  '/client/documentos': typeof AuthenticatedClientDocumentosRoute
   '/client/fretes': typeof AuthenticatedClientFretesRoute
   '/driver/faturamento': typeof AuthenticatedDriverFaturamentoRoute
   '/driver/fretes': typeof AuthenticatedDriverFretesRoute
@@ -293,6 +301,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminRoute
   '/app': typeof AuthenticatedAppRoute
   '/rastreio/$code': typeof RastreioCodeRoute
+  '/client/documentos': typeof AuthenticatedClientDocumentosRoute
   '/client/fretes': typeof AuthenticatedClientFretesRoute
   '/driver/faturamento': typeof AuthenticatedDriverFaturamentoRoute
   '/driver/fretes': typeof AuthenticatedDriverFretesRoute
@@ -332,6 +341,7 @@ export interface FileRoutesById {
   '/_authenticated/driver': typeof AuthenticatedDriverRouteWithChildren
   '/_authenticated/ops': typeof AuthenticatedOpsRouteWithChildren
   '/rastreio/$code': typeof RastreioCodeRoute
+  '/_authenticated/client/documentos': typeof AuthenticatedClientDocumentosRoute
   '/_authenticated/client/fretes': typeof AuthenticatedClientFretesRoute
   '/_authenticated/driver/faturamento': typeof AuthenticatedDriverFaturamentoRoute
   '/_authenticated/driver/fretes': typeof AuthenticatedDriverFretesRoute
@@ -371,6 +381,7 @@ export interface FileRouteTypes {
     | '/driver'
     | '/ops'
     | '/rastreio/$code'
+    | '/client/documentos'
     | '/client/fretes'
     | '/driver/faturamento'
     | '/driver/fretes'
@@ -405,6 +416,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/app'
     | '/rastreio/$code'
+    | '/client/documentos'
     | '/client/fretes'
     | '/driver/faturamento'
     | '/driver/fretes'
@@ -443,6 +455,7 @@ export interface FileRouteTypes {
     | '/_authenticated/driver'
     | '/_authenticated/ops'
     | '/rastreio/$code'
+    | '/_authenticated/client/documentos'
     | '/_authenticated/client/fretes'
     | '/_authenticated/driver/faturamento'
     | '/_authenticated/driver/fretes'
@@ -655,6 +668,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientFretesRouteImport
       parentRoute: typeof AuthenticatedClientRoute
     }
+    '/_authenticated/client/documentos': {
+      id: '/_authenticated/client/documentos'
+      path: '/documentos'
+      fullPath: '/client/documentos'
+      preLoaderRoute: typeof AuthenticatedClientDocumentosRouteImport
+      parentRoute: typeof AuthenticatedClientRoute
+    }
     '/_authenticated/ops/pedidos/': {
       id: '/_authenticated/ops/pedidos/'
       path: '/pedidos'
@@ -736,11 +756,13 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedClientRouteChildren {
+  AuthenticatedClientDocumentosRoute: typeof AuthenticatedClientDocumentosRoute
   AuthenticatedClientFretesRoute: typeof AuthenticatedClientFretesRoute
   AuthenticatedClientIndexRoute: typeof AuthenticatedClientIndexRoute
 }
 
 const AuthenticatedClientRouteChildren: AuthenticatedClientRouteChildren = {
+  AuthenticatedClientDocumentosRoute: AuthenticatedClientDocumentosRoute,
   AuthenticatedClientFretesRoute: AuthenticatedClientFretesRoute,
   AuthenticatedClientIndexRoute: AuthenticatedClientIndexRoute,
 }
