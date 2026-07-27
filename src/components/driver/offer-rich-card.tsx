@@ -147,73 +147,40 @@ export function OfferRichCard({
       }`}
     >
       {/* Header */}
-      <div className="bg-gradient-to-br from-brand to-brand/85 px-4 py-3 text-brand-foreground">
+      <div className="bg-surface px-6 py-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="grid h-8 w-8 place-items-center rounded-full bg-white/20 text-lg">
-              🚛
-            </span>
-            <div>
-              <div className="text-[10px] font-bold uppercase tracking-widest opacity-90">
-                Novo frete
-              </div>
-              <div className="text-[11px] font-medium opacity-80">
-                {pfCode ?? order.code}
-              </div>
+          <div className="flex items-center gap-3">
+            <div className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
+              Nova oferta
             </div>
           </div>
-          <div className="text-right">
-            <div className="text-2xl font-bold leading-none tracking-tight">
-              {brl(gross)}
-            </div>
-            {distanceKm ? (
-              <div className="mt-0.5 text-[10px] opacity-80">
-                {brl(gross / distanceKm)}/km
-              </div>
-            ) : null}
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
+            <Clock className="h-3.5 w-3.5" />
+            {offer.expires_at ? `Expira ${new Date(offer.expires_at).toLocaleTimeString("pt-BR")}` : "—"}
           </div>
         </div>
 
-        {/* Selos */}
-        <div className="mt-3 flex flex-wrap items-center gap-1.5">
+        <div className="mt-4 flex items-center justify-between">
+          <div>
+            <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Valor</div>
+            <div className="text-3xl font-black tracking-tighter text-brand">
+              {brl(gross)}
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-4 flex flex-wrap items-center gap-2">
           {prio && (
-            <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${prio.cls}`}>
+            <span className={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wider ${prio.cls}`}>
               {prio.label}
             </span>
           )}
           {isFav && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-bold text-amber-900">
-              <Star className="h-3 w-3 fill-current" /> Rota favorita
-            </span>
-          )}
-          {order.origin_state && order.destination_state && (
-            <span className="rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-semibold">
-              {order.origin_state} → {order.destination_state}
+            <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-amber-700">
+              <Star className="h-3 w-3 fill-current" /> Favorita
             </span>
           )}
         </div>
-
-        {/* Countdown com barra de progresso */}
-        {offer.expires_at && (
-          <div className="mt-3">
-            <div className="flex items-center justify-between text-[11px] font-semibold">
-              <span className="inline-flex items-center gap-1 opacity-90">
-                <Clock className="h-3 w-3" /> Tempo para aceitar
-              </span>
-              <CountdownLabel expiresAt={offer.expires_at} now={now} />
-            </div>
-            {progressPct !== null && (
-              <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-white/20">
-                <div
-                  className={`h-full transition-all ${
-                    urgent ? "bg-red-400" : "bg-white"
-                  }`}
-                  style={{ width: `${progressPct}%` }}
-                />
-              </div>
-            )}
-          </div>
-        )}
       </div>
 
       {/* Mapa */}
@@ -358,31 +325,25 @@ export function OfferRichCard({
       )}
 
       {/* Ações */}
-      <div className="grid grid-cols-2 gap-2 p-3">
+      <div className="flex gap-3 p-4 bg-surface">
         <button
           disabled={!!busy || isExpired || offer.status === "negotiating"}
           onClick={() => respond("decline")}
-          className="inline-flex items-center justify-center gap-1 rounded-xl border border-border bg-background py-3 text-sm font-semibold hover:bg-accent disabled:opacity-40"
+          className="flex-1 rounded-2xl border border-border bg-background py-4 text-sm font-bold uppercase tracking-widest hover:bg-accent disabled:opacity-40"
         >
           <X className="h-4 w-4" /> Recusar
         </button>
         <button
           disabled={!!busy || isExpired || offer.status === "negotiating"}
           onClick={onNegotiate}
-          className="inline-flex items-center justify-center gap-1 rounded-xl border border-brand bg-background py-3 text-sm font-semibold text-brand hover:bg-brand/5 disabled:opacity-40"
+          className="flex-1 rounded-2xl border border-brand bg-background py-4 text-sm font-bold uppercase tracking-widest text-brand hover:bg-brand/5 disabled:opacity-40"
         >
           <MessageCircle className="h-4 w-4" /> Negociar
         </button>
         <button
-          onClick={onOpenDetails}
-          className="col-span-1 inline-flex items-center justify-center gap-1 rounded-xl border border-border bg-surface py-3 text-sm font-semibold hover:bg-accent"
-        >
-          Ver detalhes <ChevronRight className="h-4 w-4" />
-        </button>
-        <button
           disabled={!!busy || isExpired || offer.status === "negotiating"}
           onClick={() => respond("accept")}
-          className="col-span-1 inline-flex items-center justify-center gap-1 rounded-xl bg-brand py-3 text-sm font-bold text-brand-foreground shadow-md hover:opacity-90 disabled:opacity-40"
+          className="flex-[1.5] rounded-2xl bg-brand py-4 text-sm font-black uppercase tracking-widest text-brand-foreground shadow-lg shadow-brand/20 hover:opacity-90 disabled:opacity-40"
         >
           <Check className="h-4 w-4" /> Aceitar
         </button>

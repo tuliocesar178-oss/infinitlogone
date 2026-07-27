@@ -181,7 +181,7 @@ export function DriverShell({
         </div>
       </header>
 
-      <main className="mx-auto max-w-2xl px-4 pb-28 pt-6">
+      <main className="mx-auto max-w-2xl px-4 pb-28 pt-0 sm:pt-6">
         {(title || actions) && (
           <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
             <div className="min-w-0">
