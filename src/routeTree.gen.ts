@@ -39,6 +39,7 @@ import { Route as AuthenticatedOpsPedidosNovoRouteImport } from './routes/_authe
 import { Route as AuthenticatedOpsPedidosIdRouteImport } from './routes/_authenticated/ops.pedidos.$id'
 import { Route as AuthenticatedOpsMotoristasAprovacoesRouteImport } from './routes/_authenticated/ops.motoristas.aprovacoes'
 import { Route as AuthenticatedOpsMotoristasIdRouteImport } from './routes/_authenticated/ops.motoristas.$id'
+import { Route as AuthenticatedDriverOfertasIdRouteImport } from './routes/_authenticated/driver.ofertas.$id'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -204,6 +205,12 @@ const AuthenticatedOpsMotoristasIdRoute =
     path: '/motoristas/$id',
     getParentRoute: () => AuthenticatedOpsRoute,
   } as any)
+const AuthenticatedDriverOfertasIdRoute =
+  AuthenticatedDriverOfertasIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedDriverOfertasRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -219,13 +226,14 @@ export interface FileRoutesByFullPath {
   '/rastreio/$code': typeof RastreioCodeRoute
   '/driver/faturamento': typeof AuthenticatedDriverFaturamentoRoute
   '/driver/fretes': typeof AuthenticatedDriverFretesRoute
-  '/driver/ofertas': typeof AuthenticatedDriverOfertasRoute
+  '/driver/ofertas': typeof AuthenticatedDriverOfertasRouteWithChildren
   '/driver/perfil': typeof AuthenticatedDriverPerfilRoute
   '/ops/central': typeof AuthenticatedOpsCentralRoute
   '/ops/equipe': typeof AuthenticatedOpsEquipeRoute
   '/ops/veiculos': typeof AuthenticatedOpsVeiculosRouteWithChildren
   '/driver/': typeof AuthenticatedDriverIndexRoute
   '/ops/': typeof AuthenticatedOpsIndexRoute
+  '/driver/ofertas/$id': typeof AuthenticatedDriverOfertasIdRoute
   '/ops/motoristas/$id': typeof AuthenticatedOpsMotoristasIdRoute
   '/ops/motoristas/aprovacoes': typeof AuthenticatedOpsMotoristasAprovacoesRoute
   '/ops/pedidos/$id': typeof AuthenticatedOpsPedidosIdRoute
@@ -248,13 +256,14 @@ export interface FileRoutesByTo {
   '/rastreio/$code': typeof RastreioCodeRoute
   '/driver/faturamento': typeof AuthenticatedDriverFaturamentoRoute
   '/driver/fretes': typeof AuthenticatedDriverFretesRoute
-  '/driver/ofertas': typeof AuthenticatedDriverOfertasRoute
+  '/driver/ofertas': typeof AuthenticatedDriverOfertasRouteWithChildren
   '/driver/perfil': typeof AuthenticatedDriverPerfilRoute
   '/ops/central': typeof AuthenticatedOpsCentralRoute
   '/ops/equipe': typeof AuthenticatedOpsEquipeRoute
   '/ops/veiculos': typeof AuthenticatedOpsVeiculosRouteWithChildren
   '/driver': typeof AuthenticatedDriverIndexRoute
   '/ops': typeof AuthenticatedOpsIndexRoute
+  '/driver/ofertas/$id': typeof AuthenticatedDriverOfertasIdRoute
   '/ops/motoristas/$id': typeof AuthenticatedOpsMotoristasIdRoute
   '/ops/motoristas/aprovacoes': typeof AuthenticatedOpsMotoristasAprovacoesRoute
   '/ops/pedidos/$id': typeof AuthenticatedOpsPedidosIdRoute
@@ -281,13 +290,14 @@ export interface FileRoutesById {
   '/rastreio/$code': typeof RastreioCodeRoute
   '/_authenticated/driver/faturamento': typeof AuthenticatedDriverFaturamentoRoute
   '/_authenticated/driver/fretes': typeof AuthenticatedDriverFretesRoute
-  '/_authenticated/driver/ofertas': typeof AuthenticatedDriverOfertasRoute
+  '/_authenticated/driver/ofertas': typeof AuthenticatedDriverOfertasRouteWithChildren
   '/_authenticated/driver/perfil': typeof AuthenticatedDriverPerfilRoute
   '/_authenticated/ops/central': typeof AuthenticatedOpsCentralRoute
   '/_authenticated/ops/equipe': typeof AuthenticatedOpsEquipeRoute
   '/_authenticated/ops/veiculos': typeof AuthenticatedOpsVeiculosRouteWithChildren
   '/_authenticated/driver/': typeof AuthenticatedDriverIndexRoute
   '/_authenticated/ops/': typeof AuthenticatedOpsIndexRoute
+  '/_authenticated/driver/ofertas/$id': typeof AuthenticatedDriverOfertasIdRoute
   '/_authenticated/ops/motoristas/$id': typeof AuthenticatedOpsMotoristasIdRoute
   '/_authenticated/ops/motoristas/aprovacoes': typeof AuthenticatedOpsMotoristasAprovacoesRoute
   '/_authenticated/ops/pedidos/$id': typeof AuthenticatedOpsPedidosIdRoute
@@ -321,6 +331,7 @@ export interface FileRouteTypes {
     | '/ops/veiculos'
     | '/driver/'
     | '/ops/'
+    | '/driver/ofertas/$id'
     | '/ops/motoristas/$id'
     | '/ops/motoristas/aprovacoes'
     | '/ops/pedidos/$id'
@@ -350,6 +361,7 @@ export interface FileRouteTypes {
     | '/ops/veiculos'
     | '/driver'
     | '/ops'
+    | '/driver/ofertas/$id'
     | '/ops/motoristas/$id'
     | '/ops/motoristas/aprovacoes'
     | '/ops/pedidos/$id'
@@ -382,6 +394,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/veiculos'
     | '/_authenticated/driver/'
     | '/_authenticated/ops/'
+    | '/_authenticated/driver/ofertas/$id'
     | '/_authenticated/ops/motoristas/$id'
     | '/_authenticated/ops/motoristas/aprovacoes'
     | '/_authenticated/ops/pedidos/$id'
@@ -615,13 +628,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsMotoristasIdRouteImport
       parentRoute: typeof AuthenticatedOpsRoute
     }
+    '/_authenticated/driver/ofertas/$id': {
+      id: '/_authenticated/driver/ofertas/$id'
+      path: '/$id'
+      fullPath: '/driver/ofertas/$id'
+      preLoaderRoute: typeof AuthenticatedDriverOfertasIdRouteImport
+      parentRoute: typeof AuthenticatedDriverOfertasRoute
+    }
   }
 }
+
+interface AuthenticatedDriverOfertasRouteChildren {
+  AuthenticatedDriverOfertasIdRoute: typeof AuthenticatedDriverOfertasIdRoute
+}
+
+const AuthenticatedDriverOfertasRouteChildren: AuthenticatedDriverOfertasRouteChildren =
+  {
+    AuthenticatedDriverOfertasIdRoute: AuthenticatedDriverOfertasIdRoute,
+  }
+
+const AuthenticatedDriverOfertasRouteWithChildren =
+  AuthenticatedDriverOfertasRoute._addFileChildren(
+    AuthenticatedDriverOfertasRouteChildren,
+  )
 
 interface AuthenticatedDriverRouteChildren {
   AuthenticatedDriverFaturamentoRoute: typeof AuthenticatedDriverFaturamentoRoute
   AuthenticatedDriverFretesRoute: typeof AuthenticatedDriverFretesRoute
-  AuthenticatedDriverOfertasRoute: typeof AuthenticatedDriverOfertasRoute
+  AuthenticatedDriverOfertasRoute: typeof AuthenticatedDriverOfertasRouteWithChildren
   AuthenticatedDriverPerfilRoute: typeof AuthenticatedDriverPerfilRoute
   AuthenticatedDriverIndexRoute: typeof AuthenticatedDriverIndexRoute
 }
@@ -629,7 +663,7 @@ interface AuthenticatedDriverRouteChildren {
 const AuthenticatedDriverRouteChildren: AuthenticatedDriverRouteChildren = {
   AuthenticatedDriverFaturamentoRoute: AuthenticatedDriverFaturamentoRoute,
   AuthenticatedDriverFretesRoute: AuthenticatedDriverFretesRoute,
-  AuthenticatedDriverOfertasRoute: AuthenticatedDriverOfertasRoute,
+  AuthenticatedDriverOfertasRoute: AuthenticatedDriverOfertasRouteWithChildren,
   AuthenticatedDriverPerfilRoute: AuthenticatedDriverPerfilRoute,
   AuthenticatedDriverIndexRoute: AuthenticatedDriverIndexRoute,
 }
