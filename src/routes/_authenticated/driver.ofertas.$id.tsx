@@ -584,7 +584,7 @@ function RouteMap({
   return <div ref={container} className="h-[38vh] min-h-[240px] w-full" />;
 }
 
-function Countdown({ expiresAt }: { expiresAt: string | null }) {
+function Countdown({ expiresAt, createdAt }: { expiresAt: string | null; createdAt?: string }) {
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000);
@@ -599,9 +599,21 @@ function Countdown({ expiresAt }: { expiresAt: string | null }) {
   const s = total % 60;
   const label = h > 0 ? `${h}h ${String(m).padStart(2, "0")}m` : `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
   const urgent = ms < 60_000;
+  const window = createdAt ? new Date(expiresAt).getTime() - new Date(createdAt).getTime() : null;
+  const pct = window ? Math.max(0, Math.min(100, (ms / window) * 100)) : null;
   return (
-    <div className={`inline-flex items-center gap-1 text-xs font-semibold ${urgent ? "text-red-500" : "text-brand"}`}>
-      <Clock className="h-3 w-3" /> Expira em {label}
+    <div>
+      <div className={`inline-flex items-center gap-1 text-xs font-semibold ${urgent ? "text-red-500" : "text-brand"}`}>
+        <Clock className="h-3 w-3" /> Expira em {label}
+      </div>
+      {pct !== null && (
+        <div className="mx-auto mt-1 h-1 w-32 overflow-hidden rounded-full bg-surface-2">
+          <div
+            className={`h-full transition-all ${urgent ? "bg-red-500" : "bg-brand"}`}
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+      )}
     </div>
   );
 }
