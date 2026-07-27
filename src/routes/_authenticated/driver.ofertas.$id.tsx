@@ -303,6 +303,42 @@ function OfferDetail() {
           </div>
         </div>
 
+        {/* Selos operacionais */}
+        <div className="flex flex-wrap gap-2">
+          {prio && (
+            <span className={`rounded-full border px-2.5 py-1 text-[11px] font-bold ${prio.cls}`}>
+              {prio.label}
+            </span>
+          )}
+          {(order.priority ?? "").toLowerCase() === "alta" && (
+            <span className="rounded-full bg-red-500 px-2.5 py-1 text-[11px] font-bold text-white">
+              🔥 Carga Urgente
+            </span>
+          )}
+          {order.origin_state && order.destination_state && (
+            <span className="rounded-full border border-border bg-surface px-2.5 py-1 text-[11px] font-semibold">
+              {order.origin_state} → {order.destination_state}
+            </span>
+          )}
+        </div>
+
+        {/* Resumo da Viagem */}
+        <TripSummary
+          distanceKm={distanceKm}
+          etaMinutes={etaMinutes}
+          weightKg={order.cargo_weight_kg ? Number(order.cargo_weight_kg) : null}
+          gross={Number(offer.offered_price)}
+          origin={order.origin_city ?? order.origin_address}
+          destination={order.destination_city ?? order.destination_address}
+        />
+
+        {/* Ganho Estimado (com pedágios e combustível) */}
+        <EstimatedEarnings
+          gross={Number(offer.offered_price)}
+          distanceKm={distanceKm}
+        />
+
+
         {/* Rentabilidade */}
         {profit && (
           <div className="card-soft p-4">
