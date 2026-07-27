@@ -89,7 +89,7 @@ function TorreDeControle() {
       const { data: drivers, error } = await supabase
         .from("drivers")
         .select("*")
-        .neq("status", "offline"); // Filter at the query level for efficiency
+        .not("status", "in", "(offline)"); // Filter at the query level for efficiency
       
       if (error) throw error;
       if (!drivers.length) return [];

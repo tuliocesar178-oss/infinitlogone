@@ -115,6 +115,7 @@ export function DriverShell({
     .toUpperCase();
 
   const availabilityLabel: Record<string, string> = {
+    available: "Disponível",
     disponivel: "Disponível",
     em_frete: "Em frete",
     folga: "Em folga",
@@ -123,6 +124,7 @@ export function DriverShell({
     offline: "Offline",
   };
   const availabilityDot: Record<string, string> = {
+    available: "bg-emerald-500",
     disponivel: "bg-emerald-500",
     em_frete: "bg-brand",
     folga: "bg-amber-500",
@@ -140,8 +142,8 @@ export function DriverShell({
             <div className="leading-tight">
               <div className="text-sm font-semibold tracking-tight">InfinitLog</div>
               <div className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
-                <span className={`h-1.5 w-1.5 rounded-full ${availabilityDot[me?.availability ?? "offline"]}`} />
-                {availabilityLabel[me?.availability ?? "offline"]}
+                <span className={`h-1.5 w-1.5 rounded-full ${availabilityDot[(me?.availability as any) ?? "offline"]}`} />
+                {availabilityLabel[(me?.availability as any) ?? "offline"]}
               </div>
             </div>
           </Link>

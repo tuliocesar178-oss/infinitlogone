@@ -101,7 +101,9 @@ function DriverProfile() {
               className={`rounded-full px-3 py-1.5 text-xs font-medium ring-1 ring-inset transition ${
                 d?.availability === a.value
                   ? "bg-brand text-brand-foreground ring-brand"
-                  : "bg-surface text-muted-foreground ring-border hover:bg-accent"
+                  : (d?.availability === ("available" as any) && a.value === "disponivel")
+                    ? "bg-brand text-brand-foreground ring-brand"
+                    : "bg-surface text-muted-foreground ring-border hover:bg-accent"
               }`}>
               {a.label}
             </button>
