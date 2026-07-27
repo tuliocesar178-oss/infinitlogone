@@ -39,6 +39,13 @@ export function DriverShell({
   const path = useRouterState({ select: (s) => s.location.pathname });
   const [pendingOffers, setPendingOffers] = useState(0);
 
+  useEffect(() => {
+    applyTheme(readTheme());
+    const onChange = () => applyTheme(readTheme());
+    window.addEventListener("driver-theme-changed", onChange);
+    return () => window.removeEventListener("driver-theme-changed", onChange);
+  }, []);
+
   const { data: me } = useQuery({
     queryKey: ["driver-me"],
     queryFn: async () => {
