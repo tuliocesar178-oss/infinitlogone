@@ -32,6 +32,7 @@ function DriverOffers() {
   const [userId, setUserId] = useState("");
   const [now, setNow] = useState(Date.now());
   const [filter, setFilter] = useState<FilterKey>("novas");
+  const favorites = useFavorites();
 
   useEffect(() => {
     (async () => {
