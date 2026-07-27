@@ -151,6 +151,47 @@ function DriverProfile() {
         )}
       </section>
 
+      <section className="card-soft p-5">
+        <SectionTitle>Aparência</SectionTitle>
+        <div className="grid grid-cols-2 gap-2">
+          {(["light", "dark"] as ThemeMode[]).map((m) => {
+            const active = theme === m;
+            const Icon = m === "dark" ? Moon : Sun;
+            return (
+              <button
+                key={m}
+                onClick={() => { setTheme(m); applyTheme(m); }}
+                className={`flex items-center justify-center gap-2 rounded-2xl px-3 py-3 text-sm font-semibold ring-1 ring-inset ${
+                  active ? "bg-brand text-brand-foreground ring-brand" : "bg-surface text-muted-foreground ring-border"
+                }`}
+              >
+                <Icon className="h-4 w-4" /> {m === "dark" ? "Escuro" : "Claro"}
+              </button>
+            );
+          })}
+        </div>
+        <p className="mt-2 text-[11px] text-muted-foreground">Ideal para dirigir à noite.</p>
+      </section>
+
+      <section className="card-soft divide-y divide-border">
+        <Link to="/driver/ofertas/historico" className="flex items-center gap-3 p-4 hover:bg-accent">
+          <span className="grid h-9 w-9 place-items-center rounded-full bg-surface-2"><Clock className="h-4 w-4 text-muted-foreground" /></span>
+          <div className="flex-1">
+            <div className="text-sm font-semibold">Histórico de ofertas</div>
+            <div className="text-xs text-muted-foreground">Aceitas, recusadas e expiradas.</div>
+          </div>
+          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+        </Link>
+        <Link to="/driver/ocorrencias" className="flex items-center gap-3 p-4 hover:bg-accent">
+          <span className="grid h-9 w-9 place-items-center rounded-full bg-amber-100"><AlertTriangle className="h-4 w-4 text-amber-700" /></span>
+          <div className="flex-1">
+            <div className="text-sm font-semibold">Ocorrências</div>
+            <div className="text-xs text-muted-foreground">Reportar problemas para a logística.</div>
+          </div>
+          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+        </Link>
+      </section>
+
       <button onClick={signOut}
         className="flex w-full items-center justify-center gap-2 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 hover:bg-red-100">
         <LogOut className="h-4 w-4" /> Sair da conta
