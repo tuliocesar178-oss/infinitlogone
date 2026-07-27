@@ -27,6 +27,7 @@ function DriverFreights() {
   const [userId, setUserId] = useState("");
   const [filter, setFilter] = useState<(typeof FILTERS)[number]["key"]>("active");
   const [navTarget, setNavTarget] = useState<NavTarget | null>(null);
+  const [chatOrder, setChatOrder] = useState<{ id: string; code: string | null } | null>(null);
 
   useEffect(() => {
     (async () => {
