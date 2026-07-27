@@ -22,8 +22,12 @@ import {
   Calendar,
   Layers,
   AlertTriangle,
+  Star,
+  Phone,
+  Zap,
 } from "lucide-react";
 import { DriverQuickChat } from "@/components/driver/quick-chat";
+import { isFavorite, readDriveMode, setDriveMode, toggleFavorite } from "@/lib/driver-prefs";
 
 const TOKEN = import.meta.env.VITE_LOVABLE_CONNECTOR_MAPBOX_PUBLIC_TOKEN as string | undefined;
 if (TOKEN) mapboxgl.accessToken = TOKEN;
