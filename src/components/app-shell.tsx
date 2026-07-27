@@ -117,7 +117,7 @@ export function AppShell({
       return {
         email: user.email ?? "",
         name: profile?.full_name ?? user.email?.split("@")[0] ?? "Usuário",
-        role: roles?.[0]?.role ?? "user",
+        role: (roles?.[0]?.role as any) ?? "user",
       };
     },
   });
