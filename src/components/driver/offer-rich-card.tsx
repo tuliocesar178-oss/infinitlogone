@@ -123,6 +123,7 @@ export function OfferRichCard({
   async function respond(action: "accept" | "decline") {
     setBusy(action);
     try {
+      if (!order) throw new Error("Pedido não encontrado");
       const { data: userData } = await supabase.auth.getUser();
       const patch =
         action === "accept"
