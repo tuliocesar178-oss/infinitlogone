@@ -45,6 +45,8 @@ function OfferDetail() {
   const [negotiateOpen, setNegotiateOpen] = useState(false);
   const [busy, setBusy] = useState<null | "accept" | "decline" | "negotiate">(null);
   const [chatOpen, setChatOpen] = useState(false);
+  const [fav, setFav] = useState(false);
+  const [driveMode, setDrive] = useState<boolean>(() => (typeof window === "undefined" ? false : readDriveMode()));
 
   useEffect(() => {
     (async () => {
