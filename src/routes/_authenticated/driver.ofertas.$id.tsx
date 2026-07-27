@@ -55,6 +55,13 @@ function OfferDetail() {
     })();
   }, []);
 
+  useEffect(() => {
+    const onChange = () => setDrive(readDriveMode());
+    window.addEventListener("driver-drive-mode-changed", onChange);
+    return () => window.removeEventListener("driver-drive-mode-changed", onChange);
+  }, []);
+
+
   const q = useQuery({
     enabled: !!id && !!userId,
     queryKey: ["driver-offer-detail", id, userId],
