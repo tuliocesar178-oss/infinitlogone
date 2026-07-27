@@ -13,6 +13,7 @@ export const Route = createFileRoute("/_authenticated/ops/motoristas/aprovacoes"
 
 type Row = {
   user_id: string; phone: string | null; city: string | null; photo_url: string | null;
+  display_photo_url: string | null;
   license_number: string | null; rntrc: string | null; approval_status: string;
   submitted_at: string | null; rejection_reason: string | null; correction_notes: string | null;
   notes: string | null;
@@ -36,11 +37,39 @@ function DriverApprovalsPage() {
       const rows = (data ?? []) as Array<Omit<Row, "profiles">>;
       const ids = rows.map((r) => r.user_id);
       let profileMap = new Map<string, { full_name: string | null }>();
+      let documentPhotoMap = new Map<string, string>();
       if (ids.length) {
-        const { data: profs } = await supabase.from("profiles").select("id, full_name").in("id", ids);
+        const [{ data: profs }, { data: photoDocs }] = await Promise.all([
+          supabase.from("profiles").select("id, full_name").in("id", ids),
+          supabase
+            .from("driver_documents")
+            .select("driver_id, file_path, mime_type, created_at")
+            .in("driver_id", ids)
+            .eq("kind", "foto_motorista")
+            .order("created_at", { ascending: false }),
+        ]);
         profileMap = new Map((profs ?? []).map((p) => [p.id, { full_name: p.full_name }]));
+
+        const latestImageDocs = new Map<string, string>();
+        for (const doc of photoDocs ?? []) {
+          if (latestImageDocs.has(doc.driver_id)) continue;
+          if (doc.mime_type && !doc.mime_type.startsWith("image/")) continue;
+          latestImageDocs.set(doc.driver_id, doc.file_path);
+        }
+
+        const signedPhotos = await Promise.all(
+          Array.from(latestImageDocs.entries()).map(async ([driverId, path]) => {
+            const { data } = await supabase.storage.from("driver-documents").createSignedUrl(path, 60 * 60);
+            return data?.signedUrl ? ([driverId, data.signedUrl] as const) : null;
+          }),
+        );
+        documentPhotoMap = new Map(signedPhotos.filter((item): item is readonly [string, string] => Boolean(item)));
       }
-      return rows.map((r) => ({ ...r, profiles: profileMap.get(r.user_id) ?? { full_name: null } })) as Row[];
+      return rows.map((r) => ({
+        ...r,
+        display_photo_url: r.photo_url ?? documentPhotoMap.get(r.user_id) ?? null,
+        profiles: profileMap.get(r.user_id) ?? { full_name: null },
+      })) as Row[];
 
     },
   });
@@ -82,8 +111,8 @@ function DriverApprovalsPage() {
         {rows.map((r) => (
           <div key={r.user_id} className="card-soft p-5">
             <div className="flex items-center gap-3">
-              {r.photo_url ? (
-                <img src={r.photo_url} alt="" className="h-14 w-14 rounded-full object-cover" />
+              {r.display_photo_url ? (
+                <img src={r.display_photo_url} alt="Foto do motorista" className="h-14 w-14 rounded-full object-cover" />
               ) : (
                 <div className="h-14 w-14 rounded-full bg-surface-2" />
               )}
@@ -170,9 +199,16 @@ function DriverDrawer({ row, onClose }: { row: Row; onClose: () => void }) {
     <div className="fixed inset-0 z-50 flex justify-end bg-black/40" onClick={onClose}>
       <aside className="h-full w-full max-w-md overflow-auto bg-background p-6" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-start justify-between">
-          <div>
-            <h2 className="text-lg font-semibold">{row.profiles?.full_name}</h2>
-            <p className="text-xs text-muted-foreground">{row.phone} · {row.city}</p>
+          <div className="flex min-w-0 items-center gap-3">
+            {row.display_photo_url ? (
+              <img src={row.display_photo_url} alt="Foto do motorista" className="h-14 w-14 rounded-2xl object-cover" />
+            ) : (
+              <div className="h-14 w-14 rounded-2xl bg-surface-2" />
+            )}
+            <div className="min-w-0">
+              <h2 className="truncate text-lg font-semibold">{row.profiles?.full_name}</h2>
+              <p className="truncate text-xs text-muted-foreground">{row.phone} · {row.city}</p>
+            </div>
           </div>
           <button onClick={onClose} className="text-sm text-muted-foreground hover:text-foreground">Fechar</button>
         </div>
