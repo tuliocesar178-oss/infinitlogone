@@ -35,7 +35,7 @@ function OffersHistory() {
         .from("freight_offers")
         .select("*")
         .eq("driver_id", userId)
-        .in("status", ["accepted", "declined", "expired", "withdrawn"])
+        .in("status", ["accepted", "declined", "expired", "cancelled"])
         .order("created_at", { ascending: false })
         .limit(80);
       if (!offers?.length) return [];
