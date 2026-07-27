@@ -53,14 +53,28 @@ function DriversList() {
   const q = useQuery({
     queryKey: ["drivers-list"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: drivers, error } = await supabase
         .from("drivers")
         .select(
-          "user_id, status, availability, financial_status, city, state, phone, cpf, photo_url, rating, last_seen_at, created_at, current_vehicle_id, profiles:profiles!inner(id, full_name), vehicles:vehicles(id, plate, brand, model, vehicle_type)",
+          "user_id, status, availability, financial_status, city, state, phone, cpf, photo_url, rating, last_seen_at, created_at, current_vehicle_id",
         )
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data ?? [];
+      const ids = (drivers ?? []).map((d) => d.user_id);
+      const vehIds = (drivers ?? []).map((d) => d.current_vehicle_id).filter(Boolean) as string[];
+      const [{ data: profiles }, { data: vehicles }] = await Promise.all([
+        ids.length
+          ? supabase.from("profiles").select("id, full_name").in("id", ids)
+          : Promise.resolve({ data: [] as any[] }),
+        vehIds.length
+          ? supabase.from("vehicles").select("id, plate, brand, model, vehicle_type").in("id", vehIds)
+          : Promise.resolve({ data: [] as any[] }),
+      ]);
+      return (drivers ?? []).map((d) => ({
+        ...d,
+        profiles: (profiles ?? []).find((p: any) => p.id === d.user_id) ?? null,
+        vehicles: (vehicles ?? []).find((v: any) => v.id === d.current_vehicle_id) ?? null,
+      }));
     },
   });
 
