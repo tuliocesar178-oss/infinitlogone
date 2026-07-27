@@ -431,6 +431,13 @@ function OfferDetail() {
           }}
         />
       )}
+
+      <DriverQuickChat
+        open={chatOpen}
+        orderId={order.id}
+        orderCode={program?.pf_code ?? order.code}
+        onClose={() => setChatOpen(false)}
+      />
     </div>
   );
 }
