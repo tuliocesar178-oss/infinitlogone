@@ -113,9 +113,9 @@ function DriverHome() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Olá, {firstName || "…"}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+      <div className="bg-surface p-4 -mx-4 -mt-6 mb-6">
+        <h1 className="text-2xl font-black tracking-tight">Olá, {firstName || "…"}</h1>
+        <p className="mt-1 text-sm font-medium text-muted-foreground">
           {active ? "Você tem um frete em andamento." : offers.length ? `Você tem ${offers.length} oferta(s) esperando.` : "Aguardando novas ofertas."}
         </p>
       </div>
@@ -155,11 +155,11 @@ function DriverHome() {
 
 function StatCard({ label, value, icon, highlight }: { label: string; value: string; icon: React.ReactNode; highlight?: boolean }) {
   return (
-    <div className={`rounded-2xl border p-3 ${highlight ? "border-brand/40 bg-brand/5" : "border-border bg-surface"}`}>
-      <div className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
+    <div className={`rounded-2xl border p-4 shadow-sm transition-all ${highlight ? "border-brand/40 bg-brand/5 ring-1 ring-brand/10" : "border-border bg-surface"}`}>
+      <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.1em] text-muted-foreground">
         {icon} {label}
       </div>
-      <div className="mt-1 truncate text-lg font-semibold tracking-tight">{value}</div>
+      <div className="mt-1 truncate text-xl font-black tracking-tight">{value}</div>
     </div>
   );
 }
