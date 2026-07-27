@@ -137,7 +137,8 @@ export function OfferRichCard({
 
         if (!profile) throw new Error("Perfil do motorista não encontrado");
 
-        // 1. Atualizar a oferta
+        // 1. Atualizar a oferta. O gatilho (trigger) no banco de dados
+        // cuidará de atualizar a tabela 'orders' automaticamente.
         const { error: offerError } = await supabase
           .from("freight_offers")
           .update({
@@ -149,20 +150,8 @@ export function OfferRichCard({
         
         if (offerError) throw offerError;
 
-        // 2. Atualizar o pedido para vincular o motorista e mudar o status
-        const { error: orderError } = await supabase
-          .from("orders")
-          .update({
-            driver_id: userData.user.id,
-            status: "driver_assigned",
-            updated_at: new Date().toISOString()
-          })
-          .eq("id", order.id);
-
-        if (orderError) throw orderError;
-
         toast.success("Frete aceito! Vá para Minhas Rotas.");
-        navigate({ to: "/driver" });
+        navigate({ to: "/driver/fretes" }); // Redireciona direto para rotas
       } else {
         const { error } = await supabase
           .from("freight_offers")
