@@ -236,6 +236,65 @@ function OfferDetail() {
           </div>
         </div>
 
+        {/* Rentabilidade */}
+        {profit && (
+          <div className="card-soft p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                  Rentabilidade estimada
+                </div>
+                <div className="mt-0.5 text-lg font-bold tracking-tight">
+                  {profit.net >= 0 ? "+" : ""}{brl(profit.net)}
+                  <span className={`ml-2 text-xs font-semibold ${profit.marginPct >= 30 ? "text-emerald-600" : profit.marginPct >= 15 ? "text-amber-600" : "text-red-600"}`}>
+                    {profit.marginPct.toFixed(0)}% líquido
+                  </span>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Km vazios</div>
+                <div className="text-sm font-semibold">
+                  {emptyKm != null ? `${emptyKm.toFixed(0)} km` : "—"}
+                </div>
+              </div>
+            </div>
+            <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
+              <div className="rounded-lg bg-surface p-2">
+                <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Bruto</div>
+                <div className="mt-0.5 font-semibold">{brl(profit.gross)}</div>
+              </div>
+              <div className="rounded-lg bg-surface p-2">
+                <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Custo estimado</div>
+                <div className="mt-0.5 font-semibold">{brl(profit.cost)}</div>
+              </div>
+              <div className="rounded-lg bg-surface p-2">
+                <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Total rodado</div>
+                <div className="mt-0.5 font-semibold">{profit.totalKm.toFixed(0)} km</div>
+              </div>
+            </div>
+            <label className="mt-3 flex items-center justify-between gap-3 rounded-lg bg-surface px-3 py-2 text-xs">
+              <span className="text-muted-foreground">Meu custo por km</span>
+              <span className="flex items-center gap-1">
+                <span className="text-muted-foreground">R$</span>
+                <input
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  value={costPerKm}
+                  onChange={(e) => setCostPerKm(Number(e.target.value) || 0)}
+                  className="w-16 rounded-md border border-border bg-background px-2 py-1 text-right font-semibold outline-none focus:border-brand"
+                />
+              </span>
+            </label>
+            {profit.marginPct < 15 && (
+              <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-2 text-xs text-amber-700 dark:text-amber-400">
+                <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                <span>Rentabilidade baixa. Considere negociar o valor antes de aceitar.</span>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Route */}
         <div className="card-soft p-4">
           <div className="flex items-start gap-3">
