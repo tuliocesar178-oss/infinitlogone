@@ -183,13 +183,21 @@ function OfferDetail() {
           </div>
           <Countdown expiresAt={offer.expires_at} />
         </div>
-        {prio ? (
-          <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${prio.cls}`}>
-            {prio.label}
-          </span>
-        ) : (
-          <span className="w-9" />
-        )}
+        <div className="flex items-center gap-2">
+          {prio ? (
+            <span className={`hidden rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider sm:inline ${prio.cls}`}>
+              {prio.label}
+            </span>
+          ) : null}
+          <button
+            onClick={() => setChatOpen(true)}
+            className="grid h-9 w-9 place-items-center rounded-full border border-border bg-surface hover:bg-accent"
+            aria-label="Chat com a logística"
+            title="Chat com a logística"
+          >
+            <MessageCircle className="h-4 w-4" />
+          </button>
+        </div>
       </div>
 
       {/* Map */}
