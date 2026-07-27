@@ -103,15 +103,26 @@ export function OfferCard({
           {offer.expires_at ? `Expira ${new Date(offer.expires_at).toLocaleTimeString("pt-BR")}` : "—"}
         </span>
       </div>
+      <div className="relative border-b border-border/60">
+        <RouteMiniMap
+          origin={order?.origin_lat && order?.origin_lng ? [order.origin_lng, order.origin_lat] : null}
+          destination={order?.destination_lat && order?.destination_lng ? [order.destination_lng, order.destination_lat] : null}
+          className="h-32 w-full rounded-none"
+        />
+        {order?.distance_km != null && (
+          <div className="absolute right-2 top-2 rounded-full bg-background/95 px-3 py-1 text-[11px] font-bold shadow-md backdrop-blur">
+            {order.distance_km} km
+          </div>
+        )}
+      </div>
+
       <div className="grid gap-4 p-6 sm:grid-cols-2">
-        <I icon={<MapPin className="h-4 w-4" />} k="Origem" v={order?.origin_city ?? order?.origin_address} />
-        <I icon={<MapPin className="h-4 w-4" />} k="Destino" v={order?.destination_city ?? order?.destination_address} />
+        <I icon={<MapPin className="h-4 w-4 text-emerald-500" />} k="Origem" v={order?.origin_city ?? order?.origin_address} />
+        <I icon={<MapPin className="h-4 w-4 text-red-500" />} k="Destino" v={order?.destination_city ?? order?.destination_address} />
         <I icon={<Package className="h-4 w-4" />} k="Carga" v={order?.cargo_type} />
-        <I k="Peso" v={order?.cargo_weight_kg ? `${order.cargo_weight_kg} kg` : null} />
-        <I k="Volumes" v={order?.volumes} />
-        <I k="Distância" v={order?.distance_km ? `${order.distance_km} km` : null} />
-        <I k="Coleta prevista" v={order?.pickup_window_start ? new Date(order.pickup_window_start).toLocaleString("pt-BR") : null} />
-        <I k="Entrega prevista" v={order?.delivery_window_end ? new Date(order.delivery_window_end).toLocaleString("pt-BR") : null} />
+        <I icon={<Truck className="h-4 w-4" />} k="Peso" v={order?.cargo_weight_kg ? `${order.cargo_weight_kg} kg` : null} />
+        <I icon={<Clock className="h-4 w-4 text-emerald-600" />} k="Coleta prevista" v={order?.pickup_window_start ? new Date(order.pickup_window_start).toLocaleString("pt-BR") : null} />
+        <I icon={<Clock className="h-4 w-4 text-red-600" />} k="Entrega prevista" v={order?.delivery_window_end ? new Date(order.delivery_window_end).toLocaleString("pt-BR") : null} />
         <I k="Forma pgto" v={labelOf(PAYMENT_METHODS, program?.payment_method)} />
         <I k="Prazo" v={labelOf(PAYMENT_TERMS, program?.payment_term)} />
       </div>
