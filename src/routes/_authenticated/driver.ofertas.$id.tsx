@@ -48,8 +48,8 @@ function OfferDetail() {
   }, []);
 
   const q = useQuery({
-    enabled: !!id,
-    queryKey: ["driver-offer-detail", id],
+    enabled: !!id && !!userId,
+    queryKey: ["driver-offer-detail", id, userId],
     queryFn: async () => {
       const { data: offer, error } = await supabase
         .from("freight_offers")
@@ -58,12 +58,13 @@ function OfferDetail() {
         .maybeSingle();
       if (error) throw error;
       if (!offer) return null;
-      const [{ data: order }, { data: program }, { data: negotiations }] = await Promise.all([
+      const [{ data: order }, { data: program }, { data: negotiations }, { data: driver }] = await Promise.all([
         supabase.from("orders").select("*").eq("id", offer.order_id).maybeSingle(),
         supabase.from("freight_programs").select("*").eq("order_id", offer.order_id).maybeSingle(),
         supabase.from("negotiations").select("*").eq("offer_id", id).order("created_at", { ascending: false }),
+        supabase.from("drivers").select("current_lat,current_lng,default_price_per_km").eq("user_id", userId).maybeSingle(),
       ]);
-      return { offer, order, program, negotiations: negotiations ?? [] };
+      return { offer, order, program, negotiations: negotiations ?? [], driver };
     },
   });
 
