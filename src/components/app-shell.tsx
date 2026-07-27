@@ -30,7 +30,7 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
   {
     label: "Operacional",
     items: [
-      { label: "Central Operacional", to: "/ops/central", icon: LayoutGrid, match: (p) => p.startsWith("/ops/central") },
+      { label: "🗼 Torre de Controle", to: "/ops/central", icon: LayoutGrid, match: (p) => p.startsWith("/ops/central") },
       { label: "Dashboard", to: "/ops", icon: BarChart3, match: (p) => p === "/ops" },
       { label: "Fretes", to: "/ops/pedidos", icon: Package, match: (p) => p.startsWith("/ops/pedidos") },
       { label: "Motoristas", to: "/ops/motoristas", icon: Truck, match: (p) => p.startsWith("/ops/motoristas") && !p.startsWith("/ops/motoristas/aprovacoes") },

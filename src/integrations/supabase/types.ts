@@ -1699,6 +1699,7 @@ export type Database = {
         | "cancelled"
         | "negotiating"
       order_status:
+        | "planning"
         | "created"
         | "preparing"
         | "awaiting_driver"
@@ -1711,6 +1712,7 @@ export type Database = {
         | "out_for_delivery"
         | "in_transit"
         | "near_destination"
+        | "at_destination"
         | "delivered"
         | "finalized"
         | "cancelled"
@@ -1909,6 +1911,7 @@ export const Constants = {
         "negotiating",
       ],
       order_status: [
+        "planning",
         "created",
         "preparing",
         "awaiting_driver",
@@ -1921,6 +1924,7 @@ export const Constants = {
         "out_for_delivery",
         "in_transit",
         "near_destination",
+        "at_destination",
         "delivered",
         "finalized",
         "cancelled",

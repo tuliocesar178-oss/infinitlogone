@@ -8,11 +8,11 @@ export type DriverAction =
   | "delivered";          // in_transit -> delivered (via evidence form)
 
 export const ACTION_TRANSITIONS: Record<DriverAction, { from: OrderStatus[]; to: OrderStatus }> = {
-  start_pickup: { from: ["driver_assigned"], to: "en_route_pickup" },
+  start_pickup: { from: ["driver_assigned", "planning"], to: "en_route_pickup" },
   arrived_pickup: { from: ["en_route_pickup", "in_transit_to_pickup"], to: "at_pickup" },
   loaded: { from: ["at_pickup"], to: "loaded" },
   start_delivery: { from: ["out_for_delivery", "loaded"], to: "in_transit" },
-  delivered: { from: ["in_transit", "near_destination"], to: "delivered" },
+  delivered: { from: ["in_transit", "near_destination", "at_destination"], to: "delivered" },
 };
 
 export function nextDriverAction(status: OrderStatus): DriverAction | null {
@@ -29,6 +29,7 @@ export function nextDriverAction(status: OrderStatus): DriverAction | null {
       return "start_delivery";
     case "in_transit":
     case "near_destination":
+    case "at_destination":
       return "delivered";
     default:
       return null;

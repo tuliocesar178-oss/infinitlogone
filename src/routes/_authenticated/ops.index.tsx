@@ -72,6 +72,7 @@ function FreightDashboard() {
   const offers = offerIds ?? new Set<string>();
 
   const counts: Record<DashboardCardKey, number> = {
+    planning: 0,
     preparing: 0,
     awaiting_driver: 0,
     offer_sent: 0,
@@ -84,7 +85,8 @@ function FreightDashboard() {
   };
 
   for (const o of list) {
-    if (o.status === "preparing" || o.status === "created") counts.preparing++;
+    if (o.status === "planning") counts.planning++;
+    else if (o.status === "preparing" || o.status === "created") counts.preparing++;
     else if (o.status === "awaiting_driver") {
       if (offers.has(o.id)) counts.offer_sent++;
       else counts.awaiting_driver++;
