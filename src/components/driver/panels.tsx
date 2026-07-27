@@ -100,7 +100,7 @@ export function OfferCard({
         </div>
         <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
           <Clock className="h-3.5 w-3.5" />
-          {offer.expires_at ? `Expira ${new Date(offer.expires_at).toLocaleTimeString("pt-BR")}` : "—"}
+          Oferta ativa
         </span>
       </div>
       <div className="relative border-b border-border/60">

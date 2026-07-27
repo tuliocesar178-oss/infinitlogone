@@ -98,8 +98,8 @@ export function OfferRichCard({
     order?.estimated_minutes ?? (distanceKm ? Math.round(distanceKm) : null); // ~60 km/h → min≈km
 
   // Countdown + progresso
-  const expMs = offer.expires_at ? new Date(offer.expires_at).getTime() - now : null;
-  const isExpired = expMs !== null && expMs <= 0;
+  const expMs = null;
+  const isExpired = false;
   const totalWindow =
     offer.expires_at && offer.created_at
       ? new Date(offer.expires_at).getTime() - new Date(offer.created_at).getTime()
@@ -156,7 +156,7 @@ export function OfferRichCard({
           </div>
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
             <Clock className="h-3.5 w-3.5" />
-            {offer.expires_at ? `Expira ${new Date(offer.expires_at).toLocaleTimeString("pt-BR")}` : "—"}
+            Oferta ativa
           </div>
         </div>
 
