@@ -3,6 +3,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "@/components/logo";
+import { applyTheme, readTheme } from "@/lib/driver-prefs";
 import {
   Bell,
   CircleDollarSign,
