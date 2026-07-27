@@ -59,9 +59,11 @@ export function NegotiationPanel({ orderId, onChanged }: { orderId: string; onCh
       <h2 className="mb-4 text-sm font-semibold uppercase tracking-widest text-muted-foreground">
         Ofertas & negociações
       </h2>
-      <ul className="space-y-3">
+      <ul className="space-y-4">
         {offers.map((o: any) => {
-          const pending = (o.negotiations ?? []).filter((n: any) => n.status === "proposed");
+          const negotiations = o.negotiations ?? [];
+          const pending = negotiations.filter((n: any) => n.status === "proposed");
+          const history = negotiations.filter((n: any) => n.status !== "proposed");
           return (
             <li key={o.id} className="rounded-xl border border-border p-3 text-sm">
               <div className="flex items-center justify-between gap-3">
@@ -72,35 +74,75 @@ export function NegotiationPanel({ orderId, onChanged }: { orderId: string; onCh
                   </div>
                 </div>
               </div>
-              {pending.length > 0 && (
-                <ul className="mt-3 space-y-2 border-t border-border pt-3">
-                  {pending.map((n: any) => (
-                    <li
-                      key={n.id}
-                      className="flex items-center justify-between gap-3 rounded-lg bg-amber-500/10 p-2"
-                    >
-                      <div>
-                        <div className="text-xs text-muted-foreground">Contraproposta</div>
-                        <div className="font-semibold">{brl(n.amount)}</div>
-                        {n.note && <div className="text-xs text-muted-foreground">{n.note}</div>}
-                      </div>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => acceptCounter(o.id, n.id, Number(n.amount))}
-                          className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90"
+              {negotiations.length > 0 && (
+                <div className="mt-3 space-y-3 border-t border-border pt-3">
+                  {/* Propostas pendentes */}
+                  {pending.length > 0 && (
+                    <ul className="space-y-2">
+                      {pending.map((n: any) => (
+                        <li
+                          key={n.id}
+                          className="flex items-center justify-between gap-3 rounded-xl bg-amber-500/10 p-3 ring-1 ring-amber-500/20 animate-pulse"
                         >
-                          <Check className="h-3 w-3" /> Aceitar
-                        </button>
-                        <button
-                          onClick={() => declineCounter(n.id)}
-                          className="inline-flex items-center gap-1 rounded-full border border-border bg-background px-3 py-1.5 text-xs hover:bg-accent"
-                        >
-                          <X className="h-3 w-3" /> Recusar
-                        </button>
+                          <div>
+                            <div className="text-[10px] font-bold uppercase tracking-widest text-amber-600">
+                              Contraproposta recebida
+                            </div>
+                            <div className="text-base font-black tracking-tight text-amber-700">
+                              {brl(n.amount)}
+                            </div>
+                            {n.note && (
+                              <div className="mt-1 text-xs text-amber-600/80 italic">
+                                "{n.note}"
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => acceptCounter(o.id, n.id, Number(n.amount))}
+                              className="inline-flex h-9 items-center gap-1.5 rounded-full bg-emerald-600 px-4 text-xs font-bold text-white shadow-lg shadow-emerald-600/20 hover:opacity-90 transition"
+                            >
+                              <Check className="h-3.5 w-3.5" /> Aceitar
+                            </button>
+                            <button
+                              onClick={() => declineCounter(n.id)}
+                              className="inline-flex h-9 items-center gap-1.5 rounded-full border border-border bg-background px-4 text-xs font-bold hover:bg-accent transition"
+                            >
+                              <X className="h-3.5 w-3.5" /> Recusar
+                            </button>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+
+                  {/* Histórico de negociação */}
+                  {history.length > 0 && (
+                    <div className="space-y-2">
+                      <div className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
+                        Histórico
                       </div>
-                    </li>
-                  ))}
-                </ul>
+                      <ul className="space-y-1">
+                        {history.map((n: any) => (
+                          <li
+                            key={n.id}
+                            className="flex items-center justify-between gap-2 text-[11px] text-muted-foreground"
+                          >
+                            <span className="flex items-center gap-1.5">
+                              {n.status === "accepted" ? (
+                                <Check className="h-3 w-3 text-emerald-500" />
+                              ) : (
+                                <X className="h-3 w-3 text-red-500" />
+                              )}
+                              {brl(n.amount)}
+                            </span>
+                            <span className="capitalize">{n.status === 'accepted' ? 'Aceita' : 'Recusada'}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
               )}
             </li>
           );

@@ -141,6 +141,7 @@ export type DashboardCardKey =
   | "preparing"
   | "awaiting_driver"
   | "offer_sent"
+  | "negotiation"
   | "en_route_pickup"
   | "at_pickup"
   | "in_transit"
@@ -159,6 +160,7 @@ export const DASHBOARD_CARDS: {
   { key: "preparing", label: "Preparando para coleta", short: "Preparando", statuses: ["preparing", "created"], tint: "sky" },
   { key: "awaiting_driver", label: "Aguardando motorista", short: "Aguardando", statuses: ["awaiting_driver"], tint: "amber" },
   { key: "offer_sent", label: "Oferta enviada", short: "Oferta enviada", statuses: ["awaiting_driver"], tint: "violet" },
+  { key: "negotiation", label: "Em negociação", short: "Negociação", statuses: ["negotiating"], tint: "amber" },
   { key: "en_route_pickup", label: "Em deslocamento", short: "Em deslocamento", statuses: ["driver_assigned", "en_route_pickup", "in_transit_to_pickup"], tint: "blue" },
   { key: "at_pickup", label: "Em coleta", short: "Em coleta", statuses: ["at_pickup", "picked_up", "loaded"], tint: "indigo" },
   { key: "in_transit", label: "Em trânsito", short: "Em trânsito", statuses: ["out_for_delivery", "in_transit"], tint: "cyan" },
