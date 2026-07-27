@@ -85,7 +85,7 @@ function DriverOffers() {
   const all = q.data ?? [];
 
   const counts = useMemo(() => {
-    let novas = 0, negociacao = 0, expirando = 0;
+    let novas = 0, negociacao = 0, expirando = 0, favoritas = 0;
     for (const it of all) {
       if (it.offer.status === "negotiating") negociacao++;
       else {
@@ -95,26 +95,29 @@ function DriverOffers() {
           if (ms > 0 && ms <= EXPIRING_WINDOW_MS) expirando++;
         }
       }
+      if (favorites.includes(routeKey(it.order?.origin_city, it.order?.destination_city))) favoritas++;
     }
-    return { novas, negociacao, expirando, todas: all.length };
-  }, [all, now]);
+    return { novas, negociacao, expirando, favoritas, todas: all.length };
+  }, [all, now, favorites]);
 
   const items = useMemo(() => {
     if (filter === "todas") return all;
     if (filter === "negociacao") return all.filter((i) => i.offer.status === "negotiating");
     if (filter === "novas") return all.filter((i) => i.offer.status === "pending");
-    // expirando
+    if (filter === "favoritas")
+      return all.filter((i) => favorites.includes(routeKey(i.order?.origin_city, i.order?.destination_city)));
     return all.filter((i) => {
       if (i.offer.status !== "pending" || !i.offer.expires_at) return false;
       const ms = new Date(i.offer.expires_at).getTime() - now;
       return ms > 0 && ms <= EXPIRING_WINDOW_MS;
     });
-  }, [all, filter, now]);
+  }, [all, filter, now, favorites]);
 
   const tabs: { key: FilterKey; label: string; count: number; tone?: string }[] = [
     { key: "novas", label: "Novas", count: counts.novas },
     { key: "expirando", label: "Expirando", count: counts.expirando, tone: "text-red-500" },
     { key: "negociacao", label: "Em negociação", count: counts.negociacao, tone: "text-brand" },
+    { key: "favoritas", label: "Favoritas", count: counts.favoritas, tone: "text-amber-500" },
     { key: "todas", label: "Todas", count: counts.todas },
   ];
 
