@@ -222,16 +222,21 @@ export function ActiveOrderPanel({
   }
 
   function openNav() {
-    const q = order.destination_lat && order.destination_lng
+    // Tenta usar lat/lng primeiro para precisão no Mapbox/Google Maps
+    const dest = order.destination_lat && order.destination_lng
       ? `${order.destination_lat},${order.destination_lng}`
       : encodeURIComponent(order.destination_address);
-    window.open(`https://www.google.com/maps/dir/?api=1&destination=${q}`, "_blank");
+    
+    // Fallback para URL scheme universal que pode abrir apps nativos
+    window.open(`https://www.google.com/maps/dir/?api=1&destination=${dest}&travelmode=driving`, "_blank");
   }
+
   function openNavPickup() {
-    const q = order.origin_lat && order.origin_lng
+    const start = order.origin_lat && order.origin_lng
       ? `${order.origin_lat},${order.origin_lng}`
       : encodeURIComponent(order.origin_address);
-    window.open(`https://www.google.com/maps/dir/?api=1&destination=${q}`, "_blank");
+    
+    window.open(`https://www.google.com/maps/dir/?api=1&destination=${start}&travelmode=driving`, "_blank");
   }
 
   return (

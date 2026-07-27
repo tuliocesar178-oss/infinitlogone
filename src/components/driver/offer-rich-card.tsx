@@ -18,6 +18,7 @@ import {
   Truck,
   Weight,
   X,
+  CircleDollarSign,
 } from "lucide-react";
 
 type Offer = {
@@ -288,8 +289,22 @@ export function OfferRichCard({
         </div>
       </div>
 
+      {/* Detalhes da Operação */}
+      <div className="grid grid-cols-2 gap-4 border-b border-border/60 px-4 py-3 bg-surface-2/30">
+        <div className="space-y-1">
+          <div className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Coleta</div>
+          <div className="text-xs font-semibold truncate">{order.pickup_company || "—"}</div>
+          <div className="text-[10px] text-muted-foreground truncate">{order.pickup_contact} {order.pickup_phone}</div>
+        </div>
+        <div className="space-y-1 text-right">
+          <div className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Entrega</div>
+          <div className="text-xs font-semibold truncate">{order.delivery_company || "—"}</div>
+          <div className="text-[10px] text-muted-foreground truncate">{order.delivery_contact}</div>
+        </div>
+      </div>
+
       {/* Carga */}
-      <div className="grid grid-cols-3 gap-2 border-b border-border/60 px-4 py-3 text-center">
+      <div className="grid grid-cols-4 gap-2 border-b border-border/60 px-4 py-3 text-center">
         <MicroKPI
           icon={<Package className="h-3.5 w-3.5" />}
           label="Tipo"
@@ -304,6 +319,11 @@ export function OfferRichCard({
           icon={<Truck className="h-3.5 w-3.5" />}
           label="Volumes"
           value={order.volumes ? String(order.volumes) : "—"}
+        />
+        <MicroKPI
+          icon={<CircleDollarSign className="h-3.5 w-3.5" />}
+          label="Nota"
+          value={order.invoice_number ? `NF ${order.invoice_number}` : "—"}
         />
       </div>
 
