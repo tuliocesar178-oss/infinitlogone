@@ -16,7 +16,7 @@ import {
   UserRound,
 } from "lucide-react";
 
-export const Route = createFileRoute("/_authenticated/ops/motoristas")({
+export const Route = createFileRoute("/_authenticated/ops/motoristas/")({
   head: () => ({
     meta: [{ title: "Motoristas — InfinitLog" }, { name: "robots", content: "noindex" }],
   }),
