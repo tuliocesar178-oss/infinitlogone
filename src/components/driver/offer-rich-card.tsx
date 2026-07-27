@@ -125,29 +125,54 @@ export function OfferRichCard({
     try {
       if (!order) throw new Error("Pedido não encontrado");
       const { data: userData } = await supabase.auth.getUser();
-      const patch =
-        action === "accept"
-          ? { 
-              status: "accepted" as const, 
-              accepted_at: new Date().toISOString(),
-              driver_id: userData.user?.id 
-            }
-          : { status: "declined" as const };
-      
-      const { error } = await supabase.from("freight_offers").update(patch).eq("id", offer.id);
-      if (error) throw error;
+      if (!userData.user) throw new Error("Usuário não autenticado");
 
       if (action === "accept") {
-        await supabase.from("orders").update({
-          driver_id: userData.user?.id,
-          status: "driver_assigned" as any,
-          updated_at: new Date().toISOString()
-        }).eq("id", order.id);
-      }
+        // Primeiro, verificamos se o motorista tem perfil ativo
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("id", userData.user.id)
+          .single();
 
-      toast.success(action === "accept" ? "Frete aceito! Vá para Minhas Rotas." : "Oferta recusada");
-      if (action === "accept") navigate({ to: "/driver" });
+        if (!profile) throw new Error("Perfil do motorista não encontrado");
+
+        // 1. Atualizar a oferta
+        const { error: offerError } = await supabase
+          .from("freight_offers")
+          .update({
+            status: "accepted",
+            accepted_at: new Date().toISOString(),
+            driver_id: userData.user.id
+          })
+          .eq("id", offer.id);
+        
+        if (offerError) throw offerError;
+
+        // 2. Atualizar o pedido para vincular o motorista e mudar o status
+        const { error: orderError } = await supabase
+          .from("orders")
+          .update({
+            driver_id: userData.user.id,
+            status: "driver_assigned",
+            updated_at: new Date().toISOString()
+          })
+          .eq("id", order.id);
+
+        if (orderError) throw orderError;
+
+        toast.success("Frete aceito! Vá para Minhas Rotas.");
+        navigate({ to: "/driver" });
+      } else {
+        const { error } = await supabase
+          .from("freight_offers")
+          .update({ status: "declined" })
+          .eq("id", offer.id);
+        if (error) throw error;
+        toast.success("Oferta recusada");
+      }
     } catch (e) {
+      console.error("Erro no aceite:", e);
       toast.error(e instanceof Error ? e.message : "Erro ao processar");
     } finally {
       setBusy(null);

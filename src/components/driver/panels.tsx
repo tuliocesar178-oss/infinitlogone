@@ -58,16 +58,49 @@ export function OfferCard({
 
   async function respond(action: "accept" | "decline") {
     try {
-      const patch = action === "accept"
-        ? { status: "accepted" as const, accepted_at: new Date().toISOString() }
-        : { status: "declined" as const };
-      const { error } = await supabase.from("freight_offers").update(patch).eq("id", offer.id);
-      if (error) throw error;
-      toast.success(action === "accept" ? "Oferta aceita" : "Oferta recusada");
-      qc.invalidateQueries({ queryKey: ["driver-offers", userId] });
-      qc.invalidateQueries({ queryKey: ["driver-active", userId] });
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) throw new Error("Usuário não autenticado");
+
+      if (action === "accept") {
+        // 1. Atualizar a oferta
+        const { error: offerError } = await supabase
+          .from("freight_offers")
+          .update({
+            status: "accepted",
+            accepted_at: new Date().toISOString(),
+            driver_id: userData.user.id
+          })
+          .eq("id", offer.id);
+        
+        if (offerError) throw offerError;
+
+        // 2. Atualizar o pedido
+        const { error: orderError } = await supabase
+          .from("orders")
+          .update({
+            driver_id: userData.user.id,
+            status: "driver_assigned",
+            updated_at: new Date().toISOString()
+          })
+          .eq("id", offer.order_id);
+
+        if (orderError) throw orderError;
+
+        toast.success("Oferta aceita");
+        qc.invalidateQueries({ queryKey: ["driver-offers", userId] });
+        qc.invalidateQueries({ queryKey: ["driver-active", userId] });
+      } else {
+        const { error } = await supabase
+          .from("freight_offers")
+          .update({ status: "declined" })
+          .eq("id", offer.id);
+        if (error) throw error;
+        toast.success("Oferta recusada");
+        qc.invalidateQueries({ queryKey: ["driver-offers", userId] });
+      }
       onChanged?.();
     } catch (e) {
+      console.error("Erro no aceite:", e);
       toast.error(e instanceof Error ? e.message : "Erro");
     }
   }
