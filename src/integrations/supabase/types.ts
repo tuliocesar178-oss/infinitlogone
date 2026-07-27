@@ -1703,6 +1703,7 @@ export type Database = {
         | "created"
         | "preparing"
         | "awaiting_driver"
+        | "negotiating"
         | "driver_assigned"
         | "en_route_pickup"
         | "at_pickup"
@@ -1915,6 +1916,7 @@ export const Constants = {
         "created",
         "preparing",
         "awaiting_driver",
+        "negotiating",
         "driver_assigned",
         "en_route_pickup",
         "at_pickup",
