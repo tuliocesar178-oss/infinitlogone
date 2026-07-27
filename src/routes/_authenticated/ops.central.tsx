@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,10 +9,10 @@ import {
   Users, ChevronRight, Search, Maximize2,
   MoreVertical, Share2, MessageSquare, Plus,
   DollarSign, Activity, TrendingUp, TrendingDown,
-  Layout
+  Layout, MapPin
 } from "lucide-react";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
-import { STATUS_LABEL, STATUS_BADGE_CLASS } from "@/lib/order-status";
+import { STATUS_LABEL, STATUS_BADGE_CLASS, OrderStatus } from "@/lib/order-status";
 import { toast } from "sonner";
 import { OrderDrawer } from "@/components/ops/order-drawer";
 import { KpiBar } from "@/components/ops/kpi-bar";
@@ -51,17 +51,36 @@ function TorreDeControle() {
   const ordersQ = useQuery({
     queryKey: ["torre-orders"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: orders, error } = await supabase
         .from("orders")
         .select(`
           *,
-          driver:profiles!orders_driver_id_fkey(id, full_name, phone),
           vehicle:vehicles(id, plate, model, photo_url)
         `)
         .is("deleted_at", null)
         .order("created_at", { ascending: false });
+      
       if (error) throw error;
-      return data || [];
+
+      // Fetch driver profiles manually to avoid join issues
+      const driverIds = orders.map(o => o.driver_id).filter(Boolean);
+      let driversMap: Record<string, any> = {};
+      
+      if (driverIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("id, full_name, phone")
+          .in("id", driverIds);
+        
+        if (profiles) {
+          driversMap = profiles.reduce((acc, p) => ({ ...acc, [p.id]: p }), {});
+        }
+      }
+
+      return orders.map(o => ({
+        ...o,
+        driver: o.driver_id ? driversMap[o.driver_id] : null
+      }));
     },
     refetchInterval: 10000,
   });
@@ -69,14 +88,30 @@ function TorreDeControle() {
   const driversQ = useQuery({
     queryKey: ["torre-drivers"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: drivers, error } = await supabase
         .from("drivers")
-        .select(`
-          *,
-          profile:profiles!drivers_user_id_fkey(full_name, avatar_url)
-        `);
+        .select("*");
+      
       if (error) throw error;
-      return data || [];
+
+      const userIds = drivers.map(d => d.user_id).filter(Boolean);
+      let profilesMap: Record<string, any> = {};
+
+      if (userIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("id, full_name, avatar_url")
+          .in("id", userIds);
+        
+        if (profiles) {
+          profilesMap = profiles.reduce((acc, p) => ({ ...acc, [p.id]: p }), {});
+        }
+      }
+
+      return drivers.map(d => ({
+        ...d,
+        profile: profilesMap[d.user_id]
+      }));
     },
     refetchInterval: 15000,
   });
@@ -300,11 +335,12 @@ function TorreDeControle() {
         </div>
       </div>
 
-      <OrderDrawer 
-        orderId={selectedOrderId} 
-        open={!!selectedOrderId} 
-        onClose={() => setSelectedOrderId(null)} 
-      />
+      {selectedOrderId && (
+        <OrderDrawer 
+          orderId={selectedOrderId} 
+          onClose={() => setSelectedOrderId(null)} 
+        />
+      )}
     </AppShell>
   );
 }
