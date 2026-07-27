@@ -30,9 +30,17 @@ type Form = {
   origin_city: string;
   origin_state: string;
   origin_zip: string;
+  origin_neighborhood: string;
+  origin_number: string;
+  origin_lat: string;
+  origin_lng: string;
   pickup_date: string;
   pickup_time: string;
   pickup_franchise_minutes: string;
+  pickup_reference: string;
+  pickup_dock: string;
+  pickup_gate: string;
+  pickup_instructions: string;
   // 3 Entrega
   delivery_company: string;
   delivery_contact: string;
@@ -41,9 +49,16 @@ type Form = {
   destination_city: string;
   destination_state: string;
   destination_zip: string;
+  destination_neighborhood: string;
+  destination_number: string;
+  destination_lat: string;
+  destination_lng: string;
   delivery_date: string;
   delivery_time: string;
   delivery_franchise_minutes: string;
+  delivery_reference: string;
+  delivery_dock: string;
+  delivery_gate: string;
   // 4 Carga
   cargo_weight_kg: string;
   volumes: string;
@@ -56,14 +71,13 @@ type Form = {
   mdfe_number: string;
   cargo_notes: string;
   // 5 Custos
-  price: string;            // valor cliente
-  driver_price: string;     // valor motorista
+  price: string;
+  driver_price: string;
   toll: string;
   fuel: string;
   escort: string;
   license: string;
   other_costs: string;
-  // 6 Docs — dinâmico
   priority: string;
 };
 
@@ -72,10 +86,14 @@ const EMPTY: Form = {
   purchase_order: "", order_number: "", client_notes: "",
   pickup_company: "", pickup_contact: "", pickup_phone: "",
   origin_address: "", origin_city: "", origin_state: "", origin_zip: "",
+  origin_neighborhood: "", origin_number: "", origin_lat: "", origin_lng: "",
   pickup_date: "", pickup_time: "", pickup_franchise_minutes: "",
+  pickup_reference: "", pickup_dock: "", pickup_gate: "", pickup_instructions: "",
   delivery_company: "", delivery_contact: "", delivery_phone: "",
   destination_address: "", destination_city: "", destination_state: "", destination_zip: "",
+  destination_neighborhood: "", destination_number: "", destination_lat: "", destination_lng: "",
   delivery_date: "", delivery_time: "", delivery_franchise_minutes: "",
+  delivery_reference: "", delivery_dock: "", delivery_gate: "",
   cargo_weight_kg: "", volumes: "", cargo_volume_m3: "", cargo_type: "",
   cargo_description: "", invoice_value: "", invoice_number: "", cte_number: "", mdfe_number: "",
   cargo_notes: "",
@@ -147,10 +165,25 @@ function NewOrderWizard() {
         origin_city: f.origin_city || null,
         origin_state: f.origin_state || null,
         origin_zip: f.origin_zip || null,
+        origin_neighborhood: f.origin_neighborhood || null,
+        origin_number: f.origin_number || null,
+        origin_lat: num(f.origin_lat),
+        origin_lng: num(f.origin_lng),
         destination_address: f.destination_address,
         destination_city: f.destination_city || null,
         destination_state: f.destination_state || null,
         destination_zip: f.destination_zip || null,
+        destination_neighborhood: f.destination_neighborhood || null,
+        destination_number: f.destination_number || null,
+        destination_lat: num(f.destination_lat),
+        destination_lng: num(f.destination_lng),
+        pickup_reference: f.pickup_reference || null,
+        pickup_dock: f.pickup_dock || null,
+        pickup_gate: f.pickup_gate || null,
+        pickup_instructions: f.pickup_instructions || null,
+        delivery_reference: f.delivery_reference || null,
+        delivery_dock: f.delivery_dock || null,
+        delivery_gate: f.delivery_gate || null,
         cargo_description: f.cargo_description || null,
         cargo_weight_kg: num(f.cargo_weight_kg),
         cargo_volume_m3: num(f.cargo_volume_m3),
