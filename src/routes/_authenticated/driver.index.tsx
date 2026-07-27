@@ -113,7 +113,7 @@ function DriverHome() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-surface p-4 -mx-4 -mt-6 mb-6">
+      <div className="bg-surface p-6 -mx-4 mb-6 shadow-sm border-b border-border/40">
         <h1 className="text-2xl font-black tracking-tight">Olá, {firstName || "…"}</h1>
         <p className="mt-1 text-sm font-medium text-muted-foreground">
           {active ? "Você tem um frete em andamento." : offers.length ? `Você tem ${offers.length} oferta(s) esperando.` : "Aguardando novas ofertas."}
