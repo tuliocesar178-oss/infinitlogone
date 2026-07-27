@@ -1,10 +1,11 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { AVAILABILITY, labelOf } from "@/lib/pf";
-import { Bell, LogOut, MapPin, Phone, Star, Truck, UserRound } from "lucide-react";
+import { applyTheme, readTheme, type ThemeMode } from "@/lib/driver-prefs";
+import { AlertTriangle, Bell, ChevronRight, Clock, LogOut, MapPin, Moon, Phone, Star, Sun, Truck, UserRound } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/driver/perfil")({
   head: () => ({ meta: [{ title: "Perfil — Motorista" }, { name: "robots", content: "noindex" }] }),
