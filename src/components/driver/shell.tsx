@@ -142,8 +142,8 @@ export function DriverShell({
             <div className="leading-tight">
               <div className="text-sm font-semibold tracking-tight">InfinitLog</div>
               <div className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
-                <span className={`h-1.5 w-1.5 rounded-full ${availabilityDot[me?.availability ?? "offline"]}`} />
-                {availabilityLabel[me?.availability ?? "offline"]}
+                <span className={`h-1.5 w-1.5 rounded-full ${availabilityDot[(me?.availability as any) ?? "offline"]}`} />
+                {availabilityLabel[(me?.availability as any) ?? "offline"]}
               </div>
             </div>
           </Link>
