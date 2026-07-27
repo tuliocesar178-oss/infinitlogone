@@ -15,7 +15,6 @@ import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea
 import { STATUS_LABEL, STATUS_BADGE_CLASS, OrderStatus } from "@/lib/order-status";
 import { toast } from "sonner";
 import { OrderDrawer } from "@/components/ops/order-drawer";
-import { KpiBar } from "@/components/ops/kpi-bar";
 import { formatBRL } from "@/lib/ops-central";
 
 export const Route = createFileRoute("/_authenticated/ops/central")({
@@ -28,7 +27,7 @@ export const Route = createFileRoute("/_authenticated/ops/central")({
   component: TorreDeControle,
 });
 
-const KANBAN_COLUMNS = [
+const KANBAN_COLUMNS: { id: OrderStatus; title: string }[] = [
   { id: "planning", title: "Planejamento" },
   { id: "preparing", title: "Preparando Coleta" },
   { id: "awaiting_driver", title: "Aguardando Motorista" },
@@ -62,7 +61,6 @@ function TorreDeControle() {
       
       if (error) throw error;
 
-      // Fetch driver profiles manually to avoid join issues
       const driverIds = orders.map(o => o.driver_id).filter((id): id is string => !!id);
       let driversMap: Record<string, any> = {};
       
@@ -94,7 +92,7 @@ function TorreDeControle() {
       
       if (error) throw error;
 
-      const userIds = drivers.map(d => d.user_id).filter(Boolean);
+      const userIds = drivers.map(d => d.user_id).filter((id): id is string => !!id);
       let profilesMap: Record<string, any> = {};
 
       if (userIds.length > 0) {
@@ -144,7 +142,7 @@ function TorreDeControle() {
     if (destination.droppableId === source.droppableId && destination.index === source.index) return;
 
     const orderId = draggableId;
-    const newStatus = destination.droppableId;
+    const newStatus = destination.droppableId as OrderStatus;
 
     try {
       const { error } = await supabase.from("orders").update({ status: newStatus }).eq("id", orderId);
