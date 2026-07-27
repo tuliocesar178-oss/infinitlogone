@@ -4,9 +4,10 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { STATUS_LABEL, STATUS_BADGE_CLASS } from "@/lib/order-status";
 import { brl } from "@/lib/pf";
-import { MapPin, Truck, Navigation, ChevronRight, Package } from "lucide-react";
+import { MapPin, Truck, Navigation, ChevronRight, Package, MessageCircle } from "lucide-react";
 import { RouteMiniMap } from "@/components/driver/route-mini-map";
 import { NavLauncherModal } from "@/components/driver/nav-launcher-modal";
+import { DriverQuickChat } from "@/components/driver/quick-chat";
 import type { NavTarget } from "@/lib/nav-launcher";
 
 export const Route = createFileRoute("/_authenticated/driver/fretes")({
