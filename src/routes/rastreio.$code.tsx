@@ -68,7 +68,7 @@ function TrackingPage() {
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["tracking", code],
     queryFn: async (): Promise<TrackingResult | null> => {
-      const { data, error } = await supabase.rpc("get_tracking", { _code: code });
+      const { data, error } = await supabase.rpc("get_tracking", { _code: code.trim().toUpperCase() });
       if (error) throw error;
       return (data as TrackingResult | null) ?? null;
     },
