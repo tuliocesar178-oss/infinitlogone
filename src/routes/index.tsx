@@ -36,7 +36,7 @@ function LandingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background text-foreground">
       <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
           <Link to="/" aria-label="InfinitLog — início">
@@ -55,16 +55,10 @@ function LandingPage() {
               Rastrear
             </Link>
             <Link
-              to="/cadastro-motorista"
-              className="hidden rounded-full border border-border bg-background px-4 py-2 text-sm hover:bg-accent md:inline-flex"
-            >
-              Sou motorista
-            </Link>
-            <Link
               to="/auth"
               className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
             >
-              Entrar <ArrowRight className="h-3.5 w-3.5" />
+              Acesso Restrito <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
         </div>
@@ -73,28 +67,28 @@ function LandingPage() {
       <section className="mx-auto max-w-6xl px-6 pt-16 pb-24 sm:pt-24">
         <div className="max-w-3xl">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1 text-xs font-medium text-muted-foreground">
-            <Zap className="h-3 w-3" /> Atendimento humano · Rastreio em tempo real
+            <Zap className="h-3 w-3" /> Tecnologia & Operação Logística
           </span>
           <h1 className="mt-6 text-5xl font-semibold tracking-tight sm:text-6xl">
             Sua carga em movimento.
-            <span className="block text-muted-foreground">Sem perder o controle.</span>
+            <span className="block text-muted-foreground">Visibilidade total.</span>
           </h1>
           <p className="mt-6 max-w-xl text-lg text-muted-foreground">
-            Nossa equipe negocia, coleta e entrega. Você acompanha cada etapa em tempo real,
-            com fotos, comprovantes e previsão de chegada.
+            Acompanhe suas operações em tempo real com o novo Portal do Cliente Corporativo.
+            KPIs, mapas, documentos e rastreamento avançado em uma única plataforma.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <a
-              href="https://wa.me/5500000000000"
+            <Link
+              to="/auth"
               className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground hover:opacity-90"
             >
-              <Phone className="h-4 w-4" /> Solicitar frete
-            </a>
+              Portal do Cliente <ArrowRight className="h-4 w-4" />
+            </Link>
             <Link
               to="/rastreio"
               className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-6 py-3 text-sm font-semibold hover:bg-accent"
             >
-              <Search className="h-4 w-4" /> Rastrear pedido
+              <Search className="h-4 w-4" /> Rastreio Rápido
             </Link>
           </div>
         </div>
@@ -108,7 +102,7 @@ function LandingPage() {
             <input
               value={code}
               onChange={(e) => setCode(e.target.value)}
-              placeholder="Código de rastreio ou número do pedido"
+              placeholder="Digite seu código de rastreio..."
               className="w-full bg-transparent text-base outline-none placeholder:text-muted-foreground"
               aria-label="Código de rastreio"
             />
@@ -123,19 +117,19 @@ function LandingPage() {
 
         <div id="servicos" className="mt-20 grid gap-6 sm:grid-cols-3">
           <FeatureCard
-            icon={<Phone className="h-5 w-5" />}
-            title="Atendimento direto"
-            body="Fale com nossa equipe por WhatsApp, telefone ou e-mail. Cotamos e fechamos seu frete."
+            icon={<BarChart3 className="h-5 w-5" />}
+            title="BI Logístico"
+            body="Dashboards modernos com KPIs de performance, prazos e custos para sua gestão."
           />
           <FeatureCard
             icon={<MapPin className="h-5 w-5" />}
-            title="Rastreie ao vivo"
-            body="Mapa em tempo real, previsão de chegada e status automáticos a cada etapa."
+            title="Torre de Controle"
+            body="Visualize sua frota e cargas no mapa com atualização em tempo real via Mapbox."
           />
           <FeatureCard
             icon={<ShieldCheck className="h-5 w-5" />}
-            title="Entrega comprovada"
-            body="Fotos da carga, canhoto assinado e nota fiscal digitalizada em toda entrega."
+            title="Central de Documentos"
+            body="Acesse notas fiscais, CT-es e canhotos digitais de forma organizada e rápida."
           />
         </div>
       </section>
@@ -144,26 +138,26 @@ function LandingPage() {
         <div className="mx-auto grid max-w-6xl gap-12 px-6 py-24 md:grid-cols-2 md:items-center">
           <div>
             <span className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-              Quem somos
+              InfinitLog BI
             </span>
             <h2 className="mt-3 text-4xl font-semibold tracking-tight">
-              Transportadora com tecnologia própria.
+              Transparência total para o seu negócio.
             </h2>
             <p className="mt-5 text-muted-foreground">
-              A InfinitLog une operação humana e um sistema interno que controla toda a jornada
-              da carga — do cadastro do pedido até a entrega assinada. Menos telefonemas, mais
-              transparência.
+              O Portal do Cliente Corporativo transforma dados em decisões. 
+              Acompanhe o tempo médio de entrega, quilometragem percorrida e 
+              tenha todos os comprovantes à disposição com um clique.
             </p>
           </div>
           <div className="grid grid-cols-2 gap-4">
             {[
-              ["+1.5M", "km rodados"],
-              ["98%", "no prazo"],
-              ["24/7", "acompanhamento"],
-              ["100%", "comprovantes digitais"],
+              ["Realtime", "Monitoramento"],
+              ["100%", "Digital"],
+              ["PowerBI", "Dashboard"],
+              ["Mobile", "Ready"],
             ].map(([n, l]) => (
               <div key={l} className="card-soft p-6">
-                <div className="text-3xl font-semibold tracking-tight">{n}</div>
+                <div className="text-2xl font-semibold tracking-tight">{n}</div>
                 <div className="mt-1 text-sm text-muted-foreground">{l}</div>
               </div>
             ))}
@@ -171,41 +165,16 @@ function LandingPage() {
         </div>
       </section>
 
-      <section id="contato" className="mx-auto max-w-6xl px-6 py-24">
-        <div className="card-soft flex flex-col items-start gap-6 p-10 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h3 className="text-3xl font-semibold tracking-tight">Precisa mover uma carga?</h3>
-            <p className="mt-2 text-muted-foreground">
-              Fale com nossa equipe comercial e receba uma cotação em minutos.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <a
-              href="https://wa.me/5500000000000"
-              className="rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground hover:opacity-90"
-            >
-              WhatsApp
-            </a>
-            <a
-              href="mailto:contato@infinitlog.com"
-              className="rounded-full border border-border bg-background px-6 py-3 text-sm font-semibold hover:bg-accent"
-            >
-              contato@infinitlog.com
-            </a>
-          </div>
-        </div>
-      </section>
-
-      <footer className="border-t border-border/60">
-        <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-4 px-6 py-8 text-sm text-muted-foreground sm:flex-row sm:items-center">
+      <footer className="border-t border-border/60 bg-surface">
+        <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-4 px-6 py-12 text-sm text-muted-foreground sm:flex-row sm:items-center">
           <div className="flex items-center gap-2">
-            <img src={logoUrl} alt="" width={20} height={20} className="h-5 w-5 object-contain" />
-            © {new Date().getFullYear()} InfinitLog Transportes
+            <Logo size={24} withWordmark={true} />
+            <span className="ml-4 border-l border-border pl-4">© {new Date().getFullYear()} InfinitLog</span>
           </div>
-          <div className="flex gap-6">
-            <a href="#servicos" className="hover:text-foreground">Serviços</a>
-            <a href="#quem-somos" className="hover:text-foreground">Quem somos</a>
-            <a href="#contato" className="hover:text-foreground">Contato</a>
+          <div className="flex gap-8">
+            <Link to="/auth" className="hover:text-foreground">Acesso Cliente</Link>
+            <Link to="/cadastro-motorista" className="hover:text-foreground">Seja um Parceiro</Link>
+            <Link to="/rastreio" className="hover:text-foreground">Rastreio</Link>
           </div>
         </div>
       </footer>
@@ -215,7 +184,7 @@ function LandingPage() {
 
 function FeatureCard({ icon, title, body }: { icon: React.ReactNode; title: string; body: string }) {
   return (
-    <div className="card-soft p-8">
+    <div className="card-soft p-8 hover:border-primary/50 transition-colors">
       <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary text-primary-foreground">
         {icon}
       </div>
@@ -224,3 +193,6 @@ function FeatureCard({ icon, title, body }: { icon: React.ReactNode; title: stri
     </div>
   );
 }
+
+import { BarChart3 } from "lucide-react";
+
