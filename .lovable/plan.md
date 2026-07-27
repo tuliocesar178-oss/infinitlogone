@@ -1,78 +1,65 @@
-# Gestão de Fretes — Módulo completo
+# Central Operacional Inteligente
 
-Reescreve `/ops` (dashboard de fretes), o wizard de novo frete e o fluxo do motorista para virar o **núcleo operacional** da InfinitLog. Reaproveita tudo que já existe: `orders`, `freight_programs`, `freight_offers`, `negotiations`, `deliveries`, `messages`, `order_events`, `order_attachments`, `driver_locations`, `send_program_to_driver()`, `on_offer_accepted()`, `generate_pf_code()`, `generate_tracking_code()`.
+Vou transformar `/ops/central` (tela inicial de Admin/Logística) numa central única inspirada em Uber Freight/Bringg/Onfleet, sem precisar navegar entre telas.
 
-Entrego em **4 fases** — cada uma testável antes da próxima.
+## Layout (desktop)
 
----
+```text
+┌─────────────────────────────────────────────────────────────┐
+│ TopBar: Busca global · Ações rápidas · Saúde · TV · Tema    │
+├─────────────────────────────────────────────────────────────┤
+│ KPIs (carrossel de cards, 4 linhas em xl / scroll em md)    │
+├────────────────────────────────┬────────────────────────────┤
+│                                │  Central de Alertas        │
+│   MAPA OPERACIONAL (~60%)      │  (fixa, tempo real)        │
+│   + filtros flutuantes         │                            │
+│   + legenda de cores           ├────────────────────────────┤
+│                                │  Feed Operacional          │
+├────────────────────────────────┴────────────────────────────┤
+│ Monitor de Fretes (tabela dinâmica com progresso e ETA)     │
+├─────────────────────────────────────────────────────────────┤
+│ Painel do Gestor (somente admin) — faturamento, ranking     │
+└─────────────────────────────────────────────────────────────┘
+```
 
-## Fase 1 — Dashboard de Fretes + Cards clicáveis + Detalhe
+Em tablet: mapa full width, alertas/feed abaixo em abas. Em mobile: KPIs em scroll horizontal, mapa em card, tabela em cards empilhados.
 
-Substitui o `/ops` atual pelo dashboard de fretes definido no spec.
+## Blocos
 
-- **Cards por estado** com contagem em tempo real (Preparando · Aguardando Motorista · Oferta Enviada · Em Deslocamento · Em Coleta · Em Trânsito · Próximo da Entrega · Entregues Hoje · Ocorrências).
-- Clique no card → `/ops/pedidos?status=<card>` (nova rota) que mostra a lista filtrada.
-- Botão fixo **NOVO FRETE** no topo.
-- Lista com busca por código/cliente/cidade e filtros de prioridade/data.
-- Sincronização realtime nas tabelas `orders`, `freight_offers`, `incidents`.
-- **Não** mexe no wizard nem no motorista nesta fase — reaproveita o que já roda.
-
-## Fase 2 — Wizard de Novo Frete em 6 etapas
-
-Reconstrói `/ops/pedidos/novo` como stepper Uber-like com progresso, validação Zod por etapa e resumo lateral.
-
-1. **Cliente** — cliente, contato, telefone, e-mail, empresa, OC, pedido, observações.
-2. **Coleta** — empresa, responsável, telefone, endereço, cidade/UF/CEP, data, hora, franquia (min).
-3. **Entrega** — mesmos campos, data/hora previstas, franquia.
-4. **Carga** — peso, volumes, cubagem, tipo, produto, valor NF, número NF, CT-e, MDF-e, obs.
-5. **Custos** — valor cliente, valor motorista, pedágio, combustível, escolta, licença, outros. Calcula em tempo real: **Custo Total**, **Lucro Previsto**, **Margem %**.
-6. **Documentos** — upload NF, CT-e, MDF-e, XML, fotos, PDF, vídeos → bucket `order-files` → grava em `order_attachments`.
-
-Ao salvar: cria `orders` (trigger já gera `tracking_code` e a `freight_programs` com `pf_code`), grava `freight_costs`, faz upload e mostra tela final com **QR Code**, **link de rastreio**, botões WhatsApp/Copiar/E-mail e **Despachar agora**.
-
-## Fase 3 — Despacho Inteligente + Oferta + Negociação
-
-Reaproveita `send_program_to_driver()` e a tabela `negotiations`.
-
-- **Painel de Despacho** dentro do detalhe do pedido e no botão "Despachar" do dashboard.
-- Server function `suggestDrivers(orderId)`:
-  - Busca motoristas com `availability='disponivel'` e `status ≠ offline`.
-  - Filtra por capacidade do veículo × peso da carga e tipo.
-  - Calcula distância `driver.current_lat/lng → order.origin_lat/lng` (Haversine + Mapbox Matrix quando disponível).
-  - Score composto: distância (peso 40) + rating (20) + histórico de aceite (15) + tempo parado (10) + fretes do dia (10) + tipo do veículo compatível (5).
-  - Retorna top-N com ⭐ para o melhor.
-- Lista de motoristas: foto, nome, cidade, veículo/placa, KM até coleta, ETA, status, valor sugerido (editável), botão **Enviar oferta**.
-- Enviar oferta chama `send_program_to_driver()` → cria `freight_offers` e status vira `awaiting_driver`.
-- **Portal do motorista** (`/driver`) já mostra ofertas; adiciono botão **Negociar** que abre modal (valor + obs) e insere `negotiations{status='proposed'}`.
-- No detalhe do pedido, painel de negociações: cada proposta com **Aceitar** (atualiza `offered_price` e aceita a oferta) / **Contrapropor** (insere nova `negotiations{status='countered'}`) / **Recusar**.
-- Trigger `on_offer_accepted` já cuida: cancela demais ofertas, vincula motorista, muda status para `driver_assigned`.
-
-## Fase 4 — Fluxo Automático do Motorista + Chat + Histórico
-
-Reescreve `/driver` para o fluxo de botões sequenciais (nenhum status manual).
-
-- **Máquina de estados por ação**:
-  - `driver_assigned` → botão **INICIAR DESLOCAMENTO** (`en_route_pickup`).
-  - `en_route_pickup` → **INICIAR NAVEGAÇÃO** (abre Google Maps + começa ping GPS).
-  - próximo (100m origem OU botão manual staff) → **CHEGUEI NA COLETA** (`at_pickup`).
-  - `at_pickup` → **ENVIAR FOTO DA CARGA** (form obrigatório: fotos carga, foto NF, volumes conferidos, obs) → `loaded` → automático `out_for_delivery`.
-  - `out_for_delivery` → **INICIAR ENTREGA** (`in_transit`).
-  - próximo destino → **ENVIAR COMPROVANTES** (form: canhoto, NF assinada, fotos, nome recebedor, doc recebedor, assinatura digital em canvas) → grava em `deliveries` + `delivered`.
-- Todas as ações gravam `order_events` com actor, from_status, to_status, GPS, payload.
-- **Chat por pedido** (`/ops/pedidos/$id` aba Chat + no /driver): usa `messages` com kinds `text/photo/video/pdf/audio` (bucket `order-files`) e Supabase Realtime.
-- **Histórico completo** no detalhe do pedido: timeline de `order_events` + negociações + entradas de custos + anexos + ocorrências, com actor, timestamp e GPS quando houver.
-
----
+1. **Mapa Operacional** — reaproveita `FleetMap`, estendido para camadas: motoristas (cor por status), pedidos ativos (origem/destino), ocorrências, base da empresa. Filtros flutuantes (cidade, motorista, cliente, status, veículo, tipo de carga, período). Ao clicar num pedido: rota completa, ETA, km restantes, última atualização.
+2. **KPIs** — 17 cartões calculados de `orders`, `drivers`, `vehicles`, `incidents`, `route_summaries` (Pedidos Hoje, Em Andamento, Finalizados, Coletas Pendentes, Motoristas Online/Disponíveis/Em Viagem/Offline, Veículos em Operação/Parados, Ocorrências, Atrasados, Tempo Médio, Taxa de Entrega, KM Rodados, Faturado, Lucro).
+3. **Central de Alertas** — estende `ops-central.ts` com regras: desvio de rota, motorista parado (>15min sem ping em viagem), atraso, nova ocorrência, novo frete, novo motorista, documento/CNH vencendo (30d), veículo em manutenção, GPS offline (>10min), sem internet. Cada alerta: hora, responsável, prioridade, cor, ícone.
+4. **Monitor de Fretes** — tabela realtime com Código, Cliente, Motorista, Origem→Destino, Status (label PT), ETA, % (via `progressPercent`), ocorrências. Linha clica → drawer lateral com detalhes e ações, sem sair da tela.
+5. **Busca global** — Cmd/Ctrl+K abre command palette pesquisando `orders` (código/tracking/NF/CT-e), `clients`, `drivers` (nome/telefone), `vehicles` (placa), cidades.
+6. **Central de Ações** — botões: Novo Frete, Nova Coleta, Cadastrar Motorista/Cliente/Veículo/Usuário, Nova Ocorrência.
+7. **Feed Operacional** — timeline lendo `order_events` em tempo real (hora + descrição amigável).
+8. **Indicador de saúde** — score 0-100 baseado em atrasos, ocorrências ativas, motoristas parados, GPS offline; badge Excelente/Boa/Atenção/Crítica.
+9. **Modo TV** — rota `/ops/central/tv` (ou `?tv=1`) em tela cheia, sem sidebar, rotação automática entre mapa/KPIs/alertas/fretes, refresh agressivo.
+10. **Modo Escuro** — toggle persistido em `localStorage`, tokens dark já mapeados em `styles.css`.
+11. **Painel do Gestor** — só admin (via `has_role`): faturamento, despesas, lucro, custo/km, frete médio, top motoristas, top clientes, veículos mais usados, ranking mensal. Gráficos com Recharts.
+12. **Realtime** — subscriptions em `orders`, `driver_locations`, `freight_offers`, `incidents`, `order_events`, `notifications`, `vehicles`.
 
 ## Detalhes técnicos
 
-- Novas rotas: `ops.pedidos.tsx` (lista filtrável), `ops.pedidos.$id.chat.tsx` (opcional; inicialmente aba dentro do detalhe).
-- Reescreve: `ops.tsx` (dashboard cards), `ops.pedidos.novo.tsx` (wizard), `driver.tsx` (fluxo sequencial), `ops.pedidos.$id.tsx` (adiciona abas Despacho, Negociações, Chat, Histórico).
-- Novos componentes: `components/orders/status-cards.tsx`, `orders/order-list.tsx`, `orders/new-order-wizard.tsx`, `orders/step-*.tsx`, `orders/dispatch-panel.tsx`, `orders/driver-suggestions.tsx`, `orders/negotiation-panel.tsx`, `orders/history-timeline.tsx`, `orders/order-chat.tsx`, `driver/action-flow.tsx`, `driver/pickup-evidence-form.tsx`, `driver/delivery-evidence-form.tsx`.
-- Novas libs: `lib/orders.functions.ts` (createOrder, addCosts, suggestDrivers, respondNegotiation, driverAction), `lib/order-flow.ts` (mapa ação→transição).
-- Sem migração nova; se necessário na Fase 3 crio `driver_stats` view. Bucket `order-files` já existe.
-- Redirecionamento admin/logistics permanece `/ops/central`; `/ops` fica como Dashboard de Fretes (segundo item da sidebar).
+- Arquivos novos:
+  - `src/components/ops/global-search.tsx` (Cmd+K)
+  - `src/components/ops/quick-actions.tsx`
+  - `src/components/ops/health-indicator.tsx`
+  - `src/components/ops/freight-monitor.tsx`
+  - `src/components/ops/operational-feed.tsx`
+  - `src/components/ops/manager-panel.tsx`
+  - `src/components/ops/map-filters.tsx`
+  - `src/components/ops/order-drawer.tsx`
+  - `src/routes/_authenticated/ops.central.tv.tsx`
+  - `src/hooks/use-theme.ts`
+- Extensões:
+  - `src/lib/ops-central.ts`: novas regras de alertas (desvio, parado, documentos vencendo, GPS offline), tipos de KPI, score de saúde.
+  - `src/components/fleet-map.tsx`: aceitar múltiplas camadas (motoristas, pedidos, incidentes, base), popup clicável emitindo seleção.
+  - `src/routes/_authenticated/ops.central.tsx`: reestruturar layout, agregar todos os blocos, subscriptions consolidadas.
+- Sem mudanças de schema (apenas leituras). Tudo respeita RLS existente; painel do gestor usa `has_role('admin')`.
+- Responsividade com grid Tailwind (`grid-cols-[minmax(0,1fr)_360px]` no desktop, colapsando para stack no md/sm).
+- Performance: `useQuery` com `staleTime` curto + realtime invalidations; agrupar canais em um único `supabase.channel`.
 
----
-
-**Começo pela Fase 1.** Alguma prioridade diferente ou confirmo essa ordem?
+## Fora do escopo desta entrega
+- CDs/Base da empresa: exibiremos apenas a base (endereço fixo em `app_settings`); múltiplos CDs ficam para depois se necessário.
+- Detecção real de "sem internet" do motorista: aproximado por ausência de ping (mesma regra do GPS Offline).
