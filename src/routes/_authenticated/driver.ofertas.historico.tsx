@@ -14,7 +14,7 @@ const STATUS_META: Record<string, { label: string; icon: any; cls: string }> = {
   accepted: { label: "Aceita", icon: Check, cls: "bg-emerald-100 text-emerald-800" },
   declined: { label: "Recusada", icon: X, cls: "bg-red-100 text-red-700" },
   expired: { label: "Expirada", icon: Clock, cls: "bg-muted text-muted-foreground" },
-  withdrawn: { label: "Retirada", icon: X, cls: "bg-muted text-muted-foreground" },
+  cancelled: { label: "Cancelada", icon: X, cls: "bg-muted text-muted-foreground" },
   negotiating: { label: "Em negociação", icon: MessageCircle, cls: "bg-brand/10 text-brand" },
 };
 
