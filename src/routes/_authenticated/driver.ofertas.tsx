@@ -13,16 +13,16 @@ export const Route = createFileRoute("/_authenticated/driver/ofertas")({
 
 type FilterKey = "novas" | "negociacao" | "expirando" | "favoritas" | "todas";
 
-function subFavorites(cb: () => void) {
-  window.addEventListener("driver-favorites-changed", cb);
-  return () => window.removeEventListener("driver-favorites-changed", cb);
-}
 function useFavorites(): string[] {
-  return useSyncExternalStore(
-    subFavorites,
+  const snapshot = useSyncExternalStore(
+    (cb) => {
+      window.addEventListener("driver-favorites-changed", cb);
+      return () => window.removeEventListener("driver-favorites-changed", cb);
+    },
     () => JSON.stringify(readFavorites()),
     () => "[]",
-  ) as unknown as string[] extends never ? never : any, readFavorites();
+  );
+  return useMemo(() => JSON.parse(snapshot) as string[], [snapshot]);
 }
 
 const EXPIRING_WINDOW_MS = 5 * 60 * 1000;
