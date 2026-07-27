@@ -62,7 +62,7 @@ export function OfferCard({
       if (!userData.user) throw new Error("Usuário não autenticado");
 
       if (action === "accept") {
-        // 1. Atualizar a oferta
+        // Atualizar apenas a oferta; o gatilho no banco cuida do pedido
         const { error: offerError } = await supabase
           .from("freight_offers")
           .update({
@@ -74,21 +74,10 @@ export function OfferCard({
         
         if (offerError) throw offerError;
 
-        // 2. Atualizar o pedido
-        const { error: orderError } = await supabase
-          .from("orders")
-          .update({
-            driver_id: userData.user.id,
-            status: "driver_assigned",
-            updated_at: new Date().toISOString()
-          })
-          .eq("id", offer.order_id);
-
-        if (orderError) throw orderError;
-
         toast.success("Oferta aceita");
         qc.invalidateQueries({ queryKey: ["driver-offers", userId] });
         qc.invalidateQueries({ queryKey: ["driver-active", userId] });
+        qc.invalidateQueries({ queryKey: ["driver-freights", userId] });
       } else {
         const { error } = await supabase
           .from("freight_offers")
