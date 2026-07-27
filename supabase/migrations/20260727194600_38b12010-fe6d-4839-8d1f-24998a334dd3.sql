@@ -1,0 +1,1 @@
+UPDATE public.drivers SET status = 'available' WHERE user_id = 'df2f0c32-b237-4f69-a5c6-ad94d74adf7a';

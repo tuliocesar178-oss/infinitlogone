@@ -88,30 +88,26 @@ function TorreDeControle() {
     queryFn: async () => {
       const { data: drivers, error } = await supabase
         .from("drivers")
-        .select("*");
+        .select("*")
+        .neq("status", "offline"); // Filter at the query level for efficiency
       
       if (error) throw error;
+      if (!drivers.length) return [];
 
-      const userIds = drivers.map(d => d.user_id).filter((id): id is string => !!id);
-      let profilesMap: Record<string, any> = {};
-
-      if (userIds.length > 0) {
-        const { data: profiles } = await supabase
-          .from("profiles")
-          .select("id, full_name, avatar_url")
-          .in("id", userIds);
-        
-        if (profiles) {
-          profilesMap = profiles.reduce((acc, p) => ({ ...acc, [p.id]: p }), {});
-        }
-      }
+      const userIds = drivers.map(d => d.user_id);
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, full_name, avatar_url")
+        .in("id", userIds);
+      
+      const profilesMap = (profiles || []).reduce((acc, p) => ({ ...acc, [p.id]: p }), {} as Record<string, any>);
 
       return drivers.map(d => ({
         ...d,
         profile: profilesMap[d.user_id]
       }));
     },
-    refetchInterval: 15000,
+    refetchInterval: 5000, // Faster refetch for online status visibility
   });
 
   useEffect(() => {
