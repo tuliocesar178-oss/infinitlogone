@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -13,8 +13,9 @@ import {
 } from "@/lib/order-flow";
 import {
   MapPin, Package, CircleDollarSign, Clock, Check, X, Navigation,
-  Camera, MessageCircle, Truck, Upload, PenLine,
+  Camera, MessageCircle, Truck, Upload, PenLine, ChevronRight, ChevronUp
 } from "lucide-react";
+import { RouteMiniMap } from "./route-mini-map";
 
 export type Order = {
   id: string;
@@ -151,7 +152,17 @@ export function ActiveOrderPanel({
   onChanged: () => void;
 }) {
   const [step, setStep] = useState<"idle" | "pickup" | "delivery">("idle");
+  const [driverPos, setDriverPos] = useState<[number, number] | null>(null);
   const nextAction = useMemo(() => nextDriverAction(order.status as never), [order.status]);
+
+  useEffect(() => {
+    const watchId = navigator.geolocation.watchPosition(
+      (pos) => setDriverPos([pos.coords.longitude, pos.coords.latitude]),
+      (err) => console.error("Geo error:", err),
+      { enableHighAccuracy: true }
+    );
+    return () => navigator.geolocation.clearWatch(watchId);
+  }, []);
 
   async function runAction(action: DriverAction) {
     try {
@@ -191,6 +202,15 @@ export function ActiveOrderPanel({
 
   return (
     <div className="card-soft overflow-hidden">
+      <div className="h-64 w-full">
+        <RouteMiniMap
+          origin={order.origin_lat && order.origin_lng ? [order.origin_lng, order.origin_lat] : null}
+          destination={order.destination_lat && order.destination_lng ? [order.destination_lng, order.destination_lat] : null}
+          driver={driverPos}
+          className="h-full w-full rounded-none"
+        />
+      </div>
+
       <div className="border-b border-border bg-brand p-6 text-brand-foreground">
         <div className="text-[10px] font-semibold uppercase tracking-widest opacity-80">Frete em andamento</div>
         <div className="mt-1 font-mono text-lg font-bold">{order.code}</div>
