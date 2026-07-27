@@ -157,7 +157,7 @@ export function ActiveOrderPanel({
     try {
       const to = ACTION_TRANSITIONS[action].to;
       const from = order.status;
-      const { error } = await supabase.from("orders").update({ status: to, updated_at: new Date().toISOString() }).eq("id", order.id);
+      const { error } = await supabase.from("orders").update({ status: to as any, updated_at: new Date().toISOString() }).eq("id", order.id);
       if (error) throw error;
       let lat: number | null = null, lng: number | null = null;
       try {
