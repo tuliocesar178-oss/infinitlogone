@@ -176,6 +176,12 @@ function DriverFreights() {
       )}
 
       <NavLauncherModal open={!!navTarget} target={navTarget} onClose={() => setNavTarget(null)} />
+      <DriverQuickChat
+        open={!!chatOrder}
+        orderId={chatOrder?.id ?? ""}
+        orderCode={chatOrder?.code ?? null}
+        onClose={() => setChatOrder(null)}
+      />
     </div>
   );
 }
