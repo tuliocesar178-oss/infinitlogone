@@ -70,8 +70,9 @@ function AuthPage() {
           </Link>
           <h2 className="text-3xl font-semibold tracking-tight">Entrar</h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            Acesso restrito à equipe InfinitLog e motoristas cadastrados.
+            Acesso à equipe, motoristas e clientes corporativos.
           </p>
+
 
           <form onSubmit={submit} className="mt-8 space-y-4">
             <Field label="Email">
@@ -112,9 +113,10 @@ function AuthPage() {
               </Link>
             </div>
             <div>
-              É cliente? Você não precisa entrar — use o{" "}
+              É cliente? <Link to="/auth" className="underline hover:text-foreground">Entre aqui</Link> ou use o{" "}
               <Link to="/rastreio" className="underline hover:text-foreground">portal de rastreamento</Link>.
             </div>
+
           </div>
 
           <style>{`
