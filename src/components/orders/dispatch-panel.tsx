@@ -28,6 +28,12 @@ export function DispatchPanel({ order, onSent }: { order: any; onSent: () => voi
         .select("user_id,current_lat,current_lng,rating,status,availability,city,phone")
         .eq("availability", "disponivel");
       if (error) throw error;
+      
+      const { data: previousOffers } = await supabase
+        .from("freight_offers")
+        .select("driver_id, status")
+        .eq("order_id", order.id);
+
       const list = data ?? [];
       const ids = list.map((d: any) => d.user_id);
       let profilesMap: Record<string, { full_name: string | null }> = {};
@@ -38,7 +44,11 @@ export function DispatchPanel({ order, onSent }: { order: any; onSent: () => voi
           .in("id", ids);
         profilesMap = Object.fromEntries((profs ?? []).map((p: any) => [p.id, { full_name: p.full_name }]));
       }
-      return list.map((d: any) => ({ ...d, profiles: profilesMap[d.user_id] ?? null }));
+      return list.map((d: any) => ({ 
+        ...d, 
+        profiles: profilesMap[d.user_id] ?? null,
+        previousStatus: previousOffers?.find(o => o.driver_id === d.user_id)?.status
+      }));
     },
   });
 
@@ -158,6 +168,11 @@ export function DispatchPanel({ order, onSent }: { order: any; onSent: () => voi
                   {isBest && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-600">
                       <Star className="h-3 w-3 fill-current" /> Melhor opção
+                    </span>
+                  )}
+                  {d.previousStatus === 'declined' && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-red-500/10 px-2 py-0.5 text-[10px] font-semibold text-red-600">
+                      Recusou anteriormente
                     </span>
                   )}
                 </div>
