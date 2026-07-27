@@ -5,6 +5,8 @@ import {
   BarChart3,
   Bell,
   DollarSign,
+  FileText,
+  Download,
   LayoutGrid,
   LogOut,
   MapPin,
@@ -15,6 +17,7 @@ import {
   Users,
   Wallet,
 } from "lucide-react";
+
 import { useEffect, useState, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Logo } from "@/components/logo";
@@ -26,31 +29,58 @@ type NavItem = {
   match?: (path: string) => boolean;
 };
 
-const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
-  {
-    label: "Operacional",
-    items: [
-      { label: "🗼 Torre de Controle", to: "/ops/central", icon: LayoutGrid, match: (p) => p.startsWith("/ops/central") },
-      { label: "Dashboard", to: "/ops", icon: BarChart3, match: (p) => p === "/ops" },
-      { label: "Fretes", to: "/ops/pedidos", icon: Package, match: (p) => p.startsWith("/ops/pedidos") },
-      { label: "Motoristas", to: "/ops/motoristas", icon: Truck, match: (p) => p.startsWith("/ops/motoristas") && !p.startsWith("/ops/motoristas/aprovacoes") },
-      { label: "Solicitações de cadastro", to: "/ops/motoristas/aprovacoes", icon: Users, match: (p) => p.startsWith("/ops/motoristas/aprovacoes") },
-      { label: "Equipe", to: "/ops/equipe", icon: Users, match: (p) => p.startsWith("/ops/equipe") },
-      { label: "Veículos", to: "/ops/veiculos", icon: Truck, match: (p) => p.startsWith("/ops/veiculos") },
-      { label: "Rastreamento", icon: MapPin },
-      { label: "Ocorrências", icon: AlertTriangle },
-    ],
-  },
-  {
-    label: "Gestão",
-    items: [
-      { label: "Relatórios", icon: BarChart3 },
-      { label: "Faturamento", icon: DollarSign },
-      { label: "Financeiro", icon: Wallet },
-      { label: "Configurações", icon: Settings },
-    ],
-  },
-];
+export const NAV_GROUPS: Record<string, { label: string; items: NavItem[] }[]> = {
+  admin: [
+    {
+      label: "Operacional",
+      items: [
+        { label: "🗼 Torre de Controle", to: "/ops/central", icon: LayoutGrid, match: (p) => p.startsWith("/ops/central") },
+        { label: "Dashboard", to: "/ops", icon: BarChart3, match: (p) => p === "/ops" },
+        { label: "Fretes", to: "/ops/pedidos", icon: Package, match: (p) => p.startsWith("/ops/pedidos") },
+        { label: "Motoristas", to: "/ops/motoristas", icon: Truck, match: (p) => p.startsWith("/ops/motoristas") && !p.startsWith("/ops/motoristas/aprovacoes") },
+        { label: "Solicitações de cadastro", to: "/ops/motoristas/aprovacoes", icon: Users, match: (p) => p.startsWith("/ops/motoristas/aprovacoes") },
+        { label: "Equipe", to: "/ops/equipe", icon: Users, match: (p) => p.startsWith("/ops/equipe") },
+        { label: "Veículos", to: "/ops/veiculos", icon: Truck, match: (p) => p.startsWith("/ops/veiculos") },
+        { label: "Rastreamento", icon: MapPin },
+        { label: "Ocorrências", icon: AlertTriangle },
+      ],
+    },
+    {
+      label: "Gestão",
+      items: [
+        { label: "Relatórios", icon: BarChart3 },
+        { label: "Faturamento", icon: DollarSign },
+        { label: "Financeiro", icon: Wallet },
+        { label: "Configurações", icon: Settings },
+      ],
+    },
+  ],
+  logistics: [
+    {
+      label: "Operacional",
+      items: [
+        { label: "🗼 Torre de Controle", to: "/ops/central", icon: LayoutGrid, match: (p) => p.startsWith("/ops/central") },
+        { label: "Dashboard", to: "/ops", icon: BarChart3, match: (p) => p === "/ops" },
+        { label: "Fretes", to: "/ops/pedidos", icon: Package, match: (p) => p.startsWith("/ops/pedidos") },
+        { label: "Motoristas", to: "/ops/motoristas", icon: Truck, match: (p) => p.startsWith("/ops/motoristas") },
+        { label: "Veículos", to: "/ops/veiculos", icon: Truck, match: (p) => p.startsWith("/ops/veiculos") },
+      ],
+    },
+  ],
+  client: [
+    {
+      label: "Minha Conta",
+      items: [
+        { label: "Dashboard", to: "/client", icon: BarChart3, match: (p) => p === "/client" || p === "/client/" },
+        { label: "Meus Fretes", to: "/client/fretes", icon: Package, match: (p) => p.startsWith("/client/fretes") },
+        { label: "BI Logístico", icon: BarChart3 },
+        { label: "Documentos", icon: FileText },
+        { label: "Relatórios", icon: Download },
+      ],
+    },
+  ],
+};
+
 
 export function AppShell({
   title,
@@ -107,8 +137,10 @@ export function AppShell({
     admin: "Administrador",
     logistics: "Logística",
     driver: "Motorista",
+    client: "Cliente",
     user: "Usuário",
   };
+
 
   const initials = (me?.name ?? "?")
     .split(" ")
@@ -141,7 +173,7 @@ export function AppShell({
         </div>
 
         <nav className="flex-1 overflow-y-auto px-3 py-4">
-          {NAV_GROUPS.map((group) => (
+          {(NAV_GROUPS[me?.role || "user"] || NAV_GROUPS.admin).map((group) => (
             <div key={group.label} className="mb-6">
               {!collapsed && (
                 <div className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-sidebar-foreground/40">

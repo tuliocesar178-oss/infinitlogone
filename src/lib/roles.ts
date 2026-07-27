@@ -6,7 +6,7 @@ const roleHome: Record<AppRole, string> = {
   admin: "/ops/central",
   logistics: "/ops/central",
   driver: "/driver",
-  client: "/rastreio",
+  client: "/client",
 };
 
 const rolePriority: AppRole[] = ["admin", "logistics", "driver", "client"];
