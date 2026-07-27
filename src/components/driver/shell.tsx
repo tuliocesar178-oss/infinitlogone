@@ -115,6 +115,7 @@ export function DriverShell({
     .toUpperCase();
 
   const availabilityLabel: Record<string, string> = {
+    available: "Disponível",
     disponivel: "Disponível",
     em_frete: "Em frete",
     folga: "Em folga",
@@ -123,6 +124,7 @@ export function DriverShell({
     offline: "Offline",
   };
   const availabilityDot: Record<string, string> = {
+    available: "bg-emerald-500",
     disponivel: "bg-emerald-500",
     em_frete: "bg-brand",
     folga: "bg-amber-500",
