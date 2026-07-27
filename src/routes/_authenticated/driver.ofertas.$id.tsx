@@ -40,6 +40,7 @@ function OfferDetail() {
   const [userId, setUserId] = useState("");
   const [negotiateOpen, setNegotiateOpen] = useState(false);
   const [busy, setBusy] = useState<null | "accept" | "decline" | "negotiate">(null);
+  const [chatOpen, setChatOpen] = useState(false);
 
   useEffect(() => {
     (async () => {
