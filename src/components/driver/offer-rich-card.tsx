@@ -37,11 +37,15 @@ type Order = {
   origin_address: string;
   origin_lat: number | null;
   origin_lng: number | null;
+  origin_neighborhood: string | null;
+  origin_number: string | null;
   destination_city: string | null;
   destination_state: string | null;
   destination_address: string;
   destination_lat: number | null;
   destination_lng: number | null;
+  destination_neighborhood: string | null;
+  destination_number: string | null;
   cargo_type: string | null;
   cargo_weight_kg: number | null;
   volumes: number | null;
@@ -50,6 +54,15 @@ type Order = {
   pickup_window_start: string | null;
   delivery_window_end: string | null;
   priority: string | null;
+  invoice_value: number | null;
+  invoice_number: string | null;
+  pickup_company: string | null;
+  pickup_contact: string | null;
+  pickup_phone: string | null;
+  pickup_phone_name: string | null;
+  delivery_company: string | null;
+  delivery_contact: string | null;
+  delivery_phone: string | null;
 };
 
 const PRIORITY: Record<string, { label: string; cls: string }> = {
