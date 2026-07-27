@@ -13,7 +13,7 @@ const searchSchema = z.object({
   priority: z.string().optional(),
 });
 
-export const Route = createFileRoute("/_authenticated/ops/pedidos")({
+export const Route = createFileRoute("/_authenticated/ops/pedidos/")({
   validateSearch: (s) => searchSchema.parse(s),
   head: () => ({ meta: [{ title: "Fretes — InfinitLog" }, { name: "robots", content: "noindex" }] }),
   component: OrdersList,
