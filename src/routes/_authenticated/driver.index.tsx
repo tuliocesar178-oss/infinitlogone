@@ -29,7 +29,7 @@ function DriverHome() {
       // Set driver as available when they access the dashboard
       await supabase
         .from("drivers")
-        .update({ status: 'available', last_seen_at: new Date().toISOString() })
+        .update({ status: 'available' as any, availability: 'disponivel' as any, last_seen_at: new Date().toISOString() })
         .eq("user_id", u.user.id);
     })();
   }, []);
