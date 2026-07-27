@@ -26,6 +26,7 @@ const ICONS: Record<DashboardCardKey, React.ComponentType<{ className?: string }
 };
 
 const TINT_CLASSES: Record<string, { bg: string; fg: string }> = {
+  slate: { bg: "bg-slate-100", fg: "text-slate-600" },
   sky: { bg: "bg-sky-100", fg: "text-sky-600" },
   amber: { bg: "bg-amber-100", fg: "text-amber-700" },
   violet: { bg: "bg-violet-100", fg: "text-violet-600" },
@@ -36,13 +37,14 @@ const TINT_CLASSES: Record<string, { bg: string; fg: string }> = {
   emerald: { bg: "bg-emerald-100", fg: "text-emerald-600" },
   red: { bg: "bg-red-100", fg: "text-red-600" },
 };
+const DEFAULT_TINT = { bg: "bg-muted", fg: "text-muted-foreground" };
 
 export function StatusCards({ counts }: { counts: Record<DashboardCardKey, number> }) {
   return (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
       {DASHBOARD_CARDS.map((card) => {
         const Icon = ICONS[card.key];
-        const tint = TINT_CLASSES[card.tint];
+        const tint = TINT_CLASSES[card.tint] ?? DEFAULT_TINT;
         const value = counts[card.key] ?? 0;
         return (
           <Link
