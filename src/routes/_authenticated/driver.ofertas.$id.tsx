@@ -759,3 +759,134 @@ function formatDuration(min: number) {
   if (h <= 0) return `${m} min`;
   return `${h}h ${String(m).padStart(2, "0")}min`;
 }
+
+function TripSummary({
+  distanceKm,
+  etaMinutes,
+  weightKg,
+  gross,
+  origin,
+  destination,
+}: {
+  distanceKm: number | null;
+  etaMinutes: number | null;
+  weightKg: number | null;
+  gross: number;
+  origin: string | null;
+  destination: string | null;
+}) {
+  const fuelLiters = distanceKm ? distanceKm / 3.5 : null;
+  return (
+    <div className="card-soft p-4">
+      <div className="mb-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+        📋 Resumo da viagem
+      </div>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <SummaryCell icon="🚚" label="Distância" value={distanceKm ? `${distanceKm.toFixed(0)} km` : "—"} />
+        <SummaryCell icon="🕒" label="Tempo estimado" value={etaMinutes ? formatDuration(etaMinutes) : "—"} />
+        <SummaryCell
+          icon="⛽"
+          label="Combustível est."
+          value={fuelLiters ? `${fuelLiters.toFixed(0)} L` : "—"}
+        />
+        <SummaryCell icon="💰" label="Valor do frete" value={brl(gross)} />
+        <SummaryCell icon="📦" label="Peso" value={weightKg ? `${weightKg} kg` : "—"} />
+        <SummaryCell icon="📍" label="Origem" value={origin ?? "—"} />
+        <SummaryCell icon="🏁" label="Destino" value={destination ?? "—"} className="col-span-2 sm:col-span-1" />
+      </div>
+    </div>
+  );
+}
+
+function SummaryCell({
+  icon,
+  label,
+  value,
+  className,
+}: {
+  icon: string;
+  label: string;
+  value: string;
+  className?: string;
+}) {
+  return (
+    <div className={`rounded-xl bg-surface p-3 ${className ?? ""}`}>
+      <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+        {icon} {label}
+      </div>
+      <div className="mt-0.5 truncate text-sm font-semibold">{value}</div>
+    </div>
+  );
+}
+
+function EstimatedEarnings({
+  gross,
+  distanceKm,
+}: {
+  gross: number;
+  distanceKm: number | null;
+}) {
+  if (!distanceKm) return null;
+  const fuelCost = (distanceKm / 3.5) * 6.0;
+  const tollCost = distanceKm * 0.15;
+  const net = gross - fuelCost - tollCost;
+  const pct = gross > 0 ? (net / gross) * 100 : 0;
+  const tone =
+    pct >= 40 ? "text-emerald-600" : pct >= 20 ? "text-amber-600" : "text-red-600";
+  return (
+    <div className="card-soft overflow-hidden">
+      <div className="flex items-center justify-between bg-gradient-to-r from-emerald-500/10 to-brand/5 px-4 py-2">
+        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+          💵 Ganho estimado
+        </span>
+        <span className={`text-[11px] font-bold ${tone}`}>{pct.toFixed(0)}% líquido</span>
+      </div>
+      <div className="divide-y divide-border/50">
+        <EarningsRow label="Valor do frete" value={brl(gross)} tone="text-foreground font-semibold" />
+        <EarningsRow
+          label="Estimativa de pedágios"
+          value={`- ${brl(tollCost)}`}
+          tone="text-muted-foreground"
+          hint={`~ R$ 0,15/km · ${distanceKm.toFixed(0)} km`}
+        />
+        <EarningsRow
+          label="Estimativa de combustível"
+          value={`- ${brl(fuelCost)}`}
+          tone="text-muted-foreground"
+          hint={`~ 3,5 km/L · R$ 6,00/L`}
+        />
+        <EarningsRow
+          label="Lucro líquido estimado"
+          value={brl(net)}
+          tone={`text-lg font-bold ${tone}`}
+        />
+      </div>
+      <div className="border-t border-border/60 bg-surface px-4 py-2 text-[10px] text-muted-foreground">
+        Valores aproximados. Estimativa não inclui alimentação, hospedagem ou manutenção.
+      </div>
+    </div>
+  );
+}
+
+function EarningsRow({
+  label,
+  value,
+  tone,
+  hint,
+}: {
+  label: string;
+  value: string;
+  tone: string;
+  hint?: string;
+}) {
+  return (
+    <div className="flex items-center justify-between px-4 py-2.5 text-sm">
+      <div>
+        <div>{label}</div>
+        {hint && <div className="text-[10px] text-muted-foreground">{hint}</div>}
+      </div>
+      <div className={tone}>{value}</div>
+    </div>
+  );
+}
+
