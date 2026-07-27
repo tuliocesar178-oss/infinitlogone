@@ -9,6 +9,7 @@ import {
   Send,
   Truck,
   Zap,
+  MessageSquare,
 } from "lucide-react";
 import { DASHBOARD_CARDS, type DashboardCardKey } from "@/lib/order-status";
 

@@ -3,6 +3,7 @@ export type OrderStatus =
   | "created"
   | "preparing"
   | "awaiting_driver"
+  | "negotiating"
   | "driver_assigned"
   | "en_route_pickup"
   | "in_transit_to_pickup"
@@ -23,6 +24,7 @@ export const STATUS_LABEL: Record<string, string> = {
   created: "Preparando para Coleta",
   preparing: "Preparando para Coleta",
   awaiting_driver: "Aguardando Motorista",
+  negotiating: "Em Negociação",
   driver_assigned: "Motorista Confirmado",
   en_route_pickup: "Em Deslocamento para Coleta",
   in_transit_to_pickup: "Em Deslocamento para Coleta",
