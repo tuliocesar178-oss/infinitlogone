@@ -16,6 +16,7 @@ function DriverProfile() {
   const qc = useQueryClient();
   const navigate = useNavigate();
   const [userId, setUserId] = useState("");
+  const [theme, setTheme] = useState<ThemeMode>(() => (typeof window === "undefined" ? "light" : readTheme()));
   useEffect(() => {
     (async () => {
       const { data: u } = await supabase.auth.getUser();
