@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { brl } from "@/lib/pf";
 import { Clock, MapPin, Package, ChevronRight, MessageCircle } from "lucide-react";
 
-export const Route = createFileRoute("/_authenticated/driver/ofertas/")({
+export const Route = createFileRoute("/_authenticated/driver/ofertas")({
   head: () => ({ meta: [{ title: "Ofertas — Motorista" }, { name: "robots", content: "noindex" }] }),
   component: DriverOffers,
 });
