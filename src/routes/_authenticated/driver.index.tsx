@@ -113,11 +113,16 @@ function DriverHome() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-surface p-6 -mx-4 mb-6 shadow-sm border-b border-border/40">
-        <h1 className="text-2xl font-black tracking-tight">Olá, {firstName || "…"}</h1>
-        <p className="mt-1 text-sm font-medium text-muted-foreground">
-          {active ? "Você tem um frete em andamento." : offers.length ? `Você tem ${offers.length} oferta(s) esperando.` : "Aguardando novas ofertas."}
-        </p>
+      <div className="bg-surface p-6 -mx-4 mb-6 shadow-sm border-b border-border/40 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-black tracking-tight">Olá, {firstName || "…"}</h1>
+          <p className="mt-1 text-sm font-medium text-muted-foreground">
+            {active ? "Você tem um frete em andamento." : offers.length ? `Você tem ${offers.length} oferta(s) esperando.` : "Aguardando novas ofertas."}
+          </p>
+        </div>
+        <div className="h-12 w-12 rounded-full bg-brand/10 grid place-items-center text-brand">
+          <Truck className="h-6 w-6" />
+        </div>
       </div>
 
       <div className="grid grid-cols-3 gap-3">
