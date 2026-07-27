@@ -1,9 +1,9 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Send, MapPin, Package, User } from "lucide-react";
+import { ArrowLeft, Send, MapPin, Package, User, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { STATUS_LABEL } from "@/lib/order-status";
 import { ShareTracking } from "@/components/share-tracking";
@@ -16,6 +16,16 @@ export const Route = createFileRoute("/_authenticated/ops/pedidos/$id")({
   head: () => ({ meta: [{ title: "Pedido — InfinitLog" }, { name: "robots", content: "noindex" }] }),
   component: OrderDetail,
 });
+
+const CANCELLABLE_STATUSES = new Set([
+  "created",
+  "preparing",
+  "awaiting_driver",
+  "driver_assigned",
+  "en_route_pickup",
+  "in_transit_to_pickup",
+  "at_pickup",
+]);
 
 function OrderDetail() {
   const { id } = Route.useParams();
