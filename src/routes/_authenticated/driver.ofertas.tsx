@@ -1,10 +1,13 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { brl } from "@/lib/pf";
 import { readFavorites, routeKey } from "@/lib/driver-prefs";
-import { Clock, MapPin, Package, ChevronRight, MessageCircle, AlertTriangle, Star, History } from "lucide-react";
+import { Clock, MessageCircle, Package, History } from "lucide-react";
+import { OfferRichCard } from "@/components/driver/offer-rich-card";
+import { DriverQuickChat } from "@/components/driver/quick-chat";
 
 export const Route = createFileRoute("/_authenticated/driver/ofertas")({
   head: () => ({ meta: [{ title: "Ofertas — Motorista" }, { name: "robots", content: "noindex" }] }),
@@ -29,10 +32,18 @@ const EXPIRING_WINDOW_MS = 5 * 60 * 1000;
 
 function DriverOffers() {
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const [userId, setUserId] = useState("");
   const [now, setNow] = useState(Date.now());
   const [filter, setFilter] = useState<FilterKey>("novas");
   const favorites = useFavorites();
+
+  // Modal state (compartilhado)
+  const [negotiateFor, setNegotiateFor] = useState<{
+    offerId: string;
+    current: number;
+  } | null>(null);
+  const [chatFor, setChatFor] = useState<{ orderId: string; code: string } | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -85,7 +96,10 @@ function DriverOffers() {
   const all = q.data ?? [];
 
   const counts = useMemo(() => {
-    let novas = 0, negociacao = 0, expirando = 0, favoritas = 0;
+    let novas = 0,
+      negociacao = 0,
+      expirando = 0,
+      favoritas = 0;
     for (const it of all) {
       if (it.offer.status === "negotiating") negociacao++;
       else {
@@ -95,7 +109,8 @@ function DriverOffers() {
           if (ms > 0 && ms <= EXPIRING_WINDOW_MS) expirando++;
         }
       }
-      if (favorites.includes(routeKey(it.order?.origin_city, it.order?.destination_city))) favoritas++;
+      if (favorites.includes(routeKey(it.order?.origin_city, it.order?.destination_city)))
+        favoritas++;
     }
     return { novas, negociacao, expirando, favoritas, todas: all.length };
   }, [all, now, favorites]);
@@ -105,7 +120,9 @@ function DriverOffers() {
     if (filter === "negociacao") return all.filter((i) => i.offer.status === "negotiating");
     if (filter === "novas") return all.filter((i) => i.offer.status === "pending");
     if (filter === "favoritas")
-      return all.filter((i) => favorites.includes(routeKey(i.order?.origin_city, i.order?.destination_city)));
+      return all.filter((i) =>
+        favorites.includes(routeKey(i.order?.origin_city, i.order?.destination_city)),
+      );
     return all.filter((i) => {
       if (i.offer.status !== "pending" || !i.offer.expires_at) return false;
       const ms = new Date(i.offer.expires_at).getTime() - now;
@@ -126,7 +143,9 @@ function DriverOffers() {
       <div className="flex items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Ofertas de fretes</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Toque em uma oferta para ver a rota, valores e aceitar.</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Todas as informações no card. Aceite, negocie ou veja detalhes sem sair da tela.
+          </p>
         </div>
         <Link
           to="/driver/ofertas/historico"
@@ -176,88 +195,176 @@ function DriverOffers() {
           </p>
         </div>
       ) : (
-        <ul className="space-y-3">
+        <ul className="space-y-4">
           {items.map(({ offer, order, program }) => {
-            const expMs = offer.expires_at ? new Date(offer.expires_at).getTime() - now : null;
-            const isExpiring = offer.status === "pending" && expMs !== null && expMs > 0 && expMs <= EXPIRING_WINDOW_MS;
-            const fav = favorites.includes(routeKey(order?.origin_city, order?.destination_city));
+            const isFav = favorites.includes(
+              routeKey(order?.origin_city, order?.destination_city),
+            );
             return (
               <li key={offer.id}>
-                <Link
-                  to="/driver/ofertas/$id"
-                  params={{ id: offer.id }}
-                  className={`card-soft block overflow-hidden transition hover:border-brand/40 hover:shadow-md ${
-                    isExpiring ? "border-red-500/50 ring-1 ring-red-500/20" : ""
-                  }`}
-                >
-                  <div className="flex items-center justify-between border-b border-border/60 bg-surface-2 px-4 py-2 text-[10px] uppercase tracking-widest text-muted-foreground">
-                    <span className="inline-flex items-center gap-2">
-                      {isExpiring && <AlertTriangle className="h-3 w-3 text-red-500" />}
-                      {fav && <Star className="h-3 w-3 fill-amber-500 stroke-amber-500" />}
-                      {program?.pf_code ?? order?.code ?? "Nova oferta"}
-                    </span>
-                    <ExpireBadge expiresAt={offer.expires_at} now={now} negotiating={offer.status === "negotiating"} />
-                  </div>
-                  <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 p-4">
-                    <div className="min-w-0 space-y-2">
-                      <div className="flex items-center gap-2 text-sm">
-                        <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-500" />
-                        <span className="truncate font-medium">{order?.origin_city ?? order?.origin_address ?? "—"}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <span className="h-2 w-2 shrink-0 rounded-full bg-red-500" />
-                        <span className="truncate font-medium">{order?.destination_city ?? order?.destination_address ?? "—"}</span>
-                      </div>
-                      <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
-                        {order?.distance_km && (
-                          <span className="inline-flex items-center gap-1">
-                            <MapPin className="h-3 w-3" /> {Number(order.distance_km).toFixed(0)} km
-                          </span>
-                        )}
-                        {order?.cargo_type && (
-                          <span className="inline-flex items-center gap-1">
-                            <Package className="h-3 w-3" /> {order.cargo_type}
-                          </span>
-                        )}
-                        {order?.cargo_weight_kg && <span>{order.cargo_weight_kg} kg</span>}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-xl font-bold tracking-tight">{brl(Number(offer.offered_price))}</div>
-                      {offer.status === "negotiating" ? (
-                        <div className="mt-1 inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-widest text-brand">
-                          <MessageCircle className="h-3 w-3" /> Em negociação
-                        </div>
-                      ) : (
-                        <div className="mt-1 inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-widest text-brand">
-                          Detalhes <ChevronRight className="h-3 w-3" />
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </Link>
+                <OfferRichCard
+                  offer={offer as any}
+                  order={order as any}
+                  pfCode={program?.pf_code ?? null}
+                  isFav={isFav}
+                  now={now}
+                  onOpenDetails={() =>
+                    navigate({ to: "/driver/ofertas/$id", params: { id: offer.id } })
+                  }
+                  onOpenChat={() =>
+                    order &&
+                    setChatFor({ orderId: order.id, code: program?.pf_code ?? order.code })
+                  }
+                  onNegotiate={() =>
+                    setNegotiateFor({ offerId: offer.id, current: Number(offer.offered_price) })
+                  }
+                />
               </li>
             );
           })}
         </ul>
       )}
+
+      {negotiateFor && (
+        <NegotiateModal
+          currentValue={negotiateFor.current}
+          onClose={() => setNegotiateFor(null)}
+          onSubmit={async (amount, note) => {
+            try {
+              const { error: e1 } = await supabase
+                .from("freight_offers")
+                .update({ status: "negotiating" })
+                .eq("id", negotiateFor.offerId);
+              if (e1) throw e1;
+              const { error: e2 } = await supabase.from("negotiations").insert({
+                offer_id: negotiateFor.offerId,
+                proposed_by: userId,
+                amount,
+                note: note || null,
+                status: "proposed",
+              });
+              if (e2) throw e2;
+              toast.success("Proposta enviada à logística");
+              setNegotiateFor(null);
+              qc.invalidateQueries({ queryKey: ["driver-offers-all", userId] });
+            } catch (e) {
+              toast.error(e instanceof Error ? e.message : "Erro");
+            }
+          }}
+        />
+      )}
+
+      {chatFor && (
+        <DriverQuickChat
+          open
+          orderId={chatFor.orderId}
+          orderCode={chatFor.code}
+          onClose={() => setChatFor(null)}
+        />
+      )}
     </div>
   );
 }
 
-function ExpireBadge({ expiresAt, now, negotiating }: { expiresAt: string | null; now: number; negotiating: boolean }) {
-  if (negotiating) return <span className="text-brand">Aguardando logística</span>;
-  if (!expiresAt) return <span>Sem prazo</span>;
-  const ms = new Date(expiresAt).getTime() - now;
-  if (ms <= 0) return <span className="text-red-500">Expirada</span>;
-  const total = Math.floor(ms / 1000);
-  const h = Math.floor(total / 3600);
-  const m = Math.floor((total % 3600) / 60);
-  const s = total % 60;
-  const label = h > 0 ? `${h}h ${String(m).padStart(2, "0")}m` : `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+function NegotiateModal({
+  currentValue,
+  onClose,
+  onSubmit,
+}: {
+  currentValue: number;
+  onClose: () => void;
+  onSubmit: (amount: number, note: string) => Promise<void>;
+}) {
+  const [amount, setAmount] = useState(String(currentValue.toFixed(2)).replace(".", ","));
+  const [note, setNote] = useState("");
+  const [saving, setSaving] = useState(false);
+  const suggestions = [
+    { label: "+5%", pct: 1.05 },
+    { label: "+10%", pct: 1.1 },
+    { label: "+15%", pct: 1.15 },
+  ];
+
   return (
-    <span className={`inline-flex items-center gap-1 ${ms < 60_000 ? "text-red-500" : ""}`}>
-      <Clock className="h-3 w-3" /> {label}
-    </span>
+    <div
+      className="fixed inset-0 z-50 grid place-items-end bg-black/40 sm:place-items-center"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-md rounded-t-3xl bg-background p-6 shadow-xl sm:rounded-3xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mb-4 flex items-center gap-2">
+          <MessageCircle className="h-5 w-5 text-brand" />
+          <h2 className="text-base font-semibold">Negociar valor</h2>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Proposta atual:{" "}
+          <span className="font-semibold text-foreground">{brl(currentValue)}</span>
+        </p>
+        <div className="mt-4 space-y-3">
+          <label className="block">
+            <div className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+              Sua contraproposta (R$)
+            </div>
+            <input
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              inputMode="decimal"
+              className="h-12 w-full rounded-xl border border-border bg-surface px-3 text-lg font-semibold outline-none focus:border-brand"
+            />
+            <div className="mt-2 flex gap-1.5">
+              {suggestions.map((s) => (
+                <button
+                  key={s.label}
+                  type="button"
+                  onClick={() =>
+                    setAmount((currentValue * s.pct).toFixed(2).replace(".", ","))
+                  }
+                  className="rounded-full border border-border bg-surface px-3 py-1 text-[11px] font-semibold hover:border-brand"
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          </label>
+          <label className="block">
+            <div className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+              Observações
+            </div>
+            <textarea
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              rows={3}
+              placeholder="Ex.: pedágio extra, carga fora do padrão…"
+              className="w-full rounded-xl border border-border bg-surface p-3 text-sm outline-none focus:border-brand"
+            />
+          </label>
+        </div>
+        <div className="mt-5 flex gap-2">
+          <button
+            onClick={onClose}
+            className="flex-1 rounded-xl border border-border py-3 text-sm hover:bg-accent"
+          >
+            Cancelar
+          </button>
+          <button
+            disabled={saving}
+            onClick={async () => {
+              const v = Number(amount.replace(/\./g, "").replace(",", "."));
+              if (!v || v <= 0) return toast.error("Valor inválido");
+              setSaving(true);
+              await onSubmit(v, note);
+              setSaving(false);
+            }}
+            className="flex-1 rounded-xl bg-brand py-3 text-sm font-semibold text-brand-foreground hover:opacity-90 disabled:opacity-60"
+          >
+            {saving ? "Enviando…" : "Enviar proposta"}
+          </button>
+        </div>
+        <div className="mt-4 flex items-center justify-center gap-1 text-[10px] text-muted-foreground">
+          <Clock className="h-3 w-3" /> Resposta média da logística: 5–10 min
+        </div>
+      </div>
+    </div>
   );
 }
