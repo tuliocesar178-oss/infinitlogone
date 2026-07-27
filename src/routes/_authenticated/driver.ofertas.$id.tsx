@@ -89,6 +89,10 @@ function OfferDetail() {
   const program = data?.program;
   const driver = data?.driver;
 
+  useEffect(() => {
+    if (order) setFav(isFavorite(order.origin_city, order.destination_city));
+  }, [order?.id, order?.origin_city, order?.destination_city]);
+
   // Custo por km ajustável pelo motorista (persistido em localStorage)
   const [costPerKm, setCostPerKm] = useState<number>(() => {
     if (typeof window === "undefined") return 2.2;
