@@ -56,18 +56,72 @@ function OrderDetail() {
   });
 
   const order = orderQ.data;
+  const canCancel = order && CANCELLABLE_STATUSES.has(order.status);
+
+  async function cancelOrder() {
+    if (!order) return;
+    const reason = window.prompt(
+      `Cancelar o pedido ${order.code}?\n\nInforme o motivo do cancelamento (será registrado no histórico):`,
+    );
+    if (reason === null) return;
+    const trimmed = reason.trim();
+    if (!trimmed) {
+      toast.error("Informe um motivo para cancelar o frete.");
+      return;
+    }
+    setCancelling(true);
+    try {
+      const { data: u } = await supabase.auth.getUser();
+      const { error: uErr } = await supabase
+        .from("orders")
+        .update({ status: "cancelled" })
+        .eq("id", order.id);
+      if (uErr) throw uErr;
+      await supabase
+        .from("freight_offers")
+        .update({ status: "cancelled" })
+        .eq("order_id", order.id)
+        .in("status", ["pending", "negotiating"]);
+      await supabase.from("order_events").insert({
+        order_id: order.id,
+        event_type: "cancelled",
+        from_status: order.status,
+        to_status: "cancelled",
+        actor_id: u.user?.id ?? null,
+        payload: { reason: trimmed },
+      });
+      toast.success("Frete cancelado.");
+      orderQ.refetch();
+      eventsQ.refetch();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao cancelar frete");
+    } finally {
+      setCancelling(false);
+    }
+  }
 
   return (
     <AppShell
       title={order ? order.code : "Pedido"}
       subtitle={order ? STATUS_LABEL[order.status] ?? order.status : ""}
       actions={
-        <Link
-          to="/ops"
-          className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-4 py-2 text-sm hover:bg-accent"
-        >
-          <ArrowLeft className="h-4 w-4" /> Voltar
-        </Link>
+        <div className="flex items-center gap-2">
+          {canCancel && (
+            <button
+              onClick={cancelOrder}
+              disabled={cancelling}
+              className="inline-flex items-center gap-2 rounded-full border border-red-500/40 bg-red-500/10 px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-500/20 disabled:opacity-60"
+            >
+              <XCircle className="h-4 w-4" /> {cancelling ? "Cancelando…" : "Cancelar frete"}
+            </button>
+          )}
+          <Link
+            to="/ops"
+            className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-4 py-2 text-sm hover:bg-accent"
+          >
+            <ArrowLeft className="h-4 w-4" /> Voltar
+          </Link>
+        </div>
       }
     >
       {orderQ.isLoading && <div className="card-soft h-64 animate-pulse bg-surface-2" />}
