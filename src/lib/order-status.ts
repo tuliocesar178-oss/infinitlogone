@@ -3,6 +3,7 @@ export type OrderStatus =
   | "created"
   | "preparing"
   | "awaiting_driver"
+  | "negotiating"
   | "driver_assigned"
   | "en_route_pickup"
   | "in_transit_to_pickup"
@@ -23,6 +24,7 @@ export const STATUS_LABEL: Record<string, string> = {
   created: "Preparando para Coleta",
   preparing: "Preparando para Coleta",
   awaiting_driver: "Aguardando Motorista",
+  negotiating: "Em Negociação",
   driver_assigned: "Motorista Confirmado",
   en_route_pickup: "Em Deslocamento para Coleta",
   in_transit_to_pickup: "Em Deslocamento para Coleta",
@@ -45,6 +47,7 @@ export const STATUS_BADGE_CLASS: Record<string, string> = {
   planning: "bg-slate-100 text-slate-800",
   created: "bg-yellow-100 text-yellow-800",
   preparing: "bg-yellow-100 text-yellow-800",
+  negotiating: "bg-amber-100 text-amber-800 font-bold animate-pulse",
   awaiting_driver: "bg-orange-100 text-orange-800",
   driver_assigned: "bg-blue-100 text-blue-800",
   en_route_pickup: "bg-blue-200 text-blue-900",
@@ -78,6 +81,7 @@ export const STATUS_FILTER_OPTIONS: { value: string; label: string }[] = [
   { value: "planning", label: "Planejamento" },
   { value: "preparing", label: "Preparando para Coleta" },
   { value: "awaiting_driver", label: "Aguardando Motorista" },
+  { value: "negotiating", label: "Em Negociação" },
   { value: "driver_assigned", label: "Motorista Confirmado" },
   { value: "en_route_pickup", label: "Em Deslocamento para Coleta" },
   { value: "at_pickup", label: "Cheguei na Coleta" },
@@ -100,6 +104,8 @@ export function publicStatus(s: string): { key: string; label: string } {
     case "awaiting_driver":
     case "created":
       return { key: "preparing", label: "Preparando para coleta" };
+    case "negotiating":
+      return { key: "negotiating", label: "Em negociação" };
     case "driver_assigned":
       return { key: "driver_assigned", label: "Motorista confirmado" };
     case "en_route_pickup":
@@ -141,6 +147,7 @@ export type DashboardCardKey =
   | "preparing"
   | "awaiting_driver"
   | "offer_sent"
+  | "negotiation"
   | "en_route_pickup"
   | "at_pickup"
   | "in_transit"
@@ -159,6 +166,7 @@ export const DASHBOARD_CARDS: {
   { key: "preparing", label: "Preparando para coleta", short: "Preparando", statuses: ["preparing", "created"], tint: "sky" },
   { key: "awaiting_driver", label: "Aguardando motorista", short: "Aguardando", statuses: ["awaiting_driver"], tint: "amber" },
   { key: "offer_sent", label: "Oferta enviada", short: "Oferta enviada", statuses: ["awaiting_driver"], tint: "violet" },
+  { key: "negotiation", label: "Em negociação", short: "Negociação", statuses: ["negotiating"], tint: "amber" },
   { key: "en_route_pickup", label: "Em deslocamento", short: "Em deslocamento", statuses: ["driver_assigned", "en_route_pickup", "in_transit_to_pickup"], tint: "blue" },
   { key: "at_pickup", label: "Em coleta", short: "Em coleta", statuses: ["at_pickup", "picked_up", "loaded"], tint: "indigo" },
   { key: "in_transit", label: "Em trânsito", short: "Em trânsito", statuses: ["out_for_delivery", "in_transit"], tint: "cyan" },

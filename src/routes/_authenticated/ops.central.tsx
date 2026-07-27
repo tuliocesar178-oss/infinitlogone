@@ -31,6 +31,7 @@ const KANBAN_COLUMNS: { id: OrderStatus; title: string }[] = [
   { id: "planning", title: "Planejamento" },
   { id: "preparing", title: "Preparando Coleta" },
   { id: "awaiting_driver", title: "Aguardando Motorista" },
+  { id: "negotiating", title: "Em Negociação" },
   { id: "driver_assigned", title: "Motorista Confirmado" },
   { id: "en_route_pickup", title: "Em Deslocamento" },
   { id: "at_pickup", title: "Na Coleta" },

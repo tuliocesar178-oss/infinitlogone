@@ -76,6 +76,7 @@ function FreightDashboard() {
     preparing: 0,
     awaiting_driver: 0,
     offer_sent: 0,
+    negotiation: 0,
     en_route_pickup: 0,
     at_pickup: 0,
     in_transit: 0,
@@ -90,6 +91,8 @@ function FreightDashboard() {
     else if (o.status === "awaiting_driver") {
       if (offers.has(o.id)) counts.offer_sent++;
       else counts.awaiting_driver++;
+    } else if (o.status === "negotiating") {
+      counts.negotiation++;
     } else if (["driver_assigned", "en_route_pickup", "in_transit_to_pickup"].includes(o.status))
       counts.en_route_pickup++;
     else if (["at_pickup", "picked_up", "loaded"].includes(o.status)) counts.at_pickup++;

@@ -9,6 +9,7 @@ import {
   Send,
   Truck,
   Zap,
+  MessageSquare,
 } from "lucide-react";
 import { DASHBOARD_CARDS, type DashboardCardKey } from "@/lib/order-status";
 
@@ -17,6 +18,7 @@ const ICONS: Record<DashboardCardKey, React.ComponentType<{ className?: string }
   preparing: Package,
   awaiting_driver: Clock,
   offer_sent: Send,
+  negotiation: MessageSquare,
   en_route_pickup: Navigation,
   at_pickup: Truck,
   in_transit: Zap,
