@@ -29,7 +29,9 @@ const CANCELLABLE_STATUSES = new Set([
 
 function OrderDetail() {
   const { id } = Route.useParams();
+  const navigate = useNavigate();
   const [tab, setTab] = useState<"op" | "pf">("op");
+  const [cancelling, setCancelling] = useState(false);
 
   const orderQ = useQuery({
     queryKey: ["order", id],
