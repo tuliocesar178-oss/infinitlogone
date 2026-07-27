@@ -104,6 +104,26 @@ function OfferDetail() {
     return null;
   }, [order, distanceKm]);
 
+  const emptyKm = useMemo(() => {
+    if (!driver?.current_lat || !driver?.current_lng) return null;
+    if (!order?.origin_lat || !order?.origin_lng) return null;
+    return haversineKm(
+      { lat: driver.current_lat, lng: driver.current_lng },
+      { lat: order.origin_lat, lng: order.origin_lng },
+    );
+  }, [driver, order]);
+
+  const profit = useMemo(() => {
+    if (!offer || !distanceKm) return null;
+    const gross = Number(offer.offered_price ?? 0);
+    const totalKm = distanceKm + (emptyKm ?? 0);
+    const cost = totalKm * costPerKm;
+    const net = gross - cost;
+    const marginPct = gross > 0 ? (net / gross) * 100 : 0;
+    const pricePerKm = distanceKm > 0 ? gross / distanceKm : 0;
+    return { gross, cost, net, marginPct, totalKm, pricePerKm };
+  }, [offer, distanceKm, emptyKm, costPerKm]);
+
   async function respond(action: "accept" | "decline") {
     if (!offer) return;
     setBusy(action);
