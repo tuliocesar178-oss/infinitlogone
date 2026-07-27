@@ -25,10 +25,20 @@ export function DispatchPanel({ order, onSent }: { order: any; onSent: () => voi
     queryFn: async () => {
       const { data, error } = await supabase
         .from("drivers")
-        .select("user_id,current_lat,current_lng,rating,status,availability,city,phone,profiles:profiles!drivers_user_id_fkey(full_name)")
+        .select("user_id,current_lat,current_lng,rating,status,availability,city,phone")
         .eq("availability", "disponivel");
       if (error) throw error;
-      return data ?? [];
+      const list = data ?? [];
+      const ids = list.map((d: any) => d.user_id);
+      let profilesMap: Record<string, { full_name: string | null }> = {};
+      if (ids.length > 0) {
+        const { data: profs } = await supabase
+          .from("profiles")
+          .select("id, full_name")
+          .in("id", ids);
+        profilesMap = Object.fromEntries((profs ?? []).map((p: any) => [p.id, { full_name: p.full_name }]));
+      }
+      return list.map((d: any) => ({ ...d, profiles: profilesMap[d.user_id] ?? null }));
     },
   });
 
