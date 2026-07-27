@@ -1,0 +1,2 @@
+ALTER TABLE public.freight_offers DROP CONSTRAINT IF EXISTS freight_offers_order_driver_unique;
+ALTER TABLE public.freight_offers ADD CONSTRAINT freight_offers_order_driver_unique UNIQUE (order_id, driver_id);
