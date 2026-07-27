@@ -23,6 +23,7 @@ import {
   Layers,
   AlertTriangle,
 } from "lucide-react";
+import { DriverQuickChat } from "@/components/driver/quick-chat";
 
 const TOKEN = import.meta.env.VITE_LOVABLE_CONNECTOR_MAPBOX_PUBLIC_TOKEN as string | undefined;
 if (TOKEN) mapboxgl.accessToken = TOKEN;
