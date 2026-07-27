@@ -4,9 +4,10 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { STATUS_LABEL, STATUS_BADGE_CLASS } from "@/lib/order-status";
 import { brl } from "@/lib/pf";
-import { MapPin, Truck, Navigation, ChevronRight, Package } from "lucide-react";
+import { MapPin, Truck, Navigation, ChevronRight, Package, MessageCircle } from "lucide-react";
 import { RouteMiniMap } from "@/components/driver/route-mini-map";
 import { NavLauncherModal } from "@/components/driver/nav-launcher-modal";
+import { DriverQuickChat } from "@/components/driver/quick-chat";
 import type { NavTarget } from "@/lib/nav-launcher";
 
 export const Route = createFileRoute("/_authenticated/driver/fretes")({
@@ -26,6 +27,7 @@ function DriverFreights() {
   const [userId, setUserId] = useState("");
   const [filter, setFilter] = useState<(typeof FILTERS)[number]["key"]>("active");
   const [navTarget, setNavTarget] = useState<NavTarget | null>(null);
+  const [chatOrder, setChatOrder] = useState<{ id: string; code: string | null } | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -148,6 +150,16 @@ function DriverFreights() {
                         {goingToPickup ? "Navegar até coleta" : "Navegar até entrega"}
                       </button>
                     ) : null}
+                    {isActive ? (
+                      <button
+                        onClick={() => setChatOrder({ id: o.id, code: o.code })}
+                        className="grid h-11 w-11 place-items-center rounded-xl border border-border bg-surface transition hover:bg-surface-2"
+                        aria-label="Chat"
+                        title="Chat com a logística"
+                      >
+                        <MessageCircle className="h-4 w-4" />
+                      </button>
+                    ) : null}
                     <Link
                       to="/driver"
                       className="flex items-center justify-center gap-1 rounded-xl border border-border bg-surface px-4 py-2.5 text-sm font-semibold transition hover:bg-surface-2"
@@ -164,6 +176,12 @@ function DriverFreights() {
       )}
 
       <NavLauncherModal open={!!navTarget} target={navTarget} onClose={() => setNavTarget(null)} />
+      <DriverQuickChat
+        open={!!chatOrder}
+        orderId={chatOrder?.id ?? ""}
+        orderCode={chatOrder?.code ?? null}
+        onClose={() => setChatOrder(null)}
+      />
     </div>
   );
 }
