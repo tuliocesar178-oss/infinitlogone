@@ -1,10 +1,11 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { AVAILABILITY, labelOf } from "@/lib/pf";
-import { Bell, LogOut, MapPin, Phone, Star, Truck, UserRound } from "lucide-react";
+import { applyTheme, readTheme, type ThemeMode } from "@/lib/driver-prefs";
+import { AlertTriangle, Bell, ChevronRight, Clock, LogOut, MapPin, Moon, Phone, Star, Sun, Truck, UserRound } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/driver/perfil")({
   head: () => ({ meta: [{ title: "Perfil — Motorista" }, { name: "robots", content: "noindex" }] }),
@@ -15,6 +16,7 @@ function DriverProfile() {
   const qc = useQueryClient();
   const navigate = useNavigate();
   const [userId, setUserId] = useState("");
+  const [theme, setTheme] = useState<ThemeMode>(() => (typeof window === "undefined" ? "light" : readTheme()));
   useEffect(() => {
     (async () => {
       const { data: u } = await supabase.auth.getUser();
@@ -147,6 +149,47 @@ function DriverProfile() {
             ))}
           </ul>
         )}
+      </section>
+
+      <section className="card-soft p-5">
+        <SectionTitle>Aparência</SectionTitle>
+        <div className="grid grid-cols-2 gap-2">
+          {(["light", "dark"] as ThemeMode[]).map((m) => {
+            const active = theme === m;
+            const Icon = m === "dark" ? Moon : Sun;
+            return (
+              <button
+                key={m}
+                onClick={() => { setTheme(m); applyTheme(m); }}
+                className={`flex items-center justify-center gap-2 rounded-2xl px-3 py-3 text-sm font-semibold ring-1 ring-inset ${
+                  active ? "bg-brand text-brand-foreground ring-brand" : "bg-surface text-muted-foreground ring-border"
+                }`}
+              >
+                <Icon className="h-4 w-4" /> {m === "dark" ? "Escuro" : "Claro"}
+              </button>
+            );
+          })}
+        </div>
+        <p className="mt-2 text-[11px] text-muted-foreground">Ideal para dirigir à noite.</p>
+      </section>
+
+      <section className="card-soft divide-y divide-border">
+        <Link to="/driver/ofertas/historico" className="flex items-center gap-3 p-4 hover:bg-accent">
+          <span className="grid h-9 w-9 place-items-center rounded-full bg-surface-2"><Clock className="h-4 w-4 text-muted-foreground" /></span>
+          <div className="flex-1">
+            <div className="text-sm font-semibold">Histórico de ofertas</div>
+            <div className="text-xs text-muted-foreground">Aceitas, recusadas e expiradas.</div>
+          </div>
+          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+        </Link>
+        <Link to="/driver/ocorrencias" className="flex items-center gap-3 p-4 hover:bg-accent">
+          <span className="grid h-9 w-9 place-items-center rounded-full bg-amber-100"><AlertTriangle className="h-4 w-4 text-amber-700" /></span>
+          <div className="flex-1">
+            <div className="text-sm font-semibold">Ocorrências</div>
+            <div className="text-xs text-muted-foreground">Reportar problemas para a logística.</div>
+          </div>
+          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+        </Link>
       </section>
 
       <button onClick={signOut}

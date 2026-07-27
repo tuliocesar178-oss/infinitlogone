@@ -22,8 +22,12 @@ import {
   Calendar,
   Layers,
   AlertTriangle,
+  Star,
+  Phone,
+  Zap,
 } from "lucide-react";
 import { DriverQuickChat } from "@/components/driver/quick-chat";
+import { isFavorite, readDriveMode, setDriveMode, toggleFavorite } from "@/lib/driver-prefs";
 
 const TOKEN = import.meta.env.VITE_LOVABLE_CONNECTOR_MAPBOX_PUBLIC_TOKEN as string | undefined;
 if (TOKEN) mapboxgl.accessToken = TOKEN;
@@ -41,6 +45,8 @@ function OfferDetail() {
   const [negotiateOpen, setNegotiateOpen] = useState(false);
   const [busy, setBusy] = useState<null | "accept" | "decline" | "negotiate">(null);
   const [chatOpen, setChatOpen] = useState(false);
+  const [fav, setFav] = useState(false);
+  const [driveMode, setDrive] = useState<boolean>(() => (typeof window === "undefined" ? false : readDriveMode()));
 
   useEffect(() => {
     (async () => {
@@ -48,6 +54,13 @@ function OfferDetail() {
       if (data.user) setUserId(data.user.id);
     })();
   }, []);
+
+  useEffect(() => {
+    const onChange = () => setDrive(readDriveMode());
+    window.addEventListener("driver-drive-mode-changed", onChange);
+    return () => window.removeEventListener("driver-drive-mode-changed", onChange);
+  }, []);
+
 
   const q = useQuery({
     enabled: !!id && !!userId,
@@ -75,6 +88,10 @@ function OfferDetail() {
   const order = data?.order;
   const program = data?.program;
   const driver = data?.driver;
+
+  useEffect(() => {
+    if (order) setFav(isFavorite(order.origin_city, order.destination_city));
+  }, [order?.id, order?.origin_city, order?.destination_city]);
 
   // Custo por km ajustável pelo motorista (persistido em localStorage)
   const [costPerKm, setCostPerKm] = useState<number>(() => {
@@ -167,10 +184,13 @@ function OfferDetail() {
   };
   const prio = priorityLabel[priority];
 
+  const phone = (order as any).contact_phone as string | null | undefined;
+  const telHref = phone ? `tel:${phone.replace(/[^+\d]/g, "")}` : null;
+
   return (
-    <div className="-mx-4 -mt-6 pb-32">
+    <div className={`-mx-4 -mt-6 pb-32 ${driveMode ? "text-lg leading-relaxed" : ""}`}>
       {/* Header */}
-      <div className="sticky top-16 z-20 flex items-center justify-between gap-3 border-b border-border/60 bg-background/95 px-4 py-2 backdrop-blur">
+      <div className="sticky top-16 z-20 flex items-center justify-between gap-2 border-b border-border/60 bg-background/95 px-4 py-2 backdrop-blur">
         <Link
           to="/driver/ofertas"
           className="grid h-9 w-9 place-items-center rounded-full text-muted-foreground hover:bg-accent"
@@ -183,12 +203,49 @@ function OfferDetail() {
           </div>
           <Countdown expiresAt={offer.expires_at} />
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           {prio ? (
             <span className={`hidden rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider sm:inline ${prio.cls}`}>
               {prio.label}
             </span>
           ) : null}
+          <button
+            onClick={() => {
+              const next = !driveMode;
+              setDrive(next);
+              setDriveMode(next);
+            }}
+            className={`grid h-9 w-9 place-items-center rounded-full border ${
+              driveMode ? "border-brand bg-brand text-brand-foreground" : "border-border bg-surface hover:bg-accent"
+            }`}
+            aria-label="Modo direção"
+            title="Modo direção (texto grande)"
+          >
+            <Zap className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => {
+              const next = toggleFavorite(order.origin_city, order.destination_city);
+              setFav(next);
+            }}
+            className={`grid h-9 w-9 place-items-center rounded-full border ${
+              fav ? "border-amber-400 bg-amber-100 text-amber-700" : "border-border bg-surface hover:bg-accent"
+            }`}
+            aria-label="Favoritar rota"
+            title={fav ? "Remover dos favoritos" : "Favoritar rota"}
+          >
+            <Star className={`h-4 w-4 ${fav ? "fill-amber-500 stroke-amber-500" : ""}`} />
+          </button>
+          {telHref && (
+            <a
+              href={telHref}
+              className="grid h-9 w-9 place-items-center rounded-full border border-emerald-500/40 bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20"
+              aria-label="Ligar para contato"
+              title={`Ligar para ${phone}`}
+            >
+              <Phone className="h-4 w-4" />
+            </a>
+          )}
           <button
             onClick={() => setChatOpen(true)}
             className="grid h-9 w-9 place-items-center rounded-full border border-border bg-surface hover:bg-accent"

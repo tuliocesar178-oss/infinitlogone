@@ -3,6 +3,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "@/components/logo";
+import { applyTheme, readTheme } from "@/lib/driver-prefs";
 import {
   Bell,
   CircleDollarSign,
@@ -37,6 +38,13 @@ export function DriverShell({
   const qc = useQueryClient();
   const path = useRouterState({ select: (s) => s.location.pathname });
   const [pendingOffers, setPendingOffers] = useState(0);
+
+  useEffect(() => {
+    applyTheme(readTheme());
+    const onChange = () => applyTheme(readTheme());
+    window.addEventListener("driver-theme-changed", onChange);
+    return () => window.removeEventListener("driver-theme-changed", onChange);
+  }, []);
 
   const { data: me } = useQuery({
     queryKey: ["driver-me"],

@@ -1,16 +1,29 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { brl } from "@/lib/pf";
-import { Clock, MapPin, Package, ChevronRight, MessageCircle, AlertTriangle } from "lucide-react";
+import { readFavorites, routeKey } from "@/lib/driver-prefs";
+import { Clock, MapPin, Package, ChevronRight, MessageCircle, AlertTriangle, Star, History } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/driver/ofertas")({
   head: () => ({ meta: [{ title: "Ofertas — Motorista" }, { name: "robots", content: "noindex" }] }),
   component: DriverOffers,
 });
 
-type FilterKey = "novas" | "negociacao" | "expirando" | "todas";
+type FilterKey = "novas" | "negociacao" | "expirando" | "favoritas" | "todas";
+
+function useFavorites(): string[] {
+  const snapshot = useSyncExternalStore(
+    (cb) => {
+      window.addEventListener("driver-favorites-changed", cb);
+      return () => window.removeEventListener("driver-favorites-changed", cb);
+    },
+    () => JSON.stringify(readFavorites()),
+    () => "[]",
+  );
+  return useMemo(() => JSON.parse(snapshot) as string[], [snapshot]);
+}
 
 const EXPIRING_WINDOW_MS = 5 * 60 * 1000;
 
@@ -19,6 +32,7 @@ function DriverOffers() {
   const [userId, setUserId] = useState("");
   const [now, setNow] = useState(Date.now());
   const [filter, setFilter] = useState<FilterKey>("novas");
+  const favorites = useFavorites();
 
   useEffect(() => {
     (async () => {
@@ -71,7 +85,7 @@ function DriverOffers() {
   const all = q.data ?? [];
 
   const counts = useMemo(() => {
-    let novas = 0, negociacao = 0, expirando = 0;
+    let novas = 0, negociacao = 0, expirando = 0, favoritas = 0;
     for (const it of all) {
       if (it.offer.status === "negotiating") negociacao++;
       else {
@@ -81,34 +95,45 @@ function DriverOffers() {
           if (ms > 0 && ms <= EXPIRING_WINDOW_MS) expirando++;
         }
       }
+      if (favorites.includes(routeKey(it.order?.origin_city, it.order?.destination_city))) favoritas++;
     }
-    return { novas, negociacao, expirando, todas: all.length };
-  }, [all, now]);
+    return { novas, negociacao, expirando, favoritas, todas: all.length };
+  }, [all, now, favorites]);
 
   const items = useMemo(() => {
     if (filter === "todas") return all;
     if (filter === "negociacao") return all.filter((i) => i.offer.status === "negotiating");
     if (filter === "novas") return all.filter((i) => i.offer.status === "pending");
-    // expirando
+    if (filter === "favoritas")
+      return all.filter((i) => favorites.includes(routeKey(i.order?.origin_city, i.order?.destination_city)));
     return all.filter((i) => {
       if (i.offer.status !== "pending" || !i.offer.expires_at) return false;
       const ms = new Date(i.offer.expires_at).getTime() - now;
       return ms > 0 && ms <= EXPIRING_WINDOW_MS;
     });
-  }, [all, filter, now]);
+  }, [all, filter, now, favorites]);
 
   const tabs: { key: FilterKey; label: string; count: number; tone?: string }[] = [
     { key: "novas", label: "Novas", count: counts.novas },
     { key: "expirando", label: "Expirando", count: counts.expirando, tone: "text-red-500" },
     { key: "negociacao", label: "Em negociação", count: counts.negociacao, tone: "text-brand" },
+    { key: "favoritas", label: "Favoritas", count: counts.favoritas, tone: "text-amber-500" },
     { key: "todas", label: "Todas", count: counts.todas },
   ];
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Ofertas de fretes</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Toque em uma oferta para ver a rota, valores e aceitar.</p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Ofertas de fretes</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Toque em uma oferta para ver a rota, valores e aceitar.</p>
+        </div>
+        <Link
+          to="/driver/ofertas/historico"
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-2 text-xs font-semibold hover:bg-accent"
+        >
+          <History className="h-3.5 w-3.5" /> Histórico
+        </Link>
       </div>
 
       <div className="flex gap-2 overflow-x-auto pb-1">
@@ -145,7 +170,9 @@ function DriverOffers() {
               ? "Nenhuma oferta prestes a expirar."
               : filter === "negociacao"
                 ? "Nenhuma negociação aguardando resposta."
-                : "Nenhuma oferta aguardando sua resposta."}
+                : filter === "favoritas"
+                  ? "Nenhuma oferta em rotas favoritas."
+                  : "Nenhuma oferta aguardando sua resposta."}
           </p>
         </div>
       ) : (
@@ -153,6 +180,7 @@ function DriverOffers() {
           {items.map(({ offer, order, program }) => {
             const expMs = offer.expires_at ? new Date(offer.expires_at).getTime() - now : null;
             const isExpiring = offer.status === "pending" && expMs !== null && expMs > 0 && expMs <= EXPIRING_WINDOW_MS;
+            const fav = favorites.includes(routeKey(order?.origin_city, order?.destination_city));
             return (
               <li key={offer.id}>
                 <Link
@@ -165,6 +193,7 @@ function DriverOffers() {
                   <div className="flex items-center justify-between border-b border-border/60 bg-surface-2 px-4 py-2 text-[10px] uppercase tracking-widest text-muted-foreground">
                     <span className="inline-flex items-center gap-2">
                       {isExpiring && <AlertTriangle className="h-3 w-3 text-red-500" />}
+                      {fav && <Star className="h-3 w-3 fill-amber-500 stroke-amber-500" />}
                       {program?.pf_code ?? order?.code ?? "Nova oferta"}
                     </span>
                     <ExpireBadge expiresAt={offer.expires_at} now={now} negotiating={offer.status === "negotiating"} />
