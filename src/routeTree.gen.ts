@@ -22,9 +22,14 @@ import { Route as AuthenticatedDriverRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedOpsIndexRouteImport } from './routes/_authenticated/ops.index'
+import { Route as AuthenticatedDriverIndexRouteImport } from './routes/_authenticated/driver.index'
 import { Route as AuthenticatedOpsVeiculosRouteImport } from './routes/_authenticated/ops.veiculos'
 import { Route as AuthenticatedOpsEquipeRouteImport } from './routes/_authenticated/ops.equipe'
 import { Route as AuthenticatedOpsCentralRouteImport } from './routes/_authenticated/ops.central'
+import { Route as AuthenticatedDriverPerfilRouteImport } from './routes/_authenticated/driver.perfil'
+import { Route as AuthenticatedDriverOfertasRouteImport } from './routes/_authenticated/driver.ofertas'
+import { Route as AuthenticatedDriverFretesRouteImport } from './routes/_authenticated/driver.fretes'
+import { Route as AuthenticatedDriverFaturamentoRouteImport } from './routes/_authenticated/driver.faturamento'
 import { Route as AuthenticatedOpsPedidosIndexRouteImport } from './routes/_authenticated/ops.pedidos.index'
 import { Route as AuthenticatedOpsMotoristasIndexRouteImport } from './routes/_authenticated/ops.motoristas.index'
 import { Route as AuthenticatedOpsVeiculosNovoRouteImport } from './routes/_authenticated/ops.veiculos.novo'
@@ -99,6 +104,12 @@ const AuthenticatedOpsIndexRoute = AuthenticatedOpsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedOpsRoute,
 } as any)
+const AuthenticatedDriverIndexRoute =
+  AuthenticatedDriverIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedDriverRoute,
+  } as any)
 const AuthenticatedOpsVeiculosRoute =
   AuthenticatedOpsVeiculosRouteImport.update({
     id: '/veiculos',
@@ -115,6 +126,30 @@ const AuthenticatedOpsCentralRoute = AuthenticatedOpsCentralRouteImport.update({
   path: '/central',
   getParentRoute: () => AuthenticatedOpsRoute,
 } as any)
+const AuthenticatedDriverPerfilRoute =
+  AuthenticatedDriverPerfilRouteImport.update({
+    id: '/perfil',
+    path: '/perfil',
+    getParentRoute: () => AuthenticatedDriverRoute,
+  } as any)
+const AuthenticatedDriverOfertasRoute =
+  AuthenticatedDriverOfertasRouteImport.update({
+    id: '/ofertas',
+    path: '/ofertas',
+    getParentRoute: () => AuthenticatedDriverRoute,
+  } as any)
+const AuthenticatedDriverFretesRoute =
+  AuthenticatedDriverFretesRouteImport.update({
+    id: '/fretes',
+    path: '/fretes',
+    getParentRoute: () => AuthenticatedDriverRoute,
+  } as any)
+const AuthenticatedDriverFaturamentoRoute =
+  AuthenticatedDriverFaturamentoRouteImport.update({
+    id: '/faturamento',
+    path: '/faturamento',
+    getParentRoute: () => AuthenticatedDriverRoute,
+  } as any)
 const AuthenticatedOpsPedidosIndexRoute =
   AuthenticatedOpsPedidosIndexRouteImport.update({
     id: '/pedidos/',
@@ -179,12 +214,17 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/app': typeof AuthenticatedAppRoute
-  '/driver': typeof AuthenticatedDriverRoute
+  '/driver': typeof AuthenticatedDriverRouteWithChildren
   '/ops': typeof AuthenticatedOpsRouteWithChildren
   '/rastreio/$code': typeof RastreioCodeRoute
+  '/driver/faturamento': typeof AuthenticatedDriverFaturamentoRoute
+  '/driver/fretes': typeof AuthenticatedDriverFretesRoute
+  '/driver/ofertas': typeof AuthenticatedDriverOfertasRoute
+  '/driver/perfil': typeof AuthenticatedDriverPerfilRoute
   '/ops/central': typeof AuthenticatedOpsCentralRoute
   '/ops/equipe': typeof AuthenticatedOpsEquipeRoute
   '/ops/veiculos': typeof AuthenticatedOpsVeiculosRouteWithChildren
+  '/driver/': typeof AuthenticatedDriverIndexRoute
   '/ops/': typeof AuthenticatedOpsIndexRoute
   '/ops/motoristas/$id': typeof AuthenticatedOpsMotoristasIdRoute
   '/ops/motoristas/aprovacoes': typeof AuthenticatedOpsMotoristasAprovacoesRoute
@@ -205,11 +245,15 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/app': typeof AuthenticatedAppRoute
-  '/driver': typeof AuthenticatedDriverRoute
   '/rastreio/$code': typeof RastreioCodeRoute
+  '/driver/faturamento': typeof AuthenticatedDriverFaturamentoRoute
+  '/driver/fretes': typeof AuthenticatedDriverFretesRoute
+  '/driver/ofertas': typeof AuthenticatedDriverOfertasRoute
+  '/driver/perfil': typeof AuthenticatedDriverPerfilRoute
   '/ops/central': typeof AuthenticatedOpsCentralRoute
   '/ops/equipe': typeof AuthenticatedOpsEquipeRoute
   '/ops/veiculos': typeof AuthenticatedOpsVeiculosRouteWithChildren
+  '/driver': typeof AuthenticatedDriverIndexRoute
   '/ops': typeof AuthenticatedOpsIndexRoute
   '/ops/motoristas/$id': typeof AuthenticatedOpsMotoristasIdRoute
   '/ops/motoristas/aprovacoes': typeof AuthenticatedOpsMotoristasAprovacoesRoute
@@ -232,12 +276,17 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/app': typeof AuthenticatedAppRoute
-  '/_authenticated/driver': typeof AuthenticatedDriverRoute
+  '/_authenticated/driver': typeof AuthenticatedDriverRouteWithChildren
   '/_authenticated/ops': typeof AuthenticatedOpsRouteWithChildren
   '/rastreio/$code': typeof RastreioCodeRoute
+  '/_authenticated/driver/faturamento': typeof AuthenticatedDriverFaturamentoRoute
+  '/_authenticated/driver/fretes': typeof AuthenticatedDriverFretesRoute
+  '/_authenticated/driver/ofertas': typeof AuthenticatedDriverOfertasRoute
+  '/_authenticated/driver/perfil': typeof AuthenticatedDriverPerfilRoute
   '/_authenticated/ops/central': typeof AuthenticatedOpsCentralRoute
   '/_authenticated/ops/equipe': typeof AuthenticatedOpsEquipeRoute
   '/_authenticated/ops/veiculos': typeof AuthenticatedOpsVeiculosRouteWithChildren
+  '/_authenticated/driver/': typeof AuthenticatedDriverIndexRoute
   '/_authenticated/ops/': typeof AuthenticatedOpsIndexRoute
   '/_authenticated/ops/motoristas/$id': typeof AuthenticatedOpsMotoristasIdRoute
   '/_authenticated/ops/motoristas/aprovacoes': typeof AuthenticatedOpsMotoristasAprovacoesRoute
@@ -263,9 +312,14 @@ export interface FileRouteTypes {
     | '/driver'
     | '/ops'
     | '/rastreio/$code'
+    | '/driver/faturamento'
+    | '/driver/fretes'
+    | '/driver/ofertas'
+    | '/driver/perfil'
     | '/ops/central'
     | '/ops/equipe'
     | '/ops/veiculos'
+    | '/driver/'
     | '/ops/'
     | '/ops/motoristas/$id'
     | '/ops/motoristas/aprovacoes'
@@ -286,11 +340,15 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/admin'
     | '/app'
-    | '/driver'
     | '/rastreio/$code'
+    | '/driver/faturamento'
+    | '/driver/fretes'
+    | '/driver/ofertas'
+    | '/driver/perfil'
     | '/ops/central'
     | '/ops/equipe'
     | '/ops/veiculos'
+    | '/driver'
     | '/ops'
     | '/ops/motoristas/$id'
     | '/ops/motoristas/aprovacoes'
@@ -315,9 +373,14 @@ export interface FileRouteTypes {
     | '/_authenticated/driver'
     | '/_authenticated/ops'
     | '/rastreio/$code'
+    | '/_authenticated/driver/faturamento'
+    | '/_authenticated/driver/fretes'
+    | '/_authenticated/driver/ofertas'
+    | '/_authenticated/driver/perfil'
     | '/_authenticated/ops/central'
     | '/_authenticated/ops/equipe'
     | '/_authenticated/ops/veiculos'
+    | '/_authenticated/driver/'
     | '/_authenticated/ops/'
     | '/_authenticated/ops/motoristas/$id'
     | '/_authenticated/ops/motoristas/aprovacoes'
@@ -433,6 +496,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsIndexRouteImport
       parentRoute: typeof AuthenticatedOpsRoute
     }
+    '/_authenticated/driver/': {
+      id: '/_authenticated/driver/'
+      path: '/'
+      fullPath: '/driver/'
+      preLoaderRoute: typeof AuthenticatedDriverIndexRouteImport
+      parentRoute: typeof AuthenticatedDriverRoute
+    }
     '/_authenticated/ops/veiculos': {
       id: '/_authenticated/ops/veiculos'
       path: '/veiculos'
@@ -453,6 +523,34 @@ declare module '@tanstack/react-router' {
       fullPath: '/ops/central'
       preLoaderRoute: typeof AuthenticatedOpsCentralRouteImport
       parentRoute: typeof AuthenticatedOpsRoute
+    }
+    '/_authenticated/driver/perfil': {
+      id: '/_authenticated/driver/perfil'
+      path: '/perfil'
+      fullPath: '/driver/perfil'
+      preLoaderRoute: typeof AuthenticatedDriverPerfilRouteImport
+      parentRoute: typeof AuthenticatedDriverRoute
+    }
+    '/_authenticated/driver/ofertas': {
+      id: '/_authenticated/driver/ofertas'
+      path: '/ofertas'
+      fullPath: '/driver/ofertas'
+      preLoaderRoute: typeof AuthenticatedDriverOfertasRouteImport
+      parentRoute: typeof AuthenticatedDriverRoute
+    }
+    '/_authenticated/driver/fretes': {
+      id: '/_authenticated/driver/fretes'
+      path: '/fretes'
+      fullPath: '/driver/fretes'
+      preLoaderRoute: typeof AuthenticatedDriverFretesRouteImport
+      parentRoute: typeof AuthenticatedDriverRoute
+    }
+    '/_authenticated/driver/faturamento': {
+      id: '/_authenticated/driver/faturamento'
+      path: '/faturamento'
+      fullPath: '/driver/faturamento'
+      preLoaderRoute: typeof AuthenticatedDriverFaturamentoRouteImport
+      parentRoute: typeof AuthenticatedDriverRoute
     }
     '/_authenticated/ops/pedidos/': {
       id: '/_authenticated/ops/pedidos/'
@@ -520,6 +618,25 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedDriverRouteChildren {
+  AuthenticatedDriverFaturamentoRoute: typeof AuthenticatedDriverFaturamentoRoute
+  AuthenticatedDriverFretesRoute: typeof AuthenticatedDriverFretesRoute
+  AuthenticatedDriverOfertasRoute: typeof AuthenticatedDriverOfertasRoute
+  AuthenticatedDriverPerfilRoute: typeof AuthenticatedDriverPerfilRoute
+  AuthenticatedDriverIndexRoute: typeof AuthenticatedDriverIndexRoute
+}
+
+const AuthenticatedDriverRouteChildren: AuthenticatedDriverRouteChildren = {
+  AuthenticatedDriverFaturamentoRoute: AuthenticatedDriverFaturamentoRoute,
+  AuthenticatedDriverFretesRoute: AuthenticatedDriverFretesRoute,
+  AuthenticatedDriverOfertasRoute: AuthenticatedDriverOfertasRoute,
+  AuthenticatedDriverPerfilRoute: AuthenticatedDriverPerfilRoute,
+  AuthenticatedDriverIndexRoute: AuthenticatedDriverIndexRoute,
+}
+
+const AuthenticatedDriverRouteWithChildren =
+  AuthenticatedDriverRoute._addFileChildren(AuthenticatedDriverRouteChildren)
+
 interface AuthenticatedOpsVeiculosRouteChildren {
   AuthenticatedOpsVeiculosIdRoute: typeof AuthenticatedOpsVeiculosIdRoute
   AuthenticatedOpsVeiculosListaRoute: typeof AuthenticatedOpsVeiculosListaRoute
@@ -571,14 +688,14 @@ const AuthenticatedOpsRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedAppRoute: typeof AuthenticatedAppRoute
-  AuthenticatedDriverRoute: typeof AuthenticatedDriverRoute
+  AuthenticatedDriverRoute: typeof AuthenticatedDriverRouteWithChildren
   AuthenticatedOpsRoute: typeof AuthenticatedOpsRouteWithChildren
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedAppRoute: AuthenticatedAppRoute,
-  AuthenticatedDriverRoute: AuthenticatedDriverRoute,
+  AuthenticatedDriverRoute: AuthenticatedDriverRouteWithChildren,
   AuthenticatedOpsRoute: AuthenticatedOpsRouteWithChildren,
 }
 
