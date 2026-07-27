@@ -246,7 +246,7 @@ function OfferDetail() {
           <Info icon={<Package className="h-3.5 w-3.5" />} k="Tipo de carga" v={order.cargo_type} />
           <Info icon={<Weight className="h-3.5 w-3.5" />} k="Peso" v={order.cargo_weight_kg ? `${order.cargo_weight_kg} kg` : null} />
           <Info icon={<Layers className="h-3.5 w-3.5" />} k="Volumes" v={order.volumes} />
-          <Info icon={<Truck className="h-3.5 w-3.5" />} k="Veículo sugerido" v={order.vehicle_type ?? "A definir"} />
+          <Info icon={<Truck className="h-3.5 w-3.5" />} k="Veículo sugerido" v="A definir" />
           <Info icon={<FileText className="h-3.5 w-3.5" />} k="Valor da NF" v={order.invoice_value ? brl(Number(order.invoice_value)) : null} />
           <Info k="Nº NF" v={order.invoice_number} />
           <Info k="Forma pgto" v={labelOf(PAYMENT_METHODS, program?.payment_method)} />
