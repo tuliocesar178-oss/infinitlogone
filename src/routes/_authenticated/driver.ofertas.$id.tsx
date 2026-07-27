@@ -201,7 +201,7 @@ function OfferDetail() {
           <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
             {program?.pf_code ?? order.code}
           </div>
-          <Countdown expiresAt={offer.expires_at} />
+          <Countdown expiresAt={offer.expires_at} createdAt={offer.created_at} />
         </div>
         <div className="flex items-center gap-1.5">
           {prio ? (
