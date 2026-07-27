@@ -72,6 +72,17 @@ function OfferDetail() {
   const offer = data?.offer;
   const order = data?.order;
   const program = data?.program;
+  const driver = data?.driver;
+
+  // Custo por km ajustável pelo motorista (persistido em localStorage)
+  const [costPerKm, setCostPerKm] = useState<number>(() => {
+    if (typeof window === "undefined") return 2.2;
+    const saved = Number(window.localStorage.getItem("driver:cost_per_km") ?? "");
+    return saved > 0 ? saved : Number(driver?.default_price_per_km ?? 2.2) || 2.2;
+  });
+  useEffect(() => {
+    if (typeof window !== "undefined") window.localStorage.setItem("driver:cost_per_km", String(costPerKm));
+  }, [costPerKm]);
 
   const distanceKm = useMemo(() => {
     if (order?.distance_km) return Number(order.distance_km);
