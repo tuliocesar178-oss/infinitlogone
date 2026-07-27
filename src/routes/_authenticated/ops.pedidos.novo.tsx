@@ -1,11 +1,14 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AppShell } from "@/components/app-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, ArrowRight, Check, Upload, X, Copy, MessageCircle, Mail } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Upload, X, Copy, MessageCircle, Mail, MapPin } from "lucide-react";
 import QRCode from "qrcode";
 import { shareMessage, trackingUrl } from "@/lib/order-status";
+import { MapboxAutocomplete, type MapboxLocation } from "@/components/mapbox-autocomplete";
+
+const MAPBOX_TOKEN = import.meta.env.VITE_LOVABLE_CONNECTOR_MAPBOX_PUBLIC_TOKEN;
 
 export const Route = createFileRoute("/_authenticated/ops/pedidos/novo")({
   head: () => ({ meta: [{ title: "Novo frete — InfinitLog" }, { name: "robots", content: "noindex" }] }),
@@ -144,6 +147,64 @@ function NewOrderWizard() {
     return null;
   }
 
+  const [routeInfo, setRouteInfo] = useState<{
+    distance_km: number;
+    duration_minutes: number;
+    geometry: string;
+  } | null>(null);
+
+  useEffect(() => {
+    async function calc() {
+      if (f.origin_lat && f.origin_lng && f.destination_lat && f.destination_lng && MAPBOX_TOKEN) {
+        try {
+          const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${f.origin_lng},${f.origin_lat};${f.destination_lng},${f.destination_lat}?geometries=geojson&overview=full&access_token=${MAPBOX_TOKEN}`;
+          const res = await fetch(url);
+          const data = await res.json();
+          const route = data.routes?.[0];
+          if (route) {
+            setRouteInfo({
+              distance_km: Number((route.distance / 1000).toFixed(1)),
+              duration_minutes: Math.round(route.duration / 60),
+              geometry: JSON.stringify(route.geometry),
+            });
+            // Auto fill price/tolls if needed, but usually operators do this
+          }
+        } catch (e) {
+          console.error("Route calc error:", e);
+        }
+      }
+    }
+    calc();
+  }, [f.origin_lat, f.origin_lng, f.destination_lat, f.destination_lng]);
+
+  function handleLocationSelect(type: "origin" | "destination", loc: MapboxLocation) {
+    if (type === "origin") {
+      setF(s => ({
+        ...s,
+        origin_address: loc.address,
+        origin_city: loc.city,
+        origin_state: loc.state,
+        origin_zip: loc.zip,
+        origin_neighborhood: loc.neighborhood,
+        origin_number: loc.number,
+        origin_lat: String(loc.lat),
+        origin_lng: String(loc.lng),
+      }));
+    } else {
+      setF(s => ({
+        ...s,
+        destination_address: loc.address,
+        destination_city: loc.city,
+        destination_state: loc.state,
+        destination_zip: loc.zip,
+        destination_neighborhood: loc.neighborhood,
+        destination_number: loc.number,
+        destination_lat: String(loc.lat),
+        destination_lng: String(loc.lng),
+      }));
+    }
+  }
+
   function next() {
     const err = canAdvance();
     if (err) return toast.error(err);
@@ -206,6 +267,10 @@ function NewOrderWizard() {
         notes: [f.client_notes, f.cargo_notes].filter(Boolean).join("\n\n") || null,
         status: "preparing" as const,
         created_by: u.user?.id ?? null,
+        distance_km: routeInfo?.distance_km ?? null,
+        estimated_minutes: routeInfo?.duration_minutes ?? null,
+        route_geometry: routeInfo?.geometry ?? null,
+        estimated_tolls: num(f.toll),
       };
       const { data: order, error } = await supabase
         .from("orders").insert(payload).select("id, code, tracking_code").single();
