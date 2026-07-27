@@ -91,7 +91,13 @@ export function DispatchPanel({ order, onSent }: { order: any; onSent: () => voi
         offered_price: price,
         expires_at: expiresAt,
       }));
-      const { error } = await supabase.from("freight_offers").insert(rows);
+      // Upsert para permitir reenvio de ofertas (substituindo a antiga se existir)
+      const { error } = await supabase
+        .from("freight_offers")
+        .upsert(
+          rows.map(r => ({ ...r, status: 'pending' })), 
+          { onConflict: 'order_id,driver_id' }
+        );
       if (error) throw error;
       const { data: u } = await supabase.auth.getUser();
       await supabase.from("orders").update({ status: "awaiting_driver", price }).eq("id", order.id);
