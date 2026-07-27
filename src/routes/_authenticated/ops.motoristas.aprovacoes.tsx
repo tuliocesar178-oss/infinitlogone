@@ -28,12 +28,20 @@ function DriverApprovalsPage() {
     queryFn: async () => {
       let query = supabase
         .from("drivers")
-        .select("user_id,phone,city,photo_url,license_number,rntrc,approval_status,submitted_at,rejection_reason,correction_notes,notes,profiles:profiles!drivers_user_id_fkey(full_name)")
+        .select("user_id,phone,city,photo_url,license_number,rntrc,approval_status,submitted_at,rejection_reason,correction_notes,notes")
         .order("submitted_at", { ascending: false });
       if (filter !== "all") query = query.eq("approval_status", filter);
       const { data, error } = await query;
       if (error) throw error;
-      return (data ?? []) as unknown as Row[];
+      const rows = (data ?? []) as Array<Omit<Row, "profiles">>;
+      const ids = rows.map((r) => r.user_id);
+      let profileMap = new Map<string, { full_name: string | null }>();
+      if (ids.length) {
+        const { data: profs } = await supabase.from("profiles").select("id, full_name").in("id", ids);
+        profileMap = new Map((profs ?? []).map((p) => [p.id, { full_name: p.full_name }]));
+      }
+      return rows.map((r) => ({ ...r, profiles: profileMap.get(r.user_id) ?? { full_name: null } })) as Row[];
+
     },
   });
 
