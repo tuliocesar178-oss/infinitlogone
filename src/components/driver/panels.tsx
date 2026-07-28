@@ -190,9 +190,11 @@ export function ActiveOrderPanel({
   const nextAction = useMemo(() => nextDriverAction(order.status as never), [order.status]);
 
   useEffect(() => {
+    // Current driver position for the mini-map ONLY (viewing)
+    // The actual server tracking happens in useBackgroundTracking hook in the parent route
     const watchId = navigator.geolocation.watchPosition(
       (pos) => setDriverPos([pos.coords.longitude, pos.coords.latitude]),
-      (err) => console.error("Geo error:", err),
+      (err) => console.error("Map Geo error:", err),
       { enableHighAccuracy: true }
     );
     return () => navigator.geolocation.clearWatch(watchId);
@@ -311,7 +313,7 @@ export function ActiveOrderPanel({
           )}
 
           {nextAction === "start_pickup" && (
-            <ActionBtn onClick={() => runAction("start_pickup")} icon={<Navigation className="h-5 w-5" />} label="INICIAR DESLOCAMENTO" tone="ghost" />
+            <ActionBtn onClick={() => runAction("start_pickup")} icon={<Navigation className="h-5 w-5" />} label="INICIAR DESLOCAMENTO" />
           )}
           {nextAction === "arrived_pickup" && (
             <ActionBtn onClick={() => runAction("arrived_pickup")} icon={<Check className="h-5 w-5" />} label="CHEGUEI NA COLETA" tone="ghost" />
@@ -327,7 +329,7 @@ export function ActiveOrderPanel({
                 label="INICIAR NAVEGAÇÃO" 
                 className="py-6 text-lg ring-4 ring-brand/20 shadow-xl"
               />
-              <ActionBtn onClick={() => runAction("start_delivery")} icon={<Truck className="h-5 w-5" />} label="INICIAR ENTREGA" tone="ghost" />
+              <ActionBtn onClick={() => runAction("start_delivery")} icon={<Truck className="h-5 w-5" />} label="INICIAR ENTREGA" />
             </>
           )}
           {nextAction === "delivered" && (

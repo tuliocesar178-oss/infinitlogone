@@ -120,19 +120,19 @@ function LandingPage() {
 
         <div id="servicos" className="mt-20 grid gap-6 sm:grid-cols-3">
           <FeatureCard
-            icon={<BarChart3 className="h-5 w-5" />}
-            title="BI Logístico"
-            body="Dashboards modernos com KPIs de performance, prazos e custos para sua gestão."
+            icon={<MapPin className="h-5 w-5" />}
+            title="Rastreamento em Tempo Real"
+            body="Visualize sua carga no mapa com atualização automática via GPS e tecnologia Mapbox."
           />
           <FeatureCard
-            icon={<MapPin className="h-5 w-5" />}
-            title="Torre de Controle"
-            body="Visualize sua frota e cargas no mapa com atualização em tempo real via Mapbox."
+            icon={<Zap className="h-5 w-5" />}
+            title="Operação Inteligente"
+            body="Dashboard completo para gestão de fretes, motoristas e comprovantes digitais."
           />
           <FeatureCard
             icon={<ShieldCheck className="h-5 w-5" />}
-            title="Central de Documentos"
-            body="Acesse notas fiscais, CT-es e canhotos digitais de forma organizada e rápida."
+            title="Segurança & Visibilidade"
+            body="Histórico completo da rota, registro de eventos e transparência total na sua logística."
           />
         </div>
       </section>

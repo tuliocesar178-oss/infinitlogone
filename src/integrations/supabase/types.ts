@@ -326,8 +326,12 @@ export type Database = {
           correction_notes: string | null
           cpf: string | null
           created_at: string
+          current_accuracy: number | null
+          current_altitude: number | null
+          current_heading: number | null
           current_lat: number | null
           current_lng: number | null
+          current_speed: number | null
           current_vehicle_id: string | null
           daily_rate: number | null
           default_price_per_km: number | null
@@ -389,8 +393,12 @@ export type Database = {
           correction_notes?: string | null
           cpf?: string | null
           created_at?: string
+          current_accuracy?: number | null
+          current_altitude?: number | null
+          current_heading?: number | null
           current_lat?: number | null
           current_lng?: number | null
+          current_speed?: number | null
           current_vehicle_id?: string | null
           daily_rate?: number | null
           default_price_per_km?: number | null
@@ -452,8 +460,12 @@ export type Database = {
           correction_notes?: string | null
           cpf?: string | null
           created_at?: string
+          current_accuracy?: number | null
+          current_altitude?: number | null
+          current_heading?: number | null
           current_lat?: number | null
           current_lng?: number | null
+          current_speed?: number | null
           current_vehicle_id?: string | null
           daily_rate?: number | null
           default_price_per_km?: number | null
@@ -950,6 +962,53 @@ export type Database = {
           },
         ]
       }
+      order_tracking_points: {
+        Row: {
+          accuracy: number | null
+          altitude: number | null
+          created_at: string
+          driver_id: string
+          heading: number | null
+          id: string
+          lat: number
+          lng: number
+          order_id: string
+          speed: number | null
+        }
+        Insert: {
+          accuracy?: number | null
+          altitude?: number | null
+          created_at?: string
+          driver_id: string
+          heading?: number | null
+          id?: string
+          lat: number
+          lng: number
+          order_id: string
+          speed?: number | null
+        }
+        Update: {
+          accuracy?: number | null
+          altitude?: number | null
+          created_at?: string
+          driver_id?: string
+          heading?: number | null
+          id?: string
+          lat?: number
+          lng?: number
+          order_id?: string
+          speed?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_tracking_points_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orders: {
         Row: {
           approach_notified_at: string | null
@@ -966,6 +1025,7 @@ export type Database = {
           client_id: string | null
           client_name: string | null
           code: string
+          completed_at: string | null
           contact_name: string | null
           contact_phone: string | null
           created_at: string
@@ -1027,6 +1087,7 @@ export type Database = {
           route_geometry: string | null
           route_highways: string | null
           scheduled_at: string | null
+          started_at: string | null
           started_trip_at: string | null
           status: Database["public"]["Enums"]["order_status"]
           tracking_code: string
@@ -1049,6 +1110,7 @@ export type Database = {
           client_id?: string | null
           client_name?: string | null
           code?: string
+          completed_at?: string | null
           contact_name?: string | null
           contact_phone?: string | null
           created_at?: string
@@ -1110,6 +1172,7 @@ export type Database = {
           route_geometry?: string | null
           route_highways?: string | null
           scheduled_at?: string | null
+          started_at?: string | null
           started_trip_at?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           tracking_code?: string
@@ -1132,6 +1195,7 @@ export type Database = {
           client_id?: string | null
           client_name?: string | null
           code?: string
+          completed_at?: string | null
           contact_name?: string | null
           contact_phone?: string | null
           created_at?: string
@@ -1193,6 +1257,7 @@ export type Database = {
           route_geometry?: string | null
           route_highways?: string | null
           scheduled_at?: string | null
+          started_at?: string | null
           started_trip_at?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           tracking_code?: string

@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ActiveOrderPanel, OfferCard, type Order } from "@/components/driver/panels";
 import { Truck, ChevronRight, Package, CircleDollarSign } from "lucide-react";
 import { brl } from "@/lib/pf";
+import { useBackgroundTracking } from "@/hooks/use-background-tracking";
 
 export const Route = createFileRoute("/_authenticated/driver/")({
   head: () => ({ meta: [{ title: "Início — Motorista" }, { name: "robots", content: "noindex" }] }),
@@ -110,6 +111,9 @@ function DriverHome() {
 
   const active = activeQ.data;
   const offers = offersQ.data ?? [];
+
+  // Enable automatic background tracking when there's an active order
+  useBackgroundTracking(active?.id, userId, active?.status);
 
   return (
     <div className="space-y-6">
