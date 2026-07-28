@@ -202,24 +202,50 @@ export function ActiveOrderPanel({
     try {
       const to = ACTION_TRANSITIONS[action].to;
       const from = order.status;
-      const { error } = await supabase.from("orders").update({ 
+      const updatePayload: any = { 
         status: to as any, 
         updated_at: new Date().toISOString() 
-      } as any).eq("id", order.id);
-      if (error) throw error;
+      };
+      
+      if (action === "start_pickup" || action === "start_delivery") {
+        updatePayload.started_trip_at = new Date().toISOString();
+      }
+
+      console.log("Updating order:", order.id, updatePayload);
+      const { error: updateError } = await supabase.from("orders").update(updatePayload).eq("id", order.id);
+      
+      if (updateError) {
+        console.error("Update error details:", updateError);
+        throw new Error(`Erro ao atualizar pedido: ${updateError.message}`);
+      }
+      
       let lat: number | null = null, lng: number | null = null;
       try {
-        const pos = await new Promise<GeolocationPosition>((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, { timeout: 5000 }));
+        const pos = await new Promise<GeolocationPosition>((res, rej) => 
+          navigator.geolocation.getCurrentPosition(res, rej, { timeout: 3000, enableHighAccuracy: true })
+        );
         lat = pos.coords.latitude; lng = pos.coords.longitude;
-      } catch {}
-      await supabase.from("order_events").insert({
-        order_id: order.id, event_type: `driver_${action}`,
-        from_status: from as never, to_status: to as never, actor_id: userId,
+      } catch (geoErr) {
+        console.warn("Geo localization failed, continuing without coordinates:", geoErr);
+      }
+      
+      const { error: eventError } = await supabase.from("order_events").insert({
+        order_id: order.id, 
+        event_type: `driver_${action}`,
+        from_status: from as any, 
+        to_status: to as any, 
+        actor_id: userId,
         payload: { lat, lng },
       });
+      
+      if (eventError) {
+        console.warn("Event insertion failed but order was updated:", eventError);
+      }
+      
       toast.success(ACTION_LABEL[action]);
       onChanged();
     } catch (e) {
+      console.error("Action error:", e);
       toast.error(e instanceof Error ? e.message : "Erro");
     }
   }
