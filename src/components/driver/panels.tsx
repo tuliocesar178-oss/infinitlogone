@@ -202,10 +202,17 @@ export function ActiveOrderPanel({
     try {
       const to = ACTION_TRANSITIONS[action].to;
       const from = order.status;
-      const { error } = await supabase.from("orders").update({ 
+      const updatePayload: any = { 
         status: to as any, 
         updated_at: new Date().toISOString() 
-      } as any).eq("id", order.id);
+      };
+      
+      // Se for o início do deslocamento, registra o horário de início da viagem
+      if (action === "start_pickup" || action === "start_delivery") {
+        updatePayload.started_trip_at = new Date().toISOString();
+      }
+
+      const { error } = await supabase.from("orders").update(updatePayload).eq("id", order.id);
       if (error) throw error;
       let lat: number | null = null, lng: number | null = null;
       try {
