@@ -223,14 +223,20 @@ export function ActiveOrderPanel({
 
   function openSmartNav() {
     // Determina o destino baseado no status atual
-    const isHeadingToPickup = ["driver_assigned", "in_transit_pickup"].includes(order.status);
+    const isHeadingToPickup = ["driver_assigned", "en_route_pickup", "in_transit_to_pickup", "at_pickup"].includes(order.status);
     
     const lat = isHeadingToPickup ? order.origin_lat : order.destination_lat;
     const lng = isHeadingToPickup ? order.origin_lng : order.destination_lng;
     const addr = isHeadingToPickup ? order.origin_address : order.destination_address;
 
-    const dest = lat && lng ? `${lat},${lng}` : encodeURIComponent(addr);
-    window.open(`https://www.google.com/maps/dir/?api=1&destination=${dest}&travelmode=driving`, "_blank");
+    if (!lat && !lng && !addr) {
+      toast.error("Destino não configurado no pedido");
+      return;
+    }
+
+    const dest = (lat && lng) ? `${lat},${lng}` : encodeURIComponent(addr || "");
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${dest}&travelmode=driving`;
+    window.open(url, "_blank");
   }
 
   return (
