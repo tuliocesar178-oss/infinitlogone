@@ -112,6 +112,9 @@ function DriverHome() {
   const active = activeQ.data;
   const offers = offersQ.data ?? [];
 
+  // Enable automatic background tracking when there's an active order
+  useBackgroundTracking(active?.id, userId, active?.status);
+
   return (
     <div className="space-y-6">
       <div className="bg-surface p-6 -mx-4 mb-6 shadow-sm border-b border-border/40 flex items-center justify-between">
