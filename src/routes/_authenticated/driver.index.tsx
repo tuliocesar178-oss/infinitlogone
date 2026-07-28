@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ActiveOrderPanel, OfferCard, type Order } from "@/components/driver/panels";
 import { Truck, ChevronRight, Package, CircleDollarSign } from "lucide-react";
 import { brl } from "@/lib/pf";
+import { useBackgroundTracking } from "@/hooks/use-background-tracking";
 
 export const Route = createFileRoute("/_authenticated/driver/")({
   head: () => ({ meta: [{ title: "Início — Motorista" }, { name: "robots", content: "noindex" }] }),
