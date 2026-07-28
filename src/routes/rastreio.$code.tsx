@@ -30,6 +30,7 @@ export const Route = createFileRoute("/rastreio/$code")({
 });
 
 type TrackingResult = {
+  id: string;
   code: string;
   tracking_code: string;
   status: string;
@@ -37,13 +38,17 @@ type TrackingResult = {
   destination_city: string | null;
   origin_address: string | null;
   destination_address: string | null;
+  origin_lat: number | null;
+  origin_lng: number | null;
+  destination_lat: number | null;
+  destination_lng: number | null;
   delivery_window_start: string | null;
   delivery_window_end: string | null;
   driver_first_name: string | null;
   driver_lat: number | null;
   driver_lng: number | null;
-  destination_lat: number | null;
-  destination_lng: number | null;
+  driver_speed: number | null;
+  driver_heading: number | null;
   distance_to_destination_km: number | null;
   initial_distance_km: number | null;
   eta_minutes: number | null;
@@ -81,7 +86,12 @@ function TrackingPage() {
       .channel(`track-${code}`)
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "order_events" },
+        { event: "*", schema: "public", table: "orders", filter: `id=eq.${data.id}` },
+        () => refetch(),
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "order_events", filter: `order_id=eq.${data.id}` },
         () => refetch(),
       )
       .subscribe();
@@ -285,12 +295,17 @@ function TrackingPage() {
                       </div>
                     </div>
                   )}
-                <div className="h-72">
+                <div className="h-80">
                   <TripMap
                     className="h-full w-full"
                     driver={
                       data.driver_lat != null && data.driver_lng != null
                         ? { lat: data.driver_lat, lng: data.driver_lng }
+                        : null
+                    }
+                    origin={
+                      data.origin_lat != null && data.origin_lng != null
+                        ? { lat: data.origin_lat, lng: data.origin_lng }
                         : null
                     }
                     destination={
