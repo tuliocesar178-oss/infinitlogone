@@ -121,16 +121,25 @@ function TrackingPage() {
 
         {!isLoading && (error || !data) && (
           <div className="card-soft grid place-items-center p-16 text-center">
-            <h1 className="text-2xl font-semibold tracking-tight">Pedido não encontrado</h1>
+            <h1 className="text-2xl font-semibold tracking-tight text-destructive">Pedido não encontrado</h1>
             <p className="mt-2 max-w-md text-sm text-muted-foreground">
-              Verifique se o código <span className="font-mono">{code}</span> está correto ou fale com nossa equipe.
+              Não conseguimos localizar o pedido <span className="font-mono font-bold text-foreground">{code}</span>. 
+              Certifique-se de que o código está correto ou que o frete já foi iniciado pela logística.
             </p>
-            <Link
-              to="/rastreio"
-              className="mt-6 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90"
-            >
-              Tentar outro código
-            </Link>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <Link
+                to="/rastreio"
+                className="rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90 shadow-lg shadow-primary/20"
+              >
+                Tentar outro código
+              </Link>
+              <button 
+                onClick={() => refetch()}
+                className="rounded-full border border-border bg-background px-6 py-2.5 text-sm font-semibold hover:bg-accent"
+              >
+                Atualizar página
+              </button>
+            </div>
           </div>
         )}
 
