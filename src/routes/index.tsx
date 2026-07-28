@@ -32,7 +32,10 @@ function LandingPage() {
     e.preventDefault();
     const value = code.trim();
     if (!value) return;
-    navigate({ to: "/rastreio/$code", params: { code: value } });
+    navigate({ 
+      to: "/rastreio/$code", 
+      params: { code: value.toUpperCase() } 
+    });
   }
 
   return (

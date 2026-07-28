@@ -23,7 +23,10 @@ function TrackingSearch() {
     e.preventDefault();
     const v = code.trim();
     if (!v) return;
-    navigate({ to: "/rastreio/$code", params: { code: v } });
+    navigate({ 
+      to: "/rastreio/$code", 
+      params: { code: v.toUpperCase() } 
+    });
   }
 
   return (
