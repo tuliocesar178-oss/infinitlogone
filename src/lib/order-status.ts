@@ -127,8 +127,11 @@ export function publicStatus(s: string): { key: string; label: string } {
       return { key: "driver_assigned", label: "Motorista confirmado" };
     case "en_route_pickup":
     case "in_transit_to_pickup":
+    case "near_pickup":
+    case "arriving_pickup":
     case "at_pickup":
       return { key: "en_route_pickup", label: "Motorista a caminho da coleta" };
+    case "loading":
     case "picked_up":
     case "loaded":
       return { key: "loaded", label: "Carga coletada" };
@@ -136,8 +139,11 @@ export function publicStatus(s: string): { key: string; label: string } {
     case "in_transit":
       return { key: "in_transit", label: "Em trânsito" };
     case "near_destination":
+    case "arriving_destination":
     case "at_destination":
+    case "unloading":
       return { key: "near_destination", label: "Próximo ao destino" };
+
     case "delivered":
     case "finalized":
       return { key: "delivered", label: "Entregue" };
