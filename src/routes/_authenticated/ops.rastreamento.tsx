@@ -96,15 +96,12 @@ function TrackingCenter() {
         : assignedDriverIds.length
           ? supabase.from("drivers").select("*").in("user_id", assignedDriverIds)
           : null;
-      const { data: drivers } = driversQuery ? await driversQuery : { data: [] as any[] };
-      const driverIds = Array.from(new Set((drivers ?? []).map((driver: any) => driver.user_id).filter(Boolean))) as string[];
-      const [{ data: drivers }, { data: profiles }] = await Promise.all([
-        Promise.resolve({ data: drivers ?? [] }),
-        driverIds.length
-          ? supabase.from("profiles").select("id, full_name, phone, avatar_url").in("id", driverIds)
-          : Promise.resolve({ data: [] as any[] }),
-      ]);
-      return { orders: orders ?? [], drivers: drivers ?? [], profiles: profiles ?? [] };
+      const { data: fleetDrivers } = driversQuery ? await driversQuery : { data: [] as any[] };
+      const driverIds = Array.from(new Set((fleetDrivers ?? []).map((driver: any) => driver.user_id).filter(Boolean))) as string[];
+      const { data: profiles } = driverIds.length
+        ? await supabase.from("profiles").select("id, full_name, phone, avatar_url").in("id", driverIds)
+        : { data: [] as any[] };
+      return { orders: orders ?? [], drivers: fleetDrivers ?? [], profiles: profiles ?? [] };
     },
   });
 
