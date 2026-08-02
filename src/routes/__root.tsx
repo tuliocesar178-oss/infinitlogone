@@ -148,10 +148,26 @@ function RootComponent() {
     return () => sub.subscription.unsubscribe();
   }, [router, queryClient]);
 
+  // Cache offline + ressincronização automática ao voltar a internet.
+  useEffect(() => {
+    const stop = enableOfflinePersistence(queryClient);
+    const resync = () => {
+      void queryClient.refetchQueries();
+      void router.invalidate();
+    };
+    window.addEventListener("infinitlog:resync", resync);
+    return () => {
+      window.removeEventListener("infinitlog:resync", resync);
+      stop();
+    };
+  }, [queryClient, router]);
+
   return (
     <QueryClientProvider client={queryClient}>
-      <Outlet />
-      <Toaster position="top-center" richColors />
+      <PwaProvider>
+        <Outlet />
+        <Toaster position="top-center" richColors />
+      </PwaProvider>
     </QueryClientProvider>
   );
 }
