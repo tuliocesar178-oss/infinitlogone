@@ -277,6 +277,50 @@ function TrackingCenter() {
     [points],
   );
 
+  // Linha do tempo da operação
+  const eventsQ = useQuery({
+    enabled: !!selected,
+    queryKey: ["tracking-events", selected?.id],
+    refetchInterval: 15000,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("order_events")
+        .select("event_type, to_status, created_at")
+        .eq("order_id", selected!.id)
+        .order("created_at", { ascending: true })
+        .limit(200);
+      return data ?? [];
+    },
+  });
+
+  const traveledKm = useMemo(() => {
+    let km = 0;
+    for (let i = 1; i < points.length; i++) {
+      const a = points[i - 1] as any;
+      const b = points[i] as any;
+      km += haversineKm({ lat: a.lat, lng: a.lng }, { lat: b.lat, lng: b.lng });
+    }
+    return km;
+  }, [points]);
+
+  const progress = useMemo(() => {
+    if (!selected) return null;
+    const o = selected.order;
+    if (["delivered", "finalized"].includes(o.status)) return 100;
+    const remaining = routeQ.data?.distance ?? selected.distanceKm;
+    const total =
+      o.initial_distance_km ??
+      (o.origin_lat && o.destination_lat
+        ? haversineKm(
+            { lat: o.origin_lat, lng: o.origin_lng },
+            { lat: o.destination_lat, lng: o.destination_lng },
+          )
+        : null);
+    if (remaining == null || !total) return null;
+    return Math.max(0, Math.min(100, Math.round(((total - remaining) / total) * 100)));
+  }, [selected, routeQ.data]);
+
+
   useEffect(() => {
     if (!replaying || points.length < 2) return;
     const t = setInterval(() => {
