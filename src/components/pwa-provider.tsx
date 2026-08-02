@@ -2,9 +2,27 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { WifiOff } from "lucide-react";
 import { registerServiceWorker } from "@/lib/pwa";
+import { enablePush, pushSupported } from "@/lib/push";
+import { supabase } from "@/integrations/supabase/client";
 import logoAsset from "@/assets/infinitlog-logo.png.asset.json";
 
 const PERMISSIONS_KEY = "infinitlog-permissions-asked";
+
+/**
+ * Reativa/renova a inscrição de push sempre que o app abre com permissão
+ * concedida e usuário logado — inscrições podem ser rotacionadas pelo browser.
+ */
+async function syncPushSubscription() {
+  if (!pushSupported() || Notification.permission !== "granted") return;
+  try {
+    const { data } = await supabase.auth.getUser();
+    if (!data.user) return;
+    await enablePush();
+  } catch (error) {
+    console.warn("[Push] não foi possível sincronizar a inscrição", error);
+  }
+}
+
 
 /**
  * Solicita as permissões do app uma única vez por dispositivo.
