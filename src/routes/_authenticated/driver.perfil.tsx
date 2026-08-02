@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { AVAILABILITY, labelOf } from "@/lib/pf";
 import { applyTheme, readTheme, type ThemeMode } from "@/lib/driver-prefs";
 import { AlertTriangle, Bell, ChevronRight, Clock, LogOut, MapPin, Moon, Phone, Star, Sun, Truck, UserRound } from "lucide-react";
+import { NotificationSettings } from "@/components/notification-settings";
 
 export const Route = createFileRoute("/_authenticated/driver/perfil")({
   head: () => ({ meta: [{ title: "Perfil — Motorista" }, { name: "robots", content: "noindex" }] }),
