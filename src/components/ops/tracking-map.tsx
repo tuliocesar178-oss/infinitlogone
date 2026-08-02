@@ -5,7 +5,8 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import { TRACK_KIND, type TrackKind } from "@/lib/tracking-center";
 import { Layers, Maximize2, Crosshair, Route as RouteIcon, Satellite, TrafficCone } from "lucide-react";
 
-const TOKEN = import.meta.env.VITE_LOVABLE_CONNECTOR_MAPBOX_PUBLIC_TOKEN as string | undefined;
+const RAW_TOKEN = import.meta.env.VITE_LOVABLE_CONNECTOR_MAPBOX_PUBLIC_TOKEN as string | undefined;
+const TOKEN = RAW_TOKEN?.trim().replace(/^['"]|['"]$/g, "");
 if (TOKEN) mapboxgl.accessToken = TOKEN;
 
 export type MapUnit = {
@@ -25,6 +26,19 @@ const STYLES = {
   streets: "mapbox://styles/mapbox/streets-v12",
   satellite: "mapbox://styles/mapbox/satellite-streets-v12",
 } as const;
+
+const FALLBACK_STYLE: mapboxgl.StyleSpecification = {
+  version: 8,
+  sources: {
+    osm: {
+      type: "raster",
+      tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
+      tileSize: 256,
+      attribution: "© OpenStreetMap",
+    },
+  },
+  layers: [{ id: "osm", type: "raster", source: "osm" }],
+};
 
 export function TrackingMap({
   units,
@@ -53,24 +67,44 @@ export function TrackingMap({
   const pinMarkers = useRef<mapboxgl.Marker[]>([]);
   const ready = useRef(false);
   const firstStyle = useRef(true);
+  const fallbackApplied = useRef(false);
   const [style, setStyle] = useState<keyof typeof STYLES>("streets");
   const [traffic, setTraffic] = useState(false);
+  const [mapLoaded, setMapLoaded] = useState(false);
+  const [mapError, setMapError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!containerRef.current || !TOKEN || mapRef.current) return;
-    const map = new mapboxgl.Map({
-      container: containerRef.current,
-      style: STYLES.streets,
-      center: BRAZIL_CENTER,
-      zoom: 3.4,
-      attributionControl: false,
-    });
+    let map: mapboxgl.Map;
+    try {
+      map = new mapboxgl.Map({
+        container: containerRef.current,
+        style: STYLES.streets,
+        center: BRAZIL_CENTER,
+        zoom: 3.4,
+        attributionControl: false,
+        antialias: true,
+        failIfMajorPerformanceCaveat: false,
+      });
+    } catch (error) {
+      setMapError(error instanceof Error ? error.message : "Não foi possível iniciar o mapa.");
+      return;
+    }
     map.addControl(new mapboxgl.NavigationControl({ visualizePitch: false }), "top-right");
     map.addControl(new mapboxgl.FullscreenControl(), "top-right");
     map.addControl(new mapboxgl.ScaleControl({ unit: "metric" }), "bottom-left");
-    map.on("error", (e) => console.error("[mapbox]", e?.error?.message ?? e));
+    map.on("error", (e) => {
+      const message = e?.error?.message ?? "Falha ao carregar o estilo do mapa.";
+      console.error("[mapbox]", message);
+      if (!fallbackApplied.current && !mapLoaded) {
+        fallbackApplied.current = true;
+        map.setStyle(FALLBACK_STYLE);
+        setMapError("O estilo principal ficou indisponível; exibindo mapa alternativo.");
+      }
+    });
     map.on("style.load", () => {
       ready.current = true;
+      setMapLoaded(true);
       map.resize();
       drawLines();
       applyTraffic();
@@ -89,6 +123,7 @@ export function TrackingMap({
       mapRef.current = null;
       markers.current.clear();
       ready.current = false;
+      fallbackApplied.current = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -262,7 +297,18 @@ export function TrackingMap({
 
   return (
     <div className={`relative ${className ?? ""}`}>
-      <div ref={containerRef} className="absolute inset-0" />
+      <div ref={containerRef} className="absolute inset-0 min-h-[320px] min-w-0 bg-surface-2" />
+
+      {!mapLoaded && !mapError && (
+        <div className="pointer-events-none absolute inset-0 z-[1] grid place-items-center bg-surface-2 text-sm font-semibold text-muted-foreground">
+          Carregando mapa do Brasil…
+        </div>
+      )}
+      {mapError && !mapLoaded && (
+        <div className="pointer-events-none absolute inset-0 z-[1] grid place-items-center bg-surface-2 px-8 text-center text-sm font-semibold text-muted-foreground">
+          {mapError}
+        </div>
+      )}
 
       <div className="pointer-events-none absolute left-3 top-3 z-10 flex flex-col gap-2">
         <div className="pointer-events-auto flex overflow-hidden rounded-xl border border-border bg-background/95 shadow-lg backdrop-blur">
