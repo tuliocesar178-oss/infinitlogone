@@ -13,6 +13,8 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "sonner";
+import { PwaProvider } from "@/components/pwa-provider";
+import { enableOfflinePersistence } from "@/lib/query-persist";
 
 function NotFoundComponent() {
   return (
