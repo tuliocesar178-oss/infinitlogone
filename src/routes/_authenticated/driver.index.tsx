@@ -112,8 +112,9 @@ function DriverHome() {
   const active = activeQ.data;
   const offers = offersQ.data ?? [];
 
-  // Enable automatic background tracking when there's an active order
-  useBackgroundTracking(active?.id, userId, active?.status);
+  // Rastreamento automático + automação por geofencing
+  const live = useBackgroundTracking(active as never, userId);
+
 
   return (
     <div className="space-y-6">
