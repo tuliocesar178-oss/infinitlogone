@@ -41,7 +41,7 @@ export const NAV_GROUPS: Record<string, { label: string; items: NavItem[] }[]> =
         { label: "Solicitações de cadastro", to: "/ops/motoristas/aprovacoes", icon: Users, match: (p) => p.startsWith("/ops/motoristas/aprovacoes") },
         { label: "Equipe", to: "/ops/equipe", icon: Users, match: (p) => p.startsWith("/ops/equipe") },
         { label: "Veículos", to: "/ops/veiculos", icon: Truck, match: (p) => p.startsWith("/ops/veiculos") },
-        { label: "Rastreamento", to: "/ops/central", icon: MapPin, match: (p) => p === "/ops/rastreamento" },
+        { label: "Rastreamento", to: "/ops/rastreamento", icon: MapPin, match: (p) => p.startsWith("/ops/rastreamento") },
         { label: "Ocorrências", to: "/ops/central", icon: AlertTriangle, match: (p) => p === "/ops/ocorrencias" },
       ],
     },
