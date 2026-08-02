@@ -89,16 +89,19 @@ function TrackingCenter() {
       const { data: orders, error } = await oq.order("updated_at", { ascending: false }).limit(400);
       if (error) throw error;
 
-      const driverIds = Array.from(new Set((orders ?? []).map((o) => o.driver_id).filter(Boolean))) as string[];
-      const [{ data: drivers }, { data: profiles }] = await Promise.all([
-        driverIds.length
-          ? supabase.from("drivers").select("*").in("user_id", driverIds)
-          : Promise.resolve({ data: [] as any[] }),
-        driverIds.length
-          ? supabase.from("profiles").select("id, full_name, phone, avatar_url").in("id", driverIds)
-          : Promise.resolve({ data: [] as any[] }),
-      ]);
-      return { orders: orders ?? [], drivers: drivers ?? [], profiles: profiles ?? [] };
+      const assignedDriverIds = Array.from(new Set((orders ?? []).map((o) => o.driver_id).filter(Boolean))) as string[];
+      const canSeeFleet = role === "admin" || role === "logistics";
+      const driversQuery = canSeeFleet
+        ? supabase.from("drivers").select("*")
+        : assignedDriverIds.length
+          ? supabase.from("drivers").select("*").in("user_id", assignedDriverIds)
+          : null;
+      const { data: fleetDrivers } = driversQuery ? await driversQuery : { data: [] as any[] };
+      const driverIds = Array.from(new Set((fleetDrivers ?? []).map((driver: any) => driver.user_id).filter(Boolean))) as string[];
+      const { data: profiles } = driverIds.length
+        ? await supabase.from("profiles").select("id, full_name, phone, avatar_url").in("id", driverIds)
+        : { data: [] as any[] };
+      return { orders: orders ?? [], drivers: fleetDrivers ?? [], profiles: profiles ?? [] };
     },
   });
 
@@ -318,15 +321,34 @@ function TrackingCenter() {
         title: u.profile?.full_name ?? "Motorista",
         subtitle: `${u.order.code} • ${STATUS_LABEL[u.order.status] ?? u.order.status}`,
       }));
+    const representedDrivers = new Set(filtered.map((unit) => unit.driver?.user_id).filter(Boolean));
+    const fleetDrivers: MapUnit[] = (dataQ.data?.drivers ?? [])
+      .filter((driver: any) =>
+        !representedDrivers.has(driver.user_id) &&
+        Number.isFinite(Number(driver.current_lat)) &&
+        Number.isFinite(Number(driver.current_lng)),
+      )
+      .map((driver: any) => {
+        const profile = dataQ.data?.profiles.find((item: any) => item.id === driver.user_id);
+        return {
+          id: `driver-${driver.user_id}`,
+          lat: Number(driver.current_lat),
+          lng: Number(driver.current_lng),
+          kind: trackKind({ status: driver.status, speedKmh: driver.current_speed, lastSeenAt: driver.last_seen_at }),
+          title: profile?.full_name ?? driver.full_name ?? "Motorista",
+          subtitle: driver.status === "available" ? "Disponível" : "Sem frete ativo",
+        };
+      });
+    const allDrivers = [...base, ...fleetDrivers];
     if (isFinished && replaying && points[replayIdx]) {
       const p = points[replayIdx] as any;
       return [
-        ...base,
+        ...allDrivers,
         { id: "replay", lat: p.lat, lng: p.lng, kind: "in_transit" as TrackKind, title: "Replay" },
       ];
     }
-    return base;
-  }, [filtered, isFinished, replaying, replayIdx, points]);
+    return allDrivers;
+  }, [filtered, isFinished, replaying, replayIdx, points, dataQ.data]);
 
   const pins: MapPin[] = useMemo(() => {
     if (!selected) return [];
