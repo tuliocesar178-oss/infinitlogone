@@ -131,6 +131,9 @@ function DriverProfile() {
         )}
       </section>
 
+      <NotificationSettings className="p-5" />
+
+
       <section className="card-soft p-5">
         <div className="mb-3 flex items-center gap-2">
           <Bell className="h-4 w-4 text-brand" />
