@@ -387,14 +387,8 @@ function TrackingCenter() {
   }
 
   return (
-    <AppShell>
+    <AppShell title="Rastreamento" subtitle="Monitoramento de motoristas, veículos e operações em tempo real">
       <div className="flex flex-col gap-4">
-        <div>
-          <h1 className="text-2xl font-black tracking-tight">Rastreamento em Tempo Real</h1>
-          <p className="text-sm text-muted-foreground">
-            Monitoramento de motoristas, veículos e operações — atualização automática.
-          </p>
-        </div>
 
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-8">
           <Stat label="Motoristas online" value={stats.online} icon={<Radio className="h-3.5 w-3.5" />} tone="ok" />

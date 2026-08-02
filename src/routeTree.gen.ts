@@ -26,6 +26,7 @@ import { Route as AuthenticatedOpsIndexRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedDriverIndexRouteImport } from './routes/_authenticated/driver.index'
 import { Route as AuthenticatedClientIndexRouteImport } from './routes/_authenticated/client.index'
 import { Route as AuthenticatedOpsVeiculosRouteImport } from './routes/_authenticated/ops.veiculos'
+import { Route as AuthenticatedOpsRastreamentoRouteImport } from './routes/_authenticated/ops.rastreamento'
 import { Route as AuthenticatedOpsEquipeRouteImport } from './routes/_authenticated/ops.equipe'
 import { Route as AuthenticatedOpsCentralRouteImport } from './routes/_authenticated/ops.central'
 import { Route as AuthenticatedDriverPerfilRouteImport } from './routes/_authenticated/driver.perfil'
@@ -133,6 +134,12 @@ const AuthenticatedOpsVeiculosRoute =
   AuthenticatedOpsVeiculosRouteImport.update({
     id: '/veiculos',
     path: '/veiculos',
+    getParentRoute: () => AuthenticatedOpsRoute,
+  } as any)
+const AuthenticatedOpsRastreamentoRoute =
+  AuthenticatedOpsRastreamentoRouteImport.update({
+    id: '/rastreamento',
+    path: '/rastreamento',
     getParentRoute: () => AuthenticatedOpsRoute,
   } as any)
 const AuthenticatedOpsEquipeRoute = AuthenticatedOpsEquipeRouteImport.update({
@@ -282,6 +289,7 @@ export interface FileRoutesByFullPath {
   '/driver/perfil': typeof AuthenticatedDriverPerfilRoute
   '/ops/central': typeof AuthenticatedOpsCentralRoute
   '/ops/equipe': typeof AuthenticatedOpsEquipeRoute
+  '/ops/rastreamento': typeof AuthenticatedOpsRastreamentoRoute
   '/ops/veiculos': typeof AuthenticatedOpsVeiculosRouteWithChildren
   '/client/': typeof AuthenticatedClientIndexRoute
   '/driver/': typeof AuthenticatedDriverIndexRoute
@@ -318,6 +326,7 @@ export interface FileRoutesByTo {
   '/driver/perfil': typeof AuthenticatedDriverPerfilRoute
   '/ops/central': typeof AuthenticatedOpsCentralRoute
   '/ops/equipe': typeof AuthenticatedOpsEquipeRoute
+  '/ops/rastreamento': typeof AuthenticatedOpsRastreamentoRoute
   '/ops/veiculos': typeof AuthenticatedOpsVeiculosRouteWithChildren
   '/client': typeof AuthenticatedClientIndexRoute
   '/driver': typeof AuthenticatedDriverIndexRoute
@@ -359,6 +368,7 @@ export interface FileRoutesById {
   '/_authenticated/driver/perfil': typeof AuthenticatedDriverPerfilRoute
   '/_authenticated/ops/central': typeof AuthenticatedOpsCentralRoute
   '/_authenticated/ops/equipe': typeof AuthenticatedOpsEquipeRoute
+  '/_authenticated/ops/rastreamento': typeof AuthenticatedOpsRastreamentoRoute
   '/_authenticated/ops/veiculos': typeof AuthenticatedOpsVeiculosRouteWithChildren
   '/_authenticated/client/': typeof AuthenticatedClientIndexRoute
   '/_authenticated/driver/': typeof AuthenticatedDriverIndexRoute
@@ -400,6 +410,7 @@ export interface FileRouteTypes {
     | '/driver/perfil'
     | '/ops/central'
     | '/ops/equipe'
+    | '/ops/rastreamento'
     | '/ops/veiculos'
     | '/client/'
     | '/driver/'
@@ -436,6 +447,7 @@ export interface FileRouteTypes {
     | '/driver/perfil'
     | '/ops/central'
     | '/ops/equipe'
+    | '/ops/rastreamento'
     | '/ops/veiculos'
     | '/client'
     | '/driver'
@@ -476,6 +488,7 @@ export interface FileRouteTypes {
     | '/_authenticated/driver/perfil'
     | '/_authenticated/ops/central'
     | '/_authenticated/ops/equipe'
+    | '/_authenticated/ops/rastreamento'
     | '/_authenticated/ops/veiculos'
     | '/_authenticated/client/'
     | '/_authenticated/driver/'
@@ -623,6 +636,13 @@ declare module '@tanstack/react-router' {
       path: '/veiculos'
       fullPath: '/ops/veiculos'
       preLoaderRoute: typeof AuthenticatedOpsVeiculosRouteImport
+      parentRoute: typeof AuthenticatedOpsRoute
+    }
+    '/_authenticated/ops/rastreamento': {
+      id: '/_authenticated/ops/rastreamento'
+      path: '/rastreamento'
+      fullPath: '/ops/rastreamento'
+      preLoaderRoute: typeof AuthenticatedOpsRastreamentoRouteImport
       parentRoute: typeof AuthenticatedOpsRoute
     }
     '/_authenticated/ops/equipe': {
@@ -851,6 +871,7 @@ const AuthenticatedOpsVeiculosRouteWithChildren =
 interface AuthenticatedOpsRouteChildren {
   AuthenticatedOpsCentralRoute: typeof AuthenticatedOpsCentralRoute
   AuthenticatedOpsEquipeRoute: typeof AuthenticatedOpsEquipeRoute
+  AuthenticatedOpsRastreamentoRoute: typeof AuthenticatedOpsRastreamentoRoute
   AuthenticatedOpsVeiculosRoute: typeof AuthenticatedOpsVeiculosRouteWithChildren
   AuthenticatedOpsIndexRoute: typeof AuthenticatedOpsIndexRoute
   AuthenticatedOpsMotoristasIdRoute: typeof AuthenticatedOpsMotoristasIdRoute
@@ -864,6 +885,7 @@ interface AuthenticatedOpsRouteChildren {
 const AuthenticatedOpsRouteChildren: AuthenticatedOpsRouteChildren = {
   AuthenticatedOpsCentralRoute: AuthenticatedOpsCentralRoute,
   AuthenticatedOpsEquipeRoute: AuthenticatedOpsEquipeRoute,
+  AuthenticatedOpsRastreamentoRoute: AuthenticatedOpsRastreamentoRoute,
   AuthenticatedOpsVeiculosRoute: AuthenticatedOpsVeiculosRouteWithChildren,
   AuthenticatedOpsIndexRoute: AuthenticatedOpsIndexRoute,
   AuthenticatedOpsMotoristasIdRoute: AuthenticatedOpsMotoristasIdRoute,
