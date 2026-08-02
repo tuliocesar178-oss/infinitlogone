@@ -320,6 +320,8 @@ function TrackingCenter() {
         kind: u.kind,
         title: u.profile?.full_name ?? "Motorista",
         subtitle: `${u.order.code} • ${STATUS_LABEL[u.order.status] ?? u.order.status}`,
+        avatarUrl: u.profile?.avatar_url ?? u.driver?.photo_url ?? null,
+        statusLabel: STATUS_LABEL[u.order.status] ?? TRACK_KIND[u.kind].label,
       }));
     const representedDrivers = new Set(filtered.map((unit) => unit.driver?.user_id).filter(Boolean));
     const fleetDrivers: MapUnit[] = (dataQ.data?.drivers ?? [])
@@ -330,15 +332,19 @@ function TrackingCenter() {
       )
       .map((driver: any) => {
         const profile = dataQ.data?.profiles.find((item: any) => item.id === driver.user_id);
+        const kind = trackKind({ status: driver.status, speedKmh: driver.current_speed, lastSeenAt: driver.last_seen_at });
         return {
           id: `driver-${driver.user_id}`,
           lat: Number(driver.current_lat),
           lng: Number(driver.current_lng),
-          kind: trackKind({ status: driver.status, speedKmh: driver.current_speed, lastSeenAt: driver.last_seen_at }),
+          kind,
           title: profile?.full_name ?? driver.full_name ?? "Motorista",
           subtitle: driver.status === "available" ? "Disponível" : "Sem frete ativo",
+          avatarUrl: profile?.avatar_url ?? driver.photo_url ?? null,
+          statusLabel: driver.status === "available" ? "Disponível" : TRACK_KIND[kind].label,
         };
       });
+
     const allDrivers = [...base, ...fleetDrivers];
     if (isFinished && replaying && points[replayIdx]) {
       const p = points[replayIdx] as any;
