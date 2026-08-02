@@ -109,6 +109,20 @@ export function DispatchPanel({ order, onSent }: { order: any; onSent: () => voi
         actor_id: u.user?.id ?? null,
         payload: { drivers: rows.length, price, expires_in_min: minutes },
       });
+      // Push imediato para os motoristas — não bloqueia o fluxo se falhar.
+      try {
+        await notifyDriversNewOffer({
+          data: {
+            driverIds: rows.map((r) => r.driver_id),
+            orderCode: order.code,
+            origin: order.origin_city ?? order.origin_address ?? "Origem",
+            destination: order.destination_city ?? order.destination_address ?? "Destino",
+            price,
+          },
+        });
+      } catch (pushError) {
+        console.warn("[Push] falha ao notificar motoristas", pushError);
+      }
       toast.success(`Oferta enviada para ${rows.length} motorista(s).`);
       setSelected(new Set());
       onSent();
