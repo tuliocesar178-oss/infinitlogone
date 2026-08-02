@@ -180,94 +180,92 @@ export function ActiveOrderPanel({
   order,
   userId,
   onChanged,
+  live,
 }: {
   order: Order;
   userId: string;
   onChanged: () => void;
+  live?: {
+    lat: number;
+    lng: number;
+    speedKmh: number | null;
+    distanceToTargetKm: number | null;
+    gpsLost: boolean;
+  } | null;
 }) {
   const [step, setStep] = useState<"idle" | "pickup" | "delivery">("idle");
-  const [driverPos, setDriverPos] = useState<[number, number] | null>(null);
+  const [fallbackPos, setFallbackPos] = useState<[number, number] | null>(null);
   const nextAction = useMemo(() => nextDriverAction(order.status as never), [order.status]);
 
+  const driverPos: [number, number] | null = live ? [live.lng, live.lat] : fallbackPos;
+  const target = navTarget(order.status, order);
+  const distKm =
+    live?.distanceToTargetKm ??
+    (driverPos ? distanceToTargetKm({ lat: driverPos[1], lng: driverPos[0] }, target) : null);
+  const unlocked = isWithinActionRadius(order.status, distKm);
+
   useEffect(() => {
-    // Current driver position for the mini-map ONLY (viewing)
-    // The actual server tracking happens in useBackgroundTracking hook in the parent route
+    if (live) return;
     const watchId = navigator.geolocation.watchPosition(
-      (pos) => setDriverPos([pos.coords.longitude, pos.coords.latitude]),
+      (pos) => setFallbackPos([pos.coords.longitude, pos.coords.latitude]),
       (err) => console.error("Map Geo error:", err),
-      { enableHighAccuracy: true }
+      { enableHighAccuracy: true },
     );
     return () => navigator.geolocation.clearWatch(watchId);
-  }, []);
+  }, [live]);
 
   async function runAction(action: DriverAction) {
     try {
       const to = ACTION_TRANSITIONS[action].to;
       const from = order.status;
-      const updatePayload: any = { 
-        status: to as any, 
-        updated_at: new Date().toISOString() 
+      const updatePayload: any = {
+        status: to as any,
+        updated_at: new Date().toISOString(),
       };
-      
+
       if (action === "start_pickup" || action === "start_delivery") {
         updatePayload.started_trip_at = new Date().toISOString();
       }
 
-      console.log("Updating order:", order.id, updatePayload);
       const { error: updateError } = await supabase.from("orders").update(updatePayload).eq("id", order.id);
-      
+
       if (updateError) {
         console.error("Update error details:", updateError);
         throw new Error(`Erro ao atualizar pedido: ${updateError.message}`);
       }
-      
-      let lat: number | null = null, lng: number | null = null;
-      try {
-        const pos = await new Promise<GeolocationPosition>((res, rej) => 
-          navigator.geolocation.getCurrentPosition(res, rej, { timeout: 3000, enableHighAccuracy: true })
-        );
-        lat = pos.coords.latitude; lng = pos.coords.longitude;
-      } catch (geoErr) {
-        console.warn("Geo localization failed, continuing without coordinates:", geoErr);
+
+      let lat: number | null = driverPos?.[1] ?? null;
+      let lng: number | null = driverPos?.[0] ?? null;
+      if (lat == null) {
+        try {
+          const pos = await new Promise<GeolocationPosition>((res, rej) =>
+            navigator.geolocation.getCurrentPosition(res, rej, { timeout: 3000, enableHighAccuracy: true }),
+          );
+          lat = pos.coords.latitude; lng = pos.coords.longitude;
+        } catch (geoErr) {
+          console.warn("Geo localization failed, continuing without coordinates:", geoErr);
+        }
       }
-      
+
       const { error: eventError } = await supabase.from("order_events").insert({
-        order_id: order.id, 
+        order_id: order.id,
         event_type: `driver_${action}`,
-        from_status: from as any, 
-        to_status: to as any, 
+        from_status: from as any,
+        to_status: to as any,
         actor_id: userId,
         payload: { lat, lng },
       });
-      
+
       if (eventError) {
         console.warn("Event insertion failed but order was updated:", eventError);
       }
-      
+
       toast.success(ACTION_LABEL[action]);
       onChanged();
     } catch (e) {
       console.error("Action error:", e);
       toast.error(e instanceof Error ? e.message : "Erro");
     }
-  }
-
-  function openSmartNav() {
-    // Determina o destino baseado no status atual
-    const isHeadingToPickup = ["driver_assigned", "en_route_pickup", "in_transit_to_pickup", "at_pickup"].includes(order.status);
-    
-    const lat = isHeadingToPickup ? order.origin_lat : order.destination_lat;
-    const lng = isHeadingToPickup ? order.origin_lng : order.destination_lng;
-    const addr = isHeadingToPickup ? order.origin_address : order.destination_address;
-
-    if (!lat && !lng && !addr) {
-      toast.error("Destino não configurado no pedido");
-      return;
-    }
-
-    const dest = (lat && lng) ? `${lat},${lng}` : encodeURIComponent(addr || "");
-    const url = `https://www.google.com/maps/dir/?api=1&destination=${dest}&travelmode=driving`;
-    window.open(url, "_blank");
   }
 
   return (
@@ -285,6 +283,17 @@ export function ActiveOrderPanel({
         <div className="text-[10px] font-semibold uppercase tracking-widest opacity-80">Frete em andamento</div>
         <div className="mt-1 font-mono text-lg font-bold">{order.code}</div>
         <div className="mt-1 text-sm opacity-90">{STATUS_LABEL[order.status] ?? order.status}</div>
+        <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] font-semibold">
+          <span className="rounded-full bg-white/15 px-2.5 py-1">
+            {target.kind === "pickup" ? "Coleta" : "Entrega"} • {fmtDistance(distKm)}
+          </span>
+          {live?.speedKmh != null && (
+            <span className="rounded-full bg-white/15 px-2.5 py-1">{Math.round(live.speedKmh)} km/h</span>
+          )}
+          <span className="rounded-full bg-white/15 px-2.5 py-1">
+            {live ? (live.gpsLost ? "GPS instável" : "Rastreamento ativo") : "Aguardando GPS"}
+          </span>
+        </div>
       </div>
 
       <div className="grid gap-4 p-6 sm:grid-cols-2">
@@ -303,37 +312,49 @@ export function ActiveOrderPanel({
 
       {step === "idle" && nextAction && (
         <div className="space-y-3 border-t border-border p-6">
-          {(nextAction === "start_pickup" || nextAction === "arrived_pickup") && (
-            <ActionBtn 
-              onClick={openSmartNav} 
-              icon={<Navigation className="h-6 w-6" />} 
-              label="INICIAR NAVEGAÇÃO" 
-              className="py-6 text-lg ring-4 ring-brand/20 shadow-xl"
-            />
+          {nextAction !== "loaded" && nextAction !== "delivered" && nextAction !== "start_pickup" && (
+            <Link
+              to="/driver/navegacao/$id"
+              params={{ id: order.id }}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-brand px-6 py-6 text-lg font-bold uppercase tracking-widest text-brand-foreground shadow-xl ring-4 ring-brand/20 active:scale-[0.98]"
+            >
+              <Navigation className="h-6 w-6" /> Modo navegação
+            </Link>
           )}
 
           {nextAction === "start_pickup" && (
-            <ActionBtn onClick={() => runAction("start_pickup")} icon={<Navigation className="h-5 w-5" />} label="INICIAR DESLOCAMENTO" />
+            <ActionBtn onClick={() => runAction("start_pickup")} icon={<Navigation className="h-5 w-5" />} label="INICIAR DESLOCAMENTO" className="py-6 text-lg" />
           )}
-          {nextAction === "arrived_pickup" && (
-            <ActionBtn onClick={() => runAction("arrived_pickup")} icon={<Check className="h-5 w-5" />} label="CHEGUEI NA COLETA" tone="ghost" />
+          {nextAction === "start_loading" && (
+            <ActionBtn
+              onClick={() => unlocked ? runAction("start_loading") : toast.error("Aproxime-se do local de coleta (100 m) para liberar.")}
+              icon={<Package className="h-5 w-5" />}
+              label="INICIAR CARREGAMENTO"
+              tone={unlocked ? "primary" : "ghost"}
+            />
           )}
           {nextAction === "loaded" && (
-            <ActionBtn onClick={() => setStep("pickup")} icon={<Camera className="h-5 w-5" />} label="ENVIAR FOTO DA CARGA" />
+            <ActionBtn onClick={() => setStep("pickup")} icon={<Camera className="h-5 w-5" />} label="CHECKLIST DA COLETA" />
           )}
           {nextAction === "start_delivery" && (
-            <>
-              <ActionBtn 
-                onClick={openSmartNav} 
-                icon={<Navigation className="h-6 w-6" />} 
-                label="INICIAR NAVEGAÇÃO" 
-                className="py-6 text-lg ring-4 ring-brand/20 shadow-xl"
-              />
-              <ActionBtn onClick={() => runAction("start_delivery")} icon={<Truck className="h-5 w-5" />} label="INICIAR ENTREGA" />
-            </>
+            <ActionBtn onClick={() => runAction("start_delivery")} icon={<Truck className="h-5 w-5" />} label="SEGUIR PARA ENTREGA" className="py-6 text-lg" />
+          )}
+          {nextAction === "start_unloading" && (
+            <ActionBtn
+              onClick={() => unlocked ? runAction("start_unloading") : toast.error("Aproxime-se do local de entrega (100 m) para liberar.")}
+              icon={<Package className="h-5 w-5" />}
+              label="INICIAR DESCARGA"
+              tone={unlocked ? "primary" : "ghost"}
+            />
           )}
           {nextAction === "delivered" && (
             <ActionBtn onClick={() => setStep("delivery")} icon={<PenLine className="h-5 w-5" />} label="ENVIAR COMPROVANTES" />
+          )}
+
+          {(nextAction === "start_loading" || nextAction === "start_unloading") && !unlocked && (
+            <p className="text-center text-xs text-muted-foreground">
+              Botão liberado automaticamente a 100 m do local ({fmtDistance(distKm)} restantes).
+            </p>
           )}
         </div>
       )}
@@ -348,6 +369,7 @@ export function ActiveOrderPanel({
     </div>
   );
 }
+
 
 function ActionBtn({ 
   onClick, icon, label, tone = "primary", className = "" 
