@@ -190,10 +190,11 @@ export const DASHBOARD_CARDS: {
   { key: "awaiting_driver", label: "Aguardando motorista", short: "Aguardando", statuses: ["awaiting_driver"], tint: "amber" },
   { key: "offer_sent", label: "Oferta enviada", short: "Oferta enviada", statuses: ["awaiting_driver"], tint: "violet" },
   { key: "negotiation", label: "Em negociação", short: "Negociação", statuses: ["negotiating"], tint: "amber" },
-  { key: "en_route_pickup", label: "Em deslocamento", short: "Em deslocamento", statuses: ["driver_assigned", "en_route_pickup", "in_transit_to_pickup"], tint: "blue" },
-  { key: "at_pickup", label: "Em coleta", short: "Em coleta", statuses: ["at_pickup", "picked_up", "loaded"], tint: "indigo" },
+  { key: "en_route_pickup", label: "Em deslocamento", short: "Em deslocamento", statuses: ["driver_assigned", "en_route_pickup", "in_transit_to_pickup", "near_pickup", "arriving_pickup"], tint: "blue" },
+  { key: "at_pickup", label: "Em coleta", short: "Em coleta", statuses: ["at_pickup", "loading", "picked_up", "loaded"], tint: "indigo" },
   { key: "in_transit", label: "Em trânsito", short: "Em trânsito", statuses: ["out_for_delivery", "in_transit"], tint: "cyan" },
-  { key: "near_destination", label: "Próximo da entrega", short: "Próximo", statuses: ["near_destination", "at_destination"], tint: "teal" },
+  { key: "near_destination", label: "Próximo da entrega", short: "Próximo", statuses: ["near_destination", "arriving_destination", "at_destination", "unloading"], tint: "teal" },
+
   { key: "delivered_today", label: "Entregues hoje", short: "Entregues hoje", statuses: ["delivered", "finalized"], tint: "emerald" },
   { key: "incident", label: "Ocorrências", short: "Ocorrências", statuses: ["incident"], tint: "red" },
 ];
