@@ -16,6 +16,8 @@ import {
   Camera, MessageCircle, Truck, Upload, PenLine, ChevronRight, ChevronUp
 } from "lucide-react";
 import { RouteMiniMap } from "./route-mini-map";
+import { navTarget, distanceToTargetKm, isWithinActionRadius, fmtDistance } from "@/lib/geofence";
+
 
 export type Order = {
   id: string;
