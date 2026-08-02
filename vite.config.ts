@@ -52,7 +52,10 @@ export default defineConfig({
         ],
       },
       workbox: {
+        // Handlers de Web Push (push + clique na notificação) carregados no mesmo SW.
+        importScripts: ["/push-sw.js"],
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2}"],
+        globIgnores: ["push-sw.js"],
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
         cleanupOutdatedCaches: true,
         clientsClaim: true,

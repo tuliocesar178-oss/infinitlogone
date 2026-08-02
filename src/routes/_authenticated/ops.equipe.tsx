@@ -5,6 +5,7 @@ import { AppShell } from "@/components/app-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { TeamInviteDialog } from "@/components/team-invite-dialog";
 import { TeamSidePanel } from "@/components/team-side-panel";
+import { NotificationSettings } from "@/components/notification-settings";
 import { TEAM_ROLES, TEAM_STATUS, labelForRole, labelForStatus, teamStatusBadge } from "@/lib/team";
 import {
   ArrowUpDown,
@@ -127,6 +128,8 @@ function TeamList() {
         </button>
       }
     >
+      <NotificationSettings className="mb-6" />
+
       <div className="mb-6 flex flex-wrap items-center gap-3">
         <div className="relative flex-1 min-w-[220px]">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
