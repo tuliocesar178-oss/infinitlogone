@@ -21,6 +21,8 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [mode, setMode] = useState<"signin" | "forgot">("signin");
+  const [sent, setSent] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -32,7 +34,16 @@ function AuthPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (mode === "forgot") {
+        const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
+        if (error) throw error;
+        setSent(true);
+        toast.success("Enviamos um link de recuperação para o seu e-mail.");
+        return;
+      }
+      const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
       if (error) throw error;
       toast.success("Bem-vindo de volta!");
       navigate({ to: "/app", replace: true });
@@ -42,6 +53,7 @@ function AuthPage() {
       setLoading(false);
     }
   }
+
 
   return (
     <div className="grid min-h-screen grid-cols-1 lg:grid-cols-2">
