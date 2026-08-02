@@ -21,6 +21,8 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [mode, setMode] = useState<"signin" | "forgot">("signin");
+  const [sent, setSent] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -32,7 +34,16 @@ function AuthPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (mode === "forgot") {
+        const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
+        if (error) throw error;
+        setSent(true);
+        toast.success("Enviamos um link de recuperação para o seu e-mail.");
+        return;
+      }
+      const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
       if (error) throw error;
       toast.success("Bem-vindo de volta!");
       navigate({ to: "/app", replace: true });
@@ -42,6 +53,7 @@ function AuthPage() {
       setLoading(false);
     }
   }
+
 
   return (
     <div className="grid min-h-screen grid-cols-1 lg:grid-cols-2">
@@ -68,42 +80,66 @@ function AuthPage() {
           <Link to="/" className="mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground lg:hidden">
             <ArrowLeft className="h-4 w-4" /> Voltar
           </Link>
-          <h2 className="text-3xl font-semibold tracking-tight">Entrar</h2>
+          <h2 className="text-3xl font-semibold tracking-tight">
+            {mode === "forgot" ? "Recuperar senha" : "Entrar"}
+          </h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            Acesso à equipe, motoristas e clientes corporativos.
+            {mode === "forgot"
+              ? "Informe seu e-mail e enviaremos um link para criar uma nova senha."
+              : "Acesso à equipe, motoristas e clientes corporativos."}
           </p>
 
+          {mode === "forgot" && sent ? (
+            <div className="mt-8 rounded-2xl border border-border bg-surface p-4 text-sm text-muted-foreground">
+              Se existir uma conta para <strong className="text-foreground">{email}</strong>, o link de
+              recuperação chegará em instantes. Verifique também a caixa de spam.
+            </div>
+          ) : (
+            <form onSubmit={submit} className="mt-8 space-y-4">
+              <Field label="Email">
+                <input
+                  required
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="input"
+                  placeholder="voce@infinitlog.com"
+                />
+              </Field>
+              {mode === "signin" && (
+                <Field label="Senha">
+                  <input
+                    required
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="input"
+                    placeholder="Sua senha"
+                  />
+                </Field>
+              )}
 
-          <form onSubmit={submit} className="mt-8 space-y-4">
-            <Field label="Email">
-              <input
-                required
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="input"
-                placeholder="voce@infinitlog.com"
-              />
-            </Field>
-            <Field label="Senha">
-              <input
-                required
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="input"
-                placeholder="Sua senha"
-              />
-            </Field>
+              <button
+                type="submit"
+                disabled={loading}
+                className="mt-2 inline-flex h-12 w-full items-center justify-center rounded-2xl bg-primary text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60"
+              >
+                {loading ? "Aguarde…" : mode === "forgot" ? "Enviar link de recuperação" : "Entrar"}
+              </button>
+            </form>
+          )}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="mt-2 inline-flex h-12 w-full items-center justify-center rounded-2xl bg-primary text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60"
-            >
-              {loading ? "Aguarde…" : "Entrar"}
-            </button>
-          </form>
+          <button
+            type="button"
+            onClick={() => {
+              setMode(mode === "forgot" ? "signin" : "forgot");
+              setSent(false);
+            }}
+            className="mt-4 w-full text-center text-xs font-medium text-primary hover:opacity-80"
+          >
+            {mode === "forgot" ? "Voltar para o login" : "Esqueci minha senha"}
+          </button>
+
 
           <div className="mt-6 space-y-2 text-center text-xs text-muted-foreground">
             <div>
