@@ -77,7 +77,8 @@ export async function pushToUsers(
           },
           keys,
         );
-        const res = await fetch(row.endpoint, payload);
+        // O payload traz corpo binário (Uint8Array); o runtime aceita, os tipos do DOM não.
+        const res = await fetch(row.endpoint, payload as unknown as RequestInit);
         if (res.ok) {
           sent += 1;
           return;
