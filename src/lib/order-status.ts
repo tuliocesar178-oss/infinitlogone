@@ -7,13 +7,18 @@ export type OrderStatus =
   | "driver_assigned"
   | "en_route_pickup"
   | "in_transit_to_pickup"
+  | "near_pickup"
+  | "arriving_pickup"
   | "at_pickup"
+  | "loading"
   | "picked_up"
   | "loaded"
   | "out_for_delivery"
   | "in_transit"
   | "near_destination"
+  | "arriving_destination"
   | "at_destination"
+  | "unloading"
   | "delivered"
   | "finalized"
   | "cancelled"
@@ -28,19 +33,25 @@ export const STATUS_LABEL: Record<string, string> = {
   driver_assigned: "Motorista Confirmado",
   en_route_pickup: "Em Deslocamento para Coleta",
   in_transit_to_pickup: "Em Deslocamento para Coleta",
-  at_pickup: "Cheguei na Coleta",
-  loaded: "Carga Carregada",
+  near_pickup: "Próximo da Coleta",
+  arriving_pickup: "Chegando ao Local de Coleta",
+  at_pickup: "No Local de Coleta",
+  loading: "Carregamento em Andamento",
+  loaded: "Carregamento Concluído",
   picked_up: "Saiu para Entrega",
   out_for_delivery: "Em Trânsito",
   in_transit: "Em Trânsito",
-  near_destination: "Próximo da Entrega",
-  at_destination: "Cheguei ao Destino",
+  near_destination: "Próximo ao Destino",
+  arriving_destination: "Chegando ao Cliente",
+  at_destination: "No Local de Entrega",
+  unloading: "Descarga em Andamento",
   delivered: "Entregue",
   completed: "Finalizado",
   finalized: "Finalizado",
   cancelled: "Cancelado",
   incident: "Ocorrência",
 };
+
 
 // Tailwind badge classes per status (background + text)
 export const STATUS_BADGE_CLASS: Record<string, string> = {
