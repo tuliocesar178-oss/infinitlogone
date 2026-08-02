@@ -40,6 +40,7 @@ export function trackKind(input: {
   online?: boolean;
 }): TrackKind {
   const { status, speedKmh, lastSeenAt } = input;
+  if (status === "delivered" || status === "finalized") return "delivered";
   if (status === "incident") return "incident";
   const stale =
     !lastSeenAt || Date.now() - new Date(lastSeenAt).getTime() > MONITOR.gpsLostSeconds * 1000;
