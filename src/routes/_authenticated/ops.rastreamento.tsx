@@ -558,6 +558,9 @@ function TrackingCenter() {
                   unit={selected}
                   onClose={() => setSelectedId(null)}
                   route={routeQ.data}
+                  events={eventsQ.data ?? []}
+                  progress={progress}
+                  traveledKm={traveledKm}
                   isFinished={isFinished}
                   replaying={replaying}
                   onToggleReplay={() => setReplaying((r) => !r)}
@@ -597,7 +600,28 @@ function TrackingCenter() {
               )}
             </aside>
           )}
+
+          {/* Bottom sheet (mobile) */}
+          {selected && (
+            <div className="absolute inset-x-0 bottom-0 z-30 max-h-[68%] overflow-y-auto rounded-t-2xl border-t border-border bg-surface shadow-2xl lg:hidden">
+              <div className="mx-auto mt-2 h-1.5 w-10 rounded-full bg-border" />
+              <DetailPanel
+                unit={selected}
+                onClose={() => setSelectedId(null)}
+                route={routeQ.data}
+                events={eventsQ.data ?? []}
+                progress={progress}
+                traveledKm={traveledKm}
+                isFinished={isFinished}
+                replaying={replaying}
+                onToggleReplay={() => setReplaying((r) => !r)}
+                replayStats={replayStats}
+                replayPoint={points[replayIdx] as any}
+              />
+            </div>
+          )}
         </div>
+
 
         <div className="flex flex-wrap gap-2">
           <button onClick={() => setFitToken((t) => t + 1)} className="rounded-xl border border-border bg-surface px-3 py-2 text-xs font-bold hover:bg-accent">
