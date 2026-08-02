@@ -107,7 +107,7 @@ export function PwaProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     void registerServiceWorker(() => window.location.reload());
-    void requestPermissionsOnce();
+    void requestPermissionsOnce().then(syncPushSubscription);
   }, []);
 
   useEffect(() => {
