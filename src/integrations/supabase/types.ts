@@ -1834,6 +1834,11 @@ export type Database = {
         | "finalized"
         | "cancelled"
         | "incident"
+        | "near_pickup"
+        | "arriving_pickup"
+        | "loading"
+        | "arriving_destination"
+        | "unloading"
       payment_method_pref: "pix" | "ted" | "doc" | "boleto"
       pix_key_type: "cpf" | "cnpj" | "email" | "phone" | "random"
       team_status: "ativo" | "bloqueado" | "convite_pendente" | "afastado"
@@ -2047,6 +2052,11 @@ export const Constants = {
         "finalized",
         "cancelled",
         "incident",
+        "near_pickup",
+        "arriving_pickup",
+        "loading",
+        "arriving_destination",
+        "unloading",
       ],
       payment_method_pref: ["pix", "ted", "doc", "boleto"],
       pix_key_type: ["cpf", "cnpj", "email", "phone", "random"],

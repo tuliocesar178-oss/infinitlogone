@@ -7,13 +7,18 @@ export type OrderStatus =
   | "driver_assigned"
   | "en_route_pickup"
   | "in_transit_to_pickup"
+  | "near_pickup"
+  | "arriving_pickup"
   | "at_pickup"
+  | "loading"
   | "picked_up"
   | "loaded"
   | "out_for_delivery"
   | "in_transit"
   | "near_destination"
+  | "arriving_destination"
   | "at_destination"
+  | "unloading"
   | "delivered"
   | "finalized"
   | "cancelled"
@@ -28,19 +33,25 @@ export const STATUS_LABEL: Record<string, string> = {
   driver_assigned: "Motorista Confirmado",
   en_route_pickup: "Em Deslocamento para Coleta",
   in_transit_to_pickup: "Em Deslocamento para Coleta",
-  at_pickup: "Cheguei na Coleta",
-  loaded: "Carga Carregada",
+  near_pickup: "Próximo da Coleta",
+  arriving_pickup: "Chegando ao Local de Coleta",
+  at_pickup: "No Local de Coleta",
+  loading: "Carregamento em Andamento",
+  loaded: "Carregamento Concluído",
   picked_up: "Saiu para Entrega",
   out_for_delivery: "Em Trânsito",
   in_transit: "Em Trânsito",
-  near_destination: "Próximo da Entrega",
-  at_destination: "Cheguei ao Destino",
+  near_destination: "Próximo ao Destino",
+  arriving_destination: "Chegando ao Cliente",
+  at_destination: "No Local de Entrega",
+  unloading: "Descarga em Andamento",
   delivered: "Entregue",
   completed: "Finalizado",
   finalized: "Finalizado",
   cancelled: "Cancelado",
   incident: "Ocorrência",
 };
+
 
 // Tailwind badge classes per status (background + text)
 export const STATUS_BADGE_CLASS: Record<string, string> = {
@@ -52,13 +63,19 @@ export const STATUS_BADGE_CLASS: Record<string, string> = {
   driver_assigned: "bg-blue-100 text-blue-800",
   en_route_pickup: "bg-blue-200 text-blue-900",
   in_transit_to_pickup: "bg-blue-200 text-blue-900",
+  near_pickup: "bg-indigo-100 text-indigo-800",
+  arriving_pickup: "bg-indigo-200 text-indigo-900",
   at_pickup: "bg-purple-100 text-purple-800",
+  loading: "bg-purple-200 text-purple-900 font-bold",
   loaded: "bg-purple-200 text-purple-900",
   picked_up: "bg-blue-100 text-blue-800",
   out_for_delivery: "bg-blue-200 text-blue-900",
   in_transit: "bg-blue-200 text-blue-900",
   near_destination: "bg-green-100 text-green-700",
+  arriving_destination: "bg-teal-100 text-teal-800",
   at_destination: "bg-emerald-100 text-emerald-800",
+  unloading: "bg-emerald-200 text-emerald-900 font-bold",
+
   delivered: "bg-green-200 text-green-800",
   completed: "bg-green-300 text-green-900",
   finalized: "bg-green-300 text-green-900",
@@ -110,8 +127,11 @@ export function publicStatus(s: string): { key: string; label: string } {
       return { key: "driver_assigned", label: "Motorista confirmado" };
     case "en_route_pickup":
     case "in_transit_to_pickup":
+    case "near_pickup":
+    case "arriving_pickup":
     case "at_pickup":
       return { key: "en_route_pickup", label: "Motorista a caminho da coleta" };
+    case "loading":
     case "picked_up":
     case "loaded":
       return { key: "loaded", label: "Carga coletada" };
@@ -119,8 +139,11 @@ export function publicStatus(s: string): { key: string; label: string } {
     case "in_transit":
       return { key: "in_transit", label: "Em trânsito" };
     case "near_destination":
+    case "arriving_destination":
     case "at_destination":
+    case "unloading":
       return { key: "near_destination", label: "Próximo ao destino" };
+
     case "delivered":
     case "finalized":
       return { key: "delivered", label: "Entregue" };
@@ -167,10 +190,11 @@ export const DASHBOARD_CARDS: {
   { key: "awaiting_driver", label: "Aguardando motorista", short: "Aguardando", statuses: ["awaiting_driver"], tint: "amber" },
   { key: "offer_sent", label: "Oferta enviada", short: "Oferta enviada", statuses: ["awaiting_driver"], tint: "violet" },
   { key: "negotiation", label: "Em negociação", short: "Negociação", statuses: ["negotiating"], tint: "amber" },
-  { key: "en_route_pickup", label: "Em deslocamento", short: "Em deslocamento", statuses: ["driver_assigned", "en_route_pickup", "in_transit_to_pickup"], tint: "blue" },
-  { key: "at_pickup", label: "Em coleta", short: "Em coleta", statuses: ["at_pickup", "picked_up", "loaded"], tint: "indigo" },
+  { key: "en_route_pickup", label: "Em deslocamento", short: "Em deslocamento", statuses: ["driver_assigned", "en_route_pickup", "in_transit_to_pickup", "near_pickup", "arriving_pickup"], tint: "blue" },
+  { key: "at_pickup", label: "Em coleta", short: "Em coleta", statuses: ["at_pickup", "loading", "picked_up", "loaded"], tint: "indigo" },
   { key: "in_transit", label: "Em trânsito", short: "Em trânsito", statuses: ["out_for_delivery", "in_transit"], tint: "cyan" },
-  { key: "near_destination", label: "Próximo da entrega", short: "Próximo", statuses: ["near_destination", "at_destination"], tint: "teal" },
+  { key: "near_destination", label: "Próximo da entrega", short: "Próximo", statuses: ["near_destination", "arriving_destination", "at_destination", "unloading"], tint: "teal" },
+
   { key: "delivered_today", label: "Entregues hoje", short: "Entregues hoje", statuses: ["delivered", "finalized"], tint: "emerald" },
   { key: "incident", label: "Ocorrências", short: "Ocorrências", statuses: ["incident"], tint: "red" },
 ];
