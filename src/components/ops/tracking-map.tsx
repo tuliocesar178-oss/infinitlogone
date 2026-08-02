@@ -16,6 +16,8 @@ export type MapUnit = {
   kind: TrackKind;
   title: string;
   subtitle?: string;
+  avatarUrl?: string | null;
+  statusLabel?: string;
   heading?: number | null;
 };
 
@@ -40,6 +42,20 @@ const FALLBACK_STYLE: mapboxgl.StyleSpecification = {
   layers: [{ id: "osm", type: "raster", source: "osm" }],
 };
 
+type MarkerEntry = {
+  marker: mapboxgl.Marker;
+  el: HTMLDivElement;
+  bubble: HTMLDivElement;
+  badge: HTMLDivElement;
+  media: HTMLDivElement;
+  from: [number, number];
+  to: [number, number];
+  start: number;
+  raf: number | null;
+};
+
+const ANIM_MS = 900;
+
 export function TrackingMap({
   units,
   pins = [],
@@ -63,7 +79,7 @@ export function TrackingMap({
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
-  const markers = useRef<Map<string, mapboxgl.Marker>>(new Map());
+  const markers = useRef<Map<string, MarkerEntry>>(new Map());
   const pinMarkers = useRef<mapboxgl.Marker[]>([]);
   const ready = useRef(false);
   const firstStyle = useRef(true);
@@ -119,6 +135,7 @@ export function TrackingMap({
     return () => {
       window.clearTimeout(t);
       ro.disconnect();
+      markers.current.forEach((m) => m.raf && cancelAnimationFrame(m.raf));
       map.remove();
       mapRef.current = null;
       markers.current.clear();
@@ -138,7 +155,6 @@ export function TrackingMap({
     mapRef.current.setStyle(STYLES[style]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [style]);
-
 
   function applyTraffic() {
     const map = mapRef.current;
@@ -170,7 +186,7 @@ export function TrackingMap({
 
   useEffect(applyTraffic, [traffic]);
 
-  function setLine(id: string, coords: [number, number][] | null, color: string, dashed: boolean) {
+  function setLine(id: string, coords: [number, number][] | null, color: string, width: number) {
     const map = mapRef.current;
     if (!map || !ready.current) return;
     const data: Feature = {
@@ -189,57 +205,129 @@ export function TrackingMap({
       type: "line",
       source: id,
       layout: { "line-cap": "round", "line-join": "round" },
-      paint: {
-        "line-color": color,
-        "line-width": 5,
-        "line-opacity": 0.85,
-        ...(dashed ? { "line-dasharray": [1.5, 1.5] } : {}),
-      },
+      paint: { "line-color": color, "line-width": width, "line-opacity": 0.9 },
     });
+    if (id === "planned-route" && !map.getLayer("planned-route-arrows")) {
+      map.addLayer({
+        id: "planned-route-arrows",
+        type: "symbol",
+        source: id,
+        layout: {
+          "symbol-placement": "line",
+          "symbol-spacing": 90,
+          "text-field": "▶",
+          "text-size": 13,
+          "text-keep-upright": false,
+          "text-allow-overlap": true,
+        },
+        paint: { "text-color": "#1d4ed8", "text-halo-color": "#ffffff", "text-halo-width": 1.4 },
+      });
+    }
   }
 
   function drawLines() {
     const plannedCoords =
       planned && planned.type === "LineString" ? (planned.coordinates as [number, number][]) : null;
-    setLine("planned-route", plannedCoords, "#2563eb", true);
-    setLine("traveled-route", traveled ?? null, "#22c55e", false);
+    setLine("planned-route", plannedCoords, "#2563eb", 5);
+    setLine("traveled-route", traveled ?? null, "#22c55e", 5);
   }
 
   useEffect(drawLines, [planned, traveled]);
 
-  // markers
+  // markers — created once, then animated to new positions
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
     const seen = new Set<string>();
+
     for (const u of units) {
       if (!Number.isFinite(u.lat) || !Number.isFinite(u.lng)) continue;
       seen.add(u.id);
       const color = TRACK_KIND[u.kind].color;
-      let m = markers.current.get(u.id);
-      if (!m) {
-        const el = document.createElement("button");
-        el.type = "button";
-        el.className = "tracking-marker";
-        el.innerHTML = `<span>🚚</span>`;
+      let entry = markers.current.get(u.id);
+
+      if (!entry) {
+        const el = document.createElement("div");
+        el.style.cssText = "display:flex;flex-direction:column;align-items:center;cursor:pointer;";
+
+        const bubble = document.createElement("div");
+        bubble.style.cssText =
+          "max-width:170px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:3px 8px;border-radius:9999px;background:rgba(255,255,255,.97);color:#0f172a;font-size:11px;font-weight:800;box-shadow:0 2px 8px rgba(0,0,0,.25);margin-bottom:4px;";
+
+        const media = document.createElement("div");
+        media.style.cssText =
+          "position:relative;width:38px;height:38px;border-radius:9999px;display:grid;place-items:center;overflow:hidden;font-size:17px;background:#fff;transition:transform .2s ease;";
+
+        const badge = document.createElement("div");
+        badge.style.cssText =
+          "margin-top:3px;padding:1px 6px;border-radius:9999px;font-size:9px;font-weight:800;color:#fff;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.25);";
+
+        el.append(bubble, media, badge);
         el.addEventListener("click", (e) => {
           e.stopPropagation();
           onSelect?.(u.id);
         });
-        m = new mapboxgl.Marker({ element: el }).setLngLat([u.lng, u.lat]).addTo(map);
-        markers.current.set(u.id, m);
-      } else {
-        m.setLngLat([u.lng, u.lat]);
+
+        const marker = new mapboxgl.Marker({ element: el, anchor: "bottom" })
+          .setLngLat([u.lng, u.lat])
+          .addTo(map);
+        entry = {
+          marker,
+          el,
+          bubble,
+          badge,
+          media,
+          from: [u.lng, u.lat],
+          to: [u.lng, u.lat],
+          start: performance.now(),
+          raf: null,
+        };
+        markers.current.set(u.id, entry);
+      } else if (entry.to[0] !== u.lng || entry.to[1] !== u.lat) {
+        // smooth move: never recreate the marker
+        const current = entry.marker.getLngLat();
+        entry.from = [current.lng, current.lat];
+        entry.to = [u.lng, u.lat];
+        entry.start = performance.now();
+        if (entry.raf) cancelAnimationFrame(entry.raf);
+        const e = entry;
+        const step = () => {
+          const k = Math.min(1, (performance.now() - e.start) / ANIM_MS);
+          const t = k < 0.5 ? 2 * k * k : -1 + (4 - 2 * k) * k;
+          e.marker.setLngLat([
+            e.from[0] + (e.to[0] - e.from[0]) * t,
+            e.from[1] + (e.to[1] - e.from[1]) * t,
+          ]);
+          e.raf = k < 1 ? requestAnimationFrame(step) : null;
+        };
+        e.raf = requestAnimationFrame(step);
       }
-      const el = m.getElement();
-      el.title = `${u.title}${u.subtitle ? ` — ${u.subtitle}` : ""}`;
-      el.style.cssText = `width:30px;height:30px;border-radius:9999px;display:grid;place-items:center;font-size:13px;cursor:pointer;background:${color};border:3px solid #fff;box-shadow:0 3px 10px rgba(0,0,0,.35);transition:transform .15s;${
-        selectedId === u.id ? "transform:scale(1.35);outline:3px solid rgba(37,99,235,.45);" : ""
-      }`;
+
+      const isSel = selectedId === u.id;
+      entry.bubble.textContent = `🚚 ${u.title}`;
+      entry.badge.textContent = u.statusLabel ?? TRACK_KIND[u.kind].label;
+      entry.badge.style.background = color;
+      entry.el.title = `${u.title}${u.subtitle ? ` — ${u.subtitle}` : ""}`;
+      entry.media.style.border = `3px solid ${color}`;
+      entry.media.style.boxShadow = isSel
+        ? `0 0 0 6px ${color}44, 0 4px 12px rgba(0,0,0,.35)`
+        : "0 3px 10px rgba(0,0,0,.3)";
+      entry.media.style.transform = isSel ? "scale(1.18)" : "scale(1)";
+      entry.el.style.zIndex = isSel ? "5" : "1";
+
+      const avatar = u.avatarUrl ?? "";
+      if (entry.media.dataset.avatar !== avatar) {
+        entry.media.dataset.avatar = avatar;
+        entry.media.innerHTML = avatar
+          ? `<img src="${avatar}" alt="" style="width:100%;height:100%;object-fit:cover" />`
+          : `<span>🚚</span>`;
+      }
     }
-    for (const [id, m] of markers.current.entries()) {
+
+    for (const [id, entry] of markers.current.entries()) {
       if (!seen.has(id)) {
-        m.remove();
+        if (entry.raf) cancelAnimationFrame(entry.raf);
+        entry.marker.remove();
         markers.current.delete(id);
       }
     }
@@ -263,7 +351,7 @@ export function TrackingMap({
     const map = mapRef.current;
     if (!map || !selectedId) return;
     const u = units.find((x) => x.id === selectedId);
-    if (u) map.flyTo({ center: [u.lng, u.lat], zoom: 12, duration: 900 });
+    if (u) map.flyTo({ center: [u.lng, u.lat], zoom: 13.5, duration: 1100, essential: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focusToken]);
 
