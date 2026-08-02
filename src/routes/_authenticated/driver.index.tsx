@@ -136,7 +136,7 @@ function DriverHome() {
         <StatCard label="Ofertas" value={String(statsQ.data?.pendingOffers ?? 0)} icon={<Package className="h-4 w-4" />} highlight={(statsQ.data?.pendingOffers ?? 0) > 0} />
       </div>
 
-      {active && <ActiveOrderPanel order={active} userId={userId} onChanged={() => activeQ.refetch()} />}
+      {active && <ActiveOrderPanel order={active} userId={userId} live={live} onChanged={() => activeQ.refetch()} />}
 
       {!active && offers.length === 0 && (
         <div className="card-soft grid place-items-center p-12 text-center">
