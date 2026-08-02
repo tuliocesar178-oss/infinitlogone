@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
+import type { Feature, Geometry } from "geojson";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { TRACK_KIND, type TrackKind } from "@/lib/tracking-center";
 import { Layers, Maximize2, Crosshair, Route as RouteIcon, Satellite, TrafficCone } from "lucide-react";
@@ -38,7 +39,7 @@ export function TrackingMap({
 }: {
   units: MapUnit[];
   pins?: MapPin[];
-  planned?: GeoJSON.Geometry | null;
+  planned?: Geometry | null;
   traveled?: [number, number][] | null;
   selectedId?: string | null;
   onSelect?: (id: string) => void;
@@ -121,7 +122,7 @@ export function TrackingMap({
   function setLine(id: string, coords: [number, number][] | null, color: string, dashed: boolean) {
     const map = mapRef.current;
     if (!map || !ready.current) return;
-    const data: GeoJSON.Feature = {
+    const data: Feature = {
       type: "Feature",
       properties: {},
       geometry: { type: "LineString", coordinates: coords ?? [] },
