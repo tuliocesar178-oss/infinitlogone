@@ -277,6 +277,50 @@ function TrackingCenter() {
     [points],
   );
 
+  // Linha do tempo da operação
+  const eventsQ = useQuery({
+    enabled: !!selected,
+    queryKey: ["tracking-events", selected?.id],
+    refetchInterval: 15000,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("order_events")
+        .select("event_type, to_status, created_at")
+        .eq("order_id", selected!.id)
+        .order("created_at", { ascending: true })
+        .limit(200);
+      return data ?? [];
+    },
+  });
+
+  const traveledKm = useMemo(() => {
+    let km = 0;
+    for (let i = 1; i < points.length; i++) {
+      const a = points[i - 1] as any;
+      const b = points[i] as any;
+      km += haversineKm({ lat: a.lat, lng: a.lng }, { lat: b.lat, lng: b.lng });
+    }
+    return km;
+  }, [points]);
+
+  const progress = useMemo(() => {
+    if (!selected) return null;
+    const o = selected.order;
+    if (["delivered", "finalized"].includes(o.status)) return 100;
+    const remaining = routeQ.data?.distance ?? selected.distanceKm;
+    const total =
+      o.initial_distance_km ??
+      (o.origin_lat && o.destination_lat
+        ? haversineKm(
+            { lat: o.origin_lat, lng: o.origin_lng },
+            { lat: o.destination_lat, lng: o.destination_lng },
+          )
+        : null);
+    if (remaining == null || !total) return null;
+    return Math.max(0, Math.min(100, Math.round(((total - remaining) / total) * 100)));
+  }, [selected, routeQ.data]);
+
+
   useEffect(() => {
     if (!replaying || points.length < 2) return;
     const t = setInterval(() => {
@@ -320,6 +364,8 @@ function TrackingCenter() {
         kind: u.kind,
         title: u.profile?.full_name ?? "Motorista",
         subtitle: `${u.order.code} • ${STATUS_LABEL[u.order.status] ?? u.order.status}`,
+        avatarUrl: u.profile?.avatar_url ?? u.driver?.photo_url ?? null,
+        statusLabel: STATUS_LABEL[u.order.status] ?? TRACK_KIND[u.kind].label,
       }));
     const representedDrivers = new Set(filtered.map((unit) => unit.driver?.user_id).filter(Boolean));
     const fleetDrivers: MapUnit[] = (dataQ.data?.drivers ?? [])
@@ -330,15 +376,19 @@ function TrackingCenter() {
       )
       .map((driver: any) => {
         const profile = dataQ.data?.profiles.find((item: any) => item.id === driver.user_id);
+        const kind = trackKind({ status: driver.status, speedKmh: driver.current_speed, lastSeenAt: driver.last_seen_at });
         return {
           id: `driver-${driver.user_id}`,
           lat: Number(driver.current_lat),
           lng: Number(driver.current_lng),
-          kind: trackKind({ status: driver.status, speedKmh: driver.current_speed, lastSeenAt: driver.last_seen_at }),
+          kind,
           title: profile?.full_name ?? driver.full_name ?? "Motorista",
           subtitle: driver.status === "available" ? "Disponível" : "Sem frete ativo",
+          avatarUrl: profile?.avatar_url ?? driver.photo_url ?? null,
+          statusLabel: driver.status === "available" ? "Disponível" : TRACK_KIND[kind].label,
         };
       });
+
     const allDrivers = [...base, ...fleetDrivers];
     if (isFinished && replaying && points[replayIdx]) {
       const p = points[replayIdx] as any;
@@ -508,6 +558,9 @@ function TrackingCenter() {
                   unit={selected}
                   onClose={() => setSelectedId(null)}
                   route={routeQ.data}
+                  events={eventsQ.data ?? []}
+                  progress={progress}
+                  traveledKm={traveledKm}
                   isFinished={isFinished}
                   replaying={replaying}
                   onToggleReplay={() => setReplaying((r) => !r)}
@@ -547,7 +600,28 @@ function TrackingCenter() {
               )}
             </aside>
           )}
+
+          {/* Bottom sheet (mobile) */}
+          {selected && (
+            <div className="absolute inset-x-0 bottom-0 z-30 max-h-[68%] overflow-y-auto rounded-t-2xl border-t border-border bg-surface shadow-2xl lg:hidden">
+              <div className="mx-auto mt-2 h-1.5 w-10 rounded-full bg-border" />
+              <DetailPanel
+                unit={selected}
+                onClose={() => setSelectedId(null)}
+                route={routeQ.data}
+                events={eventsQ.data ?? []}
+                progress={progress}
+                traveledKm={traveledKm}
+                isFinished={isFinished}
+                replaying={replaying}
+                onToggleReplay={() => setReplaying((r) => !r)}
+                replayStats={replayStats}
+                replayPoint={points[replayIdx] as any}
+              />
+            </div>
+          )}
         </div>
+
 
         <div className="flex flex-wrap gap-2">
           <button onClick={() => setFitToken((t) => t + 1)} className="rounded-xl border border-border bg-surface px-3 py-2 text-xs font-bold hover:bg-accent">
@@ -571,12 +645,27 @@ function TrackingCenter() {
   );
 }
 
+const TIMELINE: { key: string; label: string; statuses: string[] }[] = [
+  { key: "offer_sent", label: "Oferta enviada", statuses: ["awaiting_driver"] },
+  { key: "accepted", label: "Motorista aceitou", statuses: ["driver_assigned"] },
+  { key: "moving", label: "Em deslocamento", statuses: ["en_route_pickup", "in_transit_to_pickup", "near_pickup", "arriving_pickup"] },
+  { key: "at_pickup", label: "Chegou na coleta", statuses: ["at_pickup"] },
+  { key: "loading", label: "Carregamento iniciado", statuses: ["loading"] },
+  { key: "loaded", label: "Carregado", statuses: ["loaded", "picked_up"] },
+  { key: "out", label: "Saiu para entrega", statuses: ["out_for_delivery", "in_transit"] },
+  { key: "near", label: "Próximo ao destino", statuses: ["near_destination", "arriving_destination", "at_destination", "unloading"] },
+  { key: "done", label: "Entregue", statuses: ["delivered", "finalized"] },
+];
+
 function DetailPanel({
-  unit, onClose, route, isFinished, replaying, onToggleReplay, replayStats, replayPoint,
+  unit, onClose, route, events, progress, traveledKm, isFinished, replaying, onToggleReplay, replayStats, replayPoint,
 }: {
   unit: Unit;
   onClose: () => void;
   route?: { duration: number | null; distance: number | null } | null;
+  events: { event_type: string; to_status: string | null; created_at: string }[];
+  progress: number | null;
+  traveledKm: number;
   isFinished: boolean;
   replaying: boolean;
   onToggleReplay: () => void;
@@ -584,6 +673,14 @@ function DetailPanel({
   replayPoint?: { created_at: string; speed: number | null } | null;
 }) {
   const o = unit.order;
+  const currentStep = Math.max(
+    0,
+    TIMELINE.findIndex((s) => s.statuses.includes(o.status)),
+  );
+  const stampFor = (statuses: string[]) =>
+    events.find((e) => e.to_status && statuses.includes(e.to_status))?.created_at ?? null;
+  const fmtDate = (v?: string | null) => (v ? new Date(v).toLocaleString("pt-BR") : "—");
+
   return (
     <div className="flex-1 overflow-y-auto">
       <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-surface px-4 py-3">
@@ -592,7 +689,7 @@ function DetailPanel({
       </div>
 
       <div className="flex items-center gap-3 p-4">
-        <Avatar url={unit.profile?.avatar_url} name={unit.profile?.full_name} kind={unit.kind} size={52} />
+        <Avatar url={unit.profile?.avatar_url ?? unit.driver?.photo_url} name={unit.profile?.full_name} kind={unit.kind} size={52} />
         <div className="min-w-0">
           <div className="truncate text-base font-black">{unit.profile?.full_name ?? "Sem motorista"}</div>
           <div className="text-xs text-muted-foreground">{unit.profile?.phone ?? unit.driver?.phone ?? "—"}</div>
@@ -602,23 +699,74 @@ function DetailPanel({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 px-4">
+      <div className="px-4">
+        <div className="mb-1 flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+          <span>Progresso da rota</span>
+          <span>{progress != null ? `${progress}%` : "—"}</span>
+        </div>
+        <div className="h-2 overflow-hidden rounded-full bg-surface-2">
+          <div
+            className="h-full rounded-full bg-emerald-500 transition-all duration-700"
+            style={{ width: `${progress ?? 0}%` }}
+          />
+        </div>
+      </div>
+
+      <div className="mt-3 grid grid-cols-2 gap-2 px-4">
         <Field label="Veículo" value={unit.vehicle ? `${unit.vehicle.brand ?? ""} ${unit.vehicle.model ?? ""}`.trim() || "—" : "—"} />
         <Field label="Placa" value={unit.vehicle?.plate ?? "—"} />
         <Field label="Cliente" value={o.client_name ?? "—"} />
         <Field label="Frete" value={o.code} />
         <Field label="Velocidade" value={unit.speed != null ? `${Math.round(unit.speed)} km/h` : "—"} />
         <Field label="ETA" value={fmtEta(route?.duration ?? unit.etaMinutes)} />
-        <Field label="KM restantes" value={fmtDistance(route?.distance ?? unit.distanceKm)} />
         <Field label="Tempo restante" value={fmtEta(route?.duration ?? unit.etaMinutes)} />
-        <Field label="Última atualização" value={fmtAgo(unit.lastSeen)} />
+        <Field label="KM percorridos" value={`${traveledKm.toFixed(1)} km`} />
+        <Field label="KM restantes" value={fmtDistance(route?.distance ?? unit.distanceKm)} />
         <Field label="Cidade atual" value={o.current_city ?? "—"} />
+        <Field label="Data da coleta" value={fmtDate(o.pickup_date ?? o.started_trip_at ?? stampFor(["at_pickup"]))} />
+        <Field label="Entrega prevista" value={fmtDate(o.delivery_window_end ?? o.delivery_date)} />
+        <Field label="Última atualização" value={fmtAgo(unit.lastSeen)} />
       </div>
 
       <div className="space-y-2 p-4">
         <Route2 icon="🟢" label="Origem" value={`${o.origin_city ?? ""} — ${o.origin_address}`} />
+        <Route2 icon="🔵" label="Localização atual" value={o.current_city ?? (unit.lat != null ? `${unit.lat.toFixed(4)}, ${unit.lng?.toFixed(4)}` : "—")} />
         <Route2 icon="🔴" label="Destino" value={`${o.destination_city ?? ""} — ${o.destination_address}`} />
       </div>
+
+      <div className="px-4 pb-4">
+        <div className="mb-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Linha do tempo</div>
+        <ol className="space-y-0">
+          {TIMELINE.map((step, i) => {
+            const done = i < currentStep || (i === currentStep && currentStep >= 0);
+            const active = i === currentStep;
+            const at = stampFor(step.statuses);
+            return (
+              <li key={step.key} className="flex gap-3">
+                <div className="flex flex-col items-center">
+                  <span
+                    className={`grid h-4 w-4 shrink-0 place-items-center rounded-full text-[9px] font-black ${
+                      active ? "bg-brand text-brand-foreground" : done ? "bg-emerald-500 text-white" : "bg-surface-2 text-muted-foreground"
+                    }`}
+                  >
+                    {done ? "✓" : ""}
+                  </span>
+                  {i < TIMELINE.length - 1 && (
+                    <span className={`w-0.5 flex-1 ${i < currentStep ? "bg-emerald-500" : "bg-border"}`} style={{ minHeight: 16 }} />
+                  )}
+                </div>
+                <div className="pb-2">
+                  <div className={`text-xs ${active ? "font-black text-brand" : done ? "font-semibold" : "text-muted-foreground"}`}>
+                    {step.label}
+                  </div>
+                  {at && <div className="text-[10px] text-muted-foreground">{new Date(at).toLocaleString("pt-BR")}</div>}
+                </div>
+              </li>
+            );
+          })}
+        </ol>
+      </div>
+
 
       {unit.alerts.length > 0 && (
         <div className="space-y-1 px-4 pb-4">

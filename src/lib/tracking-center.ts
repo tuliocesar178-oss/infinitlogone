@@ -7,17 +7,20 @@ export type TrackKind =
   | "near_delivery"
   | "stopped"
   | "incident"
+  | "delivered"
   | "offline";
 
 export const TRACK_KIND: Record<TrackKind, { label: string; color: string; dot: string }> = {
+  to_pickup: { label: "Em deslocamento", color: "#3b82f6", dot: "🔵" },
+  loading: { label: "Carregando", color: "#eab308", dot: "🟡" },
   in_transit: { label: "Em trânsito", color: "#22c55e", dot: "🟢" },
-  to_pickup: { label: "Indo para coleta", color: "#eab308", dot: "🟡" },
-  loading: { label: "Carregando", color: "#3b82f6", dot: "🔵" },
   near_delivery: { label: "Próximo da entrega", color: "#a855f7", dot: "🟣" },
-  stopped: { label: "Parado", color: "#cbd5e1", dot: "⚪" },
+  delivered: { label: "Entregue", color: "#15803d", dot: "🟩" },
+  stopped: { label: "Parado", color: "#f97316", dot: "🟠" },
   incident: { label: "Ocorrência", color: "#ef4444", dot: "🔴" },
-  offline: { label: "Offline", color: "#334155", dot: "⚫" },
+  offline: { label: "Offline", color: "#94a3b8", dot: "⚪" },
 };
+
 
 const TO_PICKUP = [
   "driver_assigned",
@@ -37,6 +40,7 @@ export function trackKind(input: {
   online?: boolean;
 }): TrackKind {
   const { status, speedKmh, lastSeenAt } = input;
+  if (status === "delivered" || status === "finalized") return "delivered";
   if (status === "incident") return "incident";
   const stale =
     !lastSeenAt || Date.now() - new Date(lastSeenAt).getTime() > MONITOR.gpsLostSeconds * 1000;
