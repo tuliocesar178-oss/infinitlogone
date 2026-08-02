@@ -52,6 +52,7 @@ export function TrackingMap({
   const markers = useRef<Map<string, mapboxgl.Marker>>(new Map());
   const pinMarkers = useRef<mapboxgl.Marker[]>([]);
   const ready = useRef(false);
+  const firstStyle = useRef(true);
   const [style, setStyle] = useState<keyof typeof STYLES>("streets");
   const [traffic, setTraffic] = useState(false);
 
@@ -67,13 +68,23 @@ export function TrackingMap({
     map.addControl(new mapboxgl.NavigationControl({ visualizePitch: false }), "top-right");
     map.addControl(new mapboxgl.FullscreenControl(), "top-right");
     map.addControl(new mapboxgl.ScaleControl({ unit: "metric" }), "bottom-left");
+    map.on("error", (e) => console.error("[mapbox]", e?.error?.message ?? e));
     map.on("style.load", () => {
       ready.current = true;
+      map.resize();
       drawLines();
       applyTraffic();
     });
+    map.on("load", () => map.resize());
     mapRef.current = map;
+
+    const ro = new ResizeObserver(() => map.resize());
+    ro.observe(containerRef.current);
+    const t = window.setTimeout(() => map.resize(), 300);
+
     return () => {
+      window.clearTimeout(t);
+      ro.disconnect();
       map.remove();
       mapRef.current = null;
       markers.current.clear();
@@ -83,11 +94,16 @@ export function TrackingMap({
   }, []);
 
   useEffect(() => {
+    if (firstStyle.current) {
+      firstStyle.current = false;
+      return;
+    }
     if (!mapRef.current) return;
     ready.current = false;
     mapRef.current.setStyle(STYLES[style]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [style]);
+
 
   function applyTraffic() {
     const map = mapRef.current;
