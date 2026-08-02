@@ -5,6 +5,7 @@ import { AppShell } from "@/components/app-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { TeamInviteDialog } from "@/components/team-invite-dialog";
 import { TeamSidePanel } from "@/components/team-side-panel";
+import { NotificationSettings } from "@/components/notification-settings";
 import { TEAM_ROLES, TEAM_STATUS, labelForRole, labelForStatus, teamStatusBadge } from "@/lib/team";
 import {
   ArrowUpDown,
