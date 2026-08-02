@@ -13,6 +13,8 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "sonner";
+import { PwaProvider } from "@/components/pwa-provider";
+import { enableOfflinePersistence } from "@/lib/query-persist";
 
 function NotFoundComponent() {
   return (
@@ -88,10 +90,20 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "application-name", content: "InfinitLog Transportes" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-title", content: "InfinitLog" },
+      {
+        name: "apple-mobile-web-app-status-bar-style",
+        content: "black-translucent",
+      },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
       { rel: "icon", href: "/favicon.png", type: "image/png" },
+      { rel: "manifest", href: "/manifest.webmanifest" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png", sizes: "180x180" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "" },
       {
@@ -138,10 +150,26 @@ function RootComponent() {
     return () => sub.subscription.unsubscribe();
   }, [router, queryClient]);
 
+  // Cache offline + ressincronização automática ao voltar a internet.
+  useEffect(() => {
+    const stop = enableOfflinePersistence(queryClient);
+    const resync = () => {
+      void queryClient.refetchQueries();
+      void router.invalidate();
+    };
+    window.addEventListener("infinitlog:resync", resync);
+    return () => {
+      window.removeEventListener("infinitlog:resync", resync);
+      stop();
+    };
+  }, [queryClient, router]);
+
   return (
     <QueryClientProvider client={queryClient}>
-      <Outlet />
-      <Toaster position="top-center" richColors />
+      <PwaProvider>
+        <Outlet />
+        <Toaster position="top-center" richColors />
+      </PwaProvider>
     </QueryClientProvider>
   );
 }
