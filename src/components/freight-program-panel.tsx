@@ -17,10 +17,12 @@ import { FileDown, Plus, Send, Trash2 } from "lucide-react";
 import { DRIVER_COLUMNS } from "@/lib/driver-columns";
 import { sendProgramToDriver } from "@/lib/freight.functions";
 import { useServerFn } from "@tanstack/react-start";
+import { getDriverFinancials } from "@/lib/driver-financials.functions";
 
 export function FreightProgramPanel({ order }: { order: any }) {
   const qc = useQueryClient();
   const sendProgram = useServerFn(sendProgramToDriver);
+  const loadFinancials = useServerFn(getDriverFinancials);
   const orderId = order.id;
 
   const q = useQuery({
@@ -165,6 +167,13 @@ export function FreightProgramPanel({ order }: { order: any }) {
         ]);
         driver = d;
         driverProfile = p;
+        // Banking data is admin-only; ignore failures for non-admin staff.
+        try {
+          const fin = await loadFinancials({ data: { user_id: targetDriverId } });
+          if (fin) driver = { ...(d ?? {}), ...fin };
+        } catch {
+          /* sem permissão para dados bancários */
+        }
         if (d?.current_vehicle_id) {
           const { data: v } = await supabase
             .from("vehicles")
