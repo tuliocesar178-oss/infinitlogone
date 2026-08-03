@@ -5,6 +5,8 @@ import { AppShell } from "@/components/app-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { CheckCircle2, XCircle, AlertTriangle, FileText, Eye } from "lucide-react";
+import { reviewDriverSignup } from "@/lib/drivers.functions";
+import { useServerFn } from "@tanstack/react-start";
 
 export const Route = createFileRoute("/_authenticated/ops/motoristas/aprovacoes")({
   head: () => ({ meta: [{ title: "Solicitações de cadastro — InfinitLog" }, { name: "robots", content: "noindex" }] }),
@@ -76,10 +78,7 @@ function DriverApprovalsPage() {
 
   async function review(driverId: string, decision: "approve" | "reject" | "correction", reason?: string) {
     try {
-      const { error } = await supabase.rpc("review_driver_signup", {
-        _driver_id: driverId, _decision: decision, _reason: reason ?? undefined,
-      });
-      if (error) throw error;
+      await review_fn({ data: { driver_id: driverId, decision, reason: reason ?? null } });
       const msg = { approve: "Cadastro aprovado", reject: "Cadastro reprovado", correction: "Correção solicitada" }[decision];
       toast.success(msg);
       setSelected(null);

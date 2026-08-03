@@ -17,6 +17,8 @@ import {
 import { Logo } from "@/components/logo";
 import { PUBLIC_TIMELINE, publicStatus, STATUS_LABEL } from "@/lib/order-status";
 import { TripMap } from "@/components/trip-map";
+import { getPublicTracking } from "@/lib/tracking-public.functions";
+import { useServerFn } from "@tanstack/react-start";
 
 export const Route = createFileRoute("/rastreio/$code")({
   head: ({ params }) => ({
@@ -69,13 +71,13 @@ type TrackingResult = {
 
 function TrackingPage() {
   const { code } = Route.useParams();
+  const fetchTracking = useServerFn(getPublicTracking);
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["tracking", code],
     queryFn: async (): Promise<TrackingResult | null> => {
-      const { data, error } = await supabase.rpc("get_tracking", { _code: code.trim().toUpperCase() });
-      if (error) throw error;
-      return (data as TrackingResult | null) ?? null;
+      const result = await fetchTracking({ data: { code: code.trim().toUpperCase() } });
+      return (result as TrackingResult | null) ?? null;
     },
     refetchInterval: 10_000,
   });
