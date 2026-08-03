@@ -123,7 +123,35 @@ export const deleteDriver = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+const reviewSchema = z.object({
+  driver_id: z.string().uuid(),
+  decision: z.enum(["approve", "reject", "correction"]),
+  reason: z.string().trim().max(2000).optional().nullable(),
+});
+
+/**
+ * Approve / reject / request correction on a driver signup.
+ * The database routine is server-only; staff membership is verified here and
+ * re-verified inside the routine using the forwarded actor id.
+ */
+export const reviewDriverSignup = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: z.infer<typeof reviewSchema>) => reviewSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    await ensureStaff(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await (supabaseAdmin as any).rpc("review_driver_signup_as", {
+      _actor: context.userId,
+      _driver_id: data.driver_id,
+      _decision: data.decision,
+      _reason: data.reason ?? null,
+    });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 const availabilitySchema = z.object({
+
   user_id: z.string().uuid(),
   availability: z.enum(["disponivel", "em_frete", "folga", "ferias", "bloqueado", "offline"]),
 });

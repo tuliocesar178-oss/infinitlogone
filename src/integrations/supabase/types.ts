@@ -1791,8 +1791,27 @@ export type Database = {
         Args: { _decision: string; _driver_id: string; _reason?: string }
         Returns: undefined
       }
+      review_driver_signup_as: {
+        Args: {
+          _actor: string
+          _decision: string
+          _driver_id: string
+          _reason?: string
+        }
+        Returns: undefined
+      }
       send_program_to_driver: {
         Args: {
+          _driver_id: string
+          _expires_minutes?: number
+          _price: number
+          _program_id: string
+        }
+        Returns: string
+      }
+      send_program_to_driver_as: {
+        Args: {
+          _actor: string
           _driver_id: string
           _expires_minutes?: number
           _price: number

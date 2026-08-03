@@ -5,6 +5,9 @@ import { AppShell } from "@/components/app-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ArrowLeft, Upload, UserRound } from "lucide-react";
+import { DRIVER_COLUMNS } from "@/lib/driver-columns";
+import { getDriverFinancials } from "@/lib/driver-financials.functions";
+import { useServerFn } from "@tanstack/react-start";
 import {
   BANK_ACCOUNT_TYPES,
   FIN_STATUS,
@@ -30,15 +33,23 @@ function DriverDetail() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
 
+  const loadFinancials = useServerFn(getDriverFinancials);
+
   const q = useQuery({
     queryKey: ["driver", id],
     queryFn: async () => {
       const [{ data: d }, { data: p }, { data: v }] = await Promise.all([
-        supabase.from("drivers").select("*").eq("user_id", id).maybeSingle(),
+        supabase.from("drivers").select(DRIVER_COLUMNS as "*").eq("user_id", id).maybeSingle(),
         supabase.from("profiles").select("full_name, phone").eq("id", id).maybeSingle(),
         supabase.from("vehicles").select("*").eq("active", true).order("plate"),
       ]);
-      return { driver: d, profile: p, vehicles: v ?? [] };
+      let financials: any = null;
+      try {
+        financials = await loadFinancials({ data: { user_id: id } });
+      } catch {
+        financials = null;
+      }
+      return { driver: d ? { ...d, ...(financials ?? {}) } : d, profile: p, vehicles: v ?? [] };
     },
   });
 

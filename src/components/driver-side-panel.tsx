@@ -31,6 +31,8 @@ import {
   X,
 } from "lucide-react";
 import { TripMap } from "@/components/trip-map";
+import { DRIVER_COLUMNS } from "@/lib/driver-columns";
+import { getDriverFinancials } from "@/lib/driver-financials.functions";
 
 export function DriverSidePanel({
   driverId,
@@ -46,6 +48,14 @@ export function DriverSidePanel({
   const resend = useServerFn(resendDriverInvite);
   const remove = useServerFn(deleteDriver);
   const setAvail = useServerFn(setDriverAvailability);
+  const loadFinancials = useServerFn(getDriverFinancials);
+
+  const financialsQ = useQuery({
+    enabled: isAdmin,
+    queryKey: ["driver-financials", driverId],
+    queryFn: () => loadFinancials({ data: { user_id: driverId } }),
+    retry: false,
+  });
 
   const q = useQuery({
     queryKey: ["driver-panel", driverId],
@@ -59,7 +69,7 @@ export function DriverSidePanel({
         { count: doneCount },
         { count: activeCount },
       ] = await Promise.all([
-        supabase.from("drivers").select("*").eq("user_id", driverId).maybeSingle(),
+        supabase.from("drivers").select(DRIVER_COLUMNS as "*").eq("user_id", driverId).maybeSingle(),
         supabase.from("profiles").select("full_name, phone, avatar_url").eq("id", driverId).maybeSingle(),
         supabase
           .from("vehicles")
@@ -263,8 +273,8 @@ export function DriverSidePanel({
                 <Info label="Prazo" value={d?.payment_term_days ? `${d.payment_term_days}d` : "—"} />
                 <Info label="R$ / KM" value={brl(d?.default_price_per_km)} />
                 <Info label="Mín. por frete" value={brl(d?.min_freight_value)} />
-                <Info label="Banco" value={d?.bank_name ?? "—"} />
-                <Info label="PIX" value={d?.pix_key ?? "—"} />
+                <Info label="Banco" value={financialsQ.data?.bank_name ?? (isAdmin ? "—" : "restrito")} />
+                <Info label="PIX" value={financialsQ.data?.pix_key ?? (isAdmin ? "—" : "restrito")} />
               </div>
             </section>
 

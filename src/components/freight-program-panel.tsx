@@ -14,9 +14,15 @@ import {
 } from "@/lib/pf";
 import { FreightProgramPDF } from "@/components/pf-pdf";
 import { FileDown, Plus, Send, Trash2 } from "lucide-react";
+import { DRIVER_COLUMNS } from "@/lib/driver-columns";
+import { sendProgramToDriver } from "@/lib/freight.functions";
+import { useServerFn } from "@tanstack/react-start";
+import { getDriverFinancials } from "@/lib/driver-financials.functions";
 
 export function FreightProgramPanel({ order }: { order: any }) {
   const qc = useQueryClient();
+  const sendProgram = useServerFn(sendProgramToDriver);
+  const loadFinancials = useServerFn(getDriverFinancials);
   const orderId = order.id;
 
   const q = useQuery({
@@ -126,13 +132,14 @@ export function FreightProgramPanel({ order }: { order: any }) {
     setSending(true);
     try {
       await saveProgram();
-      const { error } = await supabase.rpc("send_program_to_driver", {
-        _program_id: q.data.program.id,
-        _driver_id: driverId,
-        _price: Number(form.freight_value),
-        _expires_minutes: 15,
+      await sendProgram({
+        data: {
+          program_id: q.data.program.id,
+          driver_id: driverId,
+          price: Number(form.freight_value),
+          expires_minutes: 15,
+        },
       });
-      if (error) throw error;
       toast.success("Programação enviada ao motorista");
       qc.invalidateQueries({ queryKey: ["pf", orderId] });
       qc.invalidateQueries({ queryKey: ["order", orderId] });
@@ -155,11 +162,18 @@ export function FreightProgramPanel({ order }: { order: any }) {
       const targetDriverId = order.driver_id ?? driverId;
       if (targetDriverId) {
         const [{ data: d }, { data: p }] = await Promise.all([
-          supabase.from("drivers").select("*").eq("user_id", targetDriverId).maybeSingle(),
+          supabase.from("drivers").select(DRIVER_COLUMNS as "*").eq("user_id", targetDriverId).maybeSingle(),
           supabase.from("profiles").select("*").eq("id", targetDriverId).maybeSingle(),
         ]);
         driver = d;
         driverProfile = p;
+        // Banking data is admin-only; ignore failures for non-admin staff.
+        try {
+          const fin = await loadFinancials({ data: { user_id: targetDriverId } });
+          if (fin) driver = { ...(d ?? {}), ...fin };
+        } catch {
+          /* sem permissão para dados bancários */
+        }
         if (d?.current_vehicle_id) {
           const { data: v } = await supabase
             .from("vehicles")

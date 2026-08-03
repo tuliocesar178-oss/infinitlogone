@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { brl } from "@/lib/pf";
 import { CircleDollarSign, Clock, Truck, Wallet } from "lucide-react";
 import { STATUS_LABEL } from "@/lib/order-status";
+import { getDriverFinancials } from "@/lib/driver-financials.functions";
+import { useServerFn } from "@tanstack/react-start";
 
 export const Route = createFileRoute("/_authenticated/driver/faturamento")({
   head: () => ({ meta: [{ title: "Meu faturamento — Motorista" }, { name: "robots", content: "noindex" }] }),
@@ -24,16 +26,24 @@ function DriverBilling() {
     })();
   }, []);
 
+  const loadFinancials = useServerFn(getDriverFinancials);
+
   const driverQ = useQuery({
     enabled: !!userId,
     queryKey: ["driver-billing-profile", userId],
     queryFn: async () => {
       const { data } = await supabase
         .from("drivers")
-        .select("pix_key, pix_key_type, bank_name, bank_agency, bank_account, bank_account_digit, bank_account_type, favored_name, favored_document, preferred_payment_method, payment_term_days")
+        .select("preferred_payment_method, payment_term_days")
         .eq("user_id", userId)
         .maybeSingle();
-      return data;
+      let financials: Awaited<ReturnType<typeof loadFinancials>> = null;
+      try {
+        financials = await loadFinancials({ data: { user_id: userId! } });
+      } catch {
+        financials = null;
+      }
+      return { ...(data ?? {}), ...(financials ?? {}) } as any;
     },
   });
 

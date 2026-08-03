@@ -16,6 +16,7 @@ import { STATUS_LABEL, STATUS_BADGE_CLASS, OrderStatus } from "@/lib/order-statu
 import { toast } from "sonner";
 import { OrderDrawer } from "@/components/ops/order-drawer";
 import { formatBRL } from "@/lib/ops-central";
+import { DRIVER_COLUMNS } from "@/lib/driver-columns";
 
 export const Route = createFileRoute("/_authenticated/ops/central")({
   head: () => ({
@@ -89,7 +90,7 @@ function TorreDeControle() {
     queryFn: async () => {
       const { data: drivers, error } = await supabase
         .from("drivers")
-        .select("*")
+        .select(DRIVER_COLUMNS as "*")
         .not("status", "in", "(offline)"); // Filter at the query level for efficiency
       
       if (error) throw error;
