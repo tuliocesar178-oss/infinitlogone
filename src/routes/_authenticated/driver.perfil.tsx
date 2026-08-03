@@ -7,6 +7,7 @@ import { AVAILABILITY, labelOf } from "@/lib/pf";
 import { applyTheme, readTheme, type ThemeMode } from "@/lib/driver-prefs";
 import { AlertTriangle, Bell, ChevronRight, Clock, LogOut, MapPin, Moon, Phone, Star, Sun, Truck, UserRound } from "lucide-react";
 import { NotificationSettings } from "@/components/notification-settings";
+import { DRIVER_COLUMNS } from "@/lib/driver-columns";
 
 export const Route = createFileRoute("/_authenticated/driver/perfil")({
   head: () => ({ meta: [{ title: "Perfil — Motorista" }, { name: "robots", content: "noindex" }] }),
@@ -31,7 +32,7 @@ function DriverProfile() {
     queryFn: async () => {
       const [{ data: profile }, { data: driver }, { data: vehicle }, { data: notifs }] = await Promise.all([
         supabase.from("profiles").select("full_name, phone, avatar_url").eq("id", userId).maybeSingle(),
-        supabase.from("drivers").select("*").eq("user_id", userId).maybeSingle(),
+        supabase.from("drivers").select(DRIVER_COLUMNS).eq("user_id", userId).maybeSingle(),
         supabase.from("vehicles").select("plate, brand, model, vehicle_type, color").eq("owner_driver_id", userId).limit(1).maybeSingle(),
         supabase.from("notifications").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(10),
       ]);

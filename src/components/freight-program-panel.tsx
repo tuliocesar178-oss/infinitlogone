@@ -14,6 +14,7 @@ import {
 } from "@/lib/pf";
 import { FreightProgramPDF } from "@/components/pf-pdf";
 import { FileDown, Plus, Send, Trash2 } from "lucide-react";
+import { DRIVER_COLUMNS } from "@/lib/driver-columns";
 
 export function FreightProgramPanel({ order }: { order: any }) {
   const qc = useQueryClient();
@@ -155,7 +156,7 @@ export function FreightProgramPanel({ order }: { order: any }) {
       const targetDriverId = order.driver_id ?? driverId;
       if (targetDriverId) {
         const [{ data: d }, { data: p }] = await Promise.all([
-          supabase.from("drivers").select("*").eq("user_id", targetDriverId).maybeSingle(),
+          supabase.from("drivers").select(DRIVER_COLUMNS).eq("user_id", targetDriverId).maybeSingle(),
           supabase.from("profiles").select("*").eq("id", targetDriverId).maybeSingle(),
         ]);
         driver = d;

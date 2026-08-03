@@ -31,6 +31,7 @@ import {
   X,
 } from "lucide-react";
 import { TripMap } from "@/components/trip-map";
+import { DRIVER_COLUMNS } from "@/lib/driver-columns";
 
 export function DriverSidePanel({
   driverId,
@@ -59,7 +60,7 @@ export function DriverSidePanel({
         { count: doneCount },
         { count: activeCount },
       ] = await Promise.all([
-        supabase.from("drivers").select("*").eq("user_id", driverId).maybeSingle(),
+        supabase.from("drivers").select(DRIVER_COLUMNS).eq("user_id", driverId).maybeSingle(),
         supabase.from("profiles").select("full_name, phone, avatar_url").eq("id", driverId).maybeSingle(),
         supabase
           .from("vehicles")

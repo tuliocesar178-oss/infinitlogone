@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ArrowLeft, Upload, UserRound } from "lucide-react";
 import {
+import { DRIVER_COLUMNS } from "@/lib/driver-columns";
   BANK_ACCOUNT_TYPES,
   FIN_STATUS,
   PAYMENT_METHOD_PREFS,
@@ -34,7 +35,7 @@ function DriverDetail() {
     queryKey: ["driver", id],
     queryFn: async () => {
       const [{ data: d }, { data: p }, { data: v }] = await Promise.all([
-        supabase.from("drivers").select("*").eq("user_id", id).maybeSingle(),
+        supabase.from("drivers").select(DRIVER_COLUMNS).eq("user_id", id).maybeSingle(),
         supabase.from("profiles").select("full_name, phone").eq("id", id).maybeSingle(),
         supabase.from("vehicles").select("*").eq("active", true).order("plate"),
       ]);
