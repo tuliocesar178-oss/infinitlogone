@@ -93,9 +93,9 @@ function TrackingCenter() {
       const assignedDriverIds = Array.from(new Set((orders ?? []).map((o) => o.driver_id).filter(Boolean))) as string[];
       const canSeeFleet = role === "admin" || role === "logistics";
       const driversQuery = canSeeFleet
-        ? supabase.from("drivers").select(DRIVER_COLUMNS)
+        ? supabase.from("drivers").select(DRIVER_COLUMNS as "*")
         : assignedDriverIds.length
-          ? supabase.from("drivers").select(DRIVER_COLUMNS).in("user_id", assignedDriverIds)
+          ? supabase.from("drivers").select(DRIVER_COLUMNS as "*").in("user_id", assignedDriverIds)
           : null;
       const { data: fleetDrivers } = driversQuery ? await driversQuery : { data: [] as any[] };
       const driverIds = Array.from(new Set((fleetDrivers ?? []).map((driver: any) => driver.user_id).filter(Boolean))) as string[];

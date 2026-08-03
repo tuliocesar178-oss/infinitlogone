@@ -69,7 +69,7 @@ export function DriverSidePanel({
         { count: doneCount },
         { count: activeCount },
       ] = await Promise.all([
-        supabase.from("drivers").select(DRIVER_COLUMNS).eq("user_id", driverId).maybeSingle(),
+        supabase.from("drivers").select(DRIVER_COLUMNS as "*").eq("user_id", driverId).maybeSingle(),
         supabase.from("profiles").select("full_name, phone, avatar_url").eq("id", driverId).maybeSingle(),
         supabase
           .from("vehicles")

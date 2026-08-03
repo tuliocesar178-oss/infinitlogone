@@ -32,7 +32,7 @@ function DriverProfile() {
     queryFn: async () => {
       const [{ data: profile }, { data: driver }, { data: vehicle }, { data: notifs }] = await Promise.all([
         supabase.from("profiles").select("full_name, phone, avatar_url").eq("id", userId).maybeSingle(),
-        supabase.from("drivers").select(DRIVER_COLUMNS).eq("user_id", userId).maybeSingle(),
+        supabase.from("drivers").select(DRIVER_COLUMNS as "*").eq("user_id", userId).maybeSingle(),
         supabase.from("vehicles").select("plate, brand, model, vehicle_type, color").eq("owner_driver_id", userId).limit(1).maybeSingle(),
         supabase.from("notifications").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(10),
       ]);

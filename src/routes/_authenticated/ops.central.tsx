@@ -90,7 +90,7 @@ function TorreDeControle() {
     queryFn: async () => {
       const { data: drivers, error } = await supabase
         .from("drivers")
-        .select(DRIVER_COLUMNS)
+        .select(DRIVER_COLUMNS as "*")
         .not("status", "in", "(offline)"); // Filter at the query level for efficiency
       
       if (error) throw error;

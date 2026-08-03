@@ -162,7 +162,7 @@ export function FreightProgramPanel({ order }: { order: any }) {
       const targetDriverId = order.driver_id ?? driverId;
       if (targetDriverId) {
         const [{ data: d }, { data: p }] = await Promise.all([
-          supabase.from("drivers").select(DRIVER_COLUMNS).eq("user_id", targetDriverId).maybeSingle(),
+          supabase.from("drivers").select(DRIVER_COLUMNS as "*").eq("user_id", targetDriverId).maybeSingle(),
           supabase.from("profiles").select("*").eq("id", targetDriverId).maybeSingle(),
         ]);
         driver = d;
