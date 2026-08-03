@@ -5,10 +5,10 @@ import { AppShell } from "@/components/app-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ArrowLeft, Upload, UserRound } from "lucide-react";
-import {
 import { DRIVER_COLUMNS } from "@/lib/driver-columns";
 import { getDriverFinancials } from "@/lib/driver-financials.functions";
 import { useServerFn } from "@tanstack/react-start";
+import {
   BANK_ACCOUNT_TYPES,
   FIN_STATUS,
   PAYMENT_METHOD_PREFS,
