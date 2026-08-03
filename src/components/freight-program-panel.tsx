@@ -20,6 +20,7 @@ import { useServerFn } from "@tanstack/react-start";
 
 export function FreightProgramPanel({ order }: { order: any }) {
   const qc = useQueryClient();
+  const sendProgram = useServerFn(sendProgramToDriver);
   const orderId = order.id;
 
   const q = useQuery({

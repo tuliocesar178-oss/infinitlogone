@@ -23,6 +23,7 @@ type Row = {
 };
 
 function DriverApprovalsPage() {
+  const review_fn = useServerFn(reviewDriverSignup);
   const [filter, setFilter] = useState<"pending" | "correction" | "rejected" | "all">("pending");
   const [selected, setSelected] = useState<Row | null>(null);
 
