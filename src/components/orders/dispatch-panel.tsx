@@ -27,7 +27,7 @@ export function DispatchPanel({ order, onSent }: { order: any; onSent: () => voi
       const { data, error } = await supabase
         .from("drivers")
         .select("user_id,current_lat,current_lng,rating,status,availability,city,phone,last_seen_at")
-        .in("availability", ["disponivel"]);
+        .in("availability", ["disponivel", "available", "on_trip"]);
       if (error) throw error;
       
       const { data: previousOffers } = await supabase
