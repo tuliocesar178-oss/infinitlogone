@@ -26,8 +26,8 @@ export function DispatchPanel({ order, onSent }: { order: any; onSent: () => voi
     queryFn: async () => {
       const { data, error } = await supabase
         .from("drivers")
-        .select("user_id,current_lat,current_lng,rating,status,availability,city,phone")
-        .eq("availability", "disponivel");
+        .select("user_id,current_lat,current_lng,rating,status,availability,city,phone,last_seen_at")
+        .in("availability", ["disponivel", "em_frete"] as any);
       if (error) throw error;
       
       const { data: previousOffers } = await supabase

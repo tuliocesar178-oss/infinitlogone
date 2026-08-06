@@ -27,11 +27,19 @@ function DriverHome() {
       const n = p?.full_name ?? u.user.email ?? "Motorista";
       setFirstName(n.split(" ")[0]);
 
-      // Set driver as available when they access the dashboard
+      // Atualizar status e disponibilidade do motorista ao acessar o dashboard
       await supabase
         .from("drivers")
-        .update({ status: 'available' as any, availability: 'disponivel' as any, last_seen_at: new Date().toISOString() })
+        .update({ 
+          status: 'available' as any, 
+          availability: 'disponivel' as any, 
+          last_seen_at: new Date().toISOString() 
+        })
         .eq("user_id", u.user.id);
+      
+      // Forçar atualização do dashboard após marcar como disponível
+      qc.invalidateQueries({ queryKey: ["driver-offers", u.user.id] });
+      qc.invalidateQueries({ queryKey: ["driver-home-stats", u.user.id] });
     })();
   }, []);
 
