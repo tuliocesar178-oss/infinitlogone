@@ -57,31 +57,40 @@ function DriverHome() {
         .maybeSingle();
       return (data ?? null) as Order | null;
     },
+    refetchInterval: 5000,
   });
 
   const offersQ = useQuery({
     enabled: !!userId,
     queryKey: ["driver-offers", userId],
     queryFn: async () => {
-      const { data: offers } = await supabase
+      const { data: offers, error: offErr } = await supabase
         .from("freight_offers")
         .select("*")
         .eq("driver_id", userId)
         .eq("status", "pending")
         .order("created_at", { ascending: false })
         .limit(3);
+      
+      if (offErr) {
+        console.error("Erro ao buscar ofertas:", offErr);
+        return [];
+      }
       if (!offers?.length) return [];
+      
       const ids = offers.map((o) => o.order_id);
       const [{ data: orders }, { data: programs }] = await Promise.all([
         supabase.from("orders").select("*").in("id", ids),
         supabase.from("freight_programs").select("*").in("order_id", ids),
       ]);
+      
       return offers.map((o) => ({
         offer: o,
         order: orders?.find((x) => x.id === o.order_id),
         program: programs?.find((p) => p.order_id === o.order_id),
       }));
     },
+    refetchInterval: 5000,
   });
 
   const statsQ = useQuery({
