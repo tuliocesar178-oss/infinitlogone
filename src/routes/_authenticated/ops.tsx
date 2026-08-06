@@ -9,11 +9,12 @@ export const Route = createFileRoute("/_authenticated/ops")({
     const { data: roles } = await supabase
       .from("user_roles")
       .select("role")
-      .eq("user_id", user.id)
-      .maybeSingle();
+      .eq("user_id", user.id);
+    
+    const userRoles = roles?.map(r => r.role) || [];
 
-    if (!roles || (roles.role !== "admin" && roles.role !== "logistics")) {
-      const target = roles?.role === "driver" ? "/driver" : "/client";
+    if (!userRoles.includes("admin") && !userRoles.includes("logistics")) {
+      const target = userRoles.includes("driver") ? "/driver" : "/client";
       throw redirect({ to: target });
     }
   },
