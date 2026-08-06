@@ -94,8 +94,8 @@ function ClientDashboard() {
 
   return (
     <AppShell 
-      title="Portal Executivo do Cliente" 
-      subtitle="INFINITLOG — Inteligência Logística em Tempo Real"
+      title="Dashboard" 
+      subtitle="Bem-vindo ao seu Portal de Logística"
     >
       <div className="space-y-8 pb-10">
         {/* KPI Grid */}
