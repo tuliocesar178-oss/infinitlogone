@@ -29,6 +29,8 @@ function ClientOrdersList() {
   const { data: orders, isLoading } = useQuery({
     queryKey: ["client-orders"],
     queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
       const { data } = await supabase
         .from("orders")
         .select(`
@@ -36,6 +38,7 @@ function ClientOrdersList() {
           driver:profiles!orders_driver_id_fkey(full_name),
           vehicle:vehicles(plate, model)
         `)
+        .eq("client_id", user.id)
         .order("created_at", { ascending: false });
       return data || [];
     }
