@@ -35,8 +35,14 @@ import { Route as AuthenticatedDriverOfertasRouteImport } from './routes/_authen
 import { Route as AuthenticatedDriverOcorrenciasRouteImport } from './routes/_authenticated/driver.ocorrencias'
 import { Route as AuthenticatedDriverFretesRouteImport } from './routes/_authenticated/driver.fretes'
 import { Route as AuthenticatedDriverFaturamentoRouteImport } from './routes/_authenticated/driver.faturamento'
+import { Route as AuthenticatedClientRelatoriosRouteImport } from './routes/_authenticated/client.relatorios'
+import { Route as AuthenticatedClientMapaRouteImport } from './routes/_authenticated/client.mapa'
+import { Route as AuthenticatedClientInsightsRouteImport } from './routes/_authenticated/client.insights'
+import { Route as AuthenticatedClientIndicadoresRouteImport } from './routes/_authenticated/client.indicadores'
 import { Route as AuthenticatedClientFretesRouteImport } from './routes/_authenticated/client.fretes'
+import { Route as AuthenticatedClientFinanceiroRouteImport } from './routes/_authenticated/client.financeiro'
 import { Route as AuthenticatedClientDocumentosRouteImport } from './routes/_authenticated/client.documentos'
+import { Route as AuthenticatedClientBiRouteImport } from './routes/_authenticated/client.bi'
 import { Route as AuthenticatedOpsPedidosIndexRouteImport } from './routes/_authenticated/ops.pedidos.index'
 import { Route as AuthenticatedOpsMotoristasIndexRouteImport } from './routes/_authenticated/ops.motoristas.index'
 import { Route as AuthenticatedOpsVeiculosNovoRouteImport } from './routes/_authenticated/ops.veiculos.novo'
@@ -188,10 +194,39 @@ const AuthenticatedDriverFaturamentoRoute =
     path: '/faturamento',
     getParentRoute: () => AuthenticatedDriverRoute,
   } as any)
+const AuthenticatedClientRelatoriosRoute =
+  AuthenticatedClientRelatoriosRouteImport.update({
+    id: '/relatorios',
+    path: '/relatorios',
+    getParentRoute: () => AuthenticatedClientRoute,
+  } as any)
+const AuthenticatedClientMapaRoute = AuthenticatedClientMapaRouteImport.update({
+  id: '/mapa',
+  path: '/mapa',
+  getParentRoute: () => AuthenticatedClientRoute,
+} as any)
+const AuthenticatedClientInsightsRoute =
+  AuthenticatedClientInsightsRouteImport.update({
+    id: '/insights',
+    path: '/insights',
+    getParentRoute: () => AuthenticatedClientRoute,
+  } as any)
+const AuthenticatedClientIndicadoresRoute =
+  AuthenticatedClientIndicadoresRouteImport.update({
+    id: '/indicadores',
+    path: '/indicadores',
+    getParentRoute: () => AuthenticatedClientRoute,
+  } as any)
 const AuthenticatedClientFretesRoute =
   AuthenticatedClientFretesRouteImport.update({
     id: '/fretes',
     path: '/fretes',
+    getParentRoute: () => AuthenticatedClientRoute,
+  } as any)
+const AuthenticatedClientFinanceiroRoute =
+  AuthenticatedClientFinanceiroRouteImport.update({
+    id: '/financeiro',
+    path: '/financeiro',
     getParentRoute: () => AuthenticatedClientRoute,
   } as any)
 const AuthenticatedClientDocumentosRoute =
@@ -200,6 +235,11 @@ const AuthenticatedClientDocumentosRoute =
     path: '/documentos',
     getParentRoute: () => AuthenticatedClientRoute,
   } as any)
+const AuthenticatedClientBiRoute = AuthenticatedClientBiRouteImport.update({
+  id: '/bi',
+  path: '/bi',
+  getParentRoute: () => AuthenticatedClientRoute,
+} as any)
 const AuthenticatedOpsPedidosIndexRoute =
   AuthenticatedOpsPedidosIndexRouteImport.update({
     id: '/pedidos/',
@@ -287,8 +327,14 @@ export interface FileRoutesByFullPath {
   '/driver': typeof AuthenticatedDriverRouteWithChildren
   '/ops': typeof AuthenticatedOpsRouteWithChildren
   '/rastreio/$code': typeof RastreioCodeRoute
+  '/client/bi': typeof AuthenticatedClientBiRoute
   '/client/documentos': typeof AuthenticatedClientDocumentosRoute
+  '/client/financeiro': typeof AuthenticatedClientFinanceiroRoute
   '/client/fretes': typeof AuthenticatedClientFretesRoute
+  '/client/indicadores': typeof AuthenticatedClientIndicadoresRoute
+  '/client/insights': typeof AuthenticatedClientInsightsRoute
+  '/client/mapa': typeof AuthenticatedClientMapaRoute
+  '/client/relatorios': typeof AuthenticatedClientRelatoriosRoute
   '/driver/faturamento': typeof AuthenticatedDriverFaturamentoRoute
   '/driver/fretes': typeof AuthenticatedDriverFretesRoute
   '/driver/ocorrencias': typeof AuthenticatedDriverOcorrenciasRoute
@@ -325,8 +371,14 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminRoute
   '/app': typeof AuthenticatedAppRoute
   '/rastreio/$code': typeof RastreioCodeRoute
+  '/client/bi': typeof AuthenticatedClientBiRoute
   '/client/documentos': typeof AuthenticatedClientDocumentosRoute
+  '/client/financeiro': typeof AuthenticatedClientFinanceiroRoute
   '/client/fretes': typeof AuthenticatedClientFretesRoute
+  '/client/indicadores': typeof AuthenticatedClientIndicadoresRoute
+  '/client/insights': typeof AuthenticatedClientInsightsRoute
+  '/client/mapa': typeof AuthenticatedClientMapaRoute
+  '/client/relatorios': typeof AuthenticatedClientRelatoriosRoute
   '/driver/faturamento': typeof AuthenticatedDriverFaturamentoRoute
   '/driver/fretes': typeof AuthenticatedDriverFretesRoute
   '/driver/ocorrencias': typeof AuthenticatedDriverOcorrenciasRoute
@@ -368,8 +420,14 @@ export interface FileRoutesById {
   '/_authenticated/driver': typeof AuthenticatedDriverRouteWithChildren
   '/_authenticated/ops': typeof AuthenticatedOpsRouteWithChildren
   '/rastreio/$code': typeof RastreioCodeRoute
+  '/_authenticated/client/bi': typeof AuthenticatedClientBiRoute
   '/_authenticated/client/documentos': typeof AuthenticatedClientDocumentosRoute
+  '/_authenticated/client/financeiro': typeof AuthenticatedClientFinanceiroRoute
   '/_authenticated/client/fretes': typeof AuthenticatedClientFretesRoute
+  '/_authenticated/client/indicadores': typeof AuthenticatedClientIndicadoresRoute
+  '/_authenticated/client/insights': typeof AuthenticatedClientInsightsRoute
+  '/_authenticated/client/mapa': typeof AuthenticatedClientMapaRoute
+  '/_authenticated/client/relatorios': typeof AuthenticatedClientRelatoriosRoute
   '/_authenticated/driver/faturamento': typeof AuthenticatedDriverFaturamentoRoute
   '/_authenticated/driver/fretes': typeof AuthenticatedDriverFretesRoute
   '/_authenticated/driver/ocorrencias': typeof AuthenticatedDriverOcorrenciasRoute
@@ -411,8 +469,14 @@ export interface FileRouteTypes {
     | '/driver'
     | '/ops'
     | '/rastreio/$code'
+    | '/client/bi'
     | '/client/documentos'
+    | '/client/financeiro'
     | '/client/fretes'
+    | '/client/indicadores'
+    | '/client/insights'
+    | '/client/mapa'
+    | '/client/relatorios'
     | '/driver/faturamento'
     | '/driver/fretes'
     | '/driver/ocorrencias'
@@ -449,8 +513,14 @@ export interface FileRouteTypes {
     | '/admin'
     | '/app'
     | '/rastreio/$code'
+    | '/client/bi'
     | '/client/documentos'
+    | '/client/financeiro'
     | '/client/fretes'
+    | '/client/indicadores'
+    | '/client/insights'
+    | '/client/mapa'
+    | '/client/relatorios'
     | '/driver/faturamento'
     | '/driver/fretes'
     | '/driver/ocorrencias'
@@ -491,8 +561,14 @@ export interface FileRouteTypes {
     | '/_authenticated/driver'
     | '/_authenticated/ops'
     | '/rastreio/$code'
+    | '/_authenticated/client/bi'
     | '/_authenticated/client/documentos'
+    | '/_authenticated/client/financeiro'
     | '/_authenticated/client/fretes'
+    | '/_authenticated/client/indicadores'
+    | '/_authenticated/client/insights'
+    | '/_authenticated/client/mapa'
+    | '/_authenticated/client/relatorios'
     | '/_authenticated/driver/faturamento'
     | '/_authenticated/driver/fretes'
     | '/_authenticated/driver/ocorrencias'
@@ -714,6 +790,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDriverFaturamentoRouteImport
       parentRoute: typeof AuthenticatedDriverRoute
     }
+    '/_authenticated/client/relatorios': {
+      id: '/_authenticated/client/relatorios'
+      path: '/relatorios'
+      fullPath: '/client/relatorios'
+      preLoaderRoute: typeof AuthenticatedClientRelatoriosRouteImport
+      parentRoute: typeof AuthenticatedClientRoute
+    }
+    '/_authenticated/client/mapa': {
+      id: '/_authenticated/client/mapa'
+      path: '/mapa'
+      fullPath: '/client/mapa'
+      preLoaderRoute: typeof AuthenticatedClientMapaRouteImport
+      parentRoute: typeof AuthenticatedClientRoute
+    }
+    '/_authenticated/client/insights': {
+      id: '/_authenticated/client/insights'
+      path: '/insights'
+      fullPath: '/client/insights'
+      preLoaderRoute: typeof AuthenticatedClientInsightsRouteImport
+      parentRoute: typeof AuthenticatedClientRoute
+    }
+    '/_authenticated/client/indicadores': {
+      id: '/_authenticated/client/indicadores'
+      path: '/indicadores'
+      fullPath: '/client/indicadores'
+      preLoaderRoute: typeof AuthenticatedClientIndicadoresRouteImport
+      parentRoute: typeof AuthenticatedClientRoute
+    }
     '/_authenticated/client/fretes': {
       id: '/_authenticated/client/fretes'
       path: '/fretes'
@@ -721,11 +825,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientFretesRouteImport
       parentRoute: typeof AuthenticatedClientRoute
     }
+    '/_authenticated/client/financeiro': {
+      id: '/_authenticated/client/financeiro'
+      path: '/financeiro'
+      fullPath: '/client/financeiro'
+      preLoaderRoute: typeof AuthenticatedClientFinanceiroRouteImport
+      parentRoute: typeof AuthenticatedClientRoute
+    }
     '/_authenticated/client/documentos': {
       id: '/_authenticated/client/documentos'
       path: '/documentos'
       fullPath: '/client/documentos'
       preLoaderRoute: typeof AuthenticatedClientDocumentosRouteImport
+      parentRoute: typeof AuthenticatedClientRoute
+    }
+    '/_authenticated/client/bi': {
+      id: '/_authenticated/client/bi'
+      path: '/bi'
+      fullPath: '/client/bi'
+      preLoaderRoute: typeof AuthenticatedClientBiRouteImport
       parentRoute: typeof AuthenticatedClientRoute
     }
     '/_authenticated/ops/pedidos/': {
@@ -816,14 +934,26 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedClientRouteChildren {
+  AuthenticatedClientBiRoute: typeof AuthenticatedClientBiRoute
   AuthenticatedClientDocumentosRoute: typeof AuthenticatedClientDocumentosRoute
+  AuthenticatedClientFinanceiroRoute: typeof AuthenticatedClientFinanceiroRoute
   AuthenticatedClientFretesRoute: typeof AuthenticatedClientFretesRoute
+  AuthenticatedClientIndicadoresRoute: typeof AuthenticatedClientIndicadoresRoute
+  AuthenticatedClientInsightsRoute: typeof AuthenticatedClientInsightsRoute
+  AuthenticatedClientMapaRoute: typeof AuthenticatedClientMapaRoute
+  AuthenticatedClientRelatoriosRoute: typeof AuthenticatedClientRelatoriosRoute
   AuthenticatedClientIndexRoute: typeof AuthenticatedClientIndexRoute
 }
 
 const AuthenticatedClientRouteChildren: AuthenticatedClientRouteChildren = {
+  AuthenticatedClientBiRoute: AuthenticatedClientBiRoute,
   AuthenticatedClientDocumentosRoute: AuthenticatedClientDocumentosRoute,
+  AuthenticatedClientFinanceiroRoute: AuthenticatedClientFinanceiroRoute,
   AuthenticatedClientFretesRoute: AuthenticatedClientFretesRoute,
+  AuthenticatedClientIndicadoresRoute: AuthenticatedClientIndicadoresRoute,
+  AuthenticatedClientInsightsRoute: AuthenticatedClientInsightsRoute,
+  AuthenticatedClientMapaRoute: AuthenticatedClientMapaRoute,
+  AuthenticatedClientRelatoriosRoute: AuthenticatedClientRelatoriosRoute,
   AuthenticatedClientIndexRoute: AuthenticatedClientIndexRoute,
 }
 
