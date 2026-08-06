@@ -16,6 +16,8 @@ import {
   Truck,
   Users,
   Wallet,
+  Target,
+  Zap,
 } from "lucide-react";
 
 import { useEffect, useState, type ReactNode } from "react";
