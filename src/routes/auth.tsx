@@ -149,7 +149,7 @@ function AuthPage() {
               </Link>
             </div>
             <div>
-              É cliente? <Link to="/auth" className="underline hover:text-foreground">Entre aqui</Link> ou use o{" "}
+              É cliente corporativo? <Link to="/cadastro-cliente" className="font-medium text-primary underline hover:opacity-80">Cadastre-se aqui</Link> ou use o{" "}
               <Link to="/rastreio" className="underline hover:text-foreground">portal de rastreamento</Link>.
             </div>
 
