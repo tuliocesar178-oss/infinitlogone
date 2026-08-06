@@ -80,7 +80,7 @@ function DriverHome() {
       
       const ids = offers.map((o) => o.order_id);
       const [{ data: orders }, { data: programs }] = await Promise.all([
-        supabase.from("orders").select("*").in("id", ids),
+        supabase.from("orders").select("*, distance_km, estimated_minutes").in("id", ids),
         supabase.from("freight_programs").select("*").in("order_id", ids),
       ]);
       
@@ -88,7 +88,7 @@ function DriverHome() {
         offer: o,
         order: orders?.find((x) => x.id === o.order_id),
         program: programs?.find((p) => p.order_id === o.order_id),
-      }));
+      })).filter(item => !!item.order);
     },
     refetchInterval: 5000,
   });
