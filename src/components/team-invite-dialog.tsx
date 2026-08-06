@@ -27,6 +27,7 @@ export function TeamInviteDialog({
     position: "",
     department_id: "",
     role: "operacional" as (typeof TEAM_ROLES)[number]["value"],
+    password: "",
   });
 
   const depts = useQuery({
@@ -54,6 +55,7 @@ export function TeamInviteDialog({
         position: "",
         department_id: "",
         role: "operacional",
+        password: "",
       });
   }, [open]);
 
@@ -78,9 +80,10 @@ export function TeamInviteDialog({
           position: form.position || null,
           department_id: form.department_id || null,
           role: form.role,
+          password: form.password,
         },
       });
-      toast.success("Convite enviado por e-mail");
+      toast.success("Colaborador cadastrado com sucesso");
       qc.invalidateQueries({ queryKey: ["team-list"] });
       onClose();
     } catch (err) {
@@ -128,6 +131,9 @@ export function TeamInviteDialog({
               ))}
             </select>
           </F>
+          <F label="Senha provisória" required>
+            <input type="password" className="input" required value={form.password} onChange={(e) => set("password", e.target.value)} />
+          </F>
           <F label="Telefone">
             <input className="input" value={form.phone} onChange={(e) => set("phone", e.target.value)} />
           </F>
@@ -142,7 +148,7 @@ export function TeamInviteDialog({
           </F>
           <div className="sm:col-span-2 mt-2 flex items-center justify-between border-t border-border pt-4">
             <span className="text-xs text-muted-foreground">
-              Um e-mail com link de acesso será enviado ao colaborador.
+              A conta ficará ativa imediatamente.
             </span>
             <div className="flex gap-3">
               <button
@@ -157,7 +163,7 @@ export function TeamInviteDialog({
                 disabled={saving}
                 className="rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground shadow hover:opacity-90 disabled:opacity-60"
               >
-                {saving ? "Enviando…" : "Enviar convite"}
+                {saving ? "Salvando…" : "Cadastrar Colaborador"}
               </button>
             </div>
           </div>

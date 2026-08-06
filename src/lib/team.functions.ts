@@ -66,6 +66,7 @@ const inviteSchema = z.object({
   position: z.string().trim().max(80).optional().nullable(),
   department_id: z.string().uuid().optional().nullable(),
   role: z.enum(TEAM_ROLES),
+  password: z.string().min(6),
 });
 
 export const inviteTeamMember = createServerFn({ method: "POST" })
@@ -79,13 +80,12 @@ export const inviteTeamMember = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const origin = process.env.SITE_URL || undefined;
 
-    const { data: inv, error: invErr } = await supabaseAdmin.auth.admin.inviteUserByEmail(
-      data.email,
-      {
-        data: { full_name: data.full_name, phone: data.phone ?? undefined },
-        redirectTo: origin ? `${origin}/auth` : undefined,
-      },
-    );
+    const { data: inv, error: invErr } = await supabaseAdmin.auth.admin.createUser({
+      email: data.email,
+      password: data.password,
+      email_confirm: true,
+      user_metadata: { full_name: data.full_name, phone: data.phone ?? undefined },
+    });
     if (invErr || !inv?.user) throw new Error(invErr?.message ?? "Falha ao convidar.");
     const userId = inv.user.id;
 
@@ -107,13 +107,13 @@ export const inviteTeamMember = createServerFn({ method: "POST" })
         rg: data.rg ?? null,
         position: data.position ?? null,
         department_id: data.department_id ?? null,
-        status: "convite_pendente",
+        status: "ativo",
         created_by: context.userId,
       },
       { onConflict: "user_id" },
     );
 
-    await log(context, "team.invite", "team_member", userId, `Convite enviado a ${data.email}`, {
+    await log(context, "team.create", "team_member", userId, `Colaborador cadastrado: ${data.email}`, {
       role: data.role,
     });
 
