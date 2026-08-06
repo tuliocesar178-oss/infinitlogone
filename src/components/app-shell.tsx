@@ -70,13 +70,16 @@ export const NAV_GROUPS: Record<string, { label: string; items: NavItem[] }[]> =
   ],
   client: [
     {
-      label: "Minha Conta",
+      label: "Portal Executivo",
       items: [
-        { label: "Dashboard", to: "/client", icon: BarChart3, match: (p) => p === "/client" || p === "/client/" },
+        { label: "Dashboard", to: "/client", icon: LayoutGrid, match: (p) => p === "/client" || p === "/client/" },
+        { label: "Mapa Executivo", to: "/client/mapa", icon: MapPin, match: (p) => p === "/client/mapa" },
         { label: "Meus Fretes", to: "/client/fretes", icon: Package, match: (p) => p.startsWith("/client/fretes") },
-        { label: "BI Logístico", to: "/client", icon: BarChart3, match: (p) => p === "/client/bi" },
+        { label: "BI Logístico", to: "/client/bi", icon: BarChart3, match: (p) => p === "/client/bi" },
+        { label: "Indicadores", to: "/client/indicadores", icon: Target, match: (p) => p === "/client/indicadores" },
+        { label: "Insights IA", to: "/client/insights", icon: Zap, match: (p) => p === "/client/insights" },
         { label: "Documentos", to: "/client/documentos", icon: FileText, match: (p) => p.startsWith("/client/documentos") },
-        { label: "Relatórios", to: "/client", icon: Download, match: (p) => p === "/client/relatorios" },
+        { label: "Financeiro", to: "/client/financeiro", icon: DollarSign, match: (p) => p === "/client/financeiro" },
       ],
     },
   ],
