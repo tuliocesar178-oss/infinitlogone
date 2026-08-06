@@ -40,13 +40,18 @@ function ClientDashboard() {
   const { data: stats, isLoading } = useQuery({
     queryKey: ["client-stats"],
     queryFn: async () => {
-      // For now, fetching all orders to calculate stats.
-      // In a real scenario, we would filter by client_id.
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+
+      // Filter by profile owner - assuming the user's email or ID matches the client record
       const { data: orders } = await supabase
         .from("orders")
-        .select("*");
+        .select("*")
+        .eq("customer_id", user.id); // This assumes the logged user ID is the customer_id
       
-      if (!orders) return null;
+      if (!orders || orders.length === 0) {
+        return { hasData: false };
+      }
 
       const total = orders.length;
       const inProgress = orders.filter(o => ["driver_assigned", "en_route_pickup", "at_pickup", "loaded", "picked_up", "out_for_delivery", "in_transit", "near_destination", "at_destination"].includes(o.status)).length;
@@ -54,41 +59,84 @@ function ClientDashboard() {
       const awaiting = orders.filter(o => o.status === "preparing" || o.status === "created" || o.status === "awaiting_driver").length;
       const incidents = orders.filter(o => o.status === "incident").length;
 
-      // Mock data for graphs since real data might be sparse
-      const monthlyData = [
-        { name: 'Jan', value: 45 },
-        { name: 'Fev', value: 52 },
-        { name: 'Mar', value: 48 },
-        { name: 'Abr', value: 70 },
-        { name: 'Mai', value: 61 },
-        { name: 'Jun', value: 85 },
-      ];
+      // Real calculation for monthly data based on orders
+      const last6Months = Array.from({ length: 6 }, (_, i) => {
+        const d = new Date();
+        d.setMonth(d.getMonth() - i);
+        return d.toLocaleString('pt-BR', { month: 'short' });
+      }).reverse();
 
-      const stateData = [
-        { name: 'SP', value: 40 },
-        { name: 'RJ', value: 25 },
-        { name: 'MG', value: 20 },
-        { name: 'PR', value: 10 },
-        { name: 'Outros', value: 5 },
-      ];
+      const monthlyData = last6Months.map(month => ({
+        name: month,
+        value: orders.filter(o => {
+          const orderDate = new Date(o.created_at);
+          return orderDate.toLocaleString('pt-BR', { month: 'short' }) === month;
+        }).length
+      }));
+
+      // Distribution by state
+      const states = [...new Set(orders.map(o => o.destination_state).filter(Boolean))];
+      const stateData = states.map(state => ({
+        name: state,
+        value: Math.round((orders.filter(o => o.destination_state === state).length / total) * 100)
+      })).slice(0, 5);
 
       return {
+        hasData: true,
         total,
         inProgress,
         delivered,
         awaiting,
         incidents,
-        onTimeRate: "94%",
-        totalKm: "12,450",
-        totalWeight: "85.2 ton",
-        totalInvoiced: "R$ 450.000",
-        totalFreight: "R$ 62.400",
-        avgDeliveryTime: "2.4 dias",
+        onTimeRate: delivered > 0 ? `${Math.round((delivered / (delivered + incidents)) * 100)}%` : "100%",
+        totalKm: orders.reduce((acc, o) => acc + (o.distance_km || 0), 0).toLocaleString('pt-BR'),
+        totalWeight: `${orders.reduce((acc, o) => acc + (Number(o.cargo_weight_kg) || 0), 0) / 1000} ton`,
+        totalInvoiced: `R$ ${orders.reduce((acc, o) => acc + (Number(o.total_value) || 0), 0).toLocaleString('pt-BR')}`,
+        totalFreight: `R$ ${orders.reduce((acc, o) => acc + (Number(o.freight_value) || 0), 0).toLocaleString('pt-BR')}`,
+        avgDeliveryTime: "Sob consulta",
         monthlyData,
-        stateData
+        stateData,
+        recentOrders: orders.slice(0, 5)
       };
     }
   });
+
+  if (isLoading) {
+    return (
+      <AppShell title="Dashboard" subtitle="Carregando seus dados...">
+        <div className="flex h-[50vh] items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        </div>
+      </AppShell>
+    );
+  }
+
+  if (!stats?.hasData) {
+    return (
+      <AppShell 
+        title="Bem-vindo à InfinitLog" 
+        subtitle="Seu portal de logística inteligente"
+      >
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="mb-6 rounded-full bg-slate-50 p-6">
+            <Package className="h-12 w-12 text-slate-300" />
+          </div>
+          <h2 className="text-2xl font-bold tracking-tight text-slate-900">Nenhum frete ativo ou histórico</h2>
+          <p className="mt-2 max-w-sm text-muted-foreground">
+            No momento não há informações para exibir. Assim que sua primeira operação for iniciada, você terá acesso total ao dashboard e indicadores em tempo real.
+          </p>
+          <div className="mt-8 flex gap-4">
+            <button className="rounded-xl bg-primary px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary/90">
+              Solicitar Cotação
+            </button>
+            <button className="rounded-xl border border-border bg-white px-6 py-2.5 text-sm font-semibold text-slate-900 hover:bg-slate-50">
+              Falar com Consultor
+            </button>
+          </div>
+        </div>
+      </AppShell>
+    );
+  }
 
   const COLORS = ['#0F172A', '#3B82F6', '#64748B', '#94A3B8', '#CBD5E1'];
 
@@ -235,29 +283,29 @@ function ClientDashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/40">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <tr key={i} className="hover:bg-surface-2/50">
+                {stats?.recentOrders?.map((order: any) => (
+                  <tr key={order.id} className="hover:bg-surface-2/50">
                     <td className="px-6 py-4">
-                      <div className="font-medium text-foreground">INF-2024-000{i}</div>
-                      <div className="text-[11px] text-muted-foreground">NF: 8723{i}</div>
+                      <div className="font-medium text-foreground">{order.code}</div>
+                      <div className="text-[11px] text-muted-foreground">NF: {order.invoice_number || "—"}</div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="truncate max-w-[150px]">São Paulo, SP</div>
-                      <div className="truncate max-w-[150px] text-[11px] text-muted-foreground">Rio de Janeiro, RJ</div>
+                      <div className="truncate max-w-[150px]">{order.origin_city}</div>
+                      <div className="truncate max-w-[150px] text-[11px] text-muted-foreground">{order.destination_city}</div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
                         <div className="h-6 w-6 rounded-full bg-slate-200" />
-                        <span>João Silva</span>
+                        <span>Motorista</span>
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-[11px] font-medium text-emerald-800">
-                        Entregue
+                        {order.status}
                       </span>
                     </td>
                     <td className="px-6 py-4 font-medium">
-                      R$ 1.250,00
+                      R$ {Number(order.total_value || 0).toLocaleString('pt-BR')}
                     </td>
                   </tr>
                 ))}

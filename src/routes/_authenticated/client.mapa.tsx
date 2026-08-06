@@ -26,12 +26,31 @@ function ClientMap() {
   const { data: activeVehicles } = useQuery({
     queryKey: ["client-active-vehicles"],
     queryFn: async () => {
-      // For now, mock data. In production, this would query orders 
-      // where status is en_route and join with drivers/tracking points.
-      return [
-        { id: 1, driver: "João Silva", plate: "ABC-1234", status: "in_transit", lat: -23.5505, lng: -46.6333, speed: "85 km/h", eta: "14:20", remaining: "42 km" },
-        { id: 2, driver: "Maria Souza", plate: "DEF-5678", status: "near_destination", lat: -22.9068, lng: -43.1729, speed: "22 km/h", eta: "13:15", remaining: "3.5 km" },
-      ];
+      const { data: { user } } = await supabase.auth.getUser();
+      const { data: orders } = await supabase
+        .from("orders")
+        .select(`
+          id, code, status, 
+          driver:profiles!orders_driver_id_fkey(full_name), 
+          vehicle:vehicles(plate, model)
+        `)
+        .eq("customer_id", user?.id)
+        .in("status", ["driver_assigned", "en_route_pickup", "at_pickup", "loaded", "picked_up", "out_for_delivery", "in_transit", "near_destination"]);
+      
+      if (!orders || orders.length === 0) return [];
+
+      // In a real scenario, we would join with order_tracking_points for lat/lng
+      return orders.map(order => ({
+        id: order.id,
+        driver: (order.driver as any)?.full_name || "Motorista",
+        plate: (order.vehicle as any)?.plate || "—",
+        status: order.status,
+        lat: -23.5505, // fallback
+        lng: -46.6333, // fallback
+        speed: "0 km/h",
+        eta: "--:--",
+        remaining: "-- km"
+      }));
     }
   });
 
