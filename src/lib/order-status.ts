@@ -45,7 +45,7 @@ export const STATUS_LABEL: Record<string, string> = {
   arriving_destination: "Chegando ao Cliente",
   at_destination: "No Local de Entrega",
   unloading: "Descarga em Andamento",
-  delivered: "Entregue",
+  delivered: "Entrega Concluída",
   completed: "Finalizado",
   finalized: "Finalizado",
   cancelled: "Cancelado",
