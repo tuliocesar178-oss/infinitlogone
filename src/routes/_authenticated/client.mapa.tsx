@@ -27,6 +27,7 @@ function ClientMap() {
     queryKey: ["client-active-vehicles"],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
       const { data: orders } = await supabase
         .from("orders")
         .select(`
@@ -34,7 +35,7 @@ function ClientMap() {
           driver:profiles!orders_driver_id_fkey(full_name), 
           vehicle:vehicles(plate, model)
         `)
-        .eq("client_id", user?.id)
+        .eq("client_id", user.id)
         .in("status", ["driver_assigned", "en_route_pickup", "at_pickup", "loaded", "picked_up", "out_for_delivery", "in_transit", "near_destination"]);
       
       if (!orders || orders.length === 0) return [];
