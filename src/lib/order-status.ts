@@ -45,7 +45,7 @@ export const STATUS_LABEL: Record<string, string> = {
   arriving_destination: "Chegando ao Cliente",
   at_destination: "No Local de Entrega",
   unloading: "Descarga em Andamento",
-  delivered: "Entregue",
+  delivered: "Entrega Concluída",
   completed: "Finalizado",
   finalized: "Finalizado",
   cancelled: "Cancelado",
@@ -107,7 +107,7 @@ export const STATUS_FILTER_OPTIONS: { value: string; label: string }[] = [
   { value: "in_transit", label: "Em Trânsito" },
   { value: "near_destination", label: "Próximo da Entrega" },
   { value: "at_destination", label: "Cheguei ao Destino" },
-  { value: "delivered", label: "Entregue" },
+  { value: "delivered", label: "Entrega Concluída" },
   { value: "finalized", label: "Finalizado" },
   { value: "cancelled", label: "Cancelado" },
   { value: "incident", label: "Ocorrência" },
@@ -146,7 +146,7 @@ export function publicStatus(s: string): { key: string; label: string } {
 
     case "delivered":
     case "finalized":
-      return { key: "delivered", label: "Entregue" };
+      return { key: "delivered", label: "Entrega Concluída" };
     case "incident":
       return { key: "incident", label: "Ocorrência" };
     case "cancelled":
@@ -162,7 +162,7 @@ export const PUBLIC_TIMELINE = [
   { key: "loaded", label: "Carga coletada" },
   { key: "in_transit", label: "Em trânsito" },
   { key: "near_destination", label: "Próximo ao destino" },
-  { key: "delivered", label: "Entregue" },
+  { key: "delivered", label: "Entrega Concluída" },
 ];
 
 export type DashboardCardKey =

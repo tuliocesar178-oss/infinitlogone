@@ -175,7 +175,8 @@ function LandingPage() {
             <span className="ml-4 border-l border-border pl-4">© {new Date().getFullYear()} InfinitLog</span>
           </div>
           <div className="flex gap-8">
-            <Link to="/auth" className="hover:text-foreground">Acesso Cliente</Link>
+            <Link to="/cadastro-cliente" className="hover:text-foreground">Cadastro Cliente</Link>
+            <Link to="/auth" className="hover:text-foreground">Acesso Restrito</Link>
             <Link to="/cadastro-motorista" className="hover:text-foreground">Seja um Parceiro</Link>
             <Link to="/rastreio" className="hover:text-foreground">Rastreio</Link>
           </div>

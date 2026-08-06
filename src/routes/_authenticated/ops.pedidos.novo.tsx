@@ -126,6 +126,8 @@ function NewOrderWizard() {
   const [f, setF] = useState<Form>(EMPTY);
   const [files, setFiles] = useState<{ file: File; kind: string }[]>([]);
   const [saving, setSaving] = useState(false);
+  const [clients, setClients] = useState<{ id: string; company_name: string; cnpj: string; full_name: string; phone: string; whatsapp: string; email: string; zip_code: string; address: string; address_number: string; neighborhood: string; city: string; state: string }[]>([]);
+  const [selectedClientId, setSelectedClientId] = useState<string>("");
   const [result, setResult] = useState<{
     id: string;
     code: string;
@@ -134,6 +136,61 @@ function NewOrderWizard() {
   } | null>(null);
 
   function set<K extends keyof Form>(k: K, v: string) { setF((s) => ({ ...s, [k]: v })); }
+
+  useEffect(() => {
+    async function loadClients() {
+      const { data } = await supabase
+        .from("profiles")
+        .select(`
+          id, 
+          company_name, 
+          cnpj, 
+          full_name, 
+          phone, 
+          whatsapp, 
+          email:id,
+          zip_code,
+          address:id,
+          address_number,
+          neighborhood,
+          city,
+          state
+        `);
+      // Note: email and address might be in different tables or require specific joins if not in profiles.
+      // For this implementation, we'll assume they are in profiles or we'll fetch them.
+      // Correcting the select to match our migration:
+      const { data: profilesData } = await supabase
+        .from("profiles")
+        .select("id, company_name, cnpj, full_name, phone, whatsapp, zip_code, address_number, neighborhood, city, state");
+      
+      if (profilesData) {
+        setClients(profilesData as any);
+      }
+    }
+    loadClients();
+  }, []);
+
+  function handleClientSelect(clientId: string) {
+    setSelectedClientId(clientId);
+    const client = clients.find(c => c.id === clientId);
+    if (client) {
+      setF(s => ({
+        ...s,
+        client_name: client.full_name || "",
+        company: client.company_name || "",
+        contact_name: client.full_name || "",
+        contact_phone: client.phone || "",
+        contact_email: "", // email is not in profiles by default, would need auth.users join
+        client_notes: `CNPJ: ${client.cnpj || ""}\nWhatsApp: ${client.whatsapp || ""}`,
+        origin_address: "", // Address fields
+        origin_city: client.city || "",
+        origin_state: client.state || "",
+        origin_zip: client.zip_code || "",
+        origin_neighborhood: client.neighborhood || "",
+        origin_number: client.address_number || "",
+      }));
+    }
+  }
 
   const totalCost = ["driver_price", "toll", "fuel", "escort", "license", "other_costs"]
     .reduce((s, k) => s + (num(f[k as keyof Form] as string) ?? 0), 0);
@@ -221,6 +278,7 @@ function NewOrderWizard() {
     try {
       const { data: u } = await supabase.auth.getUser();
       const payload = {
+        client_id: selectedClientId || null,
         client_name: f.client_name || null,
         contact_name: f.contact_name || null,
         contact_phone: f.contact_phone || null,
@@ -454,7 +512,24 @@ function NewOrderWizard() {
       <div className="card-soft p-6 sm:p-8">
         {step === 0 && (
           <Grid>
-            <T label="Cliente" required value={f.client_name} onChange={(v) => set("client_name", v)} />
+            <div className="sm:col-span-2">
+              <label className="block">
+                <span className="mb-1.5 block text-xs font-medium uppercase tracking-widest text-muted-foreground">
+                  Selecionar Cliente Cadastrado
+                </span>
+                <select 
+                  value={selectedClientId} 
+                  onChange={(e) => handleClientSelect(e.target.value)}
+                  className="h-11 w-full rounded-xl border border-border bg-surface px-3 text-sm outline-none focus:border-brand"
+                >
+                  <option value="">— Selecionar Cliente (Opcional) —</option>
+                  {clients.map(c => (
+                    <option key={c.id} value={c.id}>{c.company_name || c.full_name} ({c.cnpj || 'Sem CNPJ'})</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <T label="Nome do Cliente" required value={f.client_name} onChange={(v) => set("client_name", v)} />
             <T label="Empresa" value={f.company} onChange={(v) => set("company", v)} />
             <T label="Contato" value={f.contact_name} onChange={(v) => set("contact_name", v)} />
             <T label="Telefone" value={f.contact_phone} onChange={(v) => set("contact_phone", v)} />
