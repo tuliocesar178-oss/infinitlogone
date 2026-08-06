@@ -242,7 +242,7 @@ function OfferPanel({ order, onChanged }: { order: any; onChanged: () => void })
       const { data: drivers, error: dErr } = await supabase
         .from("drivers")
         .select("user_id")
-        .eq("status", "available");
+        .in("availability", ["disponivel", "em_frete"] as any);
       if (dErr) throw dErr;
       if (!drivers?.length) {
         toast.warning("Nenhum motorista disponível no momento.");
