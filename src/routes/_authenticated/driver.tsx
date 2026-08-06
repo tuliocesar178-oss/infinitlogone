@@ -10,11 +10,12 @@ export const Route = createFileRoute("/_authenticated/driver")({
     const { data: roles } = await supabase
       .from("user_roles")
       .select("role")
-      .eq("user_id", user.id)
-      .maybeSingle();
+      .eq("user_id", user.id);
+    
+    const userRoles = roles?.map(r => r.role) || [];
 
-    if (!roles || roles.role !== "driver") {
-      const target = roles?.role === "client" ? "/client" : "/ops/central";
+    if (!userRoles.includes("driver")) {
+      const target = userRoles.includes("client") ? "/client" : "/ops/central";
       throw redirect({ to: target });
     }
   },

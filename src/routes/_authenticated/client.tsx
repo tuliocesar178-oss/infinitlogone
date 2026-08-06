@@ -8,13 +8,16 @@ export const Route = createFileRoute("/_authenticated/client")({
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw redirect({ to: "/auth" });
 
-    const { data: roles } = await supabase
+    const { data: roles, error } = await supabase
       .from("user_roles")
       .select("role")
-      .eq("user_id", user.id)
-      .maybeSingle();
+      .eq("user_id", user.id);
+    
+    const userRoles = roles?.map(r => r.role) || [];
+    console.log("Checking client access for user:", user.id, "Roles:", userRoles);
 
-    if (!roles || roles.role !== "client") {
+    if (!userRoles.includes("client")) {
+      console.warn("User does not have client role. Redirecting to ops...");
       throw redirect({ to: "/ops/central" });
     }
   },
