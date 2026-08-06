@@ -1291,28 +1291,46 @@ export type Database = {
       }
       profiles: {
         Row: {
+          address_number: string | null
           avatar_url: string | null
+          cnpj: string | null
+          company_name: string | null
           created_at: string
           full_name: string | null
           id: string
+          neighborhood: string | null
           phone: string | null
           updated_at: string
+          whatsapp: string | null
+          zip_code: string | null
         }
         Insert: {
+          address_number?: string | null
           avatar_url?: string | null
+          cnpj?: string | null
+          company_name?: string | null
           created_at?: string
           full_name?: string | null
           id: string
+          neighborhood?: string | null
           phone?: string | null
           updated_at?: string
+          whatsapp?: string | null
+          zip_code?: string | null
         }
         Update: {
+          address_number?: string | null
           avatar_url?: string | null
+          cnpj?: string | null
+          company_name?: string | null
           created_at?: string
           full_name?: string | null
           id?: string
+          neighborhood?: string | null
           phone?: string | null
           updated_at?: string
+          whatsapp?: string | null
+          zip_code?: string | null
         }
         Relationships: []
       }
