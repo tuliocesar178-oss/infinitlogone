@@ -43,11 +43,11 @@ function ClientDashboard() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return null;
 
-      // Filter by profile owner - assuming the user's email or ID matches the client record
+      // Filter by profile owner
       const { data: orders } = await supabase
         .from("orders")
         .select("*")
-        .eq("customer_id", user.id); // This assumes the logged user ID is the customer_id
+        .eq("client_id", user.id); 
       
       if (!orders || orders.length === 0) {
         return { hasData: false };
@@ -77,7 +77,7 @@ function ClientDashboard() {
       // Distribution by state
       const states = [...new Set(orders.map(o => o.destination_state).filter(Boolean))];
       const stateData = states.map(state => ({
-        name: state,
+        name: state || "Desconhecido",
         value: Math.round((orders.filter(o => o.destination_state === state).length / total) * 100)
       })).slice(0, 5);
 
@@ -91,8 +91,8 @@ function ClientDashboard() {
         onTimeRate: delivered > 0 ? `${Math.round((delivered / (delivered + incidents)) * 100)}%` : "100%",
         totalKm: orders.reduce((acc, o) => acc + (o.distance_km || 0), 0).toLocaleString('pt-BR'),
         totalWeight: `${orders.reduce((acc, o) => acc + (Number(o.cargo_weight_kg) || 0), 0) / 1000} ton`,
-        totalInvoiced: `R$ ${orders.reduce((acc, o) => acc + (Number(o.total_value) || 0), 0).toLocaleString('pt-BR')}`,
-        totalFreight: `R$ ${orders.reduce((acc, o) => acc + (Number(o.freight_value) || 0), 0).toLocaleString('pt-BR')}`,
+        totalInvoiced: `R$ ${orders.reduce((acc, o) => acc + (Number(o.invoice_value) || 0), 0).toLocaleString('pt-BR')}`,
+        totalFreight: `R$ ${orders.reduce((acc, o) => acc + (Number(o.price) || 0), 0).toLocaleString('pt-BR')}`,
         avgDeliveryTime: "Sob consulta",
         monthlyData,
         stateData,
@@ -240,7 +240,7 @@ function ClientDashboard() {
                       paddingAngle={5}
                       dataKey="value"
                     >
-                      {stats?.stateData.map((entry, index) => (
+                      {stats?.stateData?.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
@@ -249,7 +249,7 @@ function ClientDashboard() {
                 </ResponsiveContainer>
               </div>
               <div className="w-full space-y-3 sm:w-1/2">
-                {stats?.stateData.map((item, index) => (
+                {stats?.stateData?.map((item, index) => (
                   <div key={item.name} className="flex items-center justify-between text-sm">
                     <div className="flex items-center gap-2">
                       <div className="h-3 w-3 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
