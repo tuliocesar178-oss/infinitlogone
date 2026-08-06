@@ -18,6 +18,8 @@ import {
   Wallet,
   Target,
   Zap,
+  HelpCircle,
+  UserRound,
 } from "lucide-react";
 
 import { useEffect, useState, type ReactNode } from "react";
@@ -72,16 +74,17 @@ export const NAV_GROUPS: Record<string, { label: string; items: NavItem[] }[]> =
   ],
   client: [
     {
-      label: "Portal Executivo",
+      label: "Portal do Cliente",
       items: [
-        { label: "Dashboard", to: "/client", icon: LayoutGrid, match: (p) => p === "/client" || p === "/client/" },
-        { label: "Mapa Executivo", to: "/client/mapa", icon: MapPin, match: (p) => p === "/client/mapa" },
-        { label: "Meus Fretes", to: "/client/fretes", icon: Package, match: (p) => p.startsWith("/client/fretes") },
-        { label: "BI Logístico", to: "/client/bi", icon: BarChart3, match: (p) => p === "/client/bi" },
-        { label: "Indicadores", to: "/client/indicadores", icon: Target, match: (p) => p === "/client/indicadores" },
-        { label: "Insights IA", to: "/client/insights", icon: Zap, match: (p) => p === "/client/insights" },
-        { label: "Documentos", to: "/client/documentos", icon: FileText, match: (p) => p.startsWith("/client/documentos") },
-        { label: "Financeiro", to: "/client/financeiro", icon: DollarSign, match: (p) => p === "/client/financeiro" },
+        { label: "🏠 Dashboard", to: "/client", icon: LayoutGrid, match: (p) => p === "/client" || p === "/client/" },
+        { label: "🚚 Meus Fretes", to: "/client/fretes", icon: Package, match: (p) => p.startsWith("/client/fretes") },
+        { label: "📍 Rastreamento", to: "/client/mapa", icon: MapPin, match: (p) => p === "/client/mapa" },
+        { label: "📄 Documentos", to: "/client/documentos", icon: FileText, match: (p) => p.startsWith("/client/documentos") },
+        { label: "📊 Relatórios", to: "/client/bi", icon: BarChart3, match: (p) => p === "/client/bi" },
+        { label: "💳 Financeiro", to: "/client/financeiro", icon: DollarSign, match: (p) => p === "/client/financeiro" },
+        { label: "💬 Chat", to: "/client/chat", icon: Zap, match: (p) => p === "/client/chat" },
+        { label: "👤 Perfil", to: "/client/perfil", icon: UserRound, match: (p) => p === "/client/perfil" },
+        { label: "❓ Suporte", to: "/client/suporte", icon: HelpCircle, match: (p) => p === "/client/suporte" },
       ],
     },
   ],
