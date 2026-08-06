@@ -126,7 +126,7 @@ function ClientBI() {
                   <YAxis axisLine={false} tickLine={false} domain={[80, 100]} />
                   <Tooltip />
                   <Line type="stepAfter" dataKey="rate" stroke="#10B981" strokeWidth={3} dot={{ r: 4, fill: '#10B981' }} />
-                </AreaChart>
+                </LineChart>
               </ResponsiveContainer>
             </div>
           </div>
