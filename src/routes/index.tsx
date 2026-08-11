@@ -1,4 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+// Correcting access error by ensuring root path works correctly and reporting state for debugging if needed
+import { useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { fetchUserRoles, primaryRole, homeForRole } from "@/lib/roles";
 import { useState, type FormEvent } from "react";
 import { ArrowRight, MapPin, Phone, Search, ShieldCheck, Zap } from "lucide-react";
 import { Logo, logoUrl } from "@/components/logo";
@@ -27,6 +31,17 @@ export const Route = createFileRoute("/")({
 function LandingPage() {
   const navigate = useNavigate();
   const [code, setCode] = useState("");
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) {
+        fetchUserRoles(data.session.user.id).then(roles => {
+          const target = homeForRole(primaryRole(roles));
+          navigate({ to: target, replace: true });
+        });
+      }
+    });
+  }, [navigate]);
 
   function onTrack(e: FormEvent) {
     e.preventDefault();
