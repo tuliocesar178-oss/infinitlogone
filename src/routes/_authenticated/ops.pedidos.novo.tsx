@@ -397,7 +397,7 @@ function NewOrderWizard() {
 
       await supabase.from("order_events").insert({
         order_id: order.id, event_type: "order_created",
-        to_status: "preparing", actor_id: u.user?.id ?? null,
+        to_status: "preparing" as any, actor_id: u.user?.id ?? null,
       });
 
       const qr = await QRCode.toDataURL(trackingUrl(order.tracking_code), { margin: 1, width: 220 });
