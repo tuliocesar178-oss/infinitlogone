@@ -190,7 +190,7 @@ function DriverOfferDetailsPage() {
                 <div className="text-lg font-black leading-tight">{order.origin_city}, {order.origin_state}</div>
                 <div className="text-sm text-muted-foreground leading-snug">{order.origin_address}</div>
                 <div className="mt-2 flex items-center gap-4 text-xs font-bold">
-                  <span className="flex items-center gap-1"><Info className="h-3 w-3" /> {order.pickup_company || "Carga Geral"}</span>
+                  <span className="flex items-center gap-1"><Info className="h-3 w-3" /> {order.pickup_instructions || "Carga Geral"}</span>
                 </div>
               </div>
             </div>
@@ -242,11 +242,11 @@ function DriverOfferDetailsPage() {
           <div className="grid grid-cols-2 gap-6">
             <div>
               <div className="text-[10px] font-bold text-muted-foreground">Responsável Coleta</div>
-              <div className="text-sm font-black">{order.pickup_contact || "Equipe Doca"}</div>
+              <div className="text-sm font-black">{order.pickup_phone_name || "Equipe Doca"}</div>
             </div>
             <div>
-              <div className="text-[10px] font-bold text-muted-foreground">Telefone</div>
-              <div className="text-sm font-black">{order.pickup_phone || "—"}</div>
+              <div className="text-[10px] font-bold text-muted-foreground">WhatsApp</div>
+              <div className="text-sm font-black">{order.pickup_whatsapp || "—"}</div>
             </div>
           </div>
         </div>
