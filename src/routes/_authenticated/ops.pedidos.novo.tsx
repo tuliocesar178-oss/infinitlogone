@@ -154,7 +154,7 @@ function NewOrderWizard() {
           console.warn("Nenhum usuário com papel 'client' encontrado. Buscando todos os perfis.");
           const { data: profilesData, error: profilesError } = await supabase
             .from("profiles")
-            .select("id, company_name, cnpj, full_name, phone, whatsapp, zip_code, address_number, neighborhood, city, state")
+            .select("id, company_name, cnpj, full_name, phone, whatsapp, zip_code, address_number, neighborhood, city, state, email")
             .limit(100);
           
           if (profilesError) throw profilesError;
