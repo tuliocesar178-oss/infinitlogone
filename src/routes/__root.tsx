@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "sonner";
 import { PwaProvider } from "@/components/pwa-provider";
 import { enableOfflinePersistence } from "@/lib/query-persist";
+import { clearRolesCache } from "@/lib/roles";
 
 function NotFoundComponent() {
   return (
@@ -144,6 +145,7 @@ function RootComponent() {
         event !== "USER_UPDATED"
       )
         return;
+      clearRolesCache();
       router.invalidate();
       if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
     });
