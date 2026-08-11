@@ -23,7 +23,6 @@ function TrackingSearch() {
     e.preventDefault();
     const v = code.trim();
     if (!v) return;
-    console.log("[track] navigating", v);
     navigate({ 
       to: "/rastreio/$code", 
       params: { code: v.toUpperCase() } 
