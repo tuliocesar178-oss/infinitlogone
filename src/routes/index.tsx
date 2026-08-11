@@ -1,5 +1,4 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-// Correcting access error by ensuring root path works correctly and reporting state for debugging if needed
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchUserRoles, primaryRole, homeForRole } from "@/lib/roles";
