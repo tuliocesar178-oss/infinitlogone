@@ -362,7 +362,7 @@ function NewOrderWizard() {
           { kind: "frete", amount: num(f.driver_price) },
           { kind: "pedagio", amount: num(f.toll) },
           { kind: "combustivel", amount: num(f.fuel) },
-          { kind: "escolta", amount: num(f.escort) },
+          { kind: "batedor", amount: num(f.escort) },
           { kind: "licenca", amount: num(f.license) },
           { kind: "outros", amount: num(f.other_costs) },
         ].filter((c) => c.amount != null && c.amount > 0)
