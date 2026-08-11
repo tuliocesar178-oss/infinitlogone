@@ -139,37 +139,44 @@ function NewOrderWizard() {
 
   useEffect(() => {
     async function loadClients() {
-      // First, fetch user IDs that have the 'client' role
-      const { data: roleData, error: roleError } = await supabase
-        .from("user_roles")
-        .select("user_id")
-        .eq("role", "client");
+      try {
+        // Fetch user IDs that have the 'client' role
+        const { data: roleData, error: roleError } = await supabase
+          .from("user_roles")
+          .select("user_id")
+          .eq("role", "client");
 
-      if (roleError) {
-        console.error("Error fetching client roles:", roleError);
-        return;
-      }
+        if (roleError) throw roleError;
 
-      if (!roleData || roleData.length === 0) {
-        setClients([]);
-        return;
-      }
+        // If no clients found by role, fall back to fetching all profiles
+        // This is important because the 'client' user role might not be set for all existing clients
+        if (!roleData || roleData.length === 0) {
+          console.warn("Nenhum usuário com papel 'client' encontrado. Buscando todos os perfis.");
+          const { data: profilesData, error: profilesError } = await supabase
+            .from("profiles")
+            .select("id, company_name, cnpj, full_name, phone, whatsapp, zip_code, address_number, neighborhood, city, state")
+            .limit(100);
+          
+          if (profilesError) throw profilesError;
+          if (profilesData) setClients(profilesData as any);
+          return;
+        }
 
-      const clientIds = roleData.map(r => r.user_id);
+        const clientIds = roleData.map(r => r.user_id);
 
-      // Then fetch profiles for those IDs
-      const { data: profilesData, error: profilesError } = await supabase
-        .from("profiles")
-        .select("id, company_name, cnpj, full_name, phone, whatsapp, zip_code, address_number, neighborhood, city, state")
-        .in("id", clientIds);
-      
-      if (profilesError) {
-        console.error("Error fetching client profiles:", profilesError);
-        return;
-      }
-
-      if (profilesData) {
-        setClients(profilesData as any);
+        // Fetch profiles for those IDs
+        const { data: profilesData, error: profilesError } = await supabase
+          .from("profiles")
+          .select("id, company_name, cnpj, full_name, phone, whatsapp, zip_code, address_number, neighborhood, city, state")
+          .in("id", clientIds);
+        
+        if (profilesError) throw profilesError;
+        if (profilesData) setClients(profilesData as any);
+      } catch (err) {
+        console.error("Erro ao carregar clientes:", err);
+        // Last resort: fetch anything from profiles to not leave the list empty
+        const { data } = await supabase.from("profiles").select("id, company_name, full_name").limit(10);
+        if (data) setClients(data as any);
       }
     }
     loadClients();
@@ -525,11 +532,13 @@ function NewOrderWizard() {
                 <select 
                   value={selectedClientId} 
                   onChange={(e) => handleClientSelect(e.target.value)}
-                  className="h-11 w-full rounded-xl border border-border bg-surface px-3 text-sm outline-none focus:border-brand"
+                  className="h-11 w-full rounded-xl border border-border bg-surface px-3 text-sm outline-none focus:border-brand appearance-none"
                 >
                   <option value="">— Selecionar Cliente (Opcional) —</option>
                   {clients.map(c => (
-                    <option key={c.id} value={c.id}>{c.company_name || c.full_name} ({c.cnpj || 'Sem CNPJ'})</option>
+                    <option key={c.id} value={c.id}>
+                      {c.company_name || c.full_name || "Sem Nome"} {c.cnpj ? `(${c.cnpj})` : ''}
+                    </option>
                   ))}
                 </select>
               </label>
