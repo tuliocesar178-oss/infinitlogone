@@ -7,6 +7,9 @@ import { useEffect } from "react";
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
   beforeLoad: async () => {
+    // getSession() lê o token local (instantâneo). Só chamamos a rede se não houver sessão.
+    const { data: s } = await supabase.auth.getSession();
+    if (s.session?.user) return { user: s.session.user };
     const { data, error } = await supabase.auth.getUser();
     if (error || !data.user) throw redirect({ to: "/auth" });
     return { user: data.user };
