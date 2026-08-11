@@ -143,7 +143,7 @@ export function OfferCard({
         </span>
       </div>
       <div className="relative border-b border-border/60">
-        <RouteMiniMap
+        <ExpandableRouteMap
           origin={order?.origin_lat && order?.origin_lng ? [order.origin_lng, order.origin_lat] : null}
           destination={order?.destination_lat && order?.destination_lng ? [order.destination_lng, order.destination_lat] : null}
           driver={driverPos}
