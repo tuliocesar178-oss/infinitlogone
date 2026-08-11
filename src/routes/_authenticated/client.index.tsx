@@ -41,13 +41,32 @@ function ClientTrackingHome() {
         .from("orders")
         .select(`
           *,
-          driver:profiles!orders_driver_id_fkey(full_name, avatar_url),
           vehicle:vehicles(plate, model, color)
         `)
         .eq("client_id", user.id)
         .order("created_at", { ascending: false });
       
-      return data || [];
+      if (!data) return [];
+
+      // Fetch driver profiles manually to avoid relation errors
+      const driverIds = [...new Set(data.map(o => o.driver_id).filter(Boolean))] as string[];
+      let driversMap: Record<string, any> = {};
+      
+      if (driverIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("id, full_name, avatar_url")
+          .in("id", driverIds);
+        
+        profiles?.forEach(p => {
+          driversMap[p.id] = p;
+        });
+      }
+
+      return data.map(order => ({
+        ...order,
+        driver: order.driver_id ? driversMap[order.driver_id] : null
+      }));
     },
     refetchInterval: 10000
   });
@@ -67,9 +86,10 @@ function ClientTrackingHome() {
     }
   }, [activeOrders, selectedOrderId]);
 
-  const selectedOrder = useMemo(() => 
-    orders?.find(o => o.id === selectedOrderId) || activeOrders[0] || null
-  , [orders, selectedOrderId, activeOrders]);
+  const selectedOrder = useMemo(() => {
+    if (!orders) return null;
+    return orders.find(o => o.id === selectedOrderId) || activeOrders[0] || null;
+  }, [orders, selectedOrderId, activeOrders]);
 
   if (isLoading) {
     return (
@@ -139,11 +159,11 @@ function ClientTrackingHome() {
                   <div className="mt-3 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className="h-6 w-6 rounded-full bg-slate-200 overflow-hidden">
-                        {order.driver?.avatar_url && <img src={order.driver.avatar_url} className="h-full w-full object-cover" />}
+                        {(order.driver as any)?.avatar_url && <img src={(order.driver as any).avatar_url} className="h-full w-full object-cover" />}
                       </div>
-                      <span className="text-[11px] font-medium">{order.driver?.full_name || "A definir"}</span>
+                      <span className="text-[11px] font-medium">{(order.driver as any)?.full_name || "A definir"}</span>
                     </div>
-                    <div className="text-[10px] text-muted-foreground font-mono">{order.vehicle?.plate}</div>
+                    <div className="text-[10px] text-muted-foreground font-mono">{(order.vehicle as any)?.plate}</div>
                   </div>
                 </button>
               ))}
@@ -196,7 +216,7 @@ function ClientTrackingHome() {
                 <div className="card-soft p-4 flex flex-col gap-1">
                   <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Motorista</span>
                   <div className="flex items-center gap-2">
-                    <span className="font-bold text-sm truncate">{selectedOrder.driver?.full_name}</span>
+                    <span className="font-bold text-sm truncate">{(selectedOrder.driver as any)?.full_name}</span>
                   </div>
                 </div>
               </div>
@@ -207,7 +227,7 @@ function ClientTrackingHome() {
                   className="h-full w-full"
                   origin={selectedOrder.origin_lat && selectedOrder.origin_lng ? { lat: selectedOrder.origin_lat, lng: selectedOrder.origin_lng } : null}
                   destination={selectedOrder.destination_lat && selectedOrder.destination_lng ? { lat: selectedOrder.destination_lat, lng: selectedOrder.destination_lng } : null}
-                  driver={selectedOrder.driver_lat && selectedOrder.driver_lng ? { lat: selectedOrder.driver_lat, lng: selectedOrder.driver_lng } : null}
+                  driver={selectedOrder.current_lat && selectedOrder.current_lng ? { lat: selectedOrder.current_lat, lng: selectedOrder.current_lng } : null}
                   interactive={true}
                 />
                 
@@ -222,7 +242,7 @@ function ClientTrackingHome() {
                    </div>
                    
                    <div className="flex gap-2">
-                      <ShareTracking orderId={selectedOrder.id} trackingCode={selectedOrder.tracking_code || ''} />
+                      <ShareTracking code={selectedOrder.tracking_code || ''} />
                    </div>
                 </div>
               </div>
@@ -239,7 +259,7 @@ function ClientTrackingHome() {
                   
                   <div className="flex flex-col lg:flex-row lg:justify-between relative gap-6 lg:gap-2">
                     {PUBLIC_TIMELINE.map((step, idx) => {
-                      const orderPublicStatus = publicStatus(selectedOrder.status);
+                      const orderPublicStatus = publicStatus(selectedOrder.status || '');
                       const currentIdx = PUBLIC_TIMELINE.findIndex(t => t.key === orderPublicStatus.key);
                       const done = currentIdx > idx;
                       const isCurrent = currentIdx === idx;
