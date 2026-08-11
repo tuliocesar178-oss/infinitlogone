@@ -139,30 +139,35 @@ function NewOrderWizard() {
 
   useEffect(() => {
     async function loadClients() {
-      const { data } = await supabase
+      // First, fetch user IDs that have the 'client' role
+      const { data: roleData, error: roleError } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "client");
+
+      if (roleError) {
+        console.error("Error fetching client roles:", roleError);
+        return;
+      }
+
+      if (!roleData || roleData.length === 0) {
+        setClients([]);
+        return;
+      }
+
+      const clientIds = roleData.map(r => r.user_id);
+
+      // Then fetch profiles for those IDs
+      const { data: profilesData, error: profilesError } = await supabase
         .from("profiles")
-        .select(`
-          id, 
-          company_name, 
-          cnpj, 
-          full_name, 
-          phone, 
-          whatsapp, 
-          email:id,
-          zip_code,
-          address:id,
-          address_number,
-          neighborhood,
-          city,
-          state
-        `);
-      // Note: email and address might be in different tables or require specific joins if not in profiles.
-      // For this implementation, we'll assume they are in profiles or we'll fetch them.
-      // Correcting the select to match our migration:
-      const { data: profilesData } = await supabase
-        .from("profiles")
-        .select("id, company_name, cnpj, full_name, phone, whatsapp, zip_code, address_number, neighborhood, city, state");
+        .select("id, company_name, cnpj, full_name, phone, whatsapp, zip_code, address_number, neighborhood, city, state")
+        .in("id", clientIds);
       
+      if (profilesError) {
+        console.error("Error fetching client profiles:", profilesError);
+        return;
+      }
+
       if (profilesData) {
         setClients(profilesData as any);
       }
