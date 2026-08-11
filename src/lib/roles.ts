@@ -25,6 +25,26 @@ export async function fetchUserRoles(userId: string): Promise<AppRole[]> {
   return (data ?? []).map((r) => r.role as AppRole);
 }
 
+/**
+ * Cache em memória dos papéis por usuário: evita repetir a mesma consulta
+ * em cada `beforeLoad` de rota (layout + subrota), o que deixava a entrada
+ * no painel lenta.
+ */
+const rolesCache = new Map<string, Promise<AppRole[]>>();
+
+export function getUserRolesCached(userId: string): Promise<AppRole[]> {
+  let p = rolesCache.get(userId);
+  if (!p) {
+    p = fetchUserRoles(userId).catch(() => [] as AppRole[]);
+    rolesCache.set(userId, p);
+  }
+  return p;
+}
+
+export function clearRolesCache() {
+  rolesCache.clear();
+}
+
 export function primaryRole(roles: AppRole[]): AppRole {
   for (const r of rolePriority) {
     if (roles.includes(r)) return r;

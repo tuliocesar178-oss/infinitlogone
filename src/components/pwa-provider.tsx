@@ -101,7 +101,7 @@ export function PwaProvider({ children }: { children: React.ReactNode }) {
   const [offline, setOffline] = useState(false);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => setShowSplash(false), 2000);
+    const timer = window.setTimeout(() => setShowSplash(false), 600);
     return () => window.clearTimeout(timer);
   }, []);
 

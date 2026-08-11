@@ -1,17 +1,12 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
-import { supabase } from "@/integrations/supabase/client";
+import { getUserRolesCached } from "@/lib/roles";
 
 export const Route = createFileRoute("/_authenticated/ops")({
-  beforeLoad: async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+  beforeLoad: async ({ context }) => {
+    const user = (context as { user?: { id: string } }).user;
     if (!user) throw redirect({ to: "/auth" });
 
-    const { data: roles } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id);
-    
-    const userRoles = roles?.map(r => r.role) || [];
+    const userRoles = await getUserRolesCached(user.id);
 
     if (!userRoles.includes("admin") && !userRoles.includes("logistics")) {
       const target = userRoles.includes("driver") ? "/driver" : "/client";

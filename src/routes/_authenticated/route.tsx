@@ -1,12 +1,15 @@
 import { createFileRoute, Outlet, redirect, useRouterState } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { fetchUserRoles, homeForRole, primaryRole } from "@/lib/roles";
+import { getUserRolesCached, homeForRole, primaryRole } from "@/lib/roles";
 import { useEffect } from "react";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
   beforeLoad: async () => {
+    // getSession() lê o token local (instantâneo). Só chamamos a rede se não houver sessão.
+    const { data: s } = await supabase.auth.getSession();
+    if (s.session?.user) return { user: s.session.user };
     const { data, error } = await supabase.auth.getUser();
     if (error || !data.user) throw redirect({ to: "/auth" });
     return { user: data.user };
@@ -21,7 +24,7 @@ function AuthenticatedLayout() {
   const { data: role } = useQuery({
     queryKey: ["user-primary-role", user.id],
     queryFn: async () => {
-      const roles = await fetchUserRoles(user.id);
+      const roles = await getUserRolesCached(user.id);
       return primaryRole(roles);
     },
     staleTime: Infinity,
