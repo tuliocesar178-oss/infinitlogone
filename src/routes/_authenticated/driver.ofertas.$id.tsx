@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,7 +7,8 @@ import { brl } from "@/lib/pf";
 import { haversineKm } from "@/lib/geo";
 import { 
   Clock, MapPin, Navigation, Package, Truck, Weight, X, 
-  ChevronLeft, Calendar, Info, Phone, AlertCircle, TrendingUp
+  ChevronLeft, Calendar, Info, Phone, AlertCircle, TrendingUp,
+  Map as MapIcon
 } from "lucide-react";
 import { toast } from "sonner";
 
