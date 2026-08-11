@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { brl } from "@/lib/pf";
 import { haversineKm } from "@/lib/geo";
-import { RouteMiniMap } from "@/components/driver/route-mini-map";
+import { RouteMiniMap, ExpandableRouteMap } from "@/components/driver/route-mini-map";
 import {
   AlertTriangle,
   Check,
