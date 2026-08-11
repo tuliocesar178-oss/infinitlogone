@@ -381,7 +381,7 @@ function NewOrderWizard() {
           { kind: "outros", amount: num(f.other_costs) },
         ].filter((c) => c.amount != null && c.amount > 0)
          .map((c) => ({ 
-           program_id: program.data!.id, 
+           program_id: programData.id, 
            kind: c.kind as any, 
            amount: c.amount 
          }));
@@ -396,7 +396,7 @@ function NewOrderWizard() {
         if (num(f.driver_price)) {
           const { error: progUpdateError } = await supabase.from("freight_programs")
             .update({ freight_value: num(f.driver_price) })
-            .eq("id", program.data.id);
+            .eq("id", programData.id);
           if (progUpdateError) {
             console.error("Erro ao atualizar valor do frete na PF:", progUpdateError);
           }
