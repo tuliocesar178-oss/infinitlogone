@@ -1291,43 +1291,55 @@ export type Database = {
       }
       profiles: {
         Row: {
+          address: string | null
           address_number: string | null
           avatar_url: string | null
+          city: string | null
           cnpj: string | null
           company_name: string | null
           created_at: string
+          email: string | null
           full_name: string | null
           id: string
           neighborhood: string | null
           phone: string | null
+          state: string | null
           updated_at: string
           whatsapp: string | null
           zip_code: string | null
         }
         Insert: {
+          address?: string | null
           address_number?: string | null
           avatar_url?: string | null
+          city?: string | null
           cnpj?: string | null
           company_name?: string | null
           created_at?: string
+          email?: string | null
           full_name?: string | null
           id: string
           neighborhood?: string | null
           phone?: string | null
+          state?: string | null
           updated_at?: string
           whatsapp?: string | null
           zip_code?: string | null
         }
         Update: {
+          address?: string | null
           address_number?: string | null
           avatar_url?: string | null
+          city?: string | null
           cnpj?: string | null
           company_name?: string | null
           created_at?: string
+          email?: string | null
           full_name?: string | null
           id?: string
           neighborhood?: string | null
           phone?: string | null
+          state?: string | null
           updated_at?: string
           whatsapp?: string | null
           zip_code?: string | null
