@@ -236,8 +236,8 @@ export function OfferRichCard({
       </div>
 
       {/* Mapa */}
-      <div className="relative group cursor-pointer" onClick={onOpenDetails}>
-        <RouteMiniMap
+      <div className="relative group">
+        <ExpandableRouteMap
           origin={
             order.origin_lat && order.origin_lng
               ? [order.origin_lng, order.origin_lat]
