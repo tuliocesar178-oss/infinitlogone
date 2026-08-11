@@ -24,6 +24,7 @@ export function RouteMiniMap({
   origin,
   destination,
   driver,
+  orderStatus,
   className,
   interactive = false,
   showRoute = true,
@@ -31,7 +32,19 @@ export function RouteMiniMap({
   onStatsUpdate,
   originInfo,
   destinationInfo,
-}: RouteMiniMapProps) {
+}: {
+  origin?: LngLat | null;
+  destination?: LngLat | null;
+  driver?: LngLat | null;
+  orderStatus?: string | null;
+  className?: string;
+  interactive?: boolean;
+  showRoute?: boolean;
+  onMapClick?: (lngLat: LngLat) => void;
+  onStatsUpdate?: (stats: { distanceKm: number; durationMin: number }) => void;
+  originInfo?: { title: string; address: string; time?: string };
+  destinationInfo?: { title: string; address: string; time?: string };
+}) {
   const ref = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
