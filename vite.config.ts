@@ -84,15 +84,9 @@ export default defineConfig({
               expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 30 },
             },
           },
-          {
-            urlPattern: ({ url }) => url.hostname.endsWith("supabase.co"),
-            handler: "NetworkFirst",
-            options: {
-              cacheName: "infinitlog-api",
-              networkTimeoutSeconds: 8,
-              expiration: { maxEntries: 120, maxAgeSeconds: 60 * 60 * 24 },
-            },
-          },
+          // Chamadas ao backend (auth/dados) nunca são cacheadas: respostas
+          // autenticadas em cache causavam erro/sessão inválida ao abrir o PWA.
+
           {
             urlPattern: ({ url }) => url.hostname.endsWith("mapbox.com"),
             handler: "StaleWhileRevalidate",
