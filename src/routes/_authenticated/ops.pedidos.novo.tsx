@@ -359,9 +359,19 @@ function NewOrderWizard() {
       }
 
       // Espera a PF ser criada pelo trigger e grava custos
-      const program = await supabase
-        .from("freight_programs").select("id").eq("order_id", order.id).maybeSingle();
-      if (program.data) {
+      // Usamos uma pequena espera ou retry pois triggers podem levar milissegundos
+      let programData = null;
+      for (let i = 0; i < 5; i++) {
+        const { data: p } = await supabase
+          .from("freight_programs").select("id").eq("order_id", order.id).maybeSingle();
+        if (p) {
+          programData = p;
+          break;
+        }
+        await new Promise(r => setTimeout(r, 500));
+      }
+
+      if (programData) {
         const costs = [
           { kind: "frete", amount: num(f.driver_price) },
           { kind: "pedagio", amount: num(f.toll) },
