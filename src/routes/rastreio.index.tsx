@@ -3,7 +3,7 @@ import { useState, type FormEvent } from "react";
 import { ArrowLeft, ArrowRight, Search } from "lucide-react";
 import { Logo } from "@/components/logo";
 
-export const Route = createFileRoute("/rastreio")({
+export const Route = createFileRoute("/rastreio/")({
   head: () => ({
     meta: [
       { title: "Rastrear pedido — InfinitLog" },
