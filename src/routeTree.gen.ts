@@ -11,13 +11,13 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as RastreioRouteImport } from './routes/rastreio'
 import { Route as CadastroMotoristaRouteImport } from './routes/cadastro-motorista'
 import { Route as CadastroClienteRouteImport } from './routes/cadastro-cliente'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AguardandoAprovacaoRouteImport } from './routes/aguardando-aprovacao'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as RastreioIndexRouteImport } from './routes/rastreio.index'
 import { Route as RastreioCodeRouteImport } from './routes/rastreio.$code'
 import { Route as AuthenticatedOpsRouteImport } from './routes/_authenticated/ops'
 import { Route as AuthenticatedDriverRouteImport } from './routes/_authenticated/driver'
@@ -67,11 +67,6 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
   path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
-const RastreioRoute = RastreioRouteImport.update({
-  id: '/rastreio',
-  path: '/rastreio',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const CadastroMotoristaRoute = CadastroMotoristaRouteImport.update({
   id: '/cadastro-motorista',
   path: '/cadastro-motorista',
@@ -101,10 +96,15 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RastreioIndexRoute = RastreioIndexRouteImport.update({
+  id: '/rastreio/',
+  path: '/rastreio/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RastreioCodeRoute = RastreioCodeRouteImport.update({
-  id: '/$code',
-  path: '/$code',
-  getParentRoute: () => RastreioRoute,
+  id: '/rastreio/$code',
+  path: '/rastreio/$code',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedOpsRoute = AuthenticatedOpsRouteImport.update({
   id: '/ops',
@@ -325,7 +325,6 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/cadastro-cliente': typeof CadastroClienteRoute
   '/cadastro-motorista': typeof CadastroMotoristaRoute
-  '/rastreio': typeof RastreioRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin': typeof AuthenticatedAdminRoute
@@ -334,6 +333,7 @@ export interface FileRoutesByFullPath {
   '/driver': typeof AuthenticatedDriverRouteWithChildren
   '/ops': typeof AuthenticatedOpsRouteWithChildren
   '/rastreio/$code': typeof RastreioCodeRoute
+  '/rastreio/': typeof RastreioIndexRoute
   '/client/bi': typeof AuthenticatedClientBiRoute
   '/client/documentos': typeof AuthenticatedClientDocumentosRoute
   '/client/financeiro': typeof AuthenticatedClientFinanceiroRoute
@@ -373,12 +373,12 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/cadastro-cliente': typeof CadastroClienteRoute
   '/cadastro-motorista': typeof CadastroMotoristaRoute
-  '/rastreio': typeof RastreioRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/app': typeof AuthenticatedAppRoute
   '/rastreio/$code': typeof RastreioCodeRoute
+  '/rastreio': typeof RastreioIndexRoute
   '/client/bi': typeof AuthenticatedClientBiRoute
   '/client/documentos': typeof AuthenticatedClientDocumentosRoute
   '/client/financeiro': typeof AuthenticatedClientFinanceiroRoute
@@ -420,7 +420,6 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/cadastro-cliente': typeof CadastroClienteRoute
   '/cadastro-motorista': typeof CadastroMotoristaRoute
-  '/rastreio': typeof RastreioRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
@@ -429,6 +428,7 @@ export interface FileRoutesById {
   '/_authenticated/driver': typeof AuthenticatedDriverRouteWithChildren
   '/_authenticated/ops': typeof AuthenticatedOpsRouteWithChildren
   '/rastreio/$code': typeof RastreioCodeRoute
+  '/rastreio/': typeof RastreioIndexRoute
   '/_authenticated/client/bi': typeof AuthenticatedClientBiRoute
   '/_authenticated/client/documentos': typeof AuthenticatedClientDocumentosRoute
   '/_authenticated/client/financeiro': typeof AuthenticatedClientFinanceiroRoute
@@ -470,7 +470,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/cadastro-cliente'
     | '/cadastro-motorista'
-    | '/rastreio'
     | '/reset-password'
     | '/sitemap.xml'
     | '/admin'
@@ -479,6 +478,7 @@ export interface FileRouteTypes {
     | '/driver'
     | '/ops'
     | '/rastreio/$code'
+    | '/rastreio/'
     | '/client/bi'
     | '/client/documentos'
     | '/client/financeiro'
@@ -518,12 +518,12 @@ export interface FileRouteTypes {
     | '/auth'
     | '/cadastro-cliente'
     | '/cadastro-motorista'
-    | '/rastreio'
     | '/reset-password'
     | '/sitemap.xml'
     | '/admin'
     | '/app'
     | '/rastreio/$code'
+    | '/rastreio'
     | '/client/bi'
     | '/client/documentos'
     | '/client/financeiro'
@@ -564,7 +564,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/cadastro-cliente'
     | '/cadastro-motorista'
-    | '/rastreio'
     | '/reset-password'
     | '/sitemap.xml'
     | '/_authenticated/admin'
@@ -573,6 +572,7 @@ export interface FileRouteTypes {
     | '/_authenticated/driver'
     | '/_authenticated/ops'
     | '/rastreio/$code'
+    | '/rastreio/'
     | '/_authenticated/client/bi'
     | '/_authenticated/client/documentos'
     | '/_authenticated/client/financeiro'
@@ -614,9 +614,10 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   CadastroClienteRoute: typeof CadastroClienteRoute
   CadastroMotoristaRoute: typeof CadastroMotoristaRoute
-  RastreioRoute: typeof RastreioRouteWithChildren
   ResetPasswordRoute: typeof ResetPasswordRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  RastreioCodeRoute: typeof RastreioCodeRoute
+  RastreioIndexRoute: typeof RastreioIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -633,13 +634,6 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/rastreio': {
-      id: '/rastreio'
-      path: '/rastreio'
-      fullPath: '/rastreio'
-      preLoaderRoute: typeof RastreioRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/cadastro-motorista': {
@@ -684,12 +678,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/rastreio/': {
+      id: '/rastreio/'
+      path: '/rastreio'
+      fullPath: '/rastreio/'
+      preLoaderRoute: typeof RastreioIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/rastreio/$code': {
       id: '/rastreio/$code'
-      path: '/$code'
+      path: '/rastreio/$code'
       fullPath: '/rastreio/$code'
       preLoaderRoute: typeof RastreioCodeRouteImport
-      parentRoute: typeof RastreioRoute
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/ops': {
       id: '/_authenticated/ops'
@@ -1089,18 +1090,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
-interface RastreioRouteChildren {
-  RastreioCodeRoute: typeof RastreioCodeRoute
-}
-
-const RastreioRouteChildren: RastreioRouteChildren = {
-  RastreioCodeRoute: RastreioCodeRoute,
-}
-
-const RastreioRouteWithChildren = RastreioRoute._addFileChildren(
-  RastreioRouteChildren,
-)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
@@ -1108,10 +1097,21 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   CadastroClienteRoute: CadastroClienteRoute,
   CadastroMotoristaRoute: CadastroMotoristaRoute,
-  RastreioRoute: RastreioRouteWithChildren,
   ResetPasswordRoute: ResetPasswordRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  RastreioCodeRoute: RastreioCodeRoute,
+  RastreioIndexRoute: RastreioIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
