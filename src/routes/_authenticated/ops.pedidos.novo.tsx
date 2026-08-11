@@ -348,7 +348,11 @@ function NewOrderWizard() {
       };
       const { data: order, error } = await supabase
         .from("orders").insert(payload).select("id, code, tracking_code").single();
-      if (error) throw error;
+      
+      if (error) {
+        console.error("Supabase error detail:", error);
+        throw error;
+      }
 
       // Espera a PF ser criada pelo trigger e grava custos
       const program = await supabase
