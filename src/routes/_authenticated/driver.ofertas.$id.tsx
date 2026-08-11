@@ -100,9 +100,24 @@ function DriverOfferDetailsPage() {
           origin={order.origin_lat && order.origin_lng ? [order.origin_lng, order.origin_lat] : null}
           destination={order.destination_lat && order.destination_lng ? [order.destination_lng, order.destination_lat] : null}
           driver={driverPos}
+          orderStatus="pending"
+          interactive={true}
           className="h-full w-full rounded-none"
+          originInfo={{ title: "Coleta", address: order.origin_address || "" }}
+          destinationInfo={{ title: "Entrega", address: order.destination_address || "" }}
         />
         
+        {/* Botão Ver Rota Completa (Uber Style Overlay) */}
+        <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-20 w-[90%] max-w-xs">
+          <Link
+            to="/driver/navegacao/$id"
+            params={{ id: offer.id }}
+            className="flex items-center justify-center gap-2 rounded-2xl bg-background/90 px-6 py-4 text-xs font-black uppercase tracking-widest shadow-2xl backdrop-blur-xl ring-1 ring-border active:scale-95 transition-all"
+          >
+            <MapIcon className="h-4 w-4 text-brand" /> Ver Rota Completa
+          </Link>
+        </div>
+
         {/* Notificação Flutuante no Mapa */}
         {distToPickup !== null && (
           <div className="absolute top-20 left-1/2 -translate-x-1/2 z-10 w-[90%] max-w-xs">
