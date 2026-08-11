@@ -9,6 +9,8 @@ import {
   Calendar, 
   File
 } from "lucide-react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 export const Route = createFileRoute("/_authenticated/client/documentos")({
   component: ClientDocuments,
@@ -16,41 +18,101 @@ export const Route = createFileRoute("/_authenticated/client/documentos")({
 
 function ClientDocuments() {
   const { data: documents, isLoading } = useQuery({
-    queryKey: ["client-documents"],
+    queryKey: ["client-documents-real"],
     queryFn: async () => {
-      // Mock documents for now. In a real scenario, we'd join order_attachments with orders filtered by client_id.
-      return [
-        { id: '1', name: 'Nota Fiscal - NF87231', type: 'NF', date: '2024-03-20', order: 'INF-2024-0001', size: '1.2 MB' },
-        { id: '2', name: 'CT-e - 55432', type: 'CTE', date: '2024-03-20', order: 'INF-2024-0001', size: '450 KB' },
-        { id: '3', name: 'Canhoto Assinado - INF-0001', type: 'Canhoto', date: '2024-03-21', order: 'INF-2024-0001', size: '2.1 MB' },
-        { id: '4', name: 'Nota Fiscal - NF87232', type: 'NF', date: '2024-03-18', order: 'INF-2024-0002', size: '1.1 MB' },
-        { id: '5', name: 'Comprovante de Entrega', type: 'Foto', date: '2024-03-19', order: 'INF-2024-0002', size: '3.4 MB' },
-      ];
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
+
+      // Buscamos pedidos do cliente que possuem arquivos anexados ou links de documentos
+      const { data: orders } = await supabase
+        .from("orders")
+        .select(`
+          id, code, invoice_number, invoice_url, created_at,
+          deliveries (
+            invoice_url,
+            pickup_photo_url,
+            delivery_photo_url,
+            signature_url
+          )
+        `)
+        .eq("client_id", user.id);
+
+      if (!orders) return [];
+
+      const docs: any[] = [];
+
+      orders.forEach(order => {
+        // Nota Fiscal do Pedido
+        if (order.invoice_url) {
+          docs.push({
+            id: `${order.id}-nf`,
+            name: `Nota Fiscal - ${order.invoice_number || order.code}`,
+            type: 'NF',
+            date: order.created_at ? format(new Date(order.created_at), "yyyy-MM-dd") : "-",
+            order: order.code,
+            size: '—',
+            url: order.invoice_url
+          });
+        }
+
+        // Documentos da Entrega (se houver)
+        if (order.deliveries) {
+          const del = order.deliveries as any;
+          if (del.invoice_url) {
+            docs.push({
+              id: `${order.id}-del-nf`,
+              name: `NF Digitalizada - ${order.code}`,
+              type: 'NF',
+              date: format(new Date(), "yyyy-MM-dd"), // Placeholder
+              order: order.code,
+              size: '—',
+              url: del.invoice_url
+            });
+          }
+          if (del.signature_url) {
+            docs.push({
+              id: `${order.id}-sig`,
+              name: `Canhoto Assinado - ${order.code}`,
+              type: 'Canhoto',
+              date: format(new Date(), "yyyy-MM-dd"),
+              order: order.code,
+              size: '—',
+              url: del.signature_url
+            });
+          }
+          if (del.delivery_photo_url) {
+            docs.push({
+              id: `${order.id}-photo`,
+              name: `Comprovante de Entrega - ${order.code}`,
+              type: 'Foto',
+              date: format(new Date(), "yyyy-MM-dd"),
+              order: order.code,
+              size: '—',
+              url: del.delivery_photo_url
+            });
+          }
+        }
+      });
+
+      return docs;
     }
   });
+
+  if (isLoading) return <div className="p-8 text-center">Carregando documentos reais...</div>;
 
   return (
     <AppShell 
       title="Central de Documentos" 
-      subtitle="Consulte e baixe todos os documentos fiscais e comprovantes de suas operações"
+      subtitle="Documentos reais vinculados às suas operações"
     >
       <div className="space-y-6 pb-10">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <input 
-              placeholder="Buscar por Pedido, NF ou Tipo..."
+              placeholder="Buscar por Pedido ou Tipo..."
               className="w-full rounded-xl border border-border bg-white py-2.5 pl-10 pr-4 text-sm outline-none focus:ring-2 focus:ring-primary/20"
             />
-          </div>
-          <div className="flex gap-2">
-            <select className="rounded-xl border border-border bg-white px-4 py-2.5 text-sm font-medium outline-none">
-              <option>Todos os tipos</option>
-              <option>Nota Fiscal</option>
-              <option>CT-e</option>
-              <option>Canhoto</option>
-              <option>Fotos</option>
-            </select>
           </div>
         </div>
 
@@ -65,17 +127,27 @@ function ClientDocuments() {
                   <h4 className="font-semibold text-sm">{doc.name}</h4>
                   <div className="mt-1 flex items-center gap-3 text-[11px] text-muted-foreground">
                     <span className="flex items-center gap-1"><Calendar className="h-3 w-3" /> {doc.date}</span>
-                    <span className="flex items-center gap-1"><File className="h-3 w-3" /> {doc.size}</span>
+                    <span className="flex items-center gap-1"><File className="h-3 w-3" /> Pedido: {doc.order}</span>
                   </div>
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <button className="grid h-8 w-8 place-items-center rounded-lg border border-border bg-white text-muted-foreground hover:bg-accent transition-all">
+                <a 
+                  href={doc.url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="grid h-8 w-8 place-items-center rounded-lg border border-border bg-white text-muted-foreground hover:bg-accent transition-all"
+                >
                   <Download className="h-4 w-4" />
-                </button>
+                </a>
               </div>
             </div>
           ))}
+          {(!documents || documents.length === 0) && (
+            <div className="col-span-full py-12 text-center card-soft border-dashed">
+              <p className="text-muted-foreground italic">Nenhum documento real anexado às suas ordens de serviço até o momento.</p>
+            </div>
+          )}
         </div>
       </div>
     </AppShell>
