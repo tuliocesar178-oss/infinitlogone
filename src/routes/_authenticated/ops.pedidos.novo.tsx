@@ -188,19 +188,21 @@ function NewOrderWizard() {
     if (client) {
       setF(s => ({
         ...s,
-        client_name: client.full_name || "",
-        company: client.company_name || "",
-        contact_name: client.full_name || "",
-        contact_phone: client.phone || "",
-        contact_email: "", // email is not in profiles by default, would need auth.users join
+        client_name: client.full_name || s.client_name,
+        company: client.company_name || s.company,
+        contact_name: client.full_name || s.contact_name,
+        contact_phone: client.phone || s.contact_phone,
+        contact_email: client.email || s.contact_email,
         client_notes: `CNPJ: ${client.cnpj || ""}\nWhatsApp: ${client.whatsapp || ""}`,
-        origin_address: "", // Address fields
-        origin_city: client.city || "",
-        origin_state: client.state || "",
-        origin_zip: client.zip_code || "",
-        origin_neighborhood: client.neighborhood || "",
-        origin_number: client.address_number || "",
+        origin_city: client.city || s.origin_city,
+        origin_state: client.state || s.origin_state,
+        origin_zip: client.zip_code || s.origin_zip,
+        origin_neighborhood: client.neighborhood || s.origin_neighborhood,
+        origin_number: client.address_number || s.origin_number,
       }));
+    } else if (!clientId) {
+      // Reset logic if needed, but usually we just leave it or clear if it was an explicit "unselect"
+      setSelectedClientId("");
     }
   }
 
