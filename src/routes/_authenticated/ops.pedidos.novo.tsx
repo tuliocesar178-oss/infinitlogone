@@ -139,11 +139,21 @@ function NewOrderWizard() {
 
   useEffect(() => {
     async function loadClients() {
-      // First, fetch user IDs that have the 'client' role
+      console.log("Loading clients...");
+      // Try to fetch profiles first to see if we can get anything
+      const { data: allProfiles, error: allProfilesError } = await supabase
+        .from("profiles")
+        .select("id, company_name, full_name");
+      
+      console.log("All profiles:", allProfiles, allProfilesError);
+
+      // Fetch user IDs that have the 'client' role
       const { data: roleData, error: roleError } = await supabase
         .from("user_roles")
         .select("user_id")
         .eq("role", "client");
+
+      console.log("Role data (client):", roleData, roleError);
 
       if (roleError) {
         console.error("Error fetching client roles:", roleError);
@@ -151,6 +161,7 @@ function NewOrderWizard() {
       }
 
       if (!roleData || roleData.length === 0) {
+        console.warn("No users found with 'client' role.");
         setClients([]);
         return;
       }
@@ -163,6 +174,8 @@ function NewOrderWizard() {
         .select("id, company_name, cnpj, full_name, phone, whatsapp, zip_code, address_number, neighborhood, city, state")
         .in("id", clientIds);
       
+      console.log("Filtered client profiles:", profilesData, profilesError);
+
       if (profilesError) {
         console.error("Error fetching client profiles:", profilesError);
         return;
