@@ -339,7 +339,7 @@ function NewOrderWizard() {
         delivery_franchise_minutes: f.delivery_franchise_minutes ? Number(f.delivery_franchise_minutes) : null,
         priority: f.priority,
         notes: [f.client_notes, f.cargo_notes].filter(Boolean).join("\n\n") || null,
-        status: "preparing" as const,
+        status: "preparing" as any,
         created_by: u.user?.id ?? null,
         distance_km: routeInfo?.distance_km ?? null,
         estimated_minutes: routeInfo?.duration_minutes ?? null,
