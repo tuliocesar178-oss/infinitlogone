@@ -76,15 +76,12 @@ export const NAV_GROUPS: Record<string, { label: string; items: NavItem[] }[]> =
     {
       label: "Portal do Cliente",
       items: [
-        { label: "🏠 Dashboard", to: "/client", icon: LayoutGrid, match: (p) => p === "/client" || p === "/client/" },
-        { label: "🚚 Meus Fretes", to: "/client/fretes", icon: Package, match: (p) => p.startsWith("/client/fretes") },
-        { label: "📍 Rastreamento", to: "/client/mapa", icon: MapPin, match: (p) => p === "/client/mapa" },
+        { label: "📍 Rastreamento", to: "/client", icon: MapPin, match: (p) => p === "/client" || p === "/client/" },
+        { label: "🚚 Histórico de Fretes", to: "/client/fretes", icon: Package, match: (p) => p.startsWith("/client/fretes") },
         { label: "📄 Documentos", to: "/client/documentos", icon: FileText, match: (p) => p.startsWith("/client/documentos") },
         { label: "📊 Relatórios", to: "/client/bi", icon: BarChart3, match: (p) => p === "/client/bi" },
         { label: "💳 Financeiro", to: "/client/financeiro", icon: DollarSign, match: (p) => p === "/client/financeiro" },
-        { label: "💬 Chat", to: "/client/chat", icon: Zap, match: (p) => p === "/client/chat" },
         { label: "👤 Perfil", to: "/client/perfil", icon: UserRound, match: (p) => p === "/client/perfil" },
-        { label: "❓ Suporte", to: "/client/suporte", icon: HelpCircle, match: (p) => p === "/client/suporte" },
       ],
     },
   ],

@@ -1,32 +1,30 @@
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
-import { AppShell } from "@/components/app-shell";
 
 export const Route = createFileRoute("/_authenticated/client")({
   ssr: false,
-  beforeLoad: async () => {
+  beforeLoad: async ({ location }) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw redirect({ to: "/auth" });
 
-    const { data: roles, error } = await supabase
+    const { data: roles } = await supabase
       .from("user_roles")
       .select("role")
       .eq("user_id", user.id);
     
     const userRoles = roles?.map(r => r.role) || [];
-    console.log("Checking client access for user:", user.id, "Roles:", userRoles);
 
     if (!userRoles.includes("client")) {
-      console.warn("User does not have client role. Redirecting to ops...");
       throw redirect({ to: "/ops/central" });
     }
+
+    // Se o cliente tentar acessar o /client raiz, redireciona para a tela de rastreamento (index do portal)
+    // que agora será a nossa tela principal de rastreio.
+    if (location.pathname === "/client" || location.pathname === "/client/") {
+      // Deixamos o fluxo seguir pois o client.index.tsx será a nossa nova tela de rastreamento principal.
+    }
   },
-  component: ClientLayout,
+  component: () => <Outlet />,
 });
 
-function ClientLayout() {
-  return (
-    <Outlet />
-  );
-}
-
+import { Outlet } from "@tanstack/react-router";

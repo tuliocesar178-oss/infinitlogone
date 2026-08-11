@@ -1,360 +1,289 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/app-shell";
 import { 
-  BarChart3, 
-  Package, 
-  CheckCircle2, 
-  Clock, 
+  MapPin, 
   Truck, 
-  AlertTriangle, 
-  TrendingUp, 
-  Scale, 
-  DollarSign, 
-  Timer,
+  Clock, 
+  Navigation,
+  CheckCircle2,
+  Circle,
+  Package,
   Calendar,
   ChevronRight,
-  MapPin
+  Share2,
+  User,
+  Info
 } from "lucide-react";
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer, 
-  LineChart, 
-  Line,
-  PieChart,
-  Pie,
-  Cell
-} from "recharts";
+import { useState, useMemo, useEffect } from "react";
+import { TripMap } from "@/components/trip-map";
+import { statusLabel, STATUS_LABEL, publicStatus, PUBLIC_TIMELINE } from "@/lib/order-status";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { Button } from "@/components/ui/button";
+import { ShareTracking } from "@/components/share-tracking";
 
 export const Route = createFileRoute("/_authenticated/client/")({
-  component: ClientDashboard,
+  component: ClientTrackingHome,
 });
 
-function ClientDashboard() {
-  const { data: stats, isLoading } = useQuery({
-    queryKey: ["client-stats"],
+function ClientTrackingHome() {
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  
+  const { data: orders, isLoading } = useQuery({
+    queryKey: ["client-active-tracking-orders"],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return null;
+      if (!user) return [];
 
-      // Filter by profile owner
-      const { data: orders } = await supabase
+      const { data } = await supabase
         .from("orders")
-        .select("*")
-        .eq("client_id", user.id); 
+        .select(`
+          *,
+          driver:profiles!orders_driver_id_fkey(full_name, avatar_url),
+          vehicle:vehicles(plate, model, color)
+        `)
+        .eq("client_id", user.id)
+        .order("created_at", { ascending: false });
       
-      if (!orders || orders.length === 0) {
-        return { hasData: false };
-      }
-
-      const total = orders.length;
-      const inProgress = orders.filter(o => ["driver_assigned", "en_route_pickup", "at_pickup", "loaded", "picked_up", "out_for_delivery", "in_transit", "near_destination", "at_destination"].includes(o.status)).length;
-      const delivered = orders.filter(o => o.status === "delivered" || o.status === "finalized").length;
-      const awaiting = orders.filter(o => o.status === "preparing" || o.status === "created" || o.status === "awaiting_driver").length;
-      const incidents = orders.filter(o => o.status === "incident").length;
-
-      // Real calculation for monthly data based on orders
-      const last6Months = Array.from({ length: 6 }, (_, i) => {
-        const d = new Date();
-        d.setMonth(d.getMonth() - i);
-        return d.toLocaleString('pt-BR', { month: 'short' });
-      }).reverse();
-
-      const monthlyData = last6Months.map(month => ({
-        name: month,
-        value: orders.filter(o => {
-          const orderDate = new Date(o.created_at);
-          return orderDate.toLocaleString('pt-BR', { month: 'short' }) === month;
-        }).length
-      }));
-
-      // Distribution by state
-      const states = [...new Set(orders.map(o => o.destination_state).filter(Boolean))];
-      const stateData = states.map(state => ({
-        name: state || "Desconhecido",
-        value: Math.round((orders.filter(o => o.destination_state === state).length / total) * 100)
-      })).slice(0, 5);
-
-      return {
-        hasData: true,
-        total,
-        inProgress,
-        delivered,
-        awaiting,
-        incidents,
-        onTimeRate: delivered > 0 ? `${Math.round((delivered / (delivered + incidents)) * 100)}%` : "100%",
-        totalKm: orders.reduce((acc, o) => acc + (o.distance_km || 0), 0).toLocaleString('pt-BR'),
-        totalWeight: `${orders.reduce((acc, o) => acc + (Number(o.cargo_weight_kg) || 0), 0) / 1000} ton`,
-        totalInvoiced: `R$ ${orders.reduce((acc, o) => acc + (Number(o.invoice_value) || 0), 0).toLocaleString('pt-BR')}`,
-        totalFreight: `R$ ${orders.reduce((acc, o) => acc + (Number(o.price) || 0), 0).toLocaleString('pt-BR')}`,
-        avgDeliveryTime: "Sob consulta",
-        monthlyData,
-        stateData,
-        recentOrders: orders.slice(0, 5)
-      };
-    }
+      return data || [];
+    },
+    refetchInterval: 10000
   });
+
+  const activeOrders = useMemo(() => 
+    orders?.filter(o => !["delivered", "finalized", "cancelled"].includes(o.status)) || []
+  , [orders]);
+
+  const historyOrders = useMemo(() => 
+    orders?.filter(o => ["delivered", "finalized"].includes(o.status)) || []
+  , [orders]);
+
+  // Se houver apenas um frete ativo e nenhum selecionado, seleciona ele automaticamente
+  useEffect(() => {
+    if (activeOrders.length === 1 && !selectedOrderId) {
+      setSelectedOrderId(activeOrders[0].id);
+    }
+  }, [activeOrders, selectedOrderId]);
+
+  const selectedOrder = useMemo(() => 
+    orders?.find(o => o.id === selectedOrderId) || activeOrders[0] || null
+  , [orders, selectedOrderId, activeOrders]);
 
   if (isLoading) {
     return (
-      <AppShell title="Dashboard" subtitle="Carregando seus dados...">
-        <div className="flex h-[50vh] items-center justify-center">
+      <AppShell title="Rastreamento" subtitle="Carregando suas entregas...">
+        <div className="flex h-[60vh] items-center justify-center">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
         </div>
       </AppShell>
     );
   }
 
-  if (!stats?.hasData) {
+  if (orders?.length === 0) {
     return (
-      <AppShell 
-        title="Bem-vindo à InfinitLog" 
-        subtitle="Seu portal de logística inteligente"
-      >
+      <AppShell title="Rastreamento" subtitle="Bem-vindo ao seu portal">
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <div className="mb-6 rounded-full bg-slate-50 p-6">
             <Package className="h-12 w-12 text-slate-300" />
           </div>
-          <h2 className="text-2xl font-bold tracking-tight text-slate-900">Nenhum frete ativo ou histórico</h2>
+          <h2 className="text-2xl font-bold tracking-tight text-slate-900">Nenhum frete encontrado</h2>
           <p className="mt-2 max-w-sm text-muted-foreground">
-            No momento não há informações para exibir. Assim que sua primeira operação for iniciada, você terá acesso total ao dashboard e indicadores em tempo real.
+            Você ainda não possui entregas cadastradas no sistema.
           </p>
-          <div className="mt-8 flex gap-4">
-            <button className="rounded-xl bg-primary px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary/90">
-              Solicitar Cotação
-            </button>
-            <button className="rounded-xl border border-border bg-white px-6 py-2.5 text-sm font-semibold text-slate-900 hover:bg-slate-50">
-              Falar com Consultor
-            </button>
-          </div>
         </div>
       </AppShell>
     );
   }
 
-  const COLORS = ['#0F172A', '#3B82F6', '#64748B', '#94A3B8', '#CBD5E1'];
-
   return (
     <AppShell 
-      title="Dashboard" 
-      subtitle="Bem-vindo ao seu Portal de Logística"
+      title="Rastreamento" 
+      subtitle={selectedOrder ? `Acompanhando ${selectedOrder.code}` : "Selecione uma entrega para rastrear"}
     >
-      <div className="space-y-8 pb-10">
-        {/* KPI Grid */}
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
-          <StatCard 
-            label="Total de Fretes" 
-            value={stats?.total ?? 0} 
-            icon={Package} 
-            trend="+12%" 
-          />
-          <StatCard 
-            label="Em Andamento" 
-            value={stats?.inProgress ?? 0} 
-            icon={Truck} 
-            color="text-blue-600"
-          />
-          <StatCard 
-            label="Entregues" 
-            value={stats?.delivered ?? 0} 
-            icon={CheckCircle2} 
-            color="text-emerald-600"
-          />
-          <StatCard 
-            label="Aguardando" 
-            value={stats?.awaiting ?? 0} 
-            icon={Clock} 
-            color="text-amber-600"
-          />
-          <StatCard 
-            label="Ocorrências" 
-            value={stats?.incidents ?? 0} 
-            icon={AlertTriangle} 
-            color="text-red-600"
-          />
-          <StatCard 
-            label="No Prazo" 
-            value={stats?.onTimeRate ?? "0%"} 
-            icon={TrendingUp} 
-            color="text-emerald-600"
-          />
-        </div>
-
-        {/* Secondary KPIs */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <SecondaryStatCard label="Quilometragem Total" value={stats?.totalKm ?? "0"} icon={MapPin} unit="km" />
-          <SecondaryStatCard label="Peso Transportado" value={stats?.totalWeight ?? "0"} icon={Scale} />
-          <SecondaryStatCard label="Valor em Notas Fiscais" value={stats?.totalInvoiced ?? "R$ 0"} icon={DollarSign} />
-          <SecondaryStatCard label="Tempo Médio Entrega" value={stats?.avgDeliveryTime ?? "0"} icon={Timer} />
-        </div>
-
-        {/* Charts Section */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          {/* Evolução Mensal */}
-          <div className="card-soft p-6">
-            <div className="mb-6 flex items-center justify-between">
-              <h3 className="font-semibold tracking-tight">Evolução Mensal de Fretes</h3>
-              <select className="rounded-lg border border-border bg-background px-2 py-1 text-xs outline-none">
-                <option>Últimos 6 meses</option>
-                <option>Este ano</option>
-              </select>
-            </div>
-            <div className="h-[300px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={stats?.monthlyData}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} />
-                  <Tooltip 
-                    cursor={{ fill: '#f1f5f9' }}
-                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                  />
-                  <Bar dataKey="value" fill="#3B82F6" radius={[4, 4, 0, 0]} barSize={40} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+      <div className="flex flex-col gap-6 lg:flex-row h-full">
+        {/* Lado Esquerdo: Lista e Detalhes */}
+        <div className="flex flex-col w-full lg:w-[400px] gap-6 shrink-0">
+          
+          {/* Saudação e Seleção */}
+          <div className="card-soft p-5 bg-primary text-primary-foreground border-none">
+            <h2 className="text-lg font-bold">Olá, Cliente</h2>
+            <p className="text-primary-foreground/80 text-sm">Suas entregas em tempo real</p>
           </div>
 
-          {/* Distribuição por Estado */}
-          <div className="card-soft p-6">
-            <div className="mb-6 flex items-center justify-between">
-              <h3 className="font-semibold tracking-tight">Fretes por Estado</h3>
-              <button className="text-xs font-medium text-blue-600 hover:underline">Ver tudo</button>
-            </div>
-            <div className="flex flex-col items-center gap-4 sm:flex-row">
-              <div className="h-[250px] w-full sm:w-1/2">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={stats?.stateData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={80}
-                      paddingAngle={5}
-                      dataKey="value"
-                    >
-                      {stats?.stateData?.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="w-full space-y-3 sm:w-1/2">
-                {stats?.stateData?.map((item, index) => (
-                  <div key={item.name} className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-2">
-                      <div className="h-3 w-3 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
-                      <span className="text-muted-foreground">{item.name}</span>
-                    </div>
-                    <span className="font-medium">{item.value}%</span>
+          {/* Lista de Ativos */}
+          <div className="space-y-3">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-2">Entregas Ativas</h3>
+            <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+              {activeOrders.map((order) => (
+                <button
+                  key={order.id}
+                  onClick={() => setSelectedOrderId(order.id)}
+                  className={`w-full text-left card-soft p-4 transition-all hover:border-brand/40 ${selectedOrderId === order.id ? 'border-brand ring-2 ring-brand/10 bg-brand/5' : ''}`}
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <span className="font-bold text-sm">{order.code}</span>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
+                      order.status === 'incident' ? 'bg-red-100 text-red-700' : 'bg-brand/10 text-brand'
+                    }`}>
+                      {statusLabel(order.status)}
+                    </span>
                   </div>
-                ))}
-              </div>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <MapPin className="h-3 w-3" />
+                    <span className="truncate">{order.origin_city}</span>
+                    <ChevronRight className="h-3 w-3" />
+                    <span className="truncate">{order.destination_city}</span>
+                  </div>
+                  <div className="mt-3 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="h-6 w-6 rounded-full bg-slate-200 overflow-hidden">
+                        {order.driver?.avatar_url && <img src={order.driver.avatar_url} className="h-full w-full object-cover" />}
+                      </div>
+                      <span className="text-[11px] font-medium">{order.driver?.full_name || "A definir"}</span>
+                    </div>
+                    <div className="text-[10px] text-muted-foreground font-mono">{order.vehicle?.plate}</div>
+                  </div>
+                </button>
+              ))}
+              {activeOrders.length === 0 && (
+                <div className="p-4 text-center text-xs text-muted-foreground border border-dashed rounded-xl">
+                  Nenhuma entrega ativa no momento.
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Histórico Rápido */}
+          <div className="space-y-3">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-2">Histórico Recente</h3>
+            <div className="space-y-2">
+              {historyOrders.slice(0, 3).map((order) => (
+                <div key={order.id} className="card-soft p-3 bg-surface-2/50 border-dashed opacity-70">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="font-bold">{order.code}</span>
+                    <span className="text-emerald-600 font-bold">Entregue</span>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
 
-        {/* Recent Orders Table Preview */}
-        <div className="card-soft overflow-hidden">
-          <div className="flex items-center justify-between border-b border-border/60 p-6">
-            <h3 className="font-semibold tracking-tight">Últimas Operações</h3>
-            <button className="inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:underline">
-              Ver lista completa <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-surface-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                <tr>
-                  <th className="px-6 py-3">ID / NF</th>
-                  <th className="px-6 py-3">Origem / Destino</th>
-                  <th className="px-6 py-3">Motorista</th>
-                  <th className="px-6 py-3">Status</th>
-                  <th className="px-6 py-3">Valor</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/40">
-                {stats?.recentOrders?.map((order: any) => (
-                  <tr key={order.id} className="hover:bg-surface-2/50">
-                    <td className="px-6 py-4">
-                      <div className="font-medium text-foreground">{order.code}</div>
-                      <div className="text-[11px] text-muted-foreground">NF: {order.invoice_number || "—"}</div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="truncate max-w-[150px]">{order.origin_city}</div>
-                      <div className="truncate max-w-[150px] text-[11px] text-muted-foreground">{order.destination_city}</div>
-                    </td>
-                    <td className="px-6 py-4">
+        {/* Lado Direito: Mapa e Timeline */}
+        <div className="flex-1 flex flex-col gap-6">
+          {selectedOrder ? (
+            <>
+              {/* Info Bar Superior */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="card-soft p-4 flex flex-col gap-1">
+                  <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Status</span>
+                  <span className="font-bold text-sm text-brand">{statusLabel(selectedOrder.status)}</span>
+                </div>
+                <div className="card-soft p-4 flex flex-col gap-1">
+                  <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Previsão</span>
+                  <span className="font-bold text-sm">
+                    {selectedOrder.delivery_window_end 
+                      ? format(new Date(selectedOrder.delivery_window_end), "HH:mm 'de' dd/MM", { locale: ptBR })
+                      : "Sob consulta"}
+                  </span>
+                </div>
+                <div className="card-soft p-4 flex flex-col gap-1">
+                  <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Distância Restante</span>
+                  <span className="font-bold text-sm">-- km</span>
+                </div>
+                <div className="card-soft p-4 flex flex-col gap-1">
+                  <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Motorista</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-sm truncate">{selectedOrder.driver?.full_name}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Mapa Full */}
+              <div className="card-soft overflow-hidden h-[500px] relative border-none">
+                <TripMap
+                  className="h-full w-full"
+                  origin={selectedOrder.origin_lat && selectedOrder.origin_lng ? { lat: selectedOrder.origin_lat, lng: selectedOrder.origin_lng } : null}
+                  destination={selectedOrder.destination_lat && selectedOrder.destination_lng ? { lat: selectedOrder.destination_lat, lng: selectedOrder.destination_lng } : null}
+                  driver={selectedOrder.driver_lat && selectedOrder.driver_lng ? { lat: selectedOrder.driver_lat, lng: selectedOrder.driver_lng } : null}
+                  interactive={true}
+                />
+                
+                {/* Floating Actions */}
+                <div className="absolute bottom-6 left-6 right-6 flex justify-between items-end">
+                   <div className="bg-white/90 backdrop-blur p-3 rounded-2xl shadow-xl border border-white/20 flex flex-col gap-1">
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Última Atualização</span>
                       <div className="flex items-center gap-2">
-                        <div className="h-6 w-6 rounded-full bg-slate-200" />
-                        <span>Motorista</span>
+                        <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                        <span className="text-xs font-bold">Agora mesmo</span>
                       </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-[11px] font-medium text-emerald-800">
-                        {order.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 font-medium">
-                      R$ {Number(order.total_value || 0).toLocaleString('pt-BR')}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                   </div>
+                   
+                   <div className="flex gap-2">
+                      <ShareTracking orderId={selectedOrder.id} trackingCode={selectedOrder.tracking_code || ''} />
+                   </div>
+                </div>
+              </div>
+
+              {/* Timeline Bottom */}
+              <div className="card-soft p-6">
+                <div className="flex items-center gap-2 mb-6">
+                  <Clock className="h-4 w-4 text-brand" />
+                  <h3 className="font-bold text-sm uppercase tracking-widest">Linha do Tempo da Operação</h3>
+                </div>
+                <div className="relative">
+                  {/* Linha vertical (Desktop/Mobile adjust) */}
+                  <div className="absolute left-[11px] top-0 bottom-0 w-0.5 bg-slate-100 lg:left-0 lg:top-[11px] lg:bottom-auto lg:right-0 lg:w-auto lg:h-0.5" />
+                  
+                  <div className="flex flex-col lg:flex-row lg:justify-between relative gap-6 lg:gap-2">
+                    {PUBLIC_TIMELINE.map((step, idx) => {
+                      const orderPublicStatus = publicStatus(selectedOrder.status);
+                      const currentIdx = PUBLIC_TIMELINE.findIndex(t => t.key === orderPublicStatus.key);
+                      const done = currentIdx > idx;
+                      const isCurrent = currentIdx === idx;
+                      
+                      return (
+                        <div key={step.key} className="flex items-start lg:flex-col lg:items-center lg:flex-1 gap-4 lg:gap-3 z-10">
+                          <div className={`shrink-0 h-6 w-6 rounded-full border-2 bg-white flex items-center justify-center transition-all ${
+                            done ? 'border-emerald-500 bg-emerald-500' : 
+                            isCurrent ? 'border-brand ring-4 ring-brand/10' : 'border-slate-200'
+                          }`}>
+                            {done ? (
+                              <CheckCircle2 className="h-4 w-4 text-white" />
+                            ) : isCurrent ? (
+                              <div className="h-2 w-2 rounded-full bg-brand animate-pulse" />
+                            ) : (
+                              <Circle className="h-3 w-3 text-slate-200" />
+                            )}
+                          </div>
+                          <div className="flex flex-col lg:items-center">
+                            <span className={`text-xs font-bold lg:text-center ${done || isCurrent ? 'text-foreground' : 'text-muted-foreground'}`}>
+                              {step.label}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground lg:text-center">
+                              {done ? "Concluído" : isCurrent ? "Em andamento" : "Pendente"}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="flex-1 card-soft flex flex-col items-center justify-center p-12 text-center border-dashed">
+              <Truck className="h-12 w-12 text-slate-200 mb-4" />
+              <h3 className="text-lg font-semibold">Selecione uma entrega</h3>
+              <p className="text-sm text-muted-foreground mt-2 max-w-xs">
+                Escolha um dos seus fretes ativos na lista ao lado para ver o rastreamento detalhado.
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </AppShell>
-  );
-}
-
-function StatCard({ label, value, icon: Icon, color = "text-foreground", trend }: { label: string; value: string | number; icon: any; color?: string; trend?: string }) {
-  return (
-    <div className="card-soft p-5 transition-transform hover:scale-[1.02]">
-      <div className="flex items-start justify-between">
-        <div className="grid h-10 w-10 place-items-center rounded-xl bg-surface-2">
-          <Icon className={`h-5 w-5 ${color}`} />
-        </div>
-        {trend && (
-          <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-            {trend}
-          </span>
-        )}
-      </div>
-      <div className="mt-4">
-        <div className="text-2xl font-bold tracking-tight">{value}</div>
-        <div className="mt-0.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-          {label}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function SecondaryStatCard({ label, value, icon: Icon, unit }: { label: string; value: string; icon: any; unit?: string }) {
-  return (
-    <div className="flex items-center gap-4 rounded-2xl border border-border/60 bg-white p-5 shadow-sm">
-      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-slate-50 text-slate-400">
-        <Icon className="h-5 w-5" />
-      </div>
-      <div>
-        <div className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-          {label}
-        </div>
-        <div className="text-lg font-bold tracking-tight">
-          {value} <span className="text-sm font-normal text-muted-foreground">{unit}</span>
-        </div>
-      </div>
-    </div>
   );
 }
