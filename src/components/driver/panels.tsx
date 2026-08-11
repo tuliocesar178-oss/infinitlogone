@@ -147,6 +147,7 @@ export function OfferCard({
           origin={order?.origin_lat && order?.origin_lng ? [order.origin_lng, order.origin_lat] : null}
           destination={order?.destination_lat && order?.destination_lng ? [order.destination_lng, order.destination_lat] : null}
           driver={driverPos}
+          orderStatus={order.status}
           className="h-32 w-full rounded-none"
         />
         <div className="absolute right-2 top-2 flex flex-col items-end gap-1">
