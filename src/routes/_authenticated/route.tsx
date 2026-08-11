@@ -1,7 +1,7 @@
 import { createFileRoute, Outlet, redirect, useRouterState } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { fetchUserRoles, homeForRole, primaryRole } from "@/lib/roles";
+import { getUserRolesCached, homeForRole, primaryRole } from "@/lib/roles";
 import { useEffect } from "react";
 
 export const Route = createFileRoute("/_authenticated")({
@@ -24,7 +24,7 @@ function AuthenticatedLayout() {
   const { data: role } = useQuery({
     queryKey: ["user-primary-role", user.id],
     queryFn: async () => {
-      const roles = await fetchUserRoles(user.id);
+      const roles = await getUserRolesCached(user.id);
       return primaryRole(roles);
     },
     staleTime: Infinity,
