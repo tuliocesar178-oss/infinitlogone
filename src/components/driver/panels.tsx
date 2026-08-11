@@ -16,7 +16,7 @@ import {
   MapPin, Package, CircleDollarSign, Clock, Check, X, Navigation,
   Camera, MessageCircle, Truck, Upload, PenLine, ChevronRight, ChevronUp
 } from "lucide-react";
-import { RouteMiniMap } from "./route-mini-map";
+import { RouteMiniMap, ExpandableRouteMap } from "./route-mini-map";
 import { navTarget, distanceToTargetKm, isWithinActionRadius, fmtDistance } from "@/lib/geofence";
 
 
@@ -143,7 +143,7 @@ export function OfferCard({
         </span>
       </div>
       <div className="relative border-b border-border/60">
-        <RouteMiniMap
+        <ExpandableRouteMap
           origin={order?.origin_lat && order?.origin_lng ? [order.origin_lng, order.origin_lat] : null}
           destination={order?.destination_lat && order?.destination_lng ? [order.destination_lng, order.destination_lat] : null}
           driver={driverPos}

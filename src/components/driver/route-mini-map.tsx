@@ -1,4 +1,6 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { Maximize2, X } from "lucide-react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 
@@ -215,6 +217,62 @@ export function RouteMiniMap({
     );
   }
   return <div ref={ref} className={`overflow-hidden ${className ?? "h-32"}`} />;
+}
+
+/** Mini mapa que abre em tela cheia ao ser tocado. */
+export function ExpandableRouteMap(
+  props: React.ComponentProps<typeof RouteMiniMap> & { title?: string },
+) {
+  const { title, className, ...map } = props;
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <div
+        className="relative"
+        role="button"
+        tabIndex={0}
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen(true);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setOpen(true);
+          }
+        }}
+      >
+        <RouteMiniMap {...map} className={className} />
+        <div className="pointer-events-none absolute inset-0" />
+        <span className="pointer-events-none absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-full bg-background/90 px-3 py-1.5 text-[11px] font-black uppercase tracking-wider text-foreground shadow-lg backdrop-blur">
+          <Maximize2 className="h-3.5 w-3.5" /> Ver rota
+        </span>
+      </div>
+
+      {open && typeof document !== "undefined"
+        ? createPortal(
+            <div className="fixed inset-0 z-[9999] bg-background">
+              <RouteMiniMap {...map} interactive className="h-full w-full" />
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                aria-label="Fechar mapa"
+                className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full bg-background px-4 py-2.5 text-xs font-black uppercase tracking-wider text-foreground shadow-xl"
+              >
+                <X className="h-4 w-4" /> Fechar
+              </button>
+              {title && (
+                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 rounded-full bg-background px-4 py-2 text-xs font-black shadow-xl">
+                  {title}
+                </div>
+              )}
+            </div>,
+            document.body,
+          )
+        : null}
+    </>
+  );
 }
 
 function orderStatusIncludes(status: any, part: string) {
