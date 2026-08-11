@@ -339,7 +339,7 @@ function NewOrderWizard() {
         delivery_franchise_minutes: f.delivery_franchise_minutes ? Number(f.delivery_franchise_minutes) : null,
         priority: f.priority,
         notes: [f.client_notes, f.cargo_notes].filter(Boolean).join("\n\n") || null,
-        status: "preparing" as const,
+        status: "preparing" as any,
         created_by: u.user?.id ?? null,
         distance_km: routeInfo?.distance_km ?? null,
         estimated_minutes: routeInfo?.duration_minutes ?? null,
@@ -348,7 +348,11 @@ function NewOrderWizard() {
       };
       const { data: order, error } = await supabase
         .from("orders").insert(payload).select("id, code, tracking_code").single();
-      if (error) throw error;
+      
+      if (error) {
+        console.error("Supabase error detail:", error);
+        throw error;
+      }
 
       // Espera a PF ser criada pelo trigger e grava custos
       const program = await supabase
@@ -358,16 +362,30 @@ function NewOrderWizard() {
           { kind: "frete", amount: num(f.driver_price) },
           { kind: "pedagio", amount: num(f.toll) },
           { kind: "combustivel", amount: num(f.fuel) },
-          { kind: "escolta", amount: num(f.escort) },
+          { kind: "batedor", amount: num(f.escort) },
           { kind: "licenca", amount: num(f.license) },
           { kind: "outros", amount: num(f.other_costs) },
         ].filter((c) => c.amount != null && c.amount > 0)
-         .map((c) => ({ program_id: program.data!.id, kind: c.kind, amount: c.amount }));
-        if (costs.length) await supabase.from("freight_costs").insert(costs as never);
+         .map((c) => ({ 
+           program_id: program.data!.id, 
+           kind: c.kind as any, 
+           amount: c.amount 
+         }));
+        
+        if (costs.length) {
+          const { error: costsError } = await supabase.from("freight_costs").insert(costs as any);
+          if (costsError) {
+            console.error("Erro ao inserir custos:", costsError);
+          }
+        }
+
         if (num(f.driver_price)) {
-          await supabase.from("freight_programs")
+          const { error: progUpdateError } = await supabase.from("freight_programs")
             .update({ freight_value: num(f.driver_price) })
             .eq("id", program.data.id);
+          if (progUpdateError) {
+            console.error("Erro ao atualizar valor do frete na PF:", progUpdateError);
+          }
         }
       }
 
@@ -387,13 +405,14 @@ function NewOrderWizard() {
 
       await supabase.from("order_events").insert({
         order_id: order.id, event_type: "order_created",
-        to_status: "preparing", actor_id: u.user?.id ?? null,
+        to_status: "preparing" as any, actor_id: u.user?.id ?? null,
       });
 
       const qr = await QRCode.toDataURL(trackingUrl(order.tracking_code), { margin: 1, width: 220 });
       setResult({ id: order.id, code: order.code, tracking_code: order.tracking_code, qr });
       toast.success(`Frete ${order.code} cadastrado`);
     } catch (e) {
+      console.error("Erro detalhado ao salvar frete:", e);
       toast.error(e instanceof Error ? e.message : "Erro ao salvar frete");
     } finally {
       setSaving(false);
