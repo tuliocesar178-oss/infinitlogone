@@ -366,7 +366,13 @@ function NewOrderWizard() {
           { kind: "licenca", amount: num(f.license) },
           { kind: "outros", amount: num(f.other_costs) },
         ].filter((c) => c.amount != null && c.amount > 0)
-         .map((c) => ({ program_id: program.data!.id, kind: c.kind, amount: c.amount }));
+         .map((c) => ({ 
+           program_id: program.data!.id, 
+           kind: c.kind === "escolta" ? "escolta" as const : 
+                 c.kind === "batedor" ? "batedor" as const : 
+                 c.kind as any, 
+           amount: c.amount 
+         }));
         if (costs.length) await supabase.from("freight_costs").insert(costs as never);
         if (num(f.driver_price)) {
           await supabase.from("freight_programs")
