@@ -60,9 +60,9 @@ export default defineConfig({
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,
-        navigateFallback: "/",
-        // OAuth e endpoints de API nunca podem ser servidos pelo app shell.
-        navigateFallbackDenylist: [/^\/~oauth/, /^\/api\//],
+        // App com SSR: nunca servir um HTML de fallback genérico — cada rota
+        // precisa da resposta real do servidor, senão o login/entrada quebra.
+
         runtimeCaching: [
           {
             // Navegações sempre tentam a rede primeiro (nunca cache-first em HTML).
