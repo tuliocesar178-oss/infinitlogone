@@ -58,9 +58,13 @@ export async function registerServiceWorker(onUpdated?: () => void): Promise<voi
     // Verificação periódica de nova versão (atualização automática, sem reinstalar).
     window.setInterval(() => void registration.update(), 60 * 60 * 1000);
 
+    // Só recarrega quando um SW ANTIGO é substituído. Na primeira instalação
+    // (clientsClaim) o controllerchange dispararia um reload desnecessário,
+    // que aparecia como falha ao abrir o app instalado.
+    const hadController = Boolean(navigator.serviceWorker.controller);
     let refreshing = false;
     navigator.serviceWorker.addEventListener("controllerchange", () => {
-      if (refreshing) return;
+      if (refreshing || !hadController) return;
       refreshing = true;
       onUpdated?.();
     });

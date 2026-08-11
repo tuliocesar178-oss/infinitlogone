@@ -54,15 +54,15 @@ export default defineConfig({
       workbox: {
         // Handlers de Web Push (push + clique na notificação) carregados no mesmo SW.
         importScripts: ["/push-sw.js"],
-        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2}"],
+        globPatterns: ["**/*.{js,css,ico,png,svg,woff,woff2}"],
         globIgnores: ["push-sw.js"],
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,
-        navigateFallback: "/",
-        // OAuth e endpoints de API nunca podem ser servidos pelo app shell.
-        navigateFallbackDenylist: [/^\/~oauth/, /^\/api\//],
+        // App com SSR: nunca servir um HTML de fallback genérico — cada rota
+        // precisa da resposta real do servidor, senão o login/entrada quebra.
+
         runtimeCaching: [
           {
             // Navegações sempre tentam a rede primeiro (nunca cache-first em HTML).
@@ -84,15 +84,9 @@ export default defineConfig({
               expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 30 },
             },
           },
-          {
-            urlPattern: ({ url }) => url.hostname.endsWith("supabase.co"),
-            handler: "NetworkFirst",
-            options: {
-              cacheName: "infinitlog-api",
-              networkTimeoutSeconds: 8,
-              expiration: { maxEntries: 120, maxAgeSeconds: 60 * 60 * 24 },
-            },
-          },
+          // Chamadas ao backend (auth/dados) nunca são cacheadas: respostas
+          // autenticadas em cache causavam erro/sessão inválida ao abrir o PWA.
+
           {
             urlPattern: ({ url }) => url.hostname.endsWith("mapbox.com"),
             handler: "StaleWhileRevalidate",
