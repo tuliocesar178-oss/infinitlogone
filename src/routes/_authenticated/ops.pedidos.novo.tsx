@@ -350,7 +350,11 @@ function NewOrderWizard() {
         .from("orders").insert(payload).select("id, code, tracking_code").single();
       
       if (error) {
-        console.error("Supabase error detail:", error);
+        console.error("Supabase order insert error:", error);
+        // Se for erro de RLS (pode acontecer se o role demorar a propagar ou política falhar)
+        if (error.code === '42501') {
+           throw new Error("Permissão negada ao salvar pedido. Verifique se você tem perfil administrativo ativo.");
+        }
         throw error;
       }
 
@@ -411,9 +415,10 @@ function NewOrderWizard() {
       const qr = await QRCode.toDataURL(trackingUrl(order.tracking_code), { margin: 1, width: 220 });
       setResult({ id: order.id, code: order.code, tracking_code: order.tracking_code, qr });
       toast.success(`Frete ${order.code} cadastrado`);
-    } catch (e) {
+    } catch (e: any) {
       console.error("Erro detalhado ao salvar frete:", e);
-      toast.error(e instanceof Error ? e.message : "Erro ao salvar frete");
+      const msg = e.message || (e.error_description) || "Erro desconhecido ao salvar frete";
+      toast.error(msg);
     } finally {
       setSaving(false);
     }
