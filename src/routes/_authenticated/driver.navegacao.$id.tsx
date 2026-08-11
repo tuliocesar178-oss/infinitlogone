@@ -1,156 +1,159 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { useEffect, useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import { RouteMiniMap } from "@/components/driver/route-mini-map";
-import { useBackgroundTracking } from "@/hooks/use-background-tracking";
-import { STATUS_LABEL } from "@/lib/order-status";
-import { navTarget, distanceToTargetKm, isWithinActionRadius, fmtDistance } from "@/lib/geofence";
-import { nextDriverAction, ACTION_LABEL, ACTION_TRANSITIONS, type DriverAction } from "@/lib/order-flow";
-import {
-  ArrowLeft, MessageCircle, AlertTriangle, PhoneCall, Camera, Flag, Gauge, Clock, Navigation,
+import { 
+  ChevronLeft, Navigation, Map as MapIcon, 
+  Target, Zap, Compass, ArrowRight 
 } from "lucide-react";
+import { brl } from "@/lib/pf";
+import { fmtDistance } from "@/lib/geofence";
 
 export const Route = createFileRoute("/_authenticated/driver/navegacao/$id")({
-  head: () => ({ meta: [{ title: "Modo navegação — Motorista" }, { name: "robots", content: "noindex" }] }),
-  component: NavigationMode,
+  head: () => ({ meta: [{ title: "Navegação — InfinitLog" }] }),
+  component: DriverNavigationPage,
 });
 
-function NavigationMode() {
+function DriverNavigationPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
-  const [userId, setUserId] = useState("");
+  const [driverPos, setDriverPos] = useState<[number, number] | null>(null);
+  const [mapStats, setMapStats] = useState<{ distanceKm: number; durationMin: number } | null>(null);
+  const [viewMode, setViewMode] = useState<"route" | "driver">("route");
 
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? ""));
-  }, []);
-
-  const orderQ = useQuery({
-    queryKey: ["nav-order", id],
-    refetchInterval: 15000,
+  const { data: order, isLoading } = useQuery({
+    queryKey: ["driver-nav-order", id],
     queryFn: async () => {
       const { data } = await supabase.from("orders").select("*").eq("id", id).maybeSingle();
-      return data as any;
+      return data;
     },
   });
 
-  const order = orderQ.data;
-  const live = useBackgroundTracking(order ?? null, userId || undefined);
+  useEffect(() => {
+    const watchId = navigator.geolocation.watchPosition(
+      (pos) => setDriverPos([pos.coords.longitude, pos.coords.latitude]),
+      (err) => console.error("Nav Geo error:", err),
+      { enableHighAccuracy: true }
+    );
+    return () => navigator.geolocation.clearWatch(watchId);
+  }, []);
 
-  if (!order) {
-    return <div className="grid h-[70vh] place-items-center text-sm text-muted-foreground">Carregando frete…</div>;
-  }
+  if (isLoading) return <div className="grid h-screen place-items-center bg-background"><Zap className="h-8 w-8 animate-pulse text-brand" /></div>;
+  if (!order) return <div className="p-10 text-center font-black uppercase tracking-widest text-muted-foreground">Pedido não encontrado</div>;
 
-  const target = navTarget(order.status, order);
-  const driverPos: [number, number] | null = live ? [live.lng, live.lat] : null;
-  const distKm =
-    live?.distanceToTargetKm ??
-    (driverPos ? distanceToTargetKm({ lat: driverPos[1], lng: driverPos[0] }, target) : null);
-  const unlocked = isWithinActionRadius(order.status, distKm);
-  const action = nextDriverAction(order.status as never);
-  const etaMin =
-    distKm != null ? Math.max(1, Math.round((distKm / Math.max(25, live?.speedKmh ?? 45)) * 60)) : order.eta_minutes;
+  const isToPickup = ["driver_assigned", "en_route_pickup", "near_pickup", "arriving_pickup", "at_pickup", "loading"].includes(order.status);
+  const targetLabel = isToPickup ? "Coleta" : "Entrega";
+  const targetAddress = isToPickup ? order.origin_address : order.destination_address;
+  const targetCity = isToPickup ? order.origin_city : order.destination_city;
 
-  async function finishStep() {
-    if (!action) return;
-    if ((action === "start_loading" || action === "start_unloading") && !unlocked) {
-      toast.error("Aproxime-se a 100 m do local para liberar esta etapa.");
-      return;
-    }
-    if (action === "loaded" || action === "delivered") {
-      navigate({ to: "/driver" });
-      return;
-    }
-    const to = ACTION_TRANSITIONS[action as DriverAction].to;
-    const { error } = await supabase
-      .from("orders")
-      .update({ status: to as never, updated_at: new Date().toISOString() } as never)
-      .eq("id", order.id);
-    if (error) return toast.error(error.message);
-    await supabase.from("order_events").insert({
-      order_id: order.id,
-      event_type: `driver_${action}`,
-      from_status: order.status as never,
-      to_status: to as never,
-      actor_id: userId,
-      payload: { lat: driverPos?.[1] ?? null, lng: driverPos?.[0] ?? null } as never,
-    } as never);
-    toast.success(ACTION_LABEL[action as DriverAction]);
-    orderQ.refetch();
-  }
+  const openExternalNav = () => {
+    const lat = isToPickup ? order.origin_lat : order.destination_lat;
+    const lng = isToPickup ? order.origin_lng : order.destination_lng;
+    if (!lat || !lng) return;
+    
+    // Fallback order: Google Maps -> Waze -> Apple Maps
+    const gmapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
+    window.open(gmapsUrl, '_blank');
+  };
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-background">
-      <div className="relative flex-1">
-        <RouteMiniMap
-          origin={order.origin_lat && order.origin_lng ? [order.origin_lng, order.origin_lat] : null}
-          destination={order.destination_lat && order.destination_lng ? [order.destination_lng, order.destination_lat] : null}
-          driver={driverPos}
-          className="h-full w-full rounded-none"
-        />
+    <div className="relative h-screen w-screen overflow-hidden bg-background">
+      {/* MAPA FULLSCREEN */}
+      <RouteMiniMap
+        origin={order.origin_lat && order.origin_lng ? [order.origin_lng, order.origin_lat] : null}
+        destination={order.destination_lat && order.destination_lng ? [order.destination_lng, order.destination_lat] : null}
+        driver={driverPos}
+        orderStatus={order.status}
+        interactive={true}
+        showRoute={true}
+        onStatsUpdate={setMapStats}
+        className="h-full w-full"
+        originInfo={{ title: "Coleta", address: order.origin_address || "" }}
+        destinationInfo={{ title: "Entrega", address: order.destination_address || "" }}
+      />
 
-        <Link
-          to="/driver"
-          className="absolute left-4 top-4 grid h-11 w-11 place-items-center rounded-full bg-background/95 shadow-lg backdrop-blur"
-          aria-label="Voltar"
+      {/* CONTROLES SUPERIORES */}
+      <div className="absolute top-6 left-6 right-6 z-20 flex items-center justify-between">
+        <button 
+          onClick={() => window.history.back()}
+          className="grid h-14 w-14 place-items-center rounded-2xl bg-background/90 shadow-2xl backdrop-blur-xl ring-1 ring-border active:scale-90 transition-transform"
         >
-          <ArrowLeft className="h-5 w-5" />
-        </Link>
+          <ChevronLeft className="h-7 w-7" />
+        </button>
 
-        <div className="absolute left-4 right-4 top-4 mx-auto max-w-md rounded-2xl bg-brand/95 px-5 py-4 text-brand-foreground shadow-xl backdrop-blur">
-          <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest opacity-80">
-            <Navigation className="h-3.5 w-3.5" />
-            {target.kind === "pickup" ? "Seguindo para coleta" : "Seguindo para entrega"}
-          </div>
-          <div className="mt-1 truncate text-sm font-semibold">{target.address}</div>
-          <div className="mt-2 flex flex-wrap gap-3 text-xs font-bold">
-            <span className="inline-flex items-center gap-1"><Flag className="h-3.5 w-3.5" /> {fmtDistance(distKm)}</span>
-            <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> {etaMin ? `${etaMin} min` : "—"}</span>
-            <span className="inline-flex items-center gap-1"><Gauge className="h-3.5 w-3.5" /> {live?.speedKmh != null ? `${Math.round(live.speedKmh)} km/h` : "—"}</span>
+        <div className="flex flex-col items-end gap-3">
+          <div className="rounded-2xl bg-brand p-4 text-white shadow-2xl ring-4 ring-brand/20 backdrop-blur-xl animate-in fade-in slide-in-from-top-4">
+            <div className="text-[10px] font-black uppercase tracking-widest opacity-80">
+              {isToPickup ? "Indo para Coleta" : "Indo para Entrega"}
+            </div>
+            <div className="mt-0.5 text-lg font-black leading-tight">
+              {targetCity}
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="space-y-3 border-t border-border bg-surface p-4 pb-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="font-mono text-sm font-bold">{order.code}</div>
-            <div className="text-xs text-muted-foreground">
-              {order.client_name ?? "Cliente"} • {STATUS_LABEL[order.status] ?? order.status}
+      {/* BOTÕES FLUTUANTES LATERAIS */}
+      <div className="absolute right-6 top-1/2 -translate-y-1/2 z-20 flex flex-col gap-3">
+        <button 
+          onClick={() => setViewMode(prev => prev === "route" ? "driver" : "route")}
+          className="grid h-14 w-14 place-items-center rounded-2xl bg-background/90 shadow-2xl backdrop-blur-xl ring-1 ring-border active:scale-90 transition-transform"
+          title="Alternar Visualização"
+        >
+          {viewMode === "route" ? <Compass className="h-6 w-6 text-brand" /> : <Target className="h-6 w-6 text-brand" />}
+        </button>
+      </div>
+
+      {/* PAINEL INFERIOR - UBER STYLE */}
+      <div className="absolute bottom-0 left-0 right-0 z-20 px-4 pb-8">
+        <div className="mx-auto max-w-lg overflow-hidden rounded-[32px] bg-background/95 p-6 shadow-[0_20px_50px_rgba(0,0,0,0.3)] backdrop-blur-2xl ring-1 ring-border/50 animate-in fade-in slide-in-from-bottom-8">
+          
+          {/* Status e Stats Reais */}
+          <div className="mb-6 flex items-center justify-between">
+            <div className="space-y-1">
+              <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Estimativa Real</div>
+              <div className="flex items-center gap-3">
+                <span className="text-3xl font-black tracking-tighter text-brand">
+                  {mapStats ? fmtDistance(mapStats.distanceKm) : "---"}
+                </span>
+                <div className="h-6 w-[2px] bg-border" />
+                <span className="text-3xl font-black tracking-tighter text-foreground">
+                  {mapStats ? `${Math.round(mapStats.durationMin)} min` : "---"}
+                </span>
+              </div>
+            </div>
+            <div className="h-14 w-14 rounded-2xl bg-brand/10 grid place-items-center text-brand">
+              <Navigation className="h-7 w-7" />
             </div>
           </div>
-          {live?.gpsLost && <span className="rounded-full bg-red-100 px-2 py-1 text-[10px] font-bold text-red-700">GPS instável</span>}
-        </div>
 
-        <div className="grid grid-cols-5 gap-2">
-          <QuickBtn to="/driver/fretes" icon={<MessageCircle className="h-4 w-4" />} label="Chat" />
-          <QuickBtn to="/driver/ocorrencias" icon={<AlertTriangle className="h-4 w-4" />} label="Ocorrência" />
-          <QuickBtn href="tel:190" icon={<AlertTriangle className="h-4 w-4 text-red-500" />} label="Emergência" />
-          <QuickBtn href={order.contact_phone ? `tel:${order.contact_phone}` : "tel:"} icon={<PhoneCall className="h-4 w-4" />} label="Operação" />
-          <QuickBtn to="/driver" icon={<Camera className="h-4 w-4" />} label="Fotos" />
-        </div>
+          {/* Barra de Progresso Real */}
+          <div className="relative mb-6">
+            <div className="h-2 w-full rounded-full bg-muted/30" />
+            <div 
+              className="absolute top-0 h-2 rounded-full bg-brand transition-all duration-1000" 
+              style={{ width: `${isToPickup ? 0 : 50}%` }} 
+            />
+            <div className="mt-2 flex justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+              <span>Coleta</span>
+              <span>Entrega</span>
+            </div>
+          </div>
 
-        {action && (
-          <button
-            onClick={finishStep}
-            className={`w-full rounded-2xl px-6 py-5 text-sm font-black uppercase tracking-widest transition-all active:scale-[0.98] ${
-              (action === "start_loading" || action === "start_unloading") && !unlocked
-                ? "border border-border bg-background text-muted-foreground"
-                : "bg-brand text-brand-foreground shadow-lg shadow-brand/20"
-            }`}
+          <div className="mb-8 space-y-1">
+            <div className="text-[10px] font-black uppercase tracking-widest text-brand">Destino Atual</div>
+            <div className="text-lg font-black leading-tight truncate">{targetAddress}</div>
+          </div>
+
+          <button 
+            onClick={openExternalNav}
+            className="flex w-full items-center justify-center gap-3 rounded-2xl bg-brand py-5 text-sm font-black uppercase tracking-[0.2em] text-white shadow-2xl shadow-brand/30 hover:opacity-95 active:scale-[0.98] transition-all"
           >
-            {ACTION_LABEL[action]}
+            Iniciar Navegação <ArrowRight className="h-5 w-5" />
           </button>
-        )}
+        </div>
       </div>
     </div>
   );
-}
-
-function QuickBtn({ to, href, icon, label }: { to?: string; href?: string; icon: React.ReactNode; label: string }) {
-  const cls =
-    "flex flex-col items-center gap-1 rounded-xl border border-border bg-background px-2 py-3 text-[10px] font-semibold hover:bg-accent";
-  if (href) return <a href={href} className={cls}>{icon}{label}</a>;
-  return <Link to={to as never} className={cls}>{icon}{label}</Link>;
 }
