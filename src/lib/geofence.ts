@@ -121,13 +121,19 @@ export function geofenceTransition(status: string, distanceKm: number | null): s
 /** O botão da etapa (carregamento/descarga) só libera dentro do raio permitido. */
 export function isWithinActionRadius(status: string, distanceKm: number | null): boolean {
   const phase = tripPhase(status);
-  if (distanceKm == null) return true; // sem coordenadas cadastradas: não bloqueia a operação
-  if (phase === "to_pickup" || phase === "at_pickup") return distanceKm <= FENCES.pickupUnlock;
-  return distanceKm <= FENCES.destUnlock;
+  // Default to 100m (0.1km) if not specified in FENCES
+  const radius = phase === "to_pickup" || phase === "at_pickup" ? FENCES.pickupUnlock : FENCES.destUnlock;
+  if (distanceKm == null) return true; 
+  return distanceKm <= radius;
 }
 
 export function fmtDistance(km: number | null | undefined): string {
-  if (km == null) return "—";
+  if (km == null || isNaN(km)) return "—";
   if (km < 1) return `${Math.round(km * 1000)} m`;
   return `${km.toFixed(1)} km`;
+}
+
+export function calculateETA(distanceKm: number, averageSpeedKmh: number = 40): number {
+  if (distanceKm <= 0) return 0;
+  return Math.round((distanceKm / averageSpeedKmh) * 60);
 }

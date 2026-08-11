@@ -147,6 +147,7 @@ export function OfferCard({
           origin={order?.origin_lat && order?.origin_lng ? [order.origin_lng, order.origin_lat] : null}
           destination={order?.destination_lat && order?.destination_lng ? [order.destination_lng, order.destination_lat] : null}
           driver={driverPos}
+          orderStatus={order.status}
           className="h-32 w-full rounded-none"
         />
         <div className="absolute right-2 top-2 flex flex-col items-end gap-1">
@@ -299,7 +300,12 @@ export function ActiveOrderPanel({
           origin={order.origin_lat && order.origin_lng ? [order.origin_lng, order.origin_lat] : null}
           destination={order.destination_lat && order.destination_lng ? [order.destination_lng, order.destination_lat] : null}
           driver={driverPos}
+          orderStatus={order.status}
           className="h-full w-full rounded-none"
+          interactive={true}
+          showRoute={true}
+          originInfo={{ title: "Coleta", address: order.origin_address || "" }}
+          destinationInfo={{ title: "Entrega", address: order.destination_address || "" }}
         />
       </div>
 
@@ -336,15 +342,13 @@ export function ActiveOrderPanel({
 
       {step === "idle" && nextAction && (
         <div className="space-y-3 border-t border-border p-6">
-          {nextAction !== "loaded" && nextAction !== "delivered" && nextAction !== "start_pickup" && (
-            <Link
-              to="/driver/navegacao/$id"
-              params={{ id: order.id }}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-brand px-6 py-6 text-lg font-bold uppercase tracking-widest text-brand-foreground shadow-xl ring-4 ring-brand/20 active:scale-[0.98]"
-            >
-              <Navigation className="h-6 w-6" /> Modo navegação
-            </Link>
-          )}
+          <Link
+            to="/driver/navegacao/$id"
+            params={{ id: order.id }}
+            className="flex w-full items-center justify-center gap-3 rounded-2xl bg-brand py-6 text-lg font-black uppercase tracking-[0.2em] text-white shadow-2xl shadow-brand/20 active:scale-[0.98] transition-all"
+          >
+            <Navigation className="h-6 w-6" /> Abrir Mapa e Rota
+          </Link>
 
           {nextAction === "start_pickup" && (
             <ActionBtn onClick={() => runAction("start_pickup")} icon={<Navigation className="h-5 w-5" />} label="INICIAR DESLOCAMENTO" className="py-6 text-lg" />
