@@ -167,7 +167,7 @@ function NewOrderWizard() {
         // Fetch profiles for those IDs
         const { data: profilesData, error: profilesError } = await supabase
           .from("profiles")
-          .select("id, company_name, cnpj, full_name, phone, whatsapp, zip_code, address_number, neighborhood, city, state")
+          .select("id, company_name, cnpj, full_name, phone, whatsapp, zip_code, address_number, neighborhood, city, state, email")
           .in("id", clientIds);
         
         if (profilesError) throw profilesError;
