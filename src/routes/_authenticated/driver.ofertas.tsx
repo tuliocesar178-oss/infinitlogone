@@ -36,7 +36,15 @@ function DriverOffers() {
   const [userId, setUserId] = useState("");
   const [now, setNow] = useState(Date.now());
   const [filter, setFilter] = useState<FilterKey>("novas");
+  const [driverPos, setDriverPos] = useState<[number, number] | null>(null);
   const favorites = useFavorites();
+
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => setDriverPos([pos.coords.longitude, pos.coords.latitude]),
+      () => console.log("Offers list geo failed")
+    );
+  }, []);
 
   // Modal state (compartilhado)
   const [negotiateFor, setNegotiateFor] = useState<{
@@ -226,6 +234,7 @@ function DriverOffers() {
                   onNegotiate={() =>
                     setNegotiateFor({ offerId: offer.id, current: Number(offer.offered_price) })
                   }
+                  driverPos={driverPos}
                 />
               </li>
             );

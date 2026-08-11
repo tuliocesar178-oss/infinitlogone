@@ -86,6 +86,7 @@ export function OfferRichCard({
   onOpenDetails,
   onOpenChat,
   onNegotiate,
+  driverPos,
 }: {
   offer: Offer;
   order: Order | undefined;
@@ -95,6 +96,7 @@ export function OfferRichCard({
   onOpenDetails: () => void;
   onOpenChat: () => void;
   onNegotiate: () => void;
+  driverPos?: [number, number] | null;
 }) {
   const navigate = useNavigate();
   const [busy, setBusy] = useState<null | "accept" | "decline">(null);
@@ -234,7 +236,7 @@ export function OfferRichCard({
       </div>
 
       {/* Mapa */}
-      <div className="relative">
+      <div className="relative group cursor-pointer" onClick={onOpenDetails}>
         <RouteMiniMap
           origin={
             order.origin_lat && order.origin_lng
@@ -246,10 +248,11 @@ export function OfferRichCard({
               ? [order.destination_lng, order.destination_lat]
               : null
           }
-          className="h-40 rounded-none"
+          driver={driverPos}
+          className="h-44 rounded-none"
         />
         {distanceKm != null && (
-          <div className="absolute right-2 top-2 rounded-full bg-background/95 px-3 py-1 text-[11px] font-bold shadow-md backdrop-blur">
+          <div className="absolute right-3 top-3 rounded-full bg-brand px-3 py-1.5 text-[11px] font-black text-white shadow-xl">
             {distanceKm.toFixed(0)} km
             {etaMinutes ? ` · ${formatDuration(etaMinutes)}` : ""}
           </div>
