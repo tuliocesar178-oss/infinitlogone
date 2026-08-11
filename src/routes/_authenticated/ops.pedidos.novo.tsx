@@ -368,16 +368,24 @@ function NewOrderWizard() {
         ].filter((c) => c.amount != null && c.amount > 0)
          .map((c) => ({ 
            program_id: program.data!.id, 
-           kind: c.kind === "escolta" ? "escolta" as const : 
-                 c.kind === "batedor" ? "batedor" as const : 
-                 c.kind as any, 
+           kind: c.kind as any, 
            amount: c.amount 
          }));
-        if (costs.length) await supabase.from("freight_costs").insert(costs as never);
+        
+        if (costs.length) {
+          const { error: costsError } = await supabase.from("freight_costs").insert(costs as any);
+          if (costsError) {
+            console.error("Erro ao inserir custos:", costsError);
+          }
+        }
+
         if (num(f.driver_price)) {
-          await supabase.from("freight_programs")
+          const { error: progUpdateError } = await supabase.from("freight_programs")
             .update({ freight_value: num(f.driver_price) })
             .eq("id", program.data.id);
+          if (progUpdateError) {
+            console.error("Erro ao atualizar valor do frete na PF:", progUpdateError);
+          }
         }
       }
 
@@ -404,6 +412,7 @@ function NewOrderWizard() {
       setResult({ id: order.id, code: order.code, tracking_code: order.tracking_code, qr });
       toast.success(`Frete ${order.code} cadastrado`);
     } catch (e) {
+      console.error("Erro detalhado ao salvar frete:", e);
       toast.error(e instanceof Error ? e.message : "Erro ao salvar frete");
     } finally {
       setSaving(false);
