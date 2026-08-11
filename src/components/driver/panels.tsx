@@ -48,15 +48,28 @@ export function OfferCard({
   order,
   program,
   userId,
+  live,
   onChanged,
 }: {
   offer: any;
   order: any;
   program: any;
   userId: string;
+  live?: any;
   onChanged?: () => void;
 }) {
   const qc = useQueryClient();
+  const navigate = useNavigate();
+
+  const driverPos: [number, number] | null = live ? [live.lng, live.lat] : null;
+
+  const distToPickup = useMemo(() => {
+    if (!driverPos || !order?.origin_lat || !order?.origin_lng) return null;
+    return haversineKm(
+      { lat: driverPos[1], lng: driverPos[0] },
+      { lat: order.origin_lat, lng: order.origin_lng }
+    );
+  }, [driverPos, order]);
 
   async function respond(action: "accept" | "decline") {
     try {
@@ -117,7 +130,7 @@ export function OfferCard({
   }
 
   return (
-    <div className="card-soft overflow-hidden">
+    <div className="card-soft overflow-hidden group cursor-pointer active:scale-[0.99] transition-transform" onClick={() => navigate({ to: "/driver/ofertas/$id", params: { id: offer.id } })}>
       <div className="flex items-center justify-between border-b border-border bg-surface-2 px-6 py-3">
         <div>
           <div className="text-xs uppercase tracking-widest text-muted-foreground">Nova oferta</div>
@@ -132,13 +145,21 @@ export function OfferCard({
         <RouteMiniMap
           origin={order?.origin_lat && order?.origin_lng ? [order.origin_lng, order.origin_lat] : null}
           destination={order?.destination_lat && order?.destination_lng ? [order.destination_lng, order.destination_lat] : null}
+          driver={driverPos}
           className="h-32 w-full rounded-none"
         />
-        {order?.distance_km != null && (
-          <div className="absolute right-2 top-2 rounded-full bg-background/95 px-3 py-1 text-[11px] font-bold shadow-md backdrop-blur">
-            {order.distance_km} km
-          </div>
-        )}
+        <div className="absolute right-2 top-2 flex flex-col items-end gap-1">
+          {order?.distance_km != null && (
+            <div className="rounded-full bg-brand px-3 py-1 text-[11px] font-black text-white shadow-md">
+              {order.distance_km} km
+            </div>
+          )}
+          {distToPickup != null && (
+            <div className="rounded-full bg-emerald-500 px-3 py-1 text-[10px] font-black text-white shadow-md animate-in fade-in slide-in-from-right-2">
+              A {distToPickup.toFixed(1)} km da coleta
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="grid gap-4 p-6 sm:grid-cols-2">
@@ -160,7 +181,7 @@ export function OfferCard({
           </div>
         </div>
       </div>
-      <div className="grid grid-cols-3 gap-2 p-4">
+      <div className="grid grid-cols-3 gap-2 p-4" onClick={(e) => e.stopPropagation()}>
         <button onClick={() => respond("decline")}
           className="flex items-center justify-center gap-1 rounded-xl border border-border bg-background px-3 py-3 text-sm font-semibold hover:bg-accent">
           <X className="h-4 w-4" /> Recusar

@@ -172,7 +172,7 @@ function DriverHome() {
             </Link>
           </div>
           {offers.map(({ offer, order, program }) => (
-            <OfferCard key={offer.id} offer={offer} order={order} program={program} userId={userId} onChanged={() => { activeQ.refetch(); offersQ.refetch(); }} />
+            <OfferCard key={offer.id} offer={offer} order={order} program={program} userId={userId} live={live} onChanged={() => { activeQ.refetch(); offersQ.refetch(); }} />
           ))}
         </div>
       )}
