@@ -350,14 +350,28 @@ function NewOrderWizard() {
         .from("orders").insert(payload).select("id, code, tracking_code").single();
       
       if (error) {
-        console.error("Supabase error detail:", error);
+        console.error("Supabase order insert error:", error);
+        // Se for erro de RLS (pode acontecer se o role demorar a propagar ou política falhar)
+        if (error.code === '42501') {
+           throw new Error("Permissão negada ao salvar pedido. Verifique se você tem perfil administrativo ativo.");
+        }
         throw error;
       }
 
       // Espera a PF ser criada pelo trigger e grava custos
-      const program = await supabase
-        .from("freight_programs").select("id").eq("order_id", order.id).maybeSingle();
-      if (program.data) {
+      // Usamos uma pequena espera ou retry pois triggers podem levar milissegundos
+      let programData = null;
+      for (let i = 0; i < 5; i++) {
+        const { data: p } = await supabase
+          .from("freight_programs").select("id").eq("order_id", order.id).maybeSingle();
+        if (p) {
+          programData = p;
+          break;
+        }
+        await new Promise(r => setTimeout(r, 500));
+      }
+
+      if (programData) {
         const costs = [
           { kind: "frete", amount: num(f.driver_price) },
           { kind: "pedagio", amount: num(f.toll) },
@@ -367,7 +381,7 @@ function NewOrderWizard() {
           { kind: "outros", amount: num(f.other_costs) },
         ].filter((c) => c.amount != null && c.amount > 0)
          .map((c) => ({ 
-           program_id: program.data!.id, 
+           program_id: programData.id, 
            kind: c.kind as any, 
            amount: c.amount 
          }));
@@ -382,7 +396,7 @@ function NewOrderWizard() {
         if (num(f.driver_price)) {
           const { error: progUpdateError } = await supabase.from("freight_programs")
             .update({ freight_value: num(f.driver_price) })
-            .eq("id", program.data.id);
+            .eq("id", programData.id);
           if (progUpdateError) {
             console.error("Erro ao atualizar valor do frete na PF:", progUpdateError);
           }
@@ -411,9 +425,10 @@ function NewOrderWizard() {
       const qr = await QRCode.toDataURL(trackingUrl(order.tracking_code), { margin: 1, width: 220 });
       setResult({ id: order.id, code: order.code, tracking_code: order.tracking_code, qr });
       toast.success(`Frete ${order.code} cadastrado`);
-    } catch (e) {
+    } catch (e: any) {
       console.error("Erro detalhado ao salvar frete:", e);
-      toast.error(e instanceof Error ? e.message : "Erro ao salvar frete");
+      const msg = e.message || (e.error_description) || "Erro desconhecido ao salvar frete";
+      toast.error(msg);
     } finally {
       setSaving(false);
     }
