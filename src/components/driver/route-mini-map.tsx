@@ -84,7 +84,7 @@ export function RouteMiniMap({
     if (interactive) {
       mapRef.current.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "top-right");
       mapRef.current.on("click", (e) => {
-        onMapClick?.([e.lngLat.lng, e.lngLat.lat]);
+        onMapClickRef.current?.([e.lngLat.lng, e.lngLat.lat]);
       });
     }
 
@@ -92,7 +92,8 @@ export function RouteMiniMap({
       mapRef.current?.remove();
       mapRef.current = null;
     };
-  }, [interactive, onMapClick]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [interactive]);
 
   useEffect(() => {
     const map = mapRef.current;
