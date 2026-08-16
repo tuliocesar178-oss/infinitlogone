@@ -51,6 +51,23 @@ export function RouteMiniMap({
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
 
+  // Callbacks vindos do pai normalmente são funções inline (nova referência a
+  // cada render). Guardamos em refs para que os efeitos abaixo não dependam
+  // delas — caso contrário o mapa era destruído/recriado em loop.
+  const onMapClickRef = useRef(onMapClick);
+  const onStatsUpdateRef = useRef(onStatsUpdate);
+  onMapClickRef.current = onMapClick;
+  onStatsUpdateRef.current = onStatsUpdate;
+
+  // Objetos/arrays inline também mudam de identidade a cada render; usamos
+  // chaves serializadas como dependências estáveis.
+  const originKey = origin ? origin.join(",") : "";
+  const destinationKey = destination ? destination.join(",") : "";
+  const driverKey = driver ? driver.join(",") : "";
+  const originInfoKey = originInfo ? JSON.stringify(originInfo) : "";
+  const destinationInfoKey = destinationInfo ? JSON.stringify(destinationInfo) : "";
+
+
   useEffect(() => {
     if (!ref.current || !TOKEN) return;
     if (mapRef.current) return;
