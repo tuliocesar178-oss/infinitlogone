@@ -225,7 +225,8 @@ export function RouteMiniMap({
 
     if (map.isStyleLoaded()) draw();
     else map.once("load", draw);
-  }, [origin, destination, driver, showRoute, originInfo, destinationInfo]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [originKey, destinationKey, driverKey, showRoute, originInfoKey, destinationInfoKey, orderStatus]);
 
   if (!TOKEN) {
     return (
