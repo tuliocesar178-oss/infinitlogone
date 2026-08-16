@@ -179,7 +179,7 @@ export function RouteMiniMap({
             const geom = route?.geometry;
             
             if (route) {
-              onStatsUpdate?.({
+              onStatsUpdateRef.current?.({
                 distanceKm: route.distance / 1000,
                 durationMin: route.duration / 60
               });
