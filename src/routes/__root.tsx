@@ -50,6 +50,11 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
         <p className="mt-2 text-sm text-muted-foreground">
           Tente novamente ou volte à página inicial.
         </p>
+        {error?.message && (
+          <p className="mt-3 break-words rounded-lg bg-muted px-3 py-2 text-left text-xs text-muted-foreground">
+            {error.message}
+          </p>
+        )}
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
             onClick={() => {

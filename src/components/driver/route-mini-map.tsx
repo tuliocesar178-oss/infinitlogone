@@ -51,6 +51,23 @@ export function RouteMiniMap({
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
 
+  // Callbacks vindos do pai normalmente são funções inline (nova referência a
+  // cada render). Guardamos em refs para que os efeitos abaixo não dependam
+  // delas — caso contrário o mapa era destruído/recriado em loop.
+  const onMapClickRef = useRef(onMapClick);
+  const onStatsUpdateRef = useRef(onStatsUpdate);
+  onMapClickRef.current = onMapClick;
+  onStatsUpdateRef.current = onStatsUpdate;
+
+  // Objetos/arrays inline também mudam de identidade a cada render; usamos
+  // chaves serializadas como dependências estáveis.
+  const originKey = origin ? origin.join(",") : "";
+  const destinationKey = destination ? destination.join(",") : "";
+  const driverKey = driver ? driver.join(",") : "";
+  const originInfoKey = originInfo ? JSON.stringify(originInfo) : "";
+  const destinationInfoKey = destinationInfo ? JSON.stringify(destinationInfo) : "";
+
+
   useEffect(() => {
     if (!ref.current || !TOKEN) return;
     if (mapRef.current) return;
@@ -67,7 +84,7 @@ export function RouteMiniMap({
     if (interactive) {
       mapRef.current.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "top-right");
       mapRef.current.on("click", (e) => {
-        onMapClick?.([e.lngLat.lng, e.lngLat.lat]);
+        onMapClickRef.current?.([e.lngLat.lng, e.lngLat.lat]);
       });
     }
 
@@ -75,7 +92,8 @@ export function RouteMiniMap({
       mapRef.current?.remove();
       mapRef.current = null;
     };
-  }, [interactive, onMapClick]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [interactive]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -161,7 +179,7 @@ export function RouteMiniMap({
             const geom = route?.geometry;
             
             if (route) {
-              onStatsUpdate?.({
+              onStatsUpdateRef.current?.({
                 distanceKm: route.distance / 1000,
                 durationMin: route.duration / 60
               });
@@ -207,7 +225,8 @@ export function RouteMiniMap({
 
     if (map.isStyleLoaded()) draw();
     else map.once("load", draw);
-  }, [origin, destination, driver, showRoute, originInfo, destinationInfo]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [originKey, destinationKey, driverKey, showRoute, originInfoKey, destinationInfoKey, orderStatus]);
 
   if (!TOKEN) {
     return (
