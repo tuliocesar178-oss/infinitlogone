@@ -109,6 +109,15 @@ function OrderDetail() {
       subtitle={order ? STATUS_LABEL[order.status] ?? order.status : ""}
       actions={
         <div className="flex items-center gap-2">
+          {order?.chat_rooms?.id && (
+            <Link
+              to={"/ops/chat" as any}
+              search={{ orderId: order.id } as any}
+              className="inline-flex items-center gap-2 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-4 py-2 text-sm font-semibold text-emerald-600 hover:bg-emerald-500/20"
+            >
+              <Send className="h-4 w-4" /> Chat da Operação
+            </Link>
+          )}
           {canCancel && (
             <button
               onClick={cancelOrder}
