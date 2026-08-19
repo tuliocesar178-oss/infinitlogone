@@ -25,8 +25,8 @@ export interface ChatRoom {
   last_message_at: string;
   order?: {
     order_number: string;
-    driver?: { full_name: string };
-    client?: { full_name: string };
+    driver?: { full_name: string; avatar_url: string | null };
+    client?: { full_name: string; avatar_url: string | null };
   };
 }
 
@@ -47,7 +47,7 @@ export async function getRooms() {
     .select(`
       *,
       order:orders(
-        order_number,
+        order_number:code,
         driver:profiles!orders_driver_id_fkey(full_name, avatar_url),
         client:profiles!orders_client_id_fkey(full_name, avatar_url)
       )
@@ -55,7 +55,7 @@ export async function getRooms() {
     .order('last_message_at', { ascending: false });
   
   if (error) throw error;
-  return data;
+  return data as unknown as ChatRoom[];
 }
 
 export async function getMessages(roomId: string) {
@@ -66,17 +66,18 @@ export async function getMessages(roomId: string) {
     .order('created_at', { ascending: true });
   
   if (error) throw error;
-  return data as ChatMessage[];
+  return data as unknown as ChatMessage[];
 }
 
-export async function sendMessage(roomId: string, content: string, kind: MessageKind = 'text', metadata: any = {}) {
+export async function sendMessage(roomId: string, content: string, kind: MessageKind = 'text', metadata: any = {}, orderId?: string) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Usuário não autenticado");
 
   const { error } = await supabase.from('messages').insert({
     room_id: roomId,
+    order_id: orderId,
     sender_id: user.id,
-    kind,
+    kind: kind as any,
     content,
     metadata
   });
