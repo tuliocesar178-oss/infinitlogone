@@ -20,6 +20,7 @@ import {
   Zap,
   HelpCircle,
   UserRound,
+  MessageSquare,
 } from "lucide-react";
 
 import { useEffect, useState, type ReactNode } from "react";
@@ -47,6 +48,7 @@ export const NAV_GROUPS: Record<string, { label: string; items: NavItem[] }[]> =
         { label: "Veículos", to: "/ops/veiculos", icon: Truck, match: (p) => p.startsWith("/ops/veiculos") },
         { label: "Rastreamento", to: "/ops/rastreamento", icon: MapPin, match: (p) => p.startsWith("/ops/rastreamento") },
         { label: "Ocorrências", to: "/ops/central", icon: AlertTriangle, match: (p) => p === "/ops/ocorrencias" },
+        { label: "Chat da Operação", to: "/ops/chat", icon: MessageSquare, match: (p) => p.startsWith("/ops/chat") },
       ],
     },
     {
@@ -69,6 +71,7 @@ export const NAV_GROUPS: Record<string, { label: string; items: NavItem[] }[]> =
         { label: "Motoristas", to: "/ops/motoristas", icon: Truck, match: (p) => p.startsWith("/ops/motoristas") },
         { label: "Veículos", to: "/ops/veiculos", icon: Truck, match: (p) => p.startsWith("/ops/veiculos") },
         { label: "Rastreamento", to: "/ops/rastreamento", icon: MapPin, match: (p) => p.startsWith("/ops/rastreamento") },
+        { label: "Chat da Operação", to: "/ops/chat", icon: MessageSquare, match: (p) => p.startsWith("/ops/chat") },
       ],
     },
   ],
