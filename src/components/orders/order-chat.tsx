@@ -3,13 +3,12 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { 
   Send, Image as ImageIcon, Paperclip, MapPin, Mic, Phone, 
-  Smile, MoreVertical, Check, CheckCheck, Download, Trash2, 
-  CornerUpLeft, Reply, Forward, Search, Filter, PhoneCall
+  Smile, MoreVertical, CheckCheck, Download, Trash2, 
+  Search, Filter, FileText
 } from "lucide-react";
 import { toast } from "sonner";
 import { 
-  getMessages, sendMessage, markAsRead, ChatMessage, 
-  MessageKind, CHAT_KIND_LABELS 
+  getMessages, sendMessage, ChatMessage 
 } from "@/lib/chat";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -34,14 +33,13 @@ export function OrderChat({ roomId, orderId, title, subtitle, avatarUrl, onCallC
   const scrollRef = useRef<HTMLDivElement>(null);
   const qc = useQueryClient();
   const [isRecording, setIsRecording] = useState(false);
-
   const [me, setMe] = useState<{ id: string } | null>(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setMe(data.user));
   }, []);
 
-  const { data: messages = [], isLoading } = useQuery({
+  const { data: messages = [] } = useQuery({
     queryKey: ["chat-messages", roomId],
     queryFn: () => getMessages(roomId),
     refetchInterval: 5000,
@@ -128,7 +126,7 @@ export function OrderChat({ roomId, orderId, title, subtitle, avatarUrl, onCallC
       {/* Messages */}
       <ScrollArea className="flex-1 p-6 bg-surface-2/50">
         <div ref={scrollRef} className="flex flex-col gap-4">
-          {messages.map((msg, i) => {
+          {messages.map((msg) => {
             const isMe = msg.sender_id === me?.id;
             return (
               <div 
