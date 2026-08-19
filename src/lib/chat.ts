@@ -75,12 +75,12 @@ export async function sendMessage(roomId: string, content: string, kind: Message
 
   const { error } = await supabase.from('messages').insert({
     room_id: roomId,
-    order_id: orderId,
+    order_id: orderId || null,
     sender_id: user.id,
     kind: kind as any,
     content,
     metadata
-  });
+  } as any);
 
   if (error) throw error;
 }
