@@ -514,6 +514,10 @@ function NewOrderWizard() {
             </div>
 
             <div className="mt-8 flex flex-col gap-2 sm:flex-row sm:justify-center">
+              <Link to={"/ops/chat" as any} search={{ orderId: result.id } as any}
+                className="inline-flex items-center justify-center gap-2 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-6 py-2.5 text-sm font-semibold text-emerald-600 hover:bg-emerald-500/20">
+                <MessageSquare className="h-4 w-4" /> Ir para o Chat
+              </Link>
               <Link to="/ops/pedidos/$id" params={{ id: result.id }}
                 className="inline-flex items-center justify-center gap-2 rounded-full bg-brand px-6 py-2.5 text-sm font-semibold text-brand-foreground hover:opacity-90">
                 Despachar agora <ArrowRight className="h-4 w-4" />
