@@ -34,6 +34,7 @@ import { Route as AuthenticatedOpsCentralRouteImport } from './routes/_authentic
 import { Route as AuthenticatedDriverPerfilRouteImport } from './routes/_authenticated/driver.perfil'
 import { Route as AuthenticatedDriverOfertasRouteImport } from './routes/_authenticated/driver.ofertas'
 import { Route as AuthenticatedDriverOcorrenciasRouteImport } from './routes/_authenticated/driver.ocorrencias'
+import { Route as AuthenticatedDriverGanhosRouteImport } from './routes/_authenticated/driver.ganhos'
 import { Route as AuthenticatedDriverFretesRouteImport } from './routes/_authenticated/driver.fretes'
 import { Route as AuthenticatedDriverFaturamentoRouteImport } from './routes/_authenticated/driver.faturamento'
 import { Route as AuthenticatedClientRelatoriosRouteImport } from './routes/_authenticated/client.relatorios'
@@ -188,6 +189,12 @@ const AuthenticatedDriverOcorrenciasRoute =
   AuthenticatedDriverOcorrenciasRouteImport.update({
     id: '/ocorrencias',
     path: '/ocorrencias',
+    getParentRoute: () => AuthenticatedDriverRoute,
+  } as any)
+const AuthenticatedDriverGanhosRoute =
+  AuthenticatedDriverGanhosRouteImport.update({
+    id: '/ganhos',
+    path: '/ganhos',
     getParentRoute: () => AuthenticatedDriverRoute,
   } as any)
 const AuthenticatedDriverFretesRoute =
@@ -358,6 +365,7 @@ export interface FileRoutesByFullPath {
   '/client/relatorios': typeof AuthenticatedClientRelatoriosRoute
   '/driver/faturamento': typeof AuthenticatedDriverFaturamentoRoute
   '/driver/fretes': typeof AuthenticatedDriverFretesRoute
+  '/driver/ganhos': typeof AuthenticatedDriverGanhosRoute
   '/driver/ocorrencias': typeof AuthenticatedDriverOcorrenciasRoute
   '/driver/ofertas': typeof AuthenticatedDriverOfertasRouteWithChildren
   '/driver/perfil': typeof AuthenticatedDriverPerfilRoute
@@ -405,6 +413,7 @@ export interface FileRoutesByTo {
   '/client/relatorios': typeof AuthenticatedClientRelatoriosRoute
   '/driver/faturamento': typeof AuthenticatedDriverFaturamentoRoute
   '/driver/fretes': typeof AuthenticatedDriverFretesRoute
+  '/driver/ganhos': typeof AuthenticatedDriverGanhosRoute
   '/driver/ocorrencias': typeof AuthenticatedDriverOcorrenciasRoute
   '/driver/ofertas': typeof AuthenticatedDriverOfertasRouteWithChildren
   '/driver/perfil': typeof AuthenticatedDriverPerfilRoute
@@ -457,6 +466,7 @@ export interface FileRoutesById {
   '/_authenticated/client/relatorios': typeof AuthenticatedClientRelatoriosRoute
   '/_authenticated/driver/faturamento': typeof AuthenticatedDriverFaturamentoRoute
   '/_authenticated/driver/fretes': typeof AuthenticatedDriverFretesRoute
+  '/_authenticated/driver/ganhos': typeof AuthenticatedDriverGanhosRoute
   '/_authenticated/driver/ocorrencias': typeof AuthenticatedDriverOcorrenciasRoute
   '/_authenticated/driver/ofertas': typeof AuthenticatedDriverOfertasRouteWithChildren
   '/_authenticated/driver/perfil': typeof AuthenticatedDriverPerfilRoute
@@ -509,6 +519,7 @@ export interface FileRouteTypes {
     | '/client/relatorios'
     | '/driver/faturamento'
     | '/driver/fretes'
+    | '/driver/ganhos'
     | '/driver/ocorrencias'
     | '/driver/ofertas'
     | '/driver/perfil'
@@ -556,6 +567,7 @@ export interface FileRouteTypes {
     | '/client/relatorios'
     | '/driver/faturamento'
     | '/driver/fretes'
+    | '/driver/ganhos'
     | '/driver/ocorrencias'
     | '/driver/ofertas'
     | '/driver/perfil'
@@ -607,6 +619,7 @@ export interface FileRouteTypes {
     | '/_authenticated/client/relatorios'
     | '/_authenticated/driver/faturamento'
     | '/_authenticated/driver/fretes'
+    | '/_authenticated/driver/ganhos'
     | '/_authenticated/driver/ocorrencias'
     | '/_authenticated/driver/ofertas'
     | '/_authenticated/driver/perfil'
@@ -821,6 +834,13 @@ declare module '@tanstack/react-router' {
       path: '/ocorrencias'
       fullPath: '/driver/ocorrencias'
       preLoaderRoute: typeof AuthenticatedDriverOcorrenciasRouteImport
+      parentRoute: typeof AuthenticatedDriverRoute
+    }
+    '/_authenticated/driver/ganhos': {
+      id: '/_authenticated/driver/ganhos'
+      path: '/ganhos'
+      fullPath: '/driver/ganhos'
+      preLoaderRoute: typeof AuthenticatedDriverGanhosRouteImport
       parentRoute: typeof AuthenticatedDriverRoute
     }
     '/_authenticated/driver/fretes': {
@@ -1041,6 +1061,7 @@ const AuthenticatedDriverOfertasRouteWithChildren =
 interface AuthenticatedDriverRouteChildren {
   AuthenticatedDriverFaturamentoRoute: typeof AuthenticatedDriverFaturamentoRoute
   AuthenticatedDriverFretesRoute: typeof AuthenticatedDriverFretesRoute
+  AuthenticatedDriverGanhosRoute: typeof AuthenticatedDriverGanhosRoute
   AuthenticatedDriverOcorrenciasRoute: typeof AuthenticatedDriverOcorrenciasRoute
   AuthenticatedDriverOfertasRoute: typeof AuthenticatedDriverOfertasRouteWithChildren
   AuthenticatedDriverPerfilRoute: typeof AuthenticatedDriverPerfilRoute
@@ -1051,6 +1072,7 @@ interface AuthenticatedDriverRouteChildren {
 const AuthenticatedDriverRouteChildren: AuthenticatedDriverRouteChildren = {
   AuthenticatedDriverFaturamentoRoute: AuthenticatedDriverFaturamentoRoute,
   AuthenticatedDriverFretesRoute: AuthenticatedDriverFretesRoute,
+  AuthenticatedDriverGanhosRoute: AuthenticatedDriverGanhosRoute,
   AuthenticatedDriverOcorrenciasRoute: AuthenticatedDriverOcorrenciasRoute,
   AuthenticatedDriverOfertasRoute: AuthenticatedDriverOfertasRouteWithChildren,
   AuthenticatedDriverPerfilRoute: AuthenticatedDriverPerfilRoute,
