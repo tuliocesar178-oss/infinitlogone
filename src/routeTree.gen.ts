@@ -54,6 +54,7 @@ import { Route as AuthenticatedOpsPedidosNovoRouteImport } from './routes/_authe
 import { Route as AuthenticatedOpsPedidosIdRouteImport } from './routes/_authenticated/ops.pedidos.$id'
 import { Route as AuthenticatedOpsMotoristasAprovacoesRouteImport } from './routes/_authenticated/ops.motoristas.aprovacoes'
 import { Route as AuthenticatedOpsMotoristasIdRouteImport } from './routes/_authenticated/ops.motoristas.$id'
+import { Route as AuthenticatedOpsFinanceiroIdRouteImport } from './routes/_authenticated/ops.financeiro.$id'
 import { Route as AuthenticatedDriverOfertasHistoricoRouteImport } from './routes/_authenticated/driver.ofertas.historico'
 import { Route as AuthenticatedDriverOfertasIdRouteImport } from './routes/_authenticated/driver.ofertas.$id'
 import { Route as AuthenticatedDriverNavegacaoIdRouteImport } from './routes/_authenticated/driver.navegacao.$id'
@@ -307,6 +308,12 @@ const AuthenticatedOpsMotoristasIdRoute =
     path: '/motoristas/$id',
     getParentRoute: () => AuthenticatedOpsRoute,
   } as any)
+const AuthenticatedOpsFinanceiroIdRoute =
+  AuthenticatedOpsFinanceiroIdRouteImport.update({
+    id: '/financeiro/$id',
+    path: '/financeiro/$id',
+    getParentRoute: () => AuthenticatedOpsRoute,
+  } as any)
 const AuthenticatedDriverOfertasHistoricoRoute =
   AuthenticatedDriverOfertasHistoricoRouteImport.update({
     id: '/historico',
@@ -364,6 +371,7 @@ export interface FileRoutesByFullPath {
   '/driver/navegacao/$id': typeof AuthenticatedDriverNavegacaoIdRoute
   '/driver/ofertas/$id': typeof AuthenticatedDriverOfertasIdRoute
   '/driver/ofertas/historico': typeof AuthenticatedDriverOfertasHistoricoRoute
+  '/ops/financeiro/$id': typeof AuthenticatedOpsFinanceiroIdRoute
   '/ops/motoristas/$id': typeof AuthenticatedOpsMotoristasIdRoute
   '/ops/motoristas/aprovacoes': typeof AuthenticatedOpsMotoristasAprovacoesRoute
   '/ops/pedidos/$id': typeof AuthenticatedOpsPedidosIdRoute
@@ -410,6 +418,7 @@ export interface FileRoutesByTo {
   '/driver/navegacao/$id': typeof AuthenticatedDriverNavegacaoIdRoute
   '/driver/ofertas/$id': typeof AuthenticatedDriverOfertasIdRoute
   '/driver/ofertas/historico': typeof AuthenticatedDriverOfertasHistoricoRoute
+  '/ops/financeiro/$id': typeof AuthenticatedOpsFinanceiroIdRoute
   '/ops/motoristas/$id': typeof AuthenticatedOpsMotoristasIdRoute
   '/ops/motoristas/aprovacoes': typeof AuthenticatedOpsMotoristasAprovacoesRoute
   '/ops/pedidos/$id': typeof AuthenticatedOpsPedidosIdRoute
@@ -461,6 +470,7 @@ export interface FileRoutesById {
   '/_authenticated/driver/navegacao/$id': typeof AuthenticatedDriverNavegacaoIdRoute
   '/_authenticated/driver/ofertas/$id': typeof AuthenticatedDriverOfertasIdRoute
   '/_authenticated/driver/ofertas/historico': typeof AuthenticatedDriverOfertasHistoricoRoute
+  '/_authenticated/ops/financeiro/$id': typeof AuthenticatedOpsFinanceiroIdRoute
   '/_authenticated/ops/motoristas/$id': typeof AuthenticatedOpsMotoristasIdRoute
   '/_authenticated/ops/motoristas/aprovacoes': typeof AuthenticatedOpsMotoristasAprovacoesRoute
   '/_authenticated/ops/pedidos/$id': typeof AuthenticatedOpsPedidosIdRoute
@@ -512,6 +522,7 @@ export interface FileRouteTypes {
     | '/driver/navegacao/$id'
     | '/driver/ofertas/$id'
     | '/driver/ofertas/historico'
+    | '/ops/financeiro/$id'
     | '/ops/motoristas/$id'
     | '/ops/motoristas/aprovacoes'
     | '/ops/pedidos/$id'
@@ -558,6 +569,7 @@ export interface FileRouteTypes {
     | '/driver/navegacao/$id'
     | '/driver/ofertas/$id'
     | '/driver/ofertas/historico'
+    | '/ops/financeiro/$id'
     | '/ops/motoristas/$id'
     | '/ops/motoristas/aprovacoes'
     | '/ops/pedidos/$id'
@@ -608,6 +620,7 @@ export interface FileRouteTypes {
     | '/_authenticated/driver/navegacao/$id'
     | '/_authenticated/driver/ofertas/$id'
     | '/_authenticated/driver/ofertas/historico'
+    | '/_authenticated/ops/financeiro/$id'
     | '/_authenticated/ops/motoristas/$id'
     | '/_authenticated/ops/motoristas/aprovacoes'
     | '/_authenticated/ops/pedidos/$id'
@@ -950,6 +963,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsMotoristasIdRouteImport
       parentRoute: typeof AuthenticatedOpsRoute
     }
+    '/_authenticated/ops/financeiro/$id': {
+      id: '/_authenticated/ops/financeiro/$id'
+      path: '/financeiro/$id'
+      fullPath: '/ops/financeiro/$id'
+      preLoaderRoute: typeof AuthenticatedOpsFinanceiroIdRouteImport
+      parentRoute: typeof AuthenticatedOpsRoute
+    }
     '/_authenticated/driver/ofertas/historico': {
       id: '/_authenticated/driver/ofertas/historico'
       path: '/historico'
@@ -1065,6 +1085,7 @@ interface AuthenticatedOpsRouteChildren {
   AuthenticatedOpsRastreamentoRoute: typeof AuthenticatedOpsRastreamentoRoute
   AuthenticatedOpsVeiculosRoute: typeof AuthenticatedOpsVeiculosRouteWithChildren
   AuthenticatedOpsIndexRoute: typeof AuthenticatedOpsIndexRoute
+  AuthenticatedOpsFinanceiroIdRoute: typeof AuthenticatedOpsFinanceiroIdRoute
   AuthenticatedOpsMotoristasIdRoute: typeof AuthenticatedOpsMotoristasIdRoute
   AuthenticatedOpsMotoristasAprovacoesRoute: typeof AuthenticatedOpsMotoristasAprovacoesRoute
   AuthenticatedOpsPedidosIdRoute: typeof AuthenticatedOpsPedidosIdRoute
@@ -1080,6 +1101,7 @@ const AuthenticatedOpsRouteChildren: AuthenticatedOpsRouteChildren = {
   AuthenticatedOpsRastreamentoRoute: AuthenticatedOpsRastreamentoRoute,
   AuthenticatedOpsVeiculosRoute: AuthenticatedOpsVeiculosRouteWithChildren,
   AuthenticatedOpsIndexRoute: AuthenticatedOpsIndexRoute,
+  AuthenticatedOpsFinanceiroIdRoute: AuthenticatedOpsFinanceiroIdRoute,
   AuthenticatedOpsMotoristasIdRoute: AuthenticatedOpsMotoristasIdRoute,
   AuthenticatedOpsMotoristasAprovacoesRoute:
     AuthenticatedOpsMotoristasAprovacoesRoute,
