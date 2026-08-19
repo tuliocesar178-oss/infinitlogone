@@ -264,6 +264,155 @@ export type Database = {
           },
         ]
       }
+      driver_payment_events: {
+        Row: {
+          action: string
+          actor_id: string | null
+          actor_name: string | null
+          created_at: string
+          from_status:
+            | Database["public"]["Enums"]["driver_payment_status"]
+            | null
+          id: string
+          metadata: Json
+          notes: string | null
+          payment_id: string
+          reason: string | null
+          to_status: Database["public"]["Enums"]["driver_payment_status"] | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          actor_name?: string | null
+          created_at?: string
+          from_status?:
+            | Database["public"]["Enums"]["driver_payment_status"]
+            | null
+          id?: string
+          metadata?: Json
+          notes?: string | null
+          payment_id: string
+          reason?: string | null
+          to_status?:
+            | Database["public"]["Enums"]["driver_payment_status"]
+            | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          actor_name?: string | null
+          created_at?: string
+          from_status?:
+            | Database["public"]["Enums"]["driver_payment_status"]
+            | null
+          id?: string
+          metadata?: Json
+          notes?: string | null
+          payment_id?: string
+          reason?: string | null
+          to_status?:
+            | Database["public"]["Enums"]["driver_payment_status"]
+            | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_payment_events_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "driver_payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      driver_payments: {
+        Row: {
+          additions_amount: number
+          approved_at: string | null
+          approved_by: string | null
+          bank_snapshot: Json
+          created_at: string
+          delivered_at: string | null
+          discounts_amount: number
+          driver_id: string | null
+          gross_amount: number
+          id: string
+          net_amount: number
+          notes: string | null
+          order_id: string
+          paid_amount: number | null
+          paid_at: string | null
+          paid_by: string | null
+          payment_account: string | null
+          payment_bank: string | null
+          payment_method: string | null
+          pending_reason: string | null
+          receipt_url: string | null
+          scheduled_for: string | null
+          status: Database["public"]["Enums"]["driver_payment_status"]
+          updated_at: string
+        }
+        Insert: {
+          additions_amount?: number
+          approved_at?: string | null
+          approved_by?: string | null
+          bank_snapshot?: Json
+          created_at?: string
+          delivered_at?: string | null
+          discounts_amount?: number
+          driver_id?: string | null
+          gross_amount?: number
+          id?: string
+          net_amount?: number
+          notes?: string | null
+          order_id: string
+          paid_amount?: number | null
+          paid_at?: string | null
+          paid_by?: string | null
+          payment_account?: string | null
+          payment_bank?: string | null
+          payment_method?: string | null
+          pending_reason?: string | null
+          receipt_url?: string | null
+          scheduled_for?: string | null
+          status?: Database["public"]["Enums"]["driver_payment_status"]
+          updated_at?: string
+        }
+        Update: {
+          additions_amount?: number
+          approved_at?: string | null
+          approved_by?: string | null
+          bank_snapshot?: Json
+          created_at?: string
+          delivered_at?: string | null
+          discounts_amount?: number
+          driver_id?: string | null
+          gross_amount?: number
+          id?: string
+          net_amount?: number
+          notes?: string | null
+          order_id?: string
+          paid_amount?: number | null
+          paid_at?: string | null
+          paid_by?: string | null
+          payment_account?: string | null
+          payment_bank?: string | null
+          payment_method?: string | null
+          pending_reason?: string | null
+          receipt_url?: string | null
+          scheduled_for?: string | null
+          status?: Database["public"]["Enums"]["driver_payment_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_payments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       driver_ratings: {
         Row: {
           created_at: string
@@ -1815,6 +1964,7 @@ export type Database = {
         Args: { lat1: number; lat2: number; lng1: number; lng2: number }
         Returns: number
       }
+      is_finance: { Args: { _user_id: string }; Returns: boolean }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
       override_arrival: { Args: { _order_id: string }; Returns: undefined }
       review_driver_signup: {
@@ -1870,6 +2020,15 @@ export type Database = {
         | "bloqueado"
         | "offline"
       driver_financial_status: "ativo" | "bloqueado" | "pagamento_pendente"
+      driver_payment_status:
+        | "aguardando_analise"
+        | "em_conferencia"
+        | "pendencia"
+        | "aprovado"
+        | "agendado"
+        | "pago"
+        | "cancelado"
+        | "devolvido"
       driver_status: "offline" | "available" | "on_trip"
       freight_cost_kind:
         | "frete"
@@ -2085,6 +2244,16 @@ export const Constants = {
         "offline",
       ],
       driver_financial_status: ["ativo", "bloqueado", "pagamento_pendente"],
+      driver_payment_status: [
+        "aguardando_analise",
+        "em_conferencia",
+        "pendencia",
+        "aprovado",
+        "agendado",
+        "pago",
+        "cancelado",
+        "devolvido",
+      ],
       driver_status: ["offline", "available", "on_trip"],
       freight_cost_kind: [
         "frete",
