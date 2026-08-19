@@ -54,8 +54,16 @@ export const NAV_GROUPS: Record<string, { label: string; items: NavItem[] }[]> =
       items: [
         { label: "Relatórios", to: "/ops/central", icon: BarChart3, match: (p) => p === "/ops/relatorios" },
         { label: "Faturamento", to: "/ops/central", icon: DollarSign, match: (p) => p === "/ops/faturamento" },
-        { label: "Financeiro", to: "/ops/central", icon: Wallet, match: (p) => p === "/ops/financeiro" },
+        { label: "💰 Financeiro", to: "/ops/financeiro", icon: Wallet, match: (p) => p.startsWith("/ops/financeiro") },
         { label: "Configurações", to: "/ops/central", icon: Settings, match: (p) => p === "/ops/configuracoes" },
+      ],
+    },
+  ],
+  financeiro: [
+    {
+      label: "Gestão",
+      items: [
+        { label: "💰 Financeiro", to: "/ops/financeiro", icon: Wallet, match: (p) => p.startsWith("/ops/financeiro") },
       ],
     },
   ],

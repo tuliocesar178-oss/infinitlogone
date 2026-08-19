@@ -19,7 +19,7 @@ const TABS: Tab[] = [
   { to: "/driver", label: "Início", icon: Home, exact: true },
   { to: "/driver/ofertas", label: "Ofertas", icon: Package },
   { to: "/driver/fretes", label: "Rotas", icon: Wallet },
-  { to: "/driver/faturamento", label: "Ganhos", icon: CircleDollarSign },
+  { to: "/driver/ganhos", label: "Ganhos", icon: CircleDollarSign },
   { to: "/driver/perfil", label: "Perfil", icon: UserRound },
 ];
 
