@@ -12,6 +12,7 @@ import {
   Package,
   UserRound,
   Wallet,
+  MessageSquare,
 } from "lucide-react";
 
 type Tab = { to: string; label: string; icon: React.ComponentType<{ className?: string }>; exact?: boolean };
@@ -20,6 +21,7 @@ const TABS: Tab[] = [
   { to: "/driver/ofertas", label: "Ofertas", icon: Package },
   { to: "/driver/fretes", label: "Rotas", icon: Wallet },
   { to: "/driver/faturamento", label: "Ganhos", icon: CircleDollarSign },
+  { to: "/ops/chat" as any, label: "Chat", icon: MessageSquare },
   { to: "/driver/perfil", label: "Perfil", icon: UserRound },
 ];
 
