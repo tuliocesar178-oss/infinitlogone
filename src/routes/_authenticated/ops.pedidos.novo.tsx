@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { AppShell } from "@/components/app-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, ArrowRight, Check, Upload, X, Copy, MessageCircle, Mail, MapPin } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Upload, X, Copy, MessageCircle, Mail, MapPin, MessageSquare } from "lucide-react";
 import QRCode from "qrcode";
 import { shareMessage, trackingUrl } from "@/lib/order-status";
 import { MapboxAutocomplete, type MapboxLocation } from "@/components/mapbox-autocomplete";
