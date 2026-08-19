@@ -228,6 +228,15 @@ function OrdersList() {
               </span>
             </Link>
             
+            <Link
+              to={"/ops/chat" as any}
+              search={{ orderId: o.id } as any}
+              className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:bg-emerald-500/10 hover:text-emerald-600 transition-colors"
+              title="Abrir chat"
+            >
+              <MessageSquare className="h-4 w-4" />
+            </Link>
+            
             <button
               onClick={async (e) => {
                 e.preventDefault();
