@@ -35,6 +35,12 @@ export function OrderChat({ roomId, orderId, title, subtitle, avatarUrl, onCallC
   const qc = useQueryClient();
   const [isRecording, setIsRecording] = useState(false);
 
+  const [me, setMe] = useState<{ id: string } | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setMe(data.user));
+  }, []);
+
   const { data: messages = [], isLoading } = useQuery({
     queryKey: ["chat-messages", roomId],
     queryFn: () => getMessages(roomId),
@@ -120,10 +126,10 @@ export function OrderChat({ roomId, orderId, title, subtitle, avatarUrl, onCallC
       </div>
 
       {/* Messages */}
-      <ScrollArea className="flex-1 p-6 bg-surface-2/50" viewportRef={scrollRef}>
-        <div className="flex flex-col gap-4">
+      <ScrollArea className="flex-1 p-6 bg-surface-2/50">
+        <div ref={scrollRef} className="flex flex-col gap-4">
           {messages.map((msg, i) => {
-            const isMe = msg.sender_id === (supabase.auth.getUser() as any).data?.user?.id; // Mock simple check for now
+            const isMe = msg.sender_id === me?.id;
             return (
               <div 
                 key={msg.id} 
@@ -206,7 +212,7 @@ export function OrderChat({ roomId, orderId, title, subtitle, avatarUrl, onCallC
               </Button>
             ) : (
               <Button 
-                variant="primary" 
+                variant="default" 
                 size="icon" 
                 className="absolute right-1 top-1 rounded-full bg-primary hover:opacity-90 h-9 w-9"
                 onClick={handleSend}

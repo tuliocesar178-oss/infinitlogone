@@ -35,7 +35,11 @@ function OrderDetail() {
   const orderQ = useQuery({
     queryKey: ["order", id],
     queryFn: async () => {
-      const { data, error } = await supabase.from("orders").select("*").eq("id", id).single();
+      const { data, error } = await supabase
+        .from("orders")
+        .select("*, chat_rooms(id)")
+        .eq("id", id)
+        .single();
       if (error) throw error;
       return data;
     },
@@ -218,7 +222,14 @@ function OrderDetail() {
                 </section>
                 <DispatchPanel order={order} onSent={() => { orderQ.refetch(); eventsQ.refetch(); }} />
                 <NegotiationPanel orderId={id} onChanged={() => { orderQ.refetch(); eventsQ.refetch(); }} />
-                <OrderChat orderId={id} />
+                {order.chat_rooms?.id && (
+                  <OrderChat 
+                    roomId={order.chat_rooms.id} 
+                    orderId={id} 
+                    title={order.code}
+                    subtitle={order.client_name || "Operacional"}
+                  />
+                )}
                 <OfferPanel order={order} onChanged={() => { orderQ.refetch(); eventsQ.refetch(); }} />
 
               </div>
