@@ -1,16 +1,15 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export type AppRole = "admin" | "logistics" | "driver" | "client" | "financeiro";
+export type AppRole = "admin" | "logistics" | "driver" | "client";
 
 const roleHome: Record<AppRole, string> = {
   admin: "/ops/central",
   logistics: "/ops/central",
-  financeiro: "/ops/financeiro",
   driver: "/driver",
   client: "/client",
 };
 
-const rolePriority: AppRole[] = ["admin", "logistics", "financeiro", "driver", "client"];
+const rolePriority: AppRole[] = ["admin", "logistics", "driver", "client"];
 
 export function homeForRole(role: AppRole | null | undefined): string {
   if (!role) return "/rastreio";

@@ -102,6 +102,10 @@ export function DispatchPanel({ order, onSent }: { order: any; onSent: () => voi
       if (error) throw error;
       const { data: u } = await supabase.auth.getUser();
       await supabase.from("orders").update({ status: "awaiting_driver", price }).eq("id", order.id);
+      
+      // Ensure chat room exists for the operation
+      await supabase.from("chat_rooms" as any).upsert({ order_id: order.id } as any, { onConflict: 'order_id' });
+
       await supabase.from("order_events").insert({
         order_id: order.id,
         event_type: "offers_sent",

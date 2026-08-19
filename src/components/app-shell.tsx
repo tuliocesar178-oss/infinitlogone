@@ -20,6 +20,7 @@ import {
   Zap,
   HelpCircle,
   UserRound,
+  MessageSquare,
 } from "lucide-react";
 
 import { useEffect, useState, type ReactNode } from "react";
@@ -47,6 +48,7 @@ export const NAV_GROUPS: Record<string, { label: string; items: NavItem[] }[]> =
         { label: "Veículos", to: "/ops/veiculos", icon: Truck, match: (p) => p.startsWith("/ops/veiculos") },
         { label: "Rastreamento", to: "/ops/rastreamento", icon: MapPin, match: (p) => p.startsWith("/ops/rastreamento") },
         { label: "Ocorrências", to: "/ops/central", icon: AlertTriangle, match: (p) => p === "/ops/ocorrencias" },
+        { label: "Chat da Operação", to: "/ops/chat", icon: MessageSquare, match: (p) => p.startsWith("/ops/chat") },
       ],
     },
     {
@@ -54,16 +56,8 @@ export const NAV_GROUPS: Record<string, { label: string; items: NavItem[] }[]> =
       items: [
         { label: "Relatórios", to: "/ops/central", icon: BarChart3, match: (p) => p === "/ops/relatorios" },
         { label: "Faturamento", to: "/ops/central", icon: DollarSign, match: (p) => p === "/ops/faturamento" },
-        { label: "💰 Financeiro", to: "/ops/financeiro", icon: Wallet, match: (p) => p.startsWith("/ops/financeiro") },
+        { label: "Financeiro", to: "/ops/central", icon: Wallet, match: (p) => p === "/ops/financeiro" },
         { label: "Configurações", to: "/ops/central", icon: Settings, match: (p) => p === "/ops/configuracoes" },
-      ],
-    },
-  ],
-  financeiro: [
-    {
-      label: "Gestão",
-      items: [
-        { label: "💰 Financeiro", to: "/ops/financeiro", icon: Wallet, match: (p) => p.startsWith("/ops/financeiro") },
       ],
     },
   ],
@@ -77,6 +71,7 @@ export const NAV_GROUPS: Record<string, { label: string; items: NavItem[] }[]> =
         { label: "Motoristas", to: "/ops/motoristas", icon: Truck, match: (p) => p.startsWith("/ops/motoristas") },
         { label: "Veículos", to: "/ops/veiculos", icon: Truck, match: (p) => p.startsWith("/ops/veiculos") },
         { label: "Rastreamento", to: "/ops/rastreamento", icon: MapPin, match: (p) => p.startsWith("/ops/rastreamento") },
+        { label: "Chat da Operação", to: "/ops/chat", icon: MessageSquare, match: (p) => p.startsWith("/ops/chat") },
       ],
     },
   ],

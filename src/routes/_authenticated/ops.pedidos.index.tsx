@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/app-shell";
-import { ArrowRight, Plus, Search, Trash2, Truck } from "lucide-react";
+import { ArrowRight, Plus, Search, Trash2, Truck, MessageSquare } from "lucide-react";
 import { DASHBOARD_CARDS, STATUS_LABEL, type DashboardCardKey } from "@/lib/order-status";
 import { toast } from "sonner";
 
@@ -181,10 +181,11 @@ function OrdersList() {
 
       {/* List */}
       <div className="card-soft overflow-hidden">
-        <div className="grid grid-cols-[auto_1fr_auto_auto_auto] gap-4 border-b border-border/60 px-5 py-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+        <div className="grid grid-cols-[auto_1fr_auto_auto_auto_auto] gap-4 border-b border-border/60 px-5 py-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
           <span>Código</span>
           <span>Cliente / Rota</span>
           <span className="hidden sm:inline">Status</span>
+          <span className="w-8"></span>
           <span className="w-8"></span>
           <span className="w-8"></span>
         </div>
@@ -200,7 +201,7 @@ function OrdersList() {
         {filtered.map((o) => (
           <div
             key={o.id}
-            className="group grid grid-cols-[auto_1fr_auto_auto_auto] items-center gap-4 border-b border-border/40 px-5 py-4 last:border-0 hover:bg-surface-2"
+            className="group grid grid-cols-[auto_1fr_auto_auto_auto_auto] items-center gap-4 border-b border-border/40 px-5 py-4 last:border-0 hover:bg-surface-2"
           >
             <Link
               to="/ops/pedidos/$id"
@@ -225,6 +226,15 @@ function OrdersList() {
               <span className="hidden rounded-full bg-surface-2 px-3 py-1 text-xs text-muted-foreground sm:inline-block">
                 {STATUS_LABEL[o.status] ?? o.status}
               </span>
+            </Link>
+            
+            <Link
+              to={"/ops/chat" as any}
+              search={{ orderId: o.id } as any}
+              className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:bg-emerald-500/10 hover:text-emerald-600 transition-colors"
+              title="Abrir chat"
+            >
+              <MessageSquare className="h-4 w-4" />
             </Link>
             
             <button

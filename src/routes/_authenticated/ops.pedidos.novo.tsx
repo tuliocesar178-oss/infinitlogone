@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { AppShell } from "@/components/app-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, ArrowRight, Check, Upload, X, Copy, MessageCircle, Mail, MapPin } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Upload, X, Copy, MessageCircle, Mail, MapPin, MessageSquare } from "lucide-react";
 import QRCode from "qrcode";
 import { shareMessage, trackingUrl } from "@/lib/order-status";
 import { MapboxAutocomplete, type MapboxLocation } from "@/components/mapbox-autocomplete";
@@ -358,6 +358,13 @@ function NewOrderWizard() {
         throw error;
       }
 
+      // Create chat room for oxygenated operation
+      try {
+        await supabase.from('chat_rooms' as any).insert({ order_id: order.id } as any);
+      } catch (ce) {
+        console.error("Error creating chat room:", ce);
+      }
+
       // Espera a PF ser criada pelo trigger e grava custos
       // Usamos uma pequena espera ou retry pois triggers podem levar milissegundos
       let programData = null;
@@ -507,6 +514,10 @@ function NewOrderWizard() {
             </div>
 
             <div className="mt-8 flex flex-col gap-2 sm:flex-row sm:justify-center">
+              <Link to={"/ops/chat" as any} search={{ orderId: result.id } as any}
+                className="inline-flex items-center justify-center gap-2 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-6 py-2.5 text-sm font-semibold text-emerald-600 hover:bg-emerald-500/20">
+                <MessageSquare className="h-4 w-4" /> Ir para o Chat
+              </Link>
               <Link to="/ops/pedidos/$id" params={{ id: result.id }}
                 className="inline-flex items-center justify-center gap-2 rounded-full bg-brand px-6 py-2.5 text-sm font-semibold text-brand-foreground hover:opacity-90">
                 Despachar agora <ArrowRight className="h-4 w-4" />

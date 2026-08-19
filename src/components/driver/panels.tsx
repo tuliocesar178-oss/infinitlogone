@@ -14,7 +14,8 @@ import {
 } from "@/lib/order-flow";
 import {
   MapPin, Package, CircleDollarSign, Clock, Check, X, Navigation,
-  Camera, MessageCircle, Truck, Upload, PenLine, ChevronRight, ChevronUp
+  Camera, MessageCircle, Truck, Upload, PenLine, ChevronRight, ChevronUp,
+  Phone
 } from "lucide-react";
 import { RouteMiniMap, ExpandableRouteMap } from "./route-mini-map";
 import { navTarget, distanceToTargetKm, isWithinActionRadius, fmtDistance } from "@/lib/geofence";
@@ -183,18 +184,26 @@ export function OfferCard({
           </div>
         </div>
       </div>
-      <div className="grid grid-cols-3 gap-2 p-4" onClick={(e) => e.stopPropagation()}>
+      <div className="grid grid-cols-4 gap-2 p-4" onClick={(e) => e.stopPropagation()}>
         <button onClick={() => respond("decline")}
-          className="flex items-center justify-center gap-1 rounded-xl border border-border bg-background px-3 py-3 text-sm font-semibold hover:bg-accent">
-          <X className="h-4 w-4" /> Recusar
+          title="Recusar"
+          className="flex items-center justify-center rounded-xl border border-border bg-background py-3 text-sm font-semibold hover:bg-accent text-red-500">
+          <X className="h-5 w-5" />
         </button>
         <button onClick={negotiate}
-          className="flex items-center justify-center gap-1 rounded-xl border border-brand bg-background px-3 py-3 text-sm font-semibold text-brand hover:bg-brand/5">
-          <MessageCircle className="h-4 w-4" /> Negociar
+          title="Negociar"
+          className="flex items-center justify-center rounded-xl border border-brand bg-background py-3 text-sm font-semibold text-brand hover:bg-brand/5">
+          <MessageCircle className="h-5 w-5" />
         </button>
+        <Link 
+          to={"/ops/chat" as any} 
+          search={{ orderId: order.id } as any}
+          className="flex items-center justify-center rounded-xl border border-border bg-background py-3 text-sm font-semibold hover:bg-accent">
+          <MessageCircle className="h-5 w-5" />
+        </Link>
         <button onClick={() => respond("accept")}
-          className="flex items-center justify-center gap-1 rounded-xl bg-brand px-3 py-3 text-sm font-bold text-brand-foreground hover:opacity-90">
-          <Check className="h-4 w-4" /> Aceitar
+          className="flex items-center justify-center gap-1 rounded-xl bg-brand py-3 text-sm font-bold text-brand-foreground hover:opacity-90">
+          <Check className="h-5 w-5" /> Aceitar
         </button>
       </div>
     </div>
@@ -384,6 +393,21 @@ export function ActiveOrderPanel({
               Botão liberado automaticamente a 100 m do local ({fmtDistance(distKm)} restantes).
             </p>
           )}
+          <div className="grid grid-cols-2 gap-3">
+            <Link
+              to={"/ops/chat" as any}
+              search={{ orderId: order.id } as any}
+              className="flex items-center justify-center gap-2 rounded-2xl border border-border bg-surface-2 py-4 text-sm font-bold uppercase tracking-wider hover:bg-accent transition-all"
+            >
+              <MessageCircle className="h-5 w-5 text-brand" /> Falar com Logística
+            </Link>
+            <button
+              onClick={() => window.open(`tel:08000000000`, '_self')}
+              className="flex items-center justify-center gap-2 rounded-2xl border border-border bg-surface-2 py-4 text-sm font-bold uppercase tracking-wider hover:bg-accent transition-all"
+            >
+              <Phone className="h-5 w-5 text-emerald-600" /> Chamada de Voz
+            </button>
+          </div>
         </div>
       )}
 
