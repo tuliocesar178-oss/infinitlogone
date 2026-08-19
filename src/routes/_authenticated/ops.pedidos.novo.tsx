@@ -358,6 +358,13 @@ function NewOrderWizard() {
         throw error;
       }
 
+      // Create chat room for oxygenated operation
+      try {
+        await supabase.from('chat_rooms' as any).insert({ order_id: order.id } as any);
+      } catch (ce) {
+        console.error("Error creating chat room:", ce);
+      }
+
       // Espera a PF ser criada pelo trigger e grava custos
       // Usamos uma pequena espera ou retry pois triggers podem levar milissegundos
       let programData = null;
