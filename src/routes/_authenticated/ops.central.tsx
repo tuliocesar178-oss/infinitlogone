@@ -187,7 +187,7 @@ function TorreDeControle() {
           >
             <Maximize2 className="h-4 w-4" />
           </button>
-          <Link to="/ops/chat" className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-surface text-muted-foreground hover:bg-accent">
+          <Link to={"/ops/chat" as any} className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-surface text-muted-foreground hover:bg-accent">
             <MessageSquare className="h-4 w-4" />
           </Link>
           <Link to="/ops/pedidos/novo" className="flex h-10 items-center gap-2 rounded-xl bg-brand px-4 text-sm font-semibold text-brand-foreground hover:opacity-90">
