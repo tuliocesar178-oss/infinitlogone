@@ -77,6 +77,38 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_rooms: {
+        Row: {
+          created_at: string | null
+          id: string
+          last_message_at: string | null
+          order_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          last_message_at?: string | null
+          order_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          last_message_at?: string | null
+          order_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_rooms_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           company_name: string | null
@@ -869,27 +901,39 @@ export type Database = {
           attachment_url: string | null
           content: string | null
           created_at: string
+          deleted_at: string | null
           id: string
           kind: Database["public"]["Enums"]["message_kind"]
+          metadata: Json | null
           order_id: string
+          read_at: string | null
+          room_id: string | null
           sender_id: string
         }
         Insert: {
           attachment_url?: string | null
           content?: string | null
           created_at?: string
+          deleted_at?: string | null
           id?: string
           kind?: Database["public"]["Enums"]["message_kind"]
+          metadata?: Json | null
           order_id: string
+          read_at?: string | null
+          room_id?: string | null
           sender_id: string
         }
         Update: {
           attachment_url?: string | null
           content?: string | null
           created_at?: string
+          deleted_at?: string | null
           id?: string
           kind?: Database["public"]["Enums"]["message_kind"]
+          metadata?: Json | null
           order_id?: string
+          read_at?: string | null
+          room_id?: string | null
           sender_id?: string
         }
         Relationships: [
@@ -898,6 +942,13 @@ export type Database = {
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "chat_rooms"
             referencedColumns: ["id"]
           },
         ]
@@ -1891,6 +1942,50 @@ export type Database = {
         }
         Relationships: []
       }
+      voice_calls: {
+        Row: {
+          caller_id: string | null
+          created_at: string | null
+          duration_seconds: number | null
+          ended_at: string | null
+          id: string
+          receiver_id: string | null
+          room_id: string | null
+          started_at: string | null
+          status: Database["public"]["Enums"]["call_status"] | null
+        }
+        Insert: {
+          caller_id?: string | null
+          created_at?: string | null
+          duration_seconds?: number | null
+          ended_at?: string | null
+          id?: string
+          receiver_id?: string | null
+          room_id?: string | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["call_status"] | null
+        }
+        Update: {
+          caller_id?: string | null
+          created_at?: string | null
+          duration_seconds?: number | null
+          ended_at?: string | null
+          id?: string
+          receiver_id?: string | null
+          room_id?: string | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["call_status"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_calls_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "chat_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       order_tracking: {
@@ -2011,6 +2106,13 @@ export type Database = {
         | "comercial"
         | "operacional"
       bank_account_type: "corrente" | "poupanca"
+      call_status:
+        | "dialing"
+        | "ringing"
+        | "connected"
+        | "ended"
+        | "missed"
+        | "rejected"
       driver_approval_status: "pending" | "active" | "correction" | "rejected"
       driver_availability:
         | "disponivel"
@@ -2234,6 +2336,14 @@ export const Constants = {
         "operacional",
       ],
       bank_account_type: ["corrente", "poupanca"],
+      call_status: [
+        "dialing",
+        "ringing",
+        "connected",
+        "ended",
+        "missed",
+        "rejected",
+      ],
       driver_approval_status: ["pending", "active", "correction", "rejected"],
       driver_availability: [
         "disponivel",
