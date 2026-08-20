@@ -360,7 +360,7 @@ function NewOrderWizard() {
 
       // Create chat room for oxygenated operation
       try {
-        await supabase.from('chat_rooms' as any).insert({ order_id: order.id } as any);
+        await supabase.from('chat_rooms').upsert({ order_id: order.id }, { onConflict: 'order_id' });
       } catch (ce) {
         console.error("Error creating chat room:", ce);
       }
