@@ -87,7 +87,7 @@ function LandingPage() {
             <Zap className="h-3 w-3" /> Tecnologia & Operação Logística
           </span>
           <h1 className="mt-6 text-5xl font-semibold tracking-tight sm:text-6xl">
-            Sua carga em movimento.
+            o chat não esta abrindo (on element 'body' at '/src/routes/index.tsx:1')
             <span className="block text-muted-foreground">Visibilidade total.</span>
           </h1>
           <p className="mt-6 max-w-xl text-lg text-muted-foreground">
