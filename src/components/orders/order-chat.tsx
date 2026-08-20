@@ -81,9 +81,9 @@ export function OrderChat({ roomId, orderId, title, subtitle, avatarUrl, onCallC
   };
 
   return (
-    <div className="flex flex-col h-[600px] w-full bg-background border rounded-2xl overflow-hidden shadow-xl">
+    <div className="flex flex-col h-full w-full bg-background md:border md:rounded-2xl overflow-hidden md:shadow-xl">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 bg-surface border-b">
+      <div className="flex items-center justify-between px-6 py-4 bg-surface border-b shrink-0">
         <div className="flex items-center gap-3">
           <Avatar className="h-10 w-10 border-2 border-primary/10">
             <AvatarImage src={avatarUrl} />
@@ -167,7 +167,7 @@ export function OrderChat({ roomId, orderId, title, subtitle, avatarUrl, onCallC
       </ScrollArea>
 
       {/* Input */}
-      <div className="p-4 bg-surface border-t">
+      <div className="p-4 bg-surface border-t shrink-0">
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="icon" className="rounded-full shrink-0">
             <Smile className="h-5 w-5" />
