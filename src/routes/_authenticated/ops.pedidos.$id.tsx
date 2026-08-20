@@ -11,8 +11,12 @@ import { FreightProgramPanel } from "@/components/freight-program-panel";
 import { DispatchPanel } from "@/components/orders/dispatch-panel";
 import { NegotiationPanel } from "@/components/orders/negotiation-panel";
 import { OrderChat } from "@/components/orders/order-chat";
+import { z } from "zod";
 
 export const Route = createFileRoute("/_authenticated/ops/pedidos/$id")({
+  validateSearch: (search: Record<string, unknown>) => z.object({
+    tab: z.enum(["op", "pf"]).optional()
+  }).parse(search),
   head: () => ({ meta: [{ title: "Pedido — InfinitLog" }, { name: "robots", content: "noindex" }] }),
   component: OrderDetail,
 });
@@ -29,7 +33,9 @@ const CANCELLABLE_STATUSES = new Set([
 
 function OrderDetail() {
   const { id } = Route.useParams();
-  const [tab, setTab] = useState<"op" | "pf">("op");
+  const search = Route.useSearch() as any;
+  const navigate = Route.useNavigate();
+  const tab = search.tab || "op";
   const [cancelling, setCancelling] = useState(false);
 
   const orderQ = useQuery({
@@ -37,7 +43,7 @@ function OrderDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("orders")
-        .select("*, chat_rooms(id)")
+        .select("*, chat_rooms!chat_rooms_order_id_fkey(id)")
         .eq("id", id)
         .single();
       if (error) throw error;
@@ -146,7 +152,7 @@ function OrderDetail() {
             ].map((t) => (
               <button
                 key={t.k}
-                onClick={() => setTab(t.k as "op" | "pf")}
+                onClick={() => navigate({ search: { tab: t.k as any } })}
                 className={`rounded-xl px-4 py-2 text-sm font-medium transition ${
                   tab === t.k
                     ? "bg-primary text-primary-foreground shadow"

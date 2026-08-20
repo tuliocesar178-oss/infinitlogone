@@ -1,15 +1,16 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { AppShell } from '@/components/app-shell';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getRooms, ChatRoom } from '@/lib/chat';
 import { OrderChat } from '@/components/orders/order-chat';
 import { Search, MessageSquare, Filter, Clock } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { z } from 'zod';
 
-export const Route = createFileRoute('/_authenticated/ops/chat' as any)({
+export const Route = createFileRoute('/_authenticated/ops/chat')({
   validateSearch: (search: Record<string, unknown>) => z.object({
     orderId: z.string().optional(),
     roomId: z.string().optional()
@@ -18,7 +19,9 @@ export const Route = createFileRoute('/_authenticated/ops/chat' as any)({
 });
 
 function OpsChatPage() {
-  const { orderId, roomId: initialRoomId } = Route.useSearch() as any;
+  const searchParams = Route.useSearch();
+  const orderId = (searchParams as any).orderId;
+  const initialRoomId = (searchParams as any).roomId;
   const [selectedRoom, setSelectedRoom] = useState<ChatRoom | null>(null);
   const [search, setSearch] = useState("");
 
@@ -28,8 +31,7 @@ function OpsChatPage() {
     refetchInterval: 10000
   });
 
-  // Effect to select room if orderId or roomId provided in search
-  useState(() => {
+  useEffect(() => {
     if (initialRoomId) {
       const room = rooms.find(r => r.id === initialRoomId);
       if (room) setSelectedRoom(room);
@@ -37,7 +39,7 @@ function OpsChatPage() {
       const room = rooms.find(r => r.order_id === orderId);
       if (room) setSelectedRoom(room);
     }
-  });
+  }, [initialRoomId, orderId, rooms]);
 
   const filteredRooms = rooms.filter(r => 
     r.order?.order_number?.toLowerCase().includes(search.toLowerCase()) ||
@@ -114,6 +116,7 @@ function OpsChatPage() {
                 title={selectedRoom.order?.order_number || "Pedido"}
                 subtitle={`${selectedRoom.order?.driver?.full_name || 'Motorista'} | ${selectedRoom.order?.client?.full_name || 'Cliente'}`}
                 avatarUrl={selectedRoom.order?.driver?.avatar_url || ''}
+                onCallClick={() => toast.info("Funcionalidade de chamada em breve...")}
               />
             </div>
           ) : (
