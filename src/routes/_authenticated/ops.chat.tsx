@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { z } from 'zod';
 
-export const Route = createFileRoute('/_authenticated/ops/chat' as any)({
+export const Route = createFileRoute('/_authenticated/ops/chat')({
   validateSearch: (search: Record<string, unknown>) => z.object({
     orderId: z.string().optional(),
     roomId: z.string().optional()
