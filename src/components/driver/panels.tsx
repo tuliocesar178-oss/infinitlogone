@@ -196,7 +196,7 @@ export function OfferCard({
           <MessageCircle className="h-5 w-5" />
         </button>
         <Link 
-          to={"/ops/chat" as any} 
+          to={"/driver/chat" as any} 
           search={{ orderId: order.id } as any}
           className="flex items-center justify-center rounded-xl border border-border bg-background py-3 text-sm font-semibold hover:bg-accent">
           <MessageCircle className="h-5 w-5" />
@@ -395,7 +395,7 @@ export function ActiveOrderPanel({
           )}
           <div className="grid grid-cols-2 gap-3">
             <Link
-              to={"/ops/chat" as any}
+              to={"/driver/chat" as any}
               search={{ orderId: order.id } as any}
               className="flex items-center justify-center gap-2 rounded-2xl border border-border bg-surface-2 py-4 text-sm font-bold uppercase tracking-wider hover:bg-accent transition-all"
             >
