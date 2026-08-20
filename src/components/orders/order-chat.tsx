@@ -81,7 +81,7 @@ export function OrderChat({ roomId, orderId, title, subtitle, avatarUrl, onCallC
   };
 
   return (
-    <div className="flex flex-col h-[600px] w-full bg-background border rounded-2xl overflow-hidden shadow-xl">
+    <div className="flex flex-col h-full w-full bg-background md:border md:rounded-2xl overflow-hidden md:shadow-xl">
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 bg-surface border-b">
         <div className="flex items-center gap-3">

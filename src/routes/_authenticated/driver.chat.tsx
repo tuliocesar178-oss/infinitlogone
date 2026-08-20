@@ -80,7 +80,7 @@ function DriverChatPage() {
   );
 
   return (
-    <div className="flex h-[calc(100vh-180px)] overflow-hidden bg-background border rounded-2xl shadow-sm">
+    <div className="flex h-[calc(100dvh-130px)] overflow-hidden bg-background border rounded-2xl shadow-sm">
       {/* Sidebar - Ocultar se um chat estiver aberto no mobile */}
       <div className={`${selectedRoom ? 'hidden md:flex' : 'flex'} w-full md:w-80 border-r flex-col bg-surface`}>
         <div className="p-4 border-b space-y-4">
@@ -138,22 +138,25 @@ function DriverChatPage() {
       {/* Chat Area */}
       <div className={`${selectedRoom ? 'flex' : 'hidden md:flex'} flex-1 flex-col bg-surface-2/30`}>
         {selectedRoom ? (
-          <div className="p-2 md:p-6 h-full flex flex-col">
-            <div className="md:hidden mb-2">
+          <div className="flex flex-col h-full">
+            <div className="md:hidden p-4 bg-background border-b flex items-center justify-between">
               <button 
                 onClick={() => setSelectedRoom(null)}
                 className="text-sm font-bold text-brand flex items-center gap-1"
               >
-                ← Voltar para lista
+                ← Voltar
               </button>
+              <span className="font-bold text-sm truncate">{selectedRoom.order?.order_number}</span>
             </div>
-            <OrderChat 
-              roomId={selectedRoom.id}
-              orderId={selectedRoom.order_id}
-              title={selectedRoom.order?.order_number || "Pedido"}
-              subtitle="Logística InfinitLog"
-              onCallClick={() => toast.info("Chamando central...")}
-            />
+            <div className="flex-1 p-0 md:p-6 overflow-hidden">
+              <OrderChat 
+                roomId={selectedRoom.id}
+                orderId={selectedRoom.order_id}
+                title={selectedRoom.order?.order_number || "Pedido"}
+                subtitle="Logística InfinitLog"
+                onCallClick={() => toast.info("Chamando central...")}
+              />
+            </div>
           </div>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground p-12 text-center">
