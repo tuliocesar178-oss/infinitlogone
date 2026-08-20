@@ -34,7 +34,7 @@ const CANCELLABLE_STATUSES = new Set([
 function OrderDetail() {
   const { id } = Route.useParams();
   const search = Route.useSearch() as any;
-  const navigate = useNavigate();
+  const navigate = Route.useNavigate();
   const tab = search.tab || "op";
   const [cancelling, setCancelling] = useState(false);
 
