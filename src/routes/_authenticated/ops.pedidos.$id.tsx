@@ -43,7 +43,7 @@ function OrderDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("orders")
-        .select("*, chat_rooms(id)")
+        .select("*, chat_rooms!chat_rooms_order_id_fkey(id)")
         .eq("id", id)
         .single();
       if (error) throw error;
