@@ -37,6 +37,7 @@ import { Route as AuthenticatedDriverOfertasRouteImport } from './routes/_authen
 import { Route as AuthenticatedDriverOcorrenciasRouteImport } from './routes/_authenticated/driver.ocorrencias'
 import { Route as AuthenticatedDriverFretesRouteImport } from './routes/_authenticated/driver.fretes'
 import { Route as AuthenticatedDriverFaturamentoRouteImport } from './routes/_authenticated/driver.faturamento'
+import { Route as AuthenticatedDriverChatRouteImport } from './routes/_authenticated/driver.chat'
 import { Route as AuthenticatedClientRelatoriosRouteImport } from './routes/_authenticated/client.relatorios'
 import { Route as AuthenticatedClientMapaRouteImport } from './routes/_authenticated/client.mapa'
 import { Route as AuthenticatedClientInsightsRouteImport } from './routes/_authenticated/client.insights'
@@ -206,6 +207,11 @@ const AuthenticatedDriverFaturamentoRoute =
     path: '/faturamento',
     getParentRoute: () => AuthenticatedDriverRoute,
   } as any)
+const AuthenticatedDriverChatRoute = AuthenticatedDriverChatRouteImport.update({
+  id: '/chat',
+  path: '/chat',
+  getParentRoute: () => AuthenticatedDriverRoute,
+} as any)
 const AuthenticatedClientRelatoriosRoute =
   AuthenticatedClientRelatoriosRouteImport.update({
     id: '/relatorios',
@@ -348,6 +354,7 @@ export interface FileRoutesByFullPath {
   '/client/insights': typeof AuthenticatedClientInsightsRoute
   '/client/mapa': typeof AuthenticatedClientMapaRoute
   '/client/relatorios': typeof AuthenticatedClientRelatoriosRoute
+  '/driver/chat': typeof AuthenticatedDriverChatRoute
   '/driver/faturamento': typeof AuthenticatedDriverFaturamentoRoute
   '/driver/fretes': typeof AuthenticatedDriverFretesRoute
   '/driver/ocorrencias': typeof AuthenticatedDriverOcorrenciasRoute
@@ -394,6 +401,7 @@ export interface FileRoutesByTo {
   '/client/insights': typeof AuthenticatedClientInsightsRoute
   '/client/mapa': typeof AuthenticatedClientMapaRoute
   '/client/relatorios': typeof AuthenticatedClientRelatoriosRoute
+  '/driver/chat': typeof AuthenticatedDriverChatRoute
   '/driver/faturamento': typeof AuthenticatedDriverFaturamentoRoute
   '/driver/fretes': typeof AuthenticatedDriverFretesRoute
   '/driver/ocorrencias': typeof AuthenticatedDriverOcorrenciasRoute
@@ -445,6 +453,7 @@ export interface FileRoutesById {
   '/_authenticated/client/insights': typeof AuthenticatedClientInsightsRoute
   '/_authenticated/client/mapa': typeof AuthenticatedClientMapaRoute
   '/_authenticated/client/relatorios': typeof AuthenticatedClientRelatoriosRoute
+  '/_authenticated/driver/chat': typeof AuthenticatedDriverChatRoute
   '/_authenticated/driver/faturamento': typeof AuthenticatedDriverFaturamentoRoute
   '/_authenticated/driver/fretes': typeof AuthenticatedDriverFretesRoute
   '/_authenticated/driver/ocorrencias': typeof AuthenticatedDriverOcorrenciasRoute
@@ -496,6 +505,7 @@ export interface FileRouteTypes {
     | '/client/insights'
     | '/client/mapa'
     | '/client/relatorios'
+    | '/driver/chat'
     | '/driver/faturamento'
     | '/driver/fretes'
     | '/driver/ocorrencias'
@@ -542,6 +552,7 @@ export interface FileRouteTypes {
     | '/client/insights'
     | '/client/mapa'
     | '/client/relatorios'
+    | '/driver/chat'
     | '/driver/faturamento'
     | '/driver/fretes'
     | '/driver/ocorrencias'
@@ -592,6 +603,7 @@ export interface FileRouteTypes {
     | '/_authenticated/client/insights'
     | '/_authenticated/client/mapa'
     | '/_authenticated/client/relatorios'
+    | '/_authenticated/driver/chat'
     | '/_authenticated/driver/faturamento'
     | '/_authenticated/driver/fretes'
     | '/_authenticated/driver/ocorrencias'
@@ -830,6 +842,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDriverFaturamentoRouteImport
       parentRoute: typeof AuthenticatedDriverRoute
     }
+    '/_authenticated/driver/chat': {
+      id: '/_authenticated/driver/chat'
+      path: '/chat'
+      fullPath: '/driver/chat'
+      preLoaderRoute: typeof AuthenticatedDriverChatRouteImport
+      parentRoute: typeof AuthenticatedDriverRoute
+    }
     '/_authenticated/client/relatorios': {
       id: '/_authenticated/client/relatorios'
       path: '/relatorios'
@@ -1018,6 +1037,7 @@ const AuthenticatedDriverOfertasRouteWithChildren =
   )
 
 interface AuthenticatedDriverRouteChildren {
+  AuthenticatedDriverChatRoute: typeof AuthenticatedDriverChatRoute
   AuthenticatedDriverFaturamentoRoute: typeof AuthenticatedDriverFaturamentoRoute
   AuthenticatedDriverFretesRoute: typeof AuthenticatedDriverFretesRoute
   AuthenticatedDriverOcorrenciasRoute: typeof AuthenticatedDriverOcorrenciasRoute
@@ -1028,6 +1048,7 @@ interface AuthenticatedDriverRouteChildren {
 }
 
 const AuthenticatedDriverRouteChildren: AuthenticatedDriverRouteChildren = {
+  AuthenticatedDriverChatRoute: AuthenticatedDriverChatRoute,
   AuthenticatedDriverFaturamentoRoute: AuthenticatedDriverFaturamentoRoute,
   AuthenticatedDriverFretesRoute: AuthenticatedDriverFretesRoute,
   AuthenticatedDriverOcorrenciasRoute: AuthenticatedDriverOcorrenciasRoute,

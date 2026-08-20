@@ -55,7 +55,7 @@ function DriverChatPage() {
             client:profiles!orders_client_id_fkey(full_name, avatar_url)
           )
         `)
-        .eq('order.driver_id', userId)
+        .eq('order.driver_id', userId!)
         .order('last_message_at', { ascending: false });
       
       if (error) throw error;
