@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router"; // o chat não esta abrindo
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchUserRoles, primaryRole, homeForRole } from "@/lib/roles";

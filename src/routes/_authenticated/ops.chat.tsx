@@ -18,7 +18,9 @@ export const Route = createFileRoute('/_authenticated/ops/chat')({
 });
 
 function OpsChatPage() {
-  const { orderId, roomId: initialRoomId } = Route.useSearch() as any;
+  const searchParams = Route.useSearch();
+  const orderId = (searchParams as any).orderId;
+  const initialRoomId = (searchParams as any).roomId;
   const [selectedRoom, setSelectedRoom] = useState<ChatRoom | null>(null);
   const [search, setSearch] = useState("");
 
