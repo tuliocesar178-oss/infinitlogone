@@ -7,6 +7,7 @@ import { ArrowLeft, ArrowRight, Check, Upload, X, Copy, MessageCircle, Mail, Map
 import QRCode from "qrcode";
 import { shareMessage, trackingUrl } from "@/lib/order-status";
 import { MapboxAutocomplete, type MapboxLocation } from "@/components/mapbox-autocomplete";
+import { sendOffersToEligibleDrivers } from "@/lib/freight-publish";
 
 const MAPBOX_TOKEN = import.meta.env.VITE_LOVABLE_CONNECTOR_MAPBOX_PUBLIC_TOKEN;
 
@@ -84,6 +85,21 @@ type Form = {
   license: string;
   other_costs: string;
   priority: string;
+  // 6 Veículo
+  req_vehicle_type: string;
+  req_body_type: string;
+  req_capacity_kg: string;
+  req_axles: string;
+  helpers_required: string;
+  helpers_count: string;
+  tracking_required: string;
+  special_requirements: string;
+  // extras da carga
+  cargo_product: string;
+  cargo_package_type: string;
+  cargo_dimensions: string;
+  operation_type: string;
+  offer_minutes: string;
 };
 
 const EMPTY: Form = {
@@ -104,9 +120,16 @@ const EMPTY: Form = {
   cargo_notes: "",
   price: "", driver_price: "", toll: "", fuel: "", escort: "", license: "", other_costs: "",
   priority: "normal",
+  req_vehicle_type: "", req_body_type: "", req_capacity_kg: "", req_axles: "",
+  helpers_required: "nao", helpers_count: "", tracking_required: "sim", special_requirements: "",
+  cargo_product: "", cargo_package_type: "", cargo_dimensions: "", operation_type: "",
+  offer_minutes: "15",
 };
 
-const STEPS = ["Cliente", "Coleta", "Entrega", "Carga", "Custos", "Documentos"] as const;
+export const VEHICLE_TYPES = ["Fiorino", "Van", "VUC", "3/4", "Toco", "Truck", "Carreta", "Bitrem", "Rodotrem", "Outro"];
+export const BODY_TYPES = ["Baú", "Sider", "Aberta", "Graneleiro", "Frigorífica", "Tanque", "Prancha", "Outra"];
+
+const STEPS = ["Cliente", "Coleta", "Entrega", "Carga", "Veículo", "Valores", "Documentos", "Revisão"] as const;
 
 function combineDateTime(d: string, t: string): string | null {
   if (!d) return null;
@@ -216,7 +239,7 @@ function NewOrderWizard() {
     if (step === 0 && !f.client_name.trim()) return "Informe o nome do cliente";
     if (step === 1 && !f.origin_address.trim()) return "Informe o endereço de coleta";
     if (step === 2 && !f.destination_address.trim()) return "Informe o endereço de entrega";
-    if (step === 4 && !f.price) return "Informe o valor negociado com o cliente";
+    if (step === 5 && !f.price) return "Informe o valor cobrado do cliente";
     return null;
   }
 
@@ -285,7 +308,7 @@ function NewOrderWizard() {
   }
   function prev() { setStep((s) => Math.max(s - 1, 0)); }
 
-  async function save() {
+  async function save(publish: boolean) {
     const err = canAdvance();
     if (err) return toast.error(err);
     setSaving(true);
@@ -339,12 +362,41 @@ function NewOrderWizard() {
         delivery_franchise_minutes: f.delivery_franchise_minutes ? Number(f.delivery_franchise_minutes) : null,
         priority: f.priority,
         notes: [f.client_notes, f.cargo_notes].filter(Boolean).join("\n\n") || null,
-        status: "preparing" as any,
+        status: (publish ? "awaiting_driver" : "planning") as any,
+        published_at: publish ? new Date().toISOString() : null,
         created_by: u.user?.id ?? null,
         distance_km: routeInfo?.distance_km ?? null,
         estimated_minutes: routeInfo?.duration_minutes ?? null,
         route_geometry: routeInfo?.geometry ?? null,
         estimated_tolls: num(f.toll),
+        // Carga complementar
+        cargo_product: f.cargo_product || null,
+        cargo_package_type: f.cargo_package_type || null,
+        cargo_dimensions: f.cargo_dimensions || null,
+        purchase_order: f.purchase_order || null,
+        operation_type: f.operation_type || null,
+        // Veículo exigido
+        required_vehicle_type: f.req_vehicle_type || null,
+        required_body_type: f.req_body_type || null,
+        required_capacity_kg: num(f.req_capacity_kg),
+        required_axles: f.req_axles ? Number(f.req_axles) : null,
+        helpers_required: f.helpers_required === "sim",
+        helpers_count: f.helpers_count ? Number(f.helpers_count) : null,
+        tracking_required: f.tracking_required !== "nao",
+        special_requirements: f.special_requirements || null,
+        // Financeiro
+        fuel_cost: num(f.fuel),
+        other_costs: num(f.other_costs),
+        driver_amount: num(f.driver_price),
+        client_amount: num(f.price),
+        offer_expires_minutes: f.offer_minutes ? Number(f.offer_minutes) : 15,
+        // Contatos
+        pickup_contact_name: f.pickup_contact || null,
+        pickup_phone: f.pickup_phone || f.pickup_whatsapp || null,
+        pickup_whatsapp: f.pickup_whatsapp || null,
+        delivery_contact_name: f.delivery_contact || null,
+        delivery_phone: f.delivery_phone || f.delivery_whatsapp || null,
+        delivery_whatsapp: f.delivery_whatsapp || null,
       };
       const { data: order, error } = await supabase
         .from("orders").insert(payload).select("id, code, tracking_code").single();
@@ -426,12 +478,32 @@ function NewOrderWizard() {
 
       await supabase.from("order_events").insert({
         order_id: order.id, event_type: "order_created",
-        to_status: "preparing" as any, actor_id: u.user?.id ?? null,
+        to_status: (publish ? "awaiting_driver" : "planning") as any, actor_id: u.user?.id ?? null,
       });
+
+      let offersSent = 0;
+      if (publish) {
+        offersSent = await sendOffersToEligibleDrivers(order.id, {
+          price: num(f.driver_price) ?? num(f.price) ?? 0,
+          minutes: f.offer_minutes ? Number(f.offer_minutes) : 15,
+          vehicleType: f.req_vehicle_type,
+          capacityKg: num(f.req_capacity_kg),
+          code: order.code,
+        });
+        await supabase.from("order_events").insert({
+          order_id: order.id, event_type: "order_published",
+          to_status: "awaiting_driver" as any, actor_id: u.user?.id ?? null,
+          payload: { offers: offersSent } as any,
+        });
+      }
 
       const qr = await QRCode.toDataURL(trackingUrl(order.tracking_code), { margin: 1, width: 220 });
       setResult({ id: order.id, code: order.code, tracking_code: order.tracking_code, qr });
-      toast.success(`Frete ${order.code} cadastrado`);
+      toast.success(
+        publish
+          ? `Frete ${order.code} publicado — ${offersSent} motorista(s) notificado(s)`
+          : `Rascunho do frete ${order.code} salvo`,
+      );
     } catch (e: any) {
       console.error("Erro detalhado ao salvar frete:", e);
       const msg = e.message || (e.error_description) || "Erro desconhecido ao salvar frete";
@@ -656,13 +728,18 @@ function NewOrderWizard() {
 
         {step === 3 && (
           <Grid>
+            <T label="Tipo de carga" value={f.cargo_type} onChange={(v) => set("cargo_type", v)} />
+            <T label="Produto" value={f.cargo_product} onChange={(v) => set("cargo_product", v)} />
             <T label="Peso (kg)" type="number" value={f.cargo_weight_kg} onChange={(v) => set("cargo_weight_kg", v)} />
-            <T label="Volumes" type="number" value={f.volumes} onChange={(v) => set("volumes", v)} />
-            <T label="Cubagem (m³)" type="number" value={f.cargo_volume_m3} onChange={(v) => set("cargo_volume_m3", v)} />
-            <T label="Tipo" value={f.cargo_type} onChange={(v) => set("cargo_type", v)} />
-            <T label="Produto" value={f.cargo_description} onChange={(v) => set("cargo_description", v)} full />
+            <T label="Unidade / cubagem (m³)" type="number" value={f.cargo_volume_m3} onChange={(v) => set("cargo_volume_m3", v)} />
+            <T label="Quantidade de volumes" type="number" value={f.volumes} onChange={(v) => set("volumes", v)} />
+            <T label="Tipo de volume" value={f.cargo_package_type} onChange={(v) => set("cargo_package_type", v)} />
+            <T label="Dimensões (C x L x A)" value={f.cargo_dimensions} onChange={(v) => set("cargo_dimensions", v)} />
+            <T label="Tipo de operação" value={f.operation_type} onChange={(v) => set("operation_type", v)} />
+            <T label="Descrição da carga" value={f.cargo_description} onChange={(v) => set("cargo_description", v)} full />
             <T label="Valor da nota fiscal" type="number" value={f.invoice_value} onChange={(v) => set("invoice_value", v)} />
             <T label="Nº da nota fiscal" value={f.invoice_number} onChange={(v) => set("invoice_number", v)} />
+            <T label="Nº do pedido / OC" value={f.purchase_order} onChange={(v) => set("purchase_order", v)} />
             <T label="CT-e" value={f.cte_number} onChange={(v) => set("cte_number", v)} />
             <T label="MDF-e" value={f.mdfe_number} onChange={(v) => set("mdfe_number", v)} />
             <T label="Observações" value={f.cargo_notes} onChange={(v) => set("cargo_notes", v)} full />
@@ -670,6 +747,48 @@ function NewOrderWizard() {
         )}
 
         {step === 4 && (
+          <Grid>
+            <label className="block">
+              <span className="mb-1.5 block text-xs font-medium uppercase tracking-widest text-muted-foreground">Tipo de veículo</span>
+              <select value={f.req_vehicle_type} onChange={(e) => set("req_vehicle_type", e.target.value)}
+                className="h-11 w-full rounded-xl border border-border bg-surface px-3 text-sm outline-none focus:border-brand">
+                <option value="">Indiferente</option>
+                {VEHICLE_TYPES.map((v) => <option key={v} value={v}>{v}</option>)}
+              </select>
+            </label>
+            <label className="block">
+              <span className="mb-1.5 block text-xs font-medium uppercase tracking-widest text-muted-foreground">Tipo de carroceria</span>
+              <select value={f.req_body_type} onChange={(e) => set("req_body_type", e.target.value)}
+                className="h-11 w-full rounded-xl border border-border bg-surface px-3 text-sm outline-none focus:border-brand">
+                <option value="">Indiferente</option>
+                {BODY_TYPES.map((v) => <option key={v} value={v}>{v}</option>)}
+              </select>
+            </label>
+            <T label="Capacidade mínima (kg)" type="number" value={f.req_capacity_kg} onChange={(v) => set("req_capacity_kg", v)} />
+            <T label="Quantidade de eixos" type="number" value={f.req_axles} onChange={(v) => set("req_axles", v)} />
+            <label className="block">
+              <span className="mb-1.5 block text-xs font-medium uppercase tracking-widest text-muted-foreground">Necessita ajudante?</span>
+              <select value={f.helpers_required} onChange={(e) => set("helpers_required", e.target.value)}
+                className="h-11 w-full rounded-xl border border-border bg-surface px-3 text-sm outline-none focus:border-brand">
+                <option value="nao">Não</option>
+                <option value="sim">Sim</option>
+              </select>
+            </label>
+            <T label="Quantidade de ajudantes" type="number" value={f.helpers_count} onChange={(v) => set("helpers_count", v)} />
+            <label className="block">
+              <span className="mb-1.5 block text-xs font-medium uppercase tracking-widest text-muted-foreground">Necessita rastreamento?</span>
+              <select value={f.tracking_required} onChange={(e) => set("tracking_required", e.target.value)}
+                className="h-11 w-full rounded-xl border border-border bg-surface px-3 text-sm outline-none focus:border-brand">
+                <option value="sim">Sim</option>
+                <option value="nao">Não</option>
+              </select>
+            </label>
+            <T label="Validade da oferta (min)" type="number" value={f.offer_minutes} onChange={(v) => set("offer_minutes", v)} />
+            <T label="Exigências especiais" value={f.special_requirements} onChange={(v) => set("special_requirements", v)} full />
+          </Grid>
+        )}
+
+        {step === 5 && (
           <>
             <Grid>
               <T label="Valor negociado com cliente (R$)" required type="number" value={f.price} onChange={(v) => set("price", v)} />
@@ -719,7 +838,7 @@ function NewOrderWizard() {
           </>
         )}
 
-        {step === 5 && (
+        {step === 6 && (
           <div>
             <p className="text-sm text-muted-foreground">Anexe NF, CT-e, MDF-e, XML, fotos, PDF ou vídeos. Os arquivos ficam vinculados ao frete.</p>
             <label className="mt-4 flex cursor-pointer items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border bg-surface-2 px-6 py-10 hover:bg-accent">
@@ -767,9 +886,50 @@ function NewOrderWizard() {
             </ul>
           </div>
         )}
+
+        {step === 7 && (
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Revise as informações antes de publicar. Ao publicar, o frete fica com status
+              <strong className="text-foreground"> Aguardando Motorista</strong> e a oferta é enviada aos motoristas elegíveis.
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <ReviewBlock title="Cliente" onEdit={() => setStep(0)} rows={[
+                ["Cliente", f.client_name],
+                ["Contato", f.contact_name],
+                ["Telefone", f.contact_phone],
+              ]} />
+              <ReviewBlock title="Coleta" onEdit={() => setStep(1)} rows={[
+                ["Endereço", f.origin_address],
+                ["Cidade/UF", `${f.origin_city} ${f.origin_state}`],
+                ["Data", `${f.pickup_date} ${f.pickup_time}`],
+              ]} />
+              <ReviewBlock title="Entrega" onEdit={() => setStep(2)} rows={[
+                ["Endereço", f.destination_address],
+                ["Cidade/UF", `${f.destination_city} ${f.destination_state}`],
+                ["Data", `${f.delivery_date} ${f.delivery_time}`],
+              ]} />
+              <ReviewBlock title="Carga" onEdit={() => setStep(3)} rows={[
+                ["Produto", f.cargo_product || f.cargo_description],
+                ["Peso", f.cargo_weight_kg ? `${f.cargo_weight_kg} kg` : ""],
+                ["Volumes", f.volumes],
+              ]} />
+              <ReviewBlock title="Veículo" onEdit={() => setStep(4)} rows={[
+                ["Tipo", f.req_vehicle_type || "Indiferente"],
+                ["Carroceria", f.req_body_type || "Indiferente"],
+                ["Rastreamento", f.tracking_required === "sim" ? "Sim" : "Não"],
+              ]} />
+              <ReviewBlock title="Valores" onEdit={() => setStep(5)} rows={[
+                ["Cliente", brl(num(f.price) ?? 0)],
+                ["Motorista", brl(num(f.driver_price) ?? 0)],
+                ["Margem", `${margin.toFixed(1)}%`],
+              ]} />
+            </div>
+          </div>
+        )}
       </div>
 
-      <div className="mt-6 flex items-center justify-between">
+      <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
         <button onClick={prev} disabled={step === 0}
           className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-5 py-2.5 text-sm font-semibold hover:bg-accent disabled:opacity-40">
           <ArrowLeft className="h-4 w-4" /> Voltar
@@ -780,10 +940,16 @@ function NewOrderWizard() {
             Avançar <ArrowRight className="h-4 w-4" />
           </button>
         ) : (
-          <button onClick={save} disabled={saving}
-            className="inline-flex items-center gap-2 rounded-full bg-brand px-6 py-2.5 text-sm font-semibold text-brand-foreground hover:opacity-90 disabled:opacity-60">
-            <Check className="h-4 w-4" /> {saving ? "Salvando…" : "Salvar frete"}
-          </button>
+          <div className="flex flex-wrap items-center gap-3">
+            <button onClick={() => void save(false)} disabled={saving}
+              className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-5 py-2.5 text-sm font-semibold hover:bg-accent disabled:opacity-60">
+              Salvar rascunho
+            </button>
+            <button onClick={() => void save(true)} disabled={saving}
+              className="inline-flex items-center gap-2 rounded-full bg-brand px-6 py-2.5 text-sm font-semibold text-brand-foreground hover:opacity-90 disabled:opacity-60">
+              <Check className="h-4 w-4" /> {saving ? "Publicando…" : "Publicar frete"}
+            </button>
+          </div>
         )}
       </div>
     </AppShell>
@@ -837,4 +1003,33 @@ function KPI({ label, value, tone = "neutral" }: { label: string; value: string;
 
 function brl(n: number) {
   return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+function ReviewBlock({
+  title,
+  rows,
+  onEdit,
+}: {
+  title: string;
+  rows: Array<[string, string | number | null | undefined]>;
+  onEdit: () => void;
+}) {
+  return (
+    <div className="rounded-2xl border border-border bg-surface p-4">
+      <div className="mb-3 flex items-center justify-between">
+        <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">{title}</div>
+        <button onClick={onEdit} className="text-xs font-semibold text-brand hover:underline">
+          Editar
+        </button>
+      </div>
+      <dl className="space-y-1.5">
+        {rows.map(([k, v]) => (
+          <div key={k} className="flex justify-between gap-3 text-sm">
+            <dt className="text-muted-foreground">{k}</dt>
+            <dd className="truncate text-right font-medium">{v ? String(v) : "—"}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  );
 }
