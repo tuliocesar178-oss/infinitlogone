@@ -119,9 +119,16 @@ const EMPTY: Form = {
   cargo_notes: "",
   price: "", driver_price: "", toll: "", fuel: "", escort: "", license: "", other_costs: "",
   priority: "normal",
+  req_vehicle_type: "", req_body_type: "", req_capacity_kg: "", req_axles: "",
+  helpers_required: "nao", helpers_count: "", tracking_required: "sim", special_requirements: "",
+  cargo_product: "", cargo_package_type: "", cargo_dimensions: "", operation_type: "",
+  offer_minutes: "15",
 };
 
-const STEPS = ["Cliente", "Coleta", "Entrega", "Carga", "Custos", "Documentos"] as const;
+export const VEHICLE_TYPES = ["Fiorino", "Van", "VUC", "3/4", "Toco", "Truck", "Carreta", "Bitrem", "Rodotrem", "Outro"];
+export const BODY_TYPES = ["Baú", "Sider", "Aberta", "Graneleiro", "Frigorífica", "Tanque", "Prancha", "Outra"];
+
+const STEPS = ["Cliente", "Coleta", "Entrega", "Carga", "Veículo", "Valores", "Documentos", "Revisão"] as const;
 
 function combineDateTime(d: string, t: string): string | null {
   if (!d) return null;
