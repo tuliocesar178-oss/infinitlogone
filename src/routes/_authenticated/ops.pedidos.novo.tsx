@@ -837,7 +837,7 @@ function NewOrderWizard() {
           </>
         )}
 
-        {step === 5 && (
+        {step === 6 && (
           <div>
             <p className="text-sm text-muted-foreground">Anexe NF, CT-e, MDF-e, XML, fotos, PDF ou vídeos. Os arquivos ficam vinculados ao frete.</p>
             <label className="mt-4 flex cursor-pointer items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border bg-surface-2 px-6 py-10 hover:bg-accent">
