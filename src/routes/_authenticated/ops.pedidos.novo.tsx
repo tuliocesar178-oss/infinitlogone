@@ -477,12 +477,32 @@ function NewOrderWizard() {
 
       await supabase.from("order_events").insert({
         order_id: order.id, event_type: "order_created",
-        to_status: "preparing" as any, actor_id: u.user?.id ?? null,
+        to_status: (publish ? "awaiting_driver" : "planning") as any, actor_id: u.user?.id ?? null,
       });
+
+      let offersSent = 0;
+      if (publish) {
+        offersSent = await sendOffersToEligibleDrivers(order.id, {
+          price: num(f.driver_price) ?? num(f.price) ?? 0,
+          minutes: f.offer_minutes ? Number(f.offer_minutes) : 15,
+          vehicleType: f.req_vehicle_type,
+          capacityKg: num(f.req_capacity_kg),
+          code: order.code,
+        });
+        await supabase.from("order_events").insert({
+          order_id: order.id, event_type: "order_published",
+          to_status: "awaiting_driver" as any, actor_id: u.user?.id ?? null,
+          payload: { offers: offersSent } as any,
+        });
+      }
 
       const qr = await QRCode.toDataURL(trackingUrl(order.tracking_code), { margin: 1, width: 220 });
       setResult({ id: order.id, code: order.code, tracking_code: order.tracking_code, qr });
-      toast.success(`Frete ${order.code} cadastrado`);
+      toast.success(
+        publish
+          ? `Frete ${order.code} publicado — ${offersSent} motorista(s) notificado(s)`
+          : `Rascunho do frete ${order.code} salvo`,
+      );
     } catch (e: any) {
       console.error("Erro detalhado ao salvar frete:", e);
       const msg = e.message || (e.error_description) || "Erro desconhecido ao salvar frete";
