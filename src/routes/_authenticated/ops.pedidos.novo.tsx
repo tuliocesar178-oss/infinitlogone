@@ -8,6 +8,17 @@ import QRCode from "qrcode";
 import { shareMessage, trackingUrl } from "@/lib/order-status";
 import { MapboxAutocomplete, type MapboxLocation } from "@/components/mapbox-autocomplete";
 import { sendOffersToEligibleDrivers } from "@/lib/freight-publish";
+import {
+  ANTT_CARGO_CLASSES,
+  ANTT_CONTRACT_TYPES,
+  ANTT_OPERATION_TYPES,
+  ANTT_AXLE_OPTIONS,
+  calculateANTTMinimumFreight,
+  type AnttCalculation,
+  type AnttContractType,
+  type AnttOperationType,
+} from "@/lib/antt";
+import { AnttCard } from "@/components/freight/antt-card";
 
 const MAPBOX_TOKEN = import.meta.env.VITE_LOVABLE_CONNECTOR_MAPBOX_PUBLIC_TOKEN;
 
@@ -100,6 +111,12 @@ type Form = {
   cargo_dimensions: string;
   operation_type: string;
   offer_minutes: string;
+  // ANTT
+  antt_cargo_class: string;
+  antt_contract_type: string;
+  antt_operation_type: string;
+  antt_high_performance: string;
+  margin_amount: string;
 };
 
 const EMPTY: Form = {
@@ -124,6 +141,8 @@ const EMPTY: Form = {
   helpers_required: "nao", helpers_count: "", tracking_required: "sim", special_requirements: "",
   cargo_product: "", cargo_package_type: "", cargo_dimensions: "", operation_type: "",
   offer_minutes: "15",
+  antt_cargo_class: "carga_geral", antt_contract_type: "composicao",
+  antt_operation_type: "lotacao", antt_high_performance: "nao", margin_amount: "",
 };
 
 export const VEHICLE_TYPES = ["Fiorino", "Van", "VUC", "3/4", "Toco", "Truck", "Carreta", "Bitrem", "Rodotrem", "Outro"];
@@ -273,6 +292,58 @@ function NewOrderWizard() {
     calc();
   }, [f.origin_lat, f.origin_lng, f.destination_lat, f.destination_lng]);
 
+  // ---- Cálculo do piso mínimo ANTT (coeficientes vindos da tabela vigente) ----
+  const [antt, setAntt] = useState<AnttCalculation | null>(null);
+  const [anttLoading, setAnttLoading] = useState(false);
+  const anttDistance = routeInfo?.distance_km ?? 0;
+  const anttAxles = Number(f.req_axles) || 0;
+
+  useEffect(() => {
+    let cancelled = false;
+    async function run() {
+      if (!anttDistance || !anttAxles) {
+        setAntt(null);
+        return;
+      }
+      setAnttLoading(true);
+      try {
+        const res = await calculateANTTMinimumFreight({
+          distance_km: anttDistance,
+          cargo_class: f.antt_cargo_class,
+          axles: anttAxles,
+          contract_type: f.antt_contract_type as AnttContractType,
+          high_performance: f.antt_high_performance === "sim",
+          operation_type: f.antt_operation_type as AnttOperationType,
+        });
+        if (!cancelled) setAntt(res);
+      } finally {
+        if (!cancelled) setAnttLoading(false);
+      }
+    }
+    void run();
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    anttDistance,
+    anttAxles,
+    f.antt_cargo_class,
+    f.antt_contract_type,
+    f.antt_high_performance,
+    f.antt_operation_type,
+  ]);
+
+  const tolls = num(f.toll) ?? 0;
+  const extraCosts = (num(f.fuel) ?? 0) + (num(f.escort) ?? 0) + (num(f.license) ?? 0) + (num(f.other_costs) ?? 0);
+  const marginAmount = num(f.margin_amount) ?? 0;
+  const negotiated = num(f.driver_price) ?? num(f.price) ?? 0;
+  const suggestedValue = (antt?.minimum_freight ?? 0) + tolls + extraCosts + marginAmount;
+  const belowFloor =
+    !!antt?.applicable &&
+    antt.minimum_freight !== null &&
+    negotiated > 0 &&
+    negotiated < antt.minimum_freight;
+
   function handleLocationSelect(type: "origin" | "destination", loc: MapboxLocation) {
     if (type === "origin") {
       setF(s => ({
@@ -311,11 +382,34 @@ function NewOrderWizard() {
   async function save(publish: boolean) {
     const err = canAdvance();
     if (err) return toast.error(err);
+    // Bloqueio legal: não é permitido publicar carga lotação abaixo do piso mínimo ANTT.
+    if (publish && belowFloor && antt?.minimum_freight != null) {
+      return toast.error(
+        `Valor abaixo do piso mínimo ANTT (${brl(antt.minimum_freight)}). Ajuste o valor do motorista ou reclassifique a operação.`,
+      );
+    }
     setSaving(true);
     try {
       const { data: u } = await supabase.auth.getUser();
       const payload = {
         client_id: selectedClientId || null,
+        antt_applicable: antt?.applicable ?? null,
+        antt_not_applicable_reason: antt?.not_applicable_reason ?? null,
+        antt_cargo_class: f.antt_cargo_class || null,
+        antt_axles: Number(f.req_axles) || null,
+        antt_contract_type: f.antt_contract_type || null,
+        antt_high_performance: f.antt_high_performance === "sim",
+        antt_table: antt?.table ?? null,
+        antt_ccd: antt?.ccd ?? null,
+        antt_cc: antt?.cc ?? null,
+        antt_distance_km: antt?.distance_km ?? routeInfo?.distance_km ?? null,
+        antt_minimum_value: antt?.minimum_freight ?? null,
+        antt_resolution: antt?.regulation ?? null,
+        antt_effective_date: antt?.effective_from ?? null,
+        antt_calculated_at: antt?.status === "ok" ? antt.calculation_date : null,
+        antt_rate_table_id: antt?.rate_table_id ?? null,
+        suggested_value: suggestedValue > 0 ? suggestedValue : null,
+        margin_amount: marginAmount || null,
         client_name: f.client_name || null,
         contact_name: f.contact_name || null,
         contact_phone: f.contact_phone || null,
@@ -945,7 +1039,8 @@ function NewOrderWizard() {
               className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-5 py-2.5 text-sm font-semibold hover:bg-accent disabled:opacity-60">
               Salvar rascunho
             </button>
-            <button onClick={() => void save(true)} disabled={saving}
+            <button onClick={() => void save(true)} disabled={saving || belowFloor}
+              title={belowFloor ? "Valor abaixo do piso mínimo ANTT" : undefined}
               className="inline-flex items-center gap-2 rounded-full bg-brand px-6 py-2.5 text-sm font-semibold text-brand-foreground hover:opacity-90 disabled:opacity-60">
               <Check className="h-4 w-4" /> {saving ? "Publicando…" : "Publicar frete"}
             </button>
