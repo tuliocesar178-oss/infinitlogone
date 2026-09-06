@@ -307,7 +307,7 @@ function NewOrderWizard() {
   }
   function prev() { setStep((s) => Math.max(s - 1, 0)); }
 
-  async function save() {
+  async function save(publish: boolean) {
     const err = canAdvance();
     if (err) return toast.error(err);
     setSaving(true);
