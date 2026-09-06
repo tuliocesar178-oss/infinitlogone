@@ -885,9 +885,50 @@ function NewOrderWizard() {
             </ul>
           </div>
         )}
+
+        {step === 7 && (
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Revise as informações antes de publicar. Ao publicar, o frete fica com status
+              <strong className="text-foreground"> Aguardando Motorista</strong> e a oferta é enviada aos motoristas elegíveis.
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <ReviewBlock title="Cliente" onEdit={() => setStep(0)} rows={[
+                ["Cliente", f.client_name],
+                ["Contato", f.contact_name],
+                ["Telefone", f.contact_phone],
+              ]} />
+              <ReviewBlock title="Coleta" onEdit={() => setStep(1)} rows={[
+                ["Endereço", f.origin_address],
+                ["Cidade/UF", `${f.origin_city} ${f.origin_state}`],
+                ["Data", `${f.pickup_date} ${f.pickup_time}`],
+              ]} />
+              <ReviewBlock title="Entrega" onEdit={() => setStep(2)} rows={[
+                ["Endereço", f.destination_address],
+                ["Cidade/UF", `${f.destination_city} ${f.destination_state}`],
+                ["Data", `${f.delivery_date} ${f.delivery_time}`],
+              ]} />
+              <ReviewBlock title="Carga" onEdit={() => setStep(3)} rows={[
+                ["Produto", f.cargo_product || f.cargo_description],
+                ["Peso", f.cargo_weight_kg ? `${f.cargo_weight_kg} kg` : ""],
+                ["Volumes", f.volumes],
+              ]} />
+              <ReviewBlock title="Veículo" onEdit={() => setStep(4)} rows={[
+                ["Tipo", f.req_vehicle_type || "Indiferente"],
+                ["Carroceria", f.req_body_type || "Indiferente"],
+                ["Rastreamento", f.tracking_required === "sim" ? "Sim" : "Não"],
+              ]} />
+              <ReviewBlock title="Valores" onEdit={() => setStep(5)} rows={[
+                ["Cliente", brl(num(f.price) ?? 0)],
+                ["Motorista", brl(num(f.driver_price) ?? 0)],
+                ["Margem", `${margin.toFixed(1)}%`],
+              ]} />
+            </div>
+          </div>
+        )}
       </div>
 
-      <div className="mt-6 flex items-center justify-between">
+      <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
         <button onClick={prev} disabled={step === 0}
           className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-5 py-2.5 text-sm font-semibold hover:bg-accent disabled:opacity-40">
           <ArrowLeft className="h-4 w-4" /> Voltar
@@ -898,10 +939,16 @@ function NewOrderWizard() {
             Avançar <ArrowRight className="h-4 w-4" />
           </button>
         ) : (
-          <button onClick={save} disabled={saving}
-            className="inline-flex items-center gap-2 rounded-full bg-brand px-6 py-2.5 text-sm font-semibold text-brand-foreground hover:opacity-90 disabled:opacity-60">
-            <Check className="h-4 w-4" /> {saving ? "Salvando…" : "Salvar frete"}
-          </button>
+          <div className="flex flex-wrap items-center gap-3">
+            <button onClick={() => void save(false)} disabled={saving}
+              className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-5 py-2.5 text-sm font-semibold hover:bg-accent disabled:opacity-60">
+              Salvar rascunho
+            </button>
+            <button onClick={() => void save(true)} disabled={saving}
+              className="inline-flex items-center gap-2 rounded-full bg-brand px-6 py-2.5 text-sm font-semibold text-brand-foreground hover:opacity-90 disabled:opacity-60">
+              <Check className="h-4 w-4" /> {saving ? "Publicando…" : "Publicar frete"}
+            </button>
+          </div>
         )}
       </div>
     </AppShell>
