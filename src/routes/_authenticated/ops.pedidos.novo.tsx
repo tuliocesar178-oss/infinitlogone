@@ -1004,3 +1004,32 @@ function KPI({ label, value, tone = "neutral" }: { label: string; value: string;
 function brl(n: number) {
   return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
+
+function ReviewBlock({
+  title,
+  rows,
+  onEdit,
+}: {
+  title: string;
+  rows: Array<[string, string | number | null | undefined]>;
+  onEdit: () => void;
+}) {
+  return (
+    <div className="rounded-2xl border border-border bg-surface p-4">
+      <div className="mb-3 flex items-center justify-between">
+        <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">{title}</div>
+        <button onClick={onEdit} className="text-xs font-semibold text-brand hover:underline">
+          Editar
+        </button>
+      </div>
+      <dl className="space-y-1.5">
+        {rows.map(([k, v]) => (
+          <div key={k} className="flex justify-between gap-3 text-sm">
+            <dt className="text-muted-foreground">{k}</dt>
+            <dd className="truncate text-right font-medium">{v ? String(v) : "—"}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  );
+}
