@@ -361,12 +361,41 @@ function NewOrderWizard() {
         delivery_franchise_minutes: f.delivery_franchise_minutes ? Number(f.delivery_franchise_minutes) : null,
         priority: f.priority,
         notes: [f.client_notes, f.cargo_notes].filter(Boolean).join("\n\n") || null,
-        status: "preparing" as any,
+        status: (publish ? "awaiting_driver" : "planning") as any,
+        published_at: publish ? new Date().toISOString() : null,
         created_by: u.user?.id ?? null,
         distance_km: routeInfo?.distance_km ?? null,
         estimated_minutes: routeInfo?.duration_minutes ?? null,
         route_geometry: routeInfo?.geometry ?? null,
         estimated_tolls: num(f.toll),
+        // Carga complementar
+        cargo_product: f.cargo_product || null,
+        cargo_package_type: f.cargo_package_type || null,
+        cargo_dimensions: f.cargo_dimensions || null,
+        purchase_order: f.purchase_order || null,
+        operation_type: f.operation_type || null,
+        // Veículo exigido
+        required_vehicle_type: f.req_vehicle_type || null,
+        required_body_type: f.req_body_type || null,
+        required_capacity_kg: num(f.req_capacity_kg),
+        required_axles: f.req_axles ? Number(f.req_axles) : null,
+        helpers_required: f.helpers_required === "sim",
+        helpers_count: f.helpers_count ? Number(f.helpers_count) : null,
+        tracking_required: f.tracking_required !== "nao",
+        special_requirements: f.special_requirements || null,
+        // Financeiro
+        fuel_cost: num(f.fuel),
+        other_costs: num(f.other_costs),
+        driver_amount: num(f.driver_price),
+        client_amount: num(f.price),
+        offer_expires_minutes: f.offer_minutes ? Number(f.offer_minutes) : 15,
+        // Contatos
+        pickup_contact_name: f.pickup_contact || null,
+        pickup_phone: f.pickup_phone || f.pickup_whatsapp || null,
+        pickup_whatsapp: f.pickup_whatsapp || null,
+        delivery_contact_name: f.delivery_contact || null,
+        delivery_phone: f.delivery_phone || f.delivery_whatsapp || null,
+        delivery_whatsapp: f.delivery_whatsapp || null,
       };
       const { data: order, error } = await supabase
         .from("orders").insert(payload).select("id, code, tracking_code").single();
