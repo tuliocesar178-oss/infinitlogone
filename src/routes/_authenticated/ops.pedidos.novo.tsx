@@ -727,13 +727,18 @@ function NewOrderWizard() {
 
         {step === 3 && (
           <Grid>
+            <T label="Tipo de carga" value={f.cargo_type} onChange={(v) => set("cargo_type", v)} />
+            <T label="Produto" value={f.cargo_product} onChange={(v) => set("cargo_product", v)} />
             <T label="Peso (kg)" type="number" value={f.cargo_weight_kg} onChange={(v) => set("cargo_weight_kg", v)} />
-            <T label="Volumes" type="number" value={f.volumes} onChange={(v) => set("volumes", v)} />
-            <T label="Cubagem (m³)" type="number" value={f.cargo_volume_m3} onChange={(v) => set("cargo_volume_m3", v)} />
-            <T label="Tipo" value={f.cargo_type} onChange={(v) => set("cargo_type", v)} />
-            <T label="Produto" value={f.cargo_description} onChange={(v) => set("cargo_description", v)} full />
+            <T label="Unidade / cubagem (m³)" type="number" value={f.cargo_volume_m3} onChange={(v) => set("cargo_volume_m3", v)} />
+            <T label="Quantidade de volumes" type="number" value={f.volumes} onChange={(v) => set("volumes", v)} />
+            <T label="Tipo de volume" value={f.cargo_package_type} onChange={(v) => set("cargo_package_type", v)} />
+            <T label="Dimensões (C x L x A)" value={f.cargo_dimensions} onChange={(v) => set("cargo_dimensions", v)} />
+            <T label="Tipo de operação" value={f.operation_type} onChange={(v) => set("operation_type", v)} />
+            <T label="Descrição da carga" value={f.cargo_description} onChange={(v) => set("cargo_description", v)} full />
             <T label="Valor da nota fiscal" type="number" value={f.invoice_value} onChange={(v) => set("invoice_value", v)} />
             <T label="Nº da nota fiscal" value={f.invoice_number} onChange={(v) => set("invoice_number", v)} />
+            <T label="Nº do pedido / OC" value={f.purchase_order} onChange={(v) => set("purchase_order", v)} />
             <T label="CT-e" value={f.cte_number} onChange={(v) => set("cte_number", v)} />
             <T label="MDF-e" value={f.mdfe_number} onChange={(v) => set("mdfe_number", v)} />
             <T label="Observações" value={f.cargo_notes} onChange={(v) => set("cargo_notes", v)} full />
@@ -741,6 +746,48 @@ function NewOrderWizard() {
         )}
 
         {step === 4 && (
+          <Grid>
+            <label className="block">
+              <span className="mb-1.5 block text-xs font-medium uppercase tracking-widest text-muted-foreground">Tipo de veículo</span>
+              <select value={f.req_vehicle_type} onChange={(e) => set("req_vehicle_type", e.target.value)}
+                className="h-11 w-full rounded-xl border border-border bg-surface px-3 text-sm outline-none focus:border-brand">
+                <option value="">Indiferente</option>
+                {VEHICLE_TYPES.map((v) => <option key={v} value={v}>{v}</option>)}
+              </select>
+            </label>
+            <label className="block">
+              <span className="mb-1.5 block text-xs font-medium uppercase tracking-widest text-muted-foreground">Tipo de carroceria</span>
+              <select value={f.req_body_type} onChange={(e) => set("req_body_type", e.target.value)}
+                className="h-11 w-full rounded-xl border border-border bg-surface px-3 text-sm outline-none focus:border-brand">
+                <option value="">Indiferente</option>
+                {BODY_TYPES.map((v) => <option key={v} value={v}>{v}</option>)}
+              </select>
+            </label>
+            <T label="Capacidade mínima (kg)" type="number" value={f.req_capacity_kg} onChange={(v) => set("req_capacity_kg", v)} />
+            <T label="Quantidade de eixos" type="number" value={f.req_axles} onChange={(v) => set("req_axles", v)} />
+            <label className="block">
+              <span className="mb-1.5 block text-xs font-medium uppercase tracking-widest text-muted-foreground">Necessita ajudante?</span>
+              <select value={f.helpers_required} onChange={(e) => set("helpers_required", e.target.value)}
+                className="h-11 w-full rounded-xl border border-border bg-surface px-3 text-sm outline-none focus:border-brand">
+                <option value="nao">Não</option>
+                <option value="sim">Sim</option>
+              </select>
+            </label>
+            <T label="Quantidade de ajudantes" type="number" value={f.helpers_count} onChange={(v) => set("helpers_count", v)} />
+            <label className="block">
+              <span className="mb-1.5 block text-xs font-medium uppercase tracking-widest text-muted-foreground">Necessita rastreamento?</span>
+              <select value={f.tracking_required} onChange={(e) => set("tracking_required", e.target.value)}
+                className="h-11 w-full rounded-xl border border-border bg-surface px-3 text-sm outline-none focus:border-brand">
+                <option value="sim">Sim</option>
+                <option value="nao">Não</option>
+              </select>
+            </label>
+            <T label="Validade da oferta (min)" type="number" value={f.offer_minutes} onChange={(v) => set("offer_minutes", v)} />
+            <T label="Exigências especiais" value={f.special_requirements} onChange={(v) => set("special_requirements", v)} full />
+          </Grid>
+        )}
+
+        {step === 5 && (
           <>
             <Grid>
               <T label="Valor negociado com cliente (R$)" required type="number" value={f.price} onChange={(v) => set("price", v)} />
