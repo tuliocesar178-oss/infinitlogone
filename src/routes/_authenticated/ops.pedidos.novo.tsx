@@ -1039,7 +1039,8 @@ function NewOrderWizard() {
               className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-5 py-2.5 text-sm font-semibold hover:bg-accent disabled:opacity-60">
               Salvar rascunho
             </button>
-            <button onClick={() => void save(true)} disabled={saving}
+            <button onClick={() => void save(true)} disabled={saving || belowFloor}
+              title={belowFloor ? "Valor abaixo do piso mínimo ANTT" : undefined}
               className="inline-flex items-center gap-2 rounded-full bg-brand px-6 py-2.5 text-sm font-semibold text-brand-foreground hover:opacity-90 disabled:opacity-60">
               <Check className="h-4 w-4" /> {saving ? "Publicando…" : "Publicar frete"}
             </button>
