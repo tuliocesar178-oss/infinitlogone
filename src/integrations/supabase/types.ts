@@ -56,6 +56,95 @@ export type Database = {
         }
         Relationships: []
       }
+      antt_freight_rates: {
+        Row: {
+          cc: number
+          ccd: number
+          codigo_tipo_carga: string
+          created_at: string
+          eixos: number
+          id: string
+          tabela: string
+          table_id: string
+          tipo_carga: string
+          updated_at: string
+        }
+        Insert: {
+          cc?: number
+          ccd: number
+          codigo_tipo_carga: string
+          created_at?: string
+          eixos: number
+          id?: string
+          tabela: string
+          table_id: string
+          tipo_carga: string
+          updated_at?: string
+        }
+        Update: {
+          cc?: number
+          ccd?: number
+          codigo_tipo_carga?: string
+          created_at?: string
+          eixos?: number
+          id?: string
+          tabela?: string
+          table_id?: string
+          tipo_carga?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "antt_freight_rates_table_id_fkey"
+            columns: ["table_id"]
+            isOneToOne: false
+            referencedRelation: "antt_rate_tables"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      antt_rate_tables: {
+        Row: {
+          active: boolean
+          anexo: string | null
+          created_at: string
+          created_by: string | null
+          fonte: string | null
+          id: string
+          notes: string | null
+          resolucao: string
+          updated_at: string
+          vigencia_fim: string | null
+          vigencia_inicio: string
+        }
+        Insert: {
+          active?: boolean
+          anexo?: string | null
+          created_at?: string
+          created_by?: string | null
+          fonte?: string | null
+          id?: string
+          notes?: string | null
+          resolucao: string
+          updated_at?: string
+          vigencia_fim?: string | null
+          vigencia_inicio: string
+        }
+        Update: {
+          active?: boolean
+          anexo?: string | null
+          created_at?: string
+          created_by?: string | null
+          fonte?: string | null
+          id?: string
+          notes?: string | null
+          resolucao?: string
+          updated_at?: string
+          vigencia_fim?: string | null
+          vigencia_inicio?: string
+        }
+        Relationships: []
+      }
       app_settings: {
         Row: {
           key: string
@@ -1162,6 +1251,47 @@ export type Database = {
           },
         ]
       }
+      order_field_changes: {
+        Row: {
+          actor_id: string | null
+          actor_name: string | null
+          created_at: string
+          field: string
+          id: string
+          new_value: string | null
+          old_value: string | null
+          order_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          actor_name?: string | null
+          created_at?: string
+          field: string
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          order_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          actor_name?: string | null
+          created_at?: string
+          field?: string
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_field_changes_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_tracking_points: {
         Row: {
           accuracy: number | null
@@ -1211,6 +1341,21 @@ export type Database = {
       }
       orders: {
         Row: {
+          antt_applicable: boolean | null
+          antt_axles: number | null
+          antt_calculated_at: string | null
+          antt_cargo_class: string | null
+          antt_cc: number | null
+          antt_ccd: number | null
+          antt_contract_type: string | null
+          antt_distance_km: number | null
+          antt_effective_date: string | null
+          antt_high_performance: boolean
+          antt_minimum_value: number | null
+          antt_not_applicable_reason: string | null
+          antt_rate_table_id: string | null
+          antt_resolution: string | null
+          antt_table: string | null
           approach_notified_at: string | null
           arrival_detected_at: string | null
           arrival_override_at: string | null
@@ -1273,6 +1418,7 @@ export type Database = {
           invoice_url: string | null
           invoice_value: number | null
           last_ping_at: string | null
+          margin_amount: number | null
           mdfe_number: string | null
           near_notified_at: string | null
           notes: string | null
@@ -1313,6 +1459,7 @@ export type Database = {
           started_at: string | null
           started_trip_at: string | null
           status: Database["public"]["Enums"]["order_status"]
+          suggested_value: number | null
           tracking_code: string
           tracking_required: boolean
           updated_at: string
@@ -1320,6 +1467,21 @@ export type Database = {
           volumes: number | null
         }
         Insert: {
+          antt_applicable?: boolean | null
+          antt_axles?: number | null
+          antt_calculated_at?: string | null
+          antt_cargo_class?: string | null
+          antt_cc?: number | null
+          antt_ccd?: number | null
+          antt_contract_type?: string | null
+          antt_distance_km?: number | null
+          antt_effective_date?: string | null
+          antt_high_performance?: boolean
+          antt_minimum_value?: number | null
+          antt_not_applicable_reason?: string | null
+          antt_rate_table_id?: string | null
+          antt_resolution?: string | null
+          antt_table?: string | null
           approach_notified_at?: string | null
           arrival_detected_at?: string | null
           arrival_override_at?: string | null
@@ -1382,6 +1544,7 @@ export type Database = {
           invoice_url?: string | null
           invoice_value?: number | null
           last_ping_at?: string | null
+          margin_amount?: number | null
           mdfe_number?: string | null
           near_notified_at?: string | null
           notes?: string | null
@@ -1422,6 +1585,7 @@ export type Database = {
           started_at?: string | null
           started_trip_at?: string | null
           status?: Database["public"]["Enums"]["order_status"]
+          suggested_value?: number | null
           tracking_code?: string
           tracking_required?: boolean
           updated_at?: string
@@ -1429,6 +1593,21 @@ export type Database = {
           volumes?: number | null
         }
         Update: {
+          antt_applicable?: boolean | null
+          antt_axles?: number | null
+          antt_calculated_at?: string | null
+          antt_cargo_class?: string | null
+          antt_cc?: number | null
+          antt_ccd?: number | null
+          antt_contract_type?: string | null
+          antt_distance_km?: number | null
+          antt_effective_date?: string | null
+          antt_high_performance?: boolean
+          antt_minimum_value?: number | null
+          antt_not_applicable_reason?: string | null
+          antt_rate_table_id?: string | null
+          antt_resolution?: string | null
+          antt_table?: string | null
           approach_notified_at?: string | null
           arrival_detected_at?: string | null
           arrival_override_at?: string | null
@@ -1491,6 +1670,7 @@ export type Database = {
           invoice_url?: string | null
           invoice_value?: number | null
           last_ping_at?: string | null
+          margin_amount?: number | null
           mdfe_number?: string | null
           near_notified_at?: string | null
           notes?: string | null
@@ -1531,6 +1711,7 @@ export type Database = {
           started_at?: string | null
           started_trip_at?: string | null
           status?: Database["public"]["Enums"]["order_status"]
+          suggested_value?: number | null
           tracking_code?: string
           tracking_required?: boolean
           updated_at?: string
@@ -1538,6 +1719,13 @@ export type Database = {
           volumes?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "orders_antt_rate_table_id_fkey"
+            columns: ["antt_rate_table_id"]
+            isOneToOne: false
+            referencedRelation: "antt_rate_tables"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "orders_client_id_fkey"
             columns: ["client_id"]

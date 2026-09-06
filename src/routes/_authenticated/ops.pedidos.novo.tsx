@@ -8,6 +8,17 @@ import QRCode from "qrcode";
 import { shareMessage, trackingUrl } from "@/lib/order-status";
 import { MapboxAutocomplete, type MapboxLocation } from "@/components/mapbox-autocomplete";
 import { sendOffersToEligibleDrivers } from "@/lib/freight-publish";
+import {
+  ANTT_CARGO_CLASSES,
+  ANTT_CONTRACT_TYPES,
+  ANTT_OPERATION_TYPES,
+  ANTT_AXLE_OPTIONS,
+  calculateANTTMinimumFreight,
+  type AnttCalculation,
+  type AnttContractType,
+  type AnttOperationType,
+} from "@/lib/antt";
+import { AnttCard } from "@/components/freight/antt-card";
 
 const MAPBOX_TOKEN = import.meta.env.VITE_LOVABLE_CONNECTOR_MAPBOX_PUBLIC_TOKEN;
 
@@ -100,6 +111,12 @@ type Form = {
   cargo_dimensions: string;
   operation_type: string;
   offer_minutes: string;
+  // ANTT
+  antt_cargo_class: string;
+  antt_contract_type: string;
+  antt_operation_type: string;
+  antt_high_performance: string;
+  margin_amount: string;
 };
 
 const EMPTY: Form = {
@@ -124,6 +141,8 @@ const EMPTY: Form = {
   helpers_required: "nao", helpers_count: "", tracking_required: "sim", special_requirements: "",
   cargo_product: "", cargo_package_type: "", cargo_dimensions: "", operation_type: "",
   offer_minutes: "15",
+  antt_cargo_class: "carga_geral", antt_contract_type: "composicao",
+  antt_operation_type: "lotacao", antt_high_performance: "nao", margin_amount: "",
 };
 
 export const VEHICLE_TYPES = ["Fiorino", "Van", "VUC", "3/4", "Toco", "Truck", "Carreta", "Bitrem", "Rodotrem", "Outro"];
@@ -272,6 +291,58 @@ function NewOrderWizard() {
     }
     calc();
   }, [f.origin_lat, f.origin_lng, f.destination_lat, f.destination_lng]);
+
+  // ---- Cálculo do piso mínimo ANTT (coeficientes vindos da tabela vigente) ----
+  const [antt, setAntt] = useState<AnttCalculation | null>(null);
+  const [anttLoading, setAnttLoading] = useState(false);
+  const anttDistance = routeInfo?.distance_km ?? 0;
+  const anttAxles = Number(f.req_axles) || 0;
+
+  useEffect(() => {
+    let cancelled = false;
+    async function run() {
+      if (!anttDistance || !anttAxles) {
+        setAntt(null);
+        return;
+      }
+      setAnttLoading(true);
+      try {
+        const res = await calculateANTTMinimumFreight({
+          distance_km: anttDistance,
+          cargo_class: f.antt_cargo_class,
+          axles: anttAxles,
+          contract_type: f.antt_contract_type as AnttContractType,
+          high_performance: f.antt_high_performance === "sim",
+          operation_type: f.antt_operation_type as AnttOperationType,
+        });
+        if (!cancelled) setAntt(res);
+      } finally {
+        if (!cancelled) setAnttLoading(false);
+      }
+    }
+    void run();
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    anttDistance,
+    anttAxles,
+    f.antt_cargo_class,
+    f.antt_contract_type,
+    f.antt_high_performance,
+    f.antt_operation_type,
+  ]);
+
+  const tolls = num(f.toll) ?? 0;
+  const extraCosts = (num(f.fuel) ?? 0) + (num(f.escort) ?? 0) + (num(f.license) ?? 0) + (num(f.other_costs) ?? 0);
+  const marginAmount = num(f.margin_amount) ?? 0;
+  const negotiated = num(f.driver_price) ?? num(f.price) ?? 0;
+  const suggestedValue = (antt?.minimum_freight ?? 0) + tolls + extraCosts + marginAmount;
+  const belowFloor =
+    !!antt?.applicable &&
+    antt.minimum_freight !== null &&
+    negotiated > 0 &&
+    negotiated < antt.minimum_freight;
 
   function handleLocationSelect(type: "origin" | "destination", loc: MapboxLocation) {
     if (type === "origin") {
