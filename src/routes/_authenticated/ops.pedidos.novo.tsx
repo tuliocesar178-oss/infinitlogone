@@ -238,7 +238,7 @@ function NewOrderWizard() {
     if (step === 0 && !f.client_name.trim()) return "Informe o nome do cliente";
     if (step === 1 && !f.origin_address.trim()) return "Informe o endereço de coleta";
     if (step === 2 && !f.destination_address.trim()) return "Informe o endereço de entrega";
-    if (step === 4 && !f.price) return "Informe o valor negociado com o cliente";
+    if (step === 5 && !f.price) return "Informe o valor cobrado do cliente";
     return null;
   }
 
