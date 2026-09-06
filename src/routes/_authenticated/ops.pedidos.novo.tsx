@@ -382,11 +382,34 @@ function NewOrderWizard() {
   async function save(publish: boolean) {
     const err = canAdvance();
     if (err) return toast.error(err);
+    // Bloqueio legal: não é permitido publicar carga lotação abaixo do piso mínimo ANTT.
+    if (publish && belowFloor && antt?.minimum_freight != null) {
+      return toast.error(
+        `Valor abaixo do piso mínimo ANTT (${brl(antt.minimum_freight)}). Ajuste o valor do motorista ou reclassifique a operação.`,
+      );
+    }
     setSaving(true);
     try {
       const { data: u } = await supabase.auth.getUser();
       const payload = {
         client_id: selectedClientId || null,
+        antt_applicable: antt?.applicable ?? null,
+        antt_not_applicable_reason: antt?.not_applicable_reason ?? null,
+        antt_cargo_class: f.antt_cargo_class || null,
+        antt_axles: Number(f.req_axles) || null,
+        antt_contract_type: f.antt_contract_type || null,
+        antt_high_performance: f.antt_high_performance === "sim",
+        antt_table: antt?.table ?? null,
+        antt_ccd: antt?.ccd ?? null,
+        antt_cc: antt?.cc ?? null,
+        antt_distance_km: antt?.distance_km ?? routeInfo?.distance_km ?? null,
+        antt_minimum_value: antt?.minimum_freight ?? null,
+        antt_resolution: antt?.regulation ?? null,
+        antt_effective_date: antt?.effective_from ?? null,
+        antt_calculated_at: antt?.status === "ok" ? antt.calculation_date : null,
+        antt_rate_table_id: antt?.rate_table_id ?? null,
+        suggested_value: suggestedValue > 0 ? suggestedValue : null,
+        margin_amount: marginAmount || null,
         client_name: f.client_name || null,
         contact_name: f.contact_name || null,
         contact_phone: f.contact_phone || null,
