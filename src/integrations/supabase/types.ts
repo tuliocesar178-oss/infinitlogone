@@ -1217,11 +1217,15 @@ export type Database = {
           arrival_override_by: string | null
           arrived_at: string | null
           cargo_description: string | null
+          cargo_dimensions: string | null
+          cargo_package_type: string | null
+          cargo_product: string | null
           cargo_type: string | null
           cargo_value: number | null
           cargo_value_declared: number | null
           cargo_volume_m3: number | null
           cargo_weight_kg: number | null
+          client_amount: number | null
           client_id: string | null
           client_name: string | null
           code: string
@@ -1235,9 +1239,12 @@ export type Database = {
           current_lat: number | null
           current_lng: number | null
           deleted_at: string | null
+          delivery_contact_name: string | null
           delivery_dock: string | null
           delivery_franchise_minutes: number | null
           delivery_gate: string | null
+          delivery_instructions: string | null
+          delivery_phone: string | null
           delivery_reference: string | null
           delivery_whatsapp: string | null
           delivery_window_end: string | null
@@ -1252,10 +1259,14 @@ export type Database = {
           destination_zip: string | null
           distance_km: number | null
           distance_to_destination_km: number | null
+          driver_amount: number | null
           driver_id: string | null
           estimated_minutes: number | null
           estimated_tolls: number | null
           eta_minutes: number | null
+          fuel_cost: number | null
+          helpers_count: number | null
+          helpers_required: boolean
           id: string
           initial_distance_km: number | null
           invoice_number: string | null
@@ -1265,6 +1276,8 @@ export type Database = {
           mdfe_number: string | null
           near_notified_at: string | null
           notes: string | null
+          offer_expires_minutes: number
+          operation_type: string | null
           origin_address: string
           origin_city: string | null
           origin_lat: number | null
@@ -1273,10 +1286,13 @@ export type Database = {
           origin_number: string | null
           origin_state: string | null
           origin_zip: string | null
+          other_costs: number | null
+          pickup_contact_name: string | null
           pickup_dock: string | null
           pickup_franchise_minutes: number | null
           pickup_gate: string | null
           pickup_instructions: string | null
+          pickup_phone: string | null
           pickup_phone_name: string | null
           pickup_reference: string | null
           pickup_whatsapp: string | null
@@ -1284,13 +1300,21 @@ export type Database = {
           pickup_window_start: string | null
           price: number | null
           priority: string
+          published_at: string | null
+          purchase_order: string | null
+          required_axles: number | null
+          required_body_type: string | null
+          required_capacity_kg: number | null
+          required_vehicle_type: string | null
           route_geometry: string | null
           route_highways: string | null
           scheduled_at: string | null
+          special_requirements: string | null
           started_at: string | null
           started_trip_at: string | null
           status: Database["public"]["Enums"]["order_status"]
           tracking_code: string
+          tracking_required: boolean
           updated_at: string
           vehicle_id: string | null
           volumes: number | null
@@ -1302,11 +1326,15 @@ export type Database = {
           arrival_override_by?: string | null
           arrived_at?: string | null
           cargo_description?: string | null
+          cargo_dimensions?: string | null
+          cargo_package_type?: string | null
+          cargo_product?: string | null
           cargo_type?: string | null
           cargo_value?: number | null
           cargo_value_declared?: number | null
           cargo_volume_m3?: number | null
           cargo_weight_kg?: number | null
+          client_amount?: number | null
           client_id?: string | null
           client_name?: string | null
           code?: string
@@ -1320,9 +1348,12 @@ export type Database = {
           current_lat?: number | null
           current_lng?: number | null
           deleted_at?: string | null
+          delivery_contact_name?: string | null
           delivery_dock?: string | null
           delivery_franchise_minutes?: number | null
           delivery_gate?: string | null
+          delivery_instructions?: string | null
+          delivery_phone?: string | null
           delivery_reference?: string | null
           delivery_whatsapp?: string | null
           delivery_window_end?: string | null
@@ -1337,10 +1368,14 @@ export type Database = {
           destination_zip?: string | null
           distance_km?: number | null
           distance_to_destination_km?: number | null
+          driver_amount?: number | null
           driver_id?: string | null
           estimated_minutes?: number | null
           estimated_tolls?: number | null
           eta_minutes?: number | null
+          fuel_cost?: number | null
+          helpers_count?: number | null
+          helpers_required?: boolean
           id?: string
           initial_distance_km?: number | null
           invoice_number?: string | null
@@ -1350,6 +1385,8 @@ export type Database = {
           mdfe_number?: string | null
           near_notified_at?: string | null
           notes?: string | null
+          offer_expires_minutes?: number
+          operation_type?: string | null
           origin_address: string
           origin_city?: string | null
           origin_lat?: number | null
@@ -1358,10 +1395,13 @@ export type Database = {
           origin_number?: string | null
           origin_state?: string | null
           origin_zip?: string | null
+          other_costs?: number | null
+          pickup_contact_name?: string | null
           pickup_dock?: string | null
           pickup_franchise_minutes?: number | null
           pickup_gate?: string | null
           pickup_instructions?: string | null
+          pickup_phone?: string | null
           pickup_phone_name?: string | null
           pickup_reference?: string | null
           pickup_whatsapp?: string | null
@@ -1369,13 +1409,21 @@ export type Database = {
           pickup_window_start?: string | null
           price?: number | null
           priority?: string
+          published_at?: string | null
+          purchase_order?: string | null
+          required_axles?: number | null
+          required_body_type?: string | null
+          required_capacity_kg?: number | null
+          required_vehicle_type?: string | null
           route_geometry?: string | null
           route_highways?: string | null
           scheduled_at?: string | null
+          special_requirements?: string | null
           started_at?: string | null
           started_trip_at?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           tracking_code?: string
+          tracking_required?: boolean
           updated_at?: string
           vehicle_id?: string | null
           volumes?: number | null
@@ -1387,11 +1435,15 @@ export type Database = {
           arrival_override_by?: string | null
           arrived_at?: string | null
           cargo_description?: string | null
+          cargo_dimensions?: string | null
+          cargo_package_type?: string | null
+          cargo_product?: string | null
           cargo_type?: string | null
           cargo_value?: number | null
           cargo_value_declared?: number | null
           cargo_volume_m3?: number | null
           cargo_weight_kg?: number | null
+          client_amount?: number | null
           client_id?: string | null
           client_name?: string | null
           code?: string
@@ -1405,9 +1457,12 @@ export type Database = {
           current_lat?: number | null
           current_lng?: number | null
           deleted_at?: string | null
+          delivery_contact_name?: string | null
           delivery_dock?: string | null
           delivery_franchise_minutes?: number | null
           delivery_gate?: string | null
+          delivery_instructions?: string | null
+          delivery_phone?: string | null
           delivery_reference?: string | null
           delivery_whatsapp?: string | null
           delivery_window_end?: string | null
@@ -1422,10 +1477,14 @@ export type Database = {
           destination_zip?: string | null
           distance_km?: number | null
           distance_to_destination_km?: number | null
+          driver_amount?: number | null
           driver_id?: string | null
           estimated_minutes?: number | null
           estimated_tolls?: number | null
           eta_minutes?: number | null
+          fuel_cost?: number | null
+          helpers_count?: number | null
+          helpers_required?: boolean
           id?: string
           initial_distance_km?: number | null
           invoice_number?: string | null
@@ -1435,6 +1494,8 @@ export type Database = {
           mdfe_number?: string | null
           near_notified_at?: string | null
           notes?: string | null
+          offer_expires_minutes?: number
+          operation_type?: string | null
           origin_address?: string
           origin_city?: string | null
           origin_lat?: number | null
@@ -1443,10 +1504,13 @@ export type Database = {
           origin_number?: string | null
           origin_state?: string | null
           origin_zip?: string | null
+          other_costs?: number | null
+          pickup_contact_name?: string | null
           pickup_dock?: string | null
           pickup_franchise_minutes?: number | null
           pickup_gate?: string | null
           pickup_instructions?: string | null
+          pickup_phone?: string | null
           pickup_phone_name?: string | null
           pickup_reference?: string | null
           pickup_whatsapp?: string | null
@@ -1454,13 +1518,21 @@ export type Database = {
           pickup_window_start?: string | null
           price?: number | null
           priority?: string
+          published_at?: string | null
+          purchase_order?: string | null
+          required_axles?: number | null
+          required_body_type?: string | null
+          required_capacity_kg?: number | null
+          required_vehicle_type?: string | null
           route_geometry?: string | null
           route_highways?: string | null
           scheduled_at?: string | null
+          special_requirements?: string | null
           started_at?: string | null
           started_trip_at?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           tracking_code?: string
+          tracking_required?: boolean
           updated_at?: string
           vehicle_id?: string | null
           volumes?: number | null
@@ -2040,9 +2112,17 @@ export type Database = {
       }
     }
     Functions: {
+      accept_freight_offer: {
+        Args: { _lat?: number; _lng?: number; _offer_id: string }
+        Returns: Json
+      }
       can_access_order_chat: {
         Args: { _order_id: string; _user_id: string }
         Returns: boolean
+      }
+      decline_freight_offer: {
+        Args: { _offer_id: string; _reason?: string }
+        Returns: Json
       }
       finalize_route: { Args: { _order_id: string }; Returns: undefined }
       generate_pf_code: { Args: never; Returns: string }
