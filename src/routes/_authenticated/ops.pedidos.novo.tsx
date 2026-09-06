@@ -7,6 +7,7 @@ import { ArrowLeft, ArrowRight, Check, Upload, X, Copy, MessageCircle, Mail, Map
 import QRCode from "qrcode";
 import { shareMessage, trackingUrl } from "@/lib/order-status";
 import { MapboxAutocomplete, type MapboxLocation } from "@/components/mapbox-autocomplete";
+import { sendOffersToEligibleDrivers } from "@/lib/freight-publish";
 
 const MAPBOX_TOKEN = import.meta.env.VITE_LOVABLE_CONNECTOR_MAPBOX_PUBLIC_TOKEN;
 
