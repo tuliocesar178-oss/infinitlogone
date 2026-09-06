@@ -84,6 +84,21 @@ type Form = {
   license: string;
   other_costs: string;
   priority: string;
+  // 6 Veículo
+  req_vehicle_type: string;
+  req_body_type: string;
+  req_capacity_kg: string;
+  req_axles: string;
+  helpers_required: string;
+  helpers_count: string;
+  tracking_required: string;
+  special_requirements: string;
+  // extras da carga
+  cargo_product: string;
+  cargo_package_type: string;
+  cargo_dimensions: string;
+  operation_type: string;
+  offer_minutes: string;
 };
 
 const EMPTY: Form = {
