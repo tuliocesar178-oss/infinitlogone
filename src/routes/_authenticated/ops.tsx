@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
-import { getUserRolesCached } from "@/lib/roles";
+import { getUserRolesCached, isStaffRole } from "@/lib/roles";
 
 export const Route = createFileRoute("/_authenticated/ops")({
   beforeLoad: async ({ context }) => {
