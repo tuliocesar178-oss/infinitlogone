@@ -8,7 +8,7 @@ export const Route = createFileRoute("/_authenticated/ops")({
 
     const userRoles = await getUserRolesCached(user.id);
 
-    if (!userRoles.includes("admin") && !userRoles.includes("logistics")) {
+    if (!userRoles.some(isStaffRole)) {
       const target = userRoles.includes("driver") ? "/driver" : "/client";
       throw redirect({ to: target });
     }
