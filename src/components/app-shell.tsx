@@ -75,6 +75,17 @@ export const NAV_GROUPS: Record<string, { label: string; items: NavItem[] }[]> =
       ],
     },
   ],
+  financeiro: [
+    {
+      label: "Financeiro",
+      items: [
+        { label: "🗼 Torre de Controle", to: "/ops/central", icon: LayoutGrid, match: (p) => p.startsWith("/ops/central") },
+        { label: "Fretes", to: "/ops/pedidos", icon: Package, match: (p) => p.startsWith("/ops/pedidos") },
+        { label: "Motoristas", to: "/ops/motoristas", icon: Truck, match: (p) => p.startsWith("/ops/motoristas") },
+        { label: "Chat da Operação", to: "/ops/chat", icon: MessageSquare, match: (p) => p.startsWith("/ops/chat") },
+      ],
+    },
+  ],
   client: [
     {
       label: "Portal do Cliente",

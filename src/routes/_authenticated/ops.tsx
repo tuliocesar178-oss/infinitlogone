@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
-import { getUserRolesCached } from "@/lib/roles";
+import { getUserRolesCached, isStaffRole } from "@/lib/roles";
 
 export const Route = createFileRoute("/_authenticated/ops")({
   beforeLoad: async ({ context }) => {
@@ -8,7 +8,7 @@ export const Route = createFileRoute("/_authenticated/ops")({
 
     const userRoles = await getUserRolesCached(user.id);
 
-    if (!userRoles.includes("admin") && !userRoles.includes("logistics")) {
+    if (!userRoles.some(isStaffRole)) {
       const target = userRoles.includes("driver") ? "/driver" : "/client";
       throw redirect({ to: target });
     }

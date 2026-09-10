@@ -1,15 +1,49 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export type AppRole = "admin" | "logistics" | "driver" | "client";
+export type AppRole =
+  | "admin"
+  | "supervisor"
+  | "logistics"
+  | "financeiro"
+  | "comercial"
+  | "operacional"
+  | "driver"
+  | "client";
+
+/** Perfis internos da empresa: todos entram pela Central Operacional. */
+export const STAFF_ROLES: AppRole[] = [
+  "admin",
+  "supervisor",
+  "logistics",
+  "financeiro",
+  "comercial",
+  "operacional",
+];
+
+export const isStaffRole = (role: AppRole | null | undefined) =>
+  !!role && STAFF_ROLES.includes(role);
 
 const roleHome: Record<AppRole, string> = {
   admin: "/ops/central",
+  supervisor: "/ops/central",
   logistics: "/ops/central",
+  financeiro: "/ops/central",
+  comercial: "/ops/central",
+  operacional: "/ops/central",
   driver: "/driver",
   client: "/client",
 };
 
-const rolePriority: AppRole[] = ["admin", "logistics", "driver", "client"];
+const rolePriority: AppRole[] = [
+  "admin",
+  "supervisor",
+  "logistics",
+  "financeiro",
+  "comercial",
+  "operacional",
+  "driver",
+  "client",
+];
 
 export function homeForRole(role: AppRole | null | undefined): string {
   if (!role) return "/rastreio";
