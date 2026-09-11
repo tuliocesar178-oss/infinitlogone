@@ -68,7 +68,7 @@ function DriverOffers() {
     queryFn: async () => {
       const { data: offers, error: offErr } = await supabase
         .from("freight_offers")
-        .select("*")
+        .select("*,negotiations(*)")
         .eq("driver_id", userId)
         .in("status", ["pending", "negotiating"])
         .order("created_at", { ascending: false });
@@ -101,6 +101,11 @@ function DriverOffers() {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "freight_offers", filter: `driver_id=eq.${userId}` },
+        () => qc.invalidateQueries({ queryKey: ["driver-offers-all", userId] }),
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "negotiations" },
         () => qc.invalidateQueries({ queryKey: ["driver-offers-all", userId] }),
       )
       .subscribe();
@@ -216,6 +221,9 @@ function DriverOffers() {
             const isFav = favorites.includes(
               routeKey(order?.origin_city, order?.destination_city),
             );
+            const pendingFromStaff = [...(offer.negotiations ?? [])]
+              .filter((negotiation) => negotiation.status === "proposed" && negotiation.proposed_by !== userId)
+              .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
             return (
               <li key={offer.id}>
                 <OfferRichCard
@@ -232,8 +240,28 @@ function DriverOffers() {
                     setChatFor({ orderId: order.id, code: program?.pf_code ?? order.code })
                   }
                   onNegotiate={() =>
-                    setNegotiateFor({ offerId: offer.id, current: Number(offer.offered_price) })
+                    setNegotiateFor({
+                      offerId: offer.id,
+                      current: Number(pendingFromStaff?.amount ?? offer.offered_price),
+                    })
                   }
+                  pendingCounteroffer={pendingFromStaff ? {
+                    id: pendingFromStaff.id,
+                    amount: Number(pendingFromStaff.amount),
+                    note: pendingFromStaff.note,
+                  } : null}
+                  onRespondCounteroffer={async (negotiationId, decision) => {
+                    const { error } = await supabase.rpc("respond_freight_counteroffer", {
+                      _negotiation_id: negotiationId,
+                      _decision: decision,
+                    });
+                    if (error) {
+                      toast.error(error.message);
+                      return;
+                    }
+                    toast.success(decision === "accepted" ? "Contraproposta aceita." : "Contraproposta recusada.");
+                    qc.invalidateQueries({ queryKey: ["driver-offers-all", userId] });
+                  }}
                   driverPos={driverPos}
                 />
               </li>
@@ -248,19 +276,12 @@ function DriverOffers() {
           onClose={() => setNegotiateFor(null)}
           onSubmit={async (amount, note) => {
             try {
-              const { error: e1 } = await supabase
-                .from("freight_offers")
-                .update({ status: "negotiating" })
-                .eq("id", negotiateFor.offerId);
-              if (e1) throw e1;
-              const { error: e2 } = await supabase.from("negotiations").insert({
-                offer_id: negotiateFor.offerId,
-                proposed_by: userId,
-                amount,
-                note: note || null,
-                status: "proposed",
+              const { error } = await supabase.rpc("submit_freight_counteroffer", {
+                _offer_id: negotiateFor.offerId,
+                _amount: amount,
+                _note: note || undefined,
               });
-              if (e2) throw e2;
+              if (error) throw error;
               toast.success("Proposta enviada à logística");
               setNegotiateFor(null);
               qc.invalidateQueries({ queryKey: ["driver-offers-all", userId] });
