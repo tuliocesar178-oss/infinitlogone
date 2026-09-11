@@ -20,6 +20,7 @@ import {
   X,
   CircleDollarSign,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 type Offer = {
   id: string;
@@ -66,6 +67,12 @@ type Order = {
   delivery_phone: string | null;
 };
 
+interface PendingCounteroffer {
+  id: string;
+  amount: number;
+  note: string | null;
+}
+
 const PRIORITY: Record<string, { label: string; cls: string }> = {
   alta: { label: "🔥 Urgente", cls: "bg-red-500 text-white" },
   media: { label: "Média", cls: "bg-amber-500 text-white" },
@@ -86,6 +93,8 @@ export function OfferRichCard({
   onOpenDetails,
   onOpenChat,
   onNegotiate,
+  pendingCounteroffer,
+  onRespondCounteroffer,
   driverPos,
 }: {
   offer: Offer;
@@ -96,10 +105,13 @@ export function OfferRichCard({
   onOpenDetails: () => void;
   onOpenChat: () => void;
   onNegotiate: () => void;
+  pendingCounteroffer: PendingCounteroffer | null;
+  onRespondCounteroffer: (negotiationId: string, decision: "accepted" | "declined") => Promise<void>;
   driverPos?: [number, number] | null;
 }) {
   const navigate = useNavigate();
   const [busy, setBusy] = useState<null | "accept" | "decline">(null);
+  const [respondingCounter, setRespondingCounter] = useState(false);
 
   const distanceKm =
     order?.distance_km != null
@@ -390,14 +402,51 @@ export function OfferRichCard({
         </div>
       )}
 
-      {offer.status === "negotiating" && (
+      {offer.status === "negotiating" && !pendingCounteroffer && (
         <div className="flex items-center gap-2 border-b border-border/60 bg-brand/5 px-4 py-2 text-xs font-semibold text-brand">
           <MessageCircle className="h-3.5 w-3.5" /> Aguardando resposta da logística
         </div>
       )}
 
+      {pendingCounteroffer && (
+        <div className="border-b border-primary/30 bg-primary/5 p-4">
+          <div className="flex items-start gap-3">
+            <MessageCircle className="mt-0.5 h-5 w-5 text-primary" />
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-semibold uppercase text-primary">Nova proposta da logística</p>
+              <p className="mt-1 text-2xl font-bold">{brl(pendingCounteroffer.amount)}</p>
+              {pendingCounteroffer.note && (
+                <p className="mt-1 text-sm text-muted-foreground">{pendingCounteroffer.note}</p>
+              )}
+            </div>
+          </div>
+          <div className="mt-4 grid grid-cols-3 gap-2">
+            <Button
+              variant="outline"
+              disabled={respondingCounter}
+              onClick={() => onRespondCounteroffer(pendingCounteroffer.id, "declined")}
+            >
+              Recusar
+            </Button>
+            <Button variant="outline" disabled={respondingCounter} onClick={onNegotiate}>
+              Novo valor
+            </Button>
+            <Button
+              disabled={respondingCounter}
+              onClick={async () => {
+                setRespondingCounter(true);
+                await onRespondCounteroffer(pendingCounteroffer.id, "accepted");
+                setRespondingCounter(false);
+              }}
+            >
+              Aceitar
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Ações */}
-      <div className="flex gap-3 p-4 bg-surface">
+      {!pendingCounteroffer && <div className="flex gap-3 p-4 bg-surface">
         <button
           disabled={!!busy || isExpired || offer.status === "negotiating"}
           onClick={() => respond("decline")}
@@ -419,7 +468,7 @@ export function OfferRichCard({
         >
           <Check className="h-4 w-4" /> Aceitar
         </button>
-      </div>
+      </div>}
 
       {/* Rodapé com chat */}
       <div className="flex items-center justify-between border-t border-border/60 bg-surface px-4 py-2 text-[11px] text-muted-foreground">
