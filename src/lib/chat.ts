@@ -64,12 +64,26 @@ export async function getRooms() {
 export async function getMessages(roomId: string) {
   const { data, error } = await supabase
     .from('messages')
-    .select('*, sender:profiles!messages_sender_id_fkey(full_name, avatar_url)')
+    .select('*')
     .eq('room_id', roomId)
     .order('created_at', { ascending: true });
   
   if (error) throw error;
-  return data as unknown as ChatMessage[];
+  if (!data?.length) return [];
+
+  const senderIds = Array.from(new Set(data.map(message => message.sender_id)));
+  const { data: profiles, error: profilesError } = await supabase
+    .from('profiles')
+    .select('id, full_name, avatar_url')
+    .in('id', senderIds);
+
+  if (profilesError) throw profilesError;
+  const profileById = new Map((profiles || []).map(profile => [profile.id, profile]));
+
+  return data.map(message => ({
+    ...message,
+    sender: profileById.get(message.sender_id),
+  })) as unknown as ChatMessage[];
 }
 
 export async function sendMessage(roomId: string, content: string, kind: MessageKind = 'text', metadata: any = {}, orderId?: string) {
