@@ -173,6 +173,8 @@ export type Database = {
           id: string
           last_message_at: string | null
           order_id: string | null
+          staff_a: string | null
+          staff_b: string | null
           updated_at: string | null
         }
         Insert: {
@@ -181,6 +183,8 @@ export type Database = {
           id?: string
           last_message_at?: string | null
           order_id?: string | null
+          staff_a?: string | null
+          staff_b?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -189,6 +193,8 @@ export type Database = {
           id?: string
           last_message_at?: string | null
           order_id?: string | null
+          staff_a?: string | null
+          staff_b?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -204,6 +210,20 @@ export type Database = {
             columns: ["order_id"]
             isOneToOne: true
             referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_rooms_staff_a_fkey"
+            columns: ["staff_a"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_rooms_staff_b_fkey"
+            columns: ["staff_b"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -2322,6 +2342,10 @@ export type Database = {
         Args: { _order_id: string; _user_id: string }
         Returns: boolean
       }
+      can_access_staff_room: {
+        Args: { _room_id: string; _user: string }
+        Returns: boolean
+      }
       decline_freight_offer: {
         Args: { _offer_id: string; _reason?: string }
         Returns: Json
@@ -2333,6 +2357,7 @@ export type Database = {
         Args: { _driver_id: string }
         Returns: string
       }
+      get_or_create_staff_room: { Args: { _other_id: string }; Returns: string }
       get_tracking: { Args: { _code: string }; Returns: Json }
       has_role: {
         Args: {
