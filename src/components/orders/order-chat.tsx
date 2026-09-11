@@ -21,7 +21,7 @@ import {
 
 interface ChatProps {
   roomId: string;
-  orderId: string;
+  orderId?: string | null;
   title: string;
   subtitle?: string;
   avatarUrl?: string;
@@ -46,7 +46,7 @@ export function OrderChat({ roomId, orderId, title, subtitle, avatarUrl, onCallC
   });
 
   const sendMutation = useMutation({
-    mutationFn: (content: string) => sendMessage(roomId, content, 'text', {}, orderId),
+    mutationFn: (content: string) => sendMessage(roomId, content, 'text', {}, orderId || undefined),
     onSuccess: () => {
       setText("");
       qc.invalidateQueries({ queryKey: ["chat-messages", roomId] });
