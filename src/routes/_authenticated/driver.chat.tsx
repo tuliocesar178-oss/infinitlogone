@@ -1,11 +1,12 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
 import { DriverShell } from '@/components/driver/shell';
 import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { getRooms, ChatRoom } from '@/lib/chat';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { getOrCreateDriverRoom, ChatRoom } from '@/lib/chat';
 import { OrderChat } from '@/components/orders/order-chat';
-import { Search, MessageSquare, Filter, Clock } from 'lucide-react';
+import { Search, MessageSquare, Clock } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { z } from 'zod';
@@ -30,19 +31,26 @@ export const Route = createFileRoute('/_authenticated/driver/chat')({
 
 function DriverChatPage() {
   const searchParams = Route.useSearch();
-  const orderId = (searchParams as any).orderId;
-  const initialRoomId = (searchParams as any).roomId;
+  const orderId = searchParams.orderId;
+  const initialRoomId = searchParams.roomId;
   const [selectedRoom, setSelectedRoom] = useState<ChatRoom | null>(null);
   const [search, setSearch] = useState("");
   const [userId, setUserId] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id || null));
   }, []);
 
-  const { data: rooms = [], isLoading } = useQuery({
+  const { data: rooms = [], isLoading, error, refetch } = useQuery({
     queryKey: ['chat-rooms', userId],
     queryFn: async () => {
+      if (!userId) return [];
+
+      // Todo motorista aprovado possui uma conversa geral. Isso também permite
+      // que ele inicie o contato, sem esperar a equipe enviar primeiro.
+      await getOrCreateDriverRoom(userId);
+
       // Salas vinculadas a fretes do motorista
       const orderRooms = await supabase
         .from('chat_rooms')
@@ -56,7 +64,7 @@ function DriverChatPage() {
             client:profiles!orders_client_id_fkey(full_name, avatar_url)
           )
         `)
-        .eq('order.driver_id', userId!)
+        .eq('order.driver_id', userId)
         .order('last_message_at', { ascending: false });
       if (orderRooms.error) throw orderRooms.error;
 
@@ -65,7 +73,7 @@ function DriverChatPage() {
         .from('chat_rooms')
         .select('*')
         .is('order_id', null)
-        .eq('driver_id', userId!)
+        .eq('driver_id', userId)
         .order('last_message_at', { ascending: false });
       if (directRooms.error) throw directRooms.error;
 
@@ -79,6 +87,23 @@ function DriverChatPage() {
     enabled: !!userId,
     refetchInterval: 10000
   });
+
+  useEffect(() => {
+    if (!userId) return;
+    const channel = supabase
+      .channel(`driver-chat-list:${userId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_rooms' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['chat-rooms', userId] });
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['chat-rooms', userId] });
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient, userId]);
 
   useEffect(() => {
     if (initialRoomId) {
@@ -119,6 +144,11 @@ function DriverChatPage() {
         <div className="flex-1 overflow-y-auto">
           {isLoading ? (
             <div className="p-8 text-center text-sm text-muted-foreground">Carregando salas...</div>
+          ) : error ? (
+            <div className="space-y-3 p-8 text-center text-sm text-muted-foreground">
+              <p>Não foi possível carregar suas conversas.</p>
+              <Button variant="outline" size="sm" onClick={() => refetch()}>Tentar novamente</Button>
+            </div>
           ) : filteredRooms.length === 0 ? (
             <div className="p-8 text-center text-sm text-muted-foreground">Nenhuma conversa encontrada.</div>
           ) : (
