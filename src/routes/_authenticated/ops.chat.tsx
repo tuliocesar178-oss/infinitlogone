@@ -131,6 +131,7 @@ function OpsChatPage() {
         toast.error('Conversa do frete ainda não foi criada.');
         return;
       }
+      setActiveTeam(null);
       setActive({ roomId, driver, order });
       await markRoomAsRead(roomId);
       qc.invalidateQueries({ queryKey: ['chat-drivers'] });
