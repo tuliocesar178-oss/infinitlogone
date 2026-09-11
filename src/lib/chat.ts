@@ -274,6 +274,90 @@ export async function getOrCreateDriverRoom(driverId: string): Promise<string> {
   return data as unknown as string;
 }
 
+/* ---------------------------------------------------------------
+ * Conversas internas entre membros da equipe
+ * --------------------------------------------------------------- */
+
+export interface TeamContact {
+  user_id: string;
+  full_name: string;
+  avatar_url: string | null;
+  position: string | null;
+  phone: string | null;
+  status: string;
+  room_id: string | null;
+  unread: number;
+}
+
+/** Lista os colegas internos (exceto o próprio usuário) com sala e não lidas. */
+export async function getTeamContacts(): Promise<TeamContact[]> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const { data: members, error } = await supabase
+    .from('team_members')
+    .select('user_id, full_name, position, phone, photo_url, status')
+    .neq('user_id', user.id);
+  if (error) throw error;
+  if (!members?.length) return [];
+
+  const ids = members.map((m) => m.user_id);
+  const [profilesRes, roomsRes] = await Promise.all([
+    supabase.from('profiles').select('id, full_name, avatar_url').in('id', ids),
+    supabase
+      .from('chat_rooms')
+      .select('id, staff_a, staff_b, order_id')
+      .is('order_id', null)
+      .or(`staff_a.eq.${user.id},staff_b.eq.${user.id}`),
+  ]);
+
+  const profiles = new Map((profilesRes.data || []).map((p: any) => [p.id, p]));
+  const rooms = (roomsRes.data || []) as any[];
+  const roomByPeer = new Map<string, string>();
+  rooms.forEach((r) => {
+    if (!r.staff_a || !r.staff_b) return;
+    const peer = r.staff_a === user.id ? r.staff_b : r.staff_a;
+    roomByPeer.set(peer, r.id);
+  });
+
+  const unreadByRoom = new Map<string, number>();
+  if (rooms.length) {
+    const { data: unread } = await supabase
+      .from('messages')
+      .select('room_id')
+      .is('read_at', null)
+      .neq('sender_id', user.id)
+      .in('room_id', rooms.map((r) => r.id));
+    (unread || []).forEach((m: any) =>
+      unreadByRoom.set(m.room_id, (unreadByRoom.get(m.room_id) || 0) + 1),
+    );
+  }
+
+  return members
+    .map((m) => {
+      const profile: any = profiles.get(m.user_id);
+      const roomId = roomByPeer.get(m.user_id) || null;
+      return {
+        user_id: m.user_id,
+        full_name: profile?.full_name || m.full_name || 'Membro da equipe',
+        avatar_url: profile?.avatar_url || m.photo_url || null,
+        position: m.position,
+        phone: m.phone,
+        status: m.status,
+        room_id: roomId,
+        unread: roomId ? unreadByRoom.get(roomId) || 0 : 0,
+      };
+    })
+    .sort((a, b) => a.full_name.localeCompare(b.full_name));
+}
+
+/** Abre (ou cria, sem duplicar) a conversa interna com um colega. */
+export async function getOrCreateStaffRoom(otherId: string): Promise<string> {
+  const { data, error } = await supabase.rpc('get_or_create_staff_room' as any, { _other_id: otherId } as any);
+  if (error) throw error;
+  return data as unknown as string;
+}
+
 /** Marca como lidas as mensagens recebidas de uma sala. */
 export async function markRoomAsRead(roomId: string) {
   const { data: { user } } = await supabase.auth.getUser();
