@@ -17,7 +17,8 @@ function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number) {
 
 export function DispatchPanel({ order, onSent }: { order: any; onSent: () => void }) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [price, setPrice] = useState<number>(order.price ?? 0);
+  // Valor pago ao motorista — nunca o valor negociado com o cliente.
+  const [price, setPrice] = useState<number>(order.driver_amount ?? order.price ?? 0);
   const [minutes, setMinutes] = useState(15);
   const [sending, setSending] = useState(false);
 

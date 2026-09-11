@@ -278,7 +278,8 @@ function OfferPanel({ order, onChanged }: { order: any; onChanged: () => void })
       const rows = drivers.map((d) => ({
         order_id: order.id,
         driver_id: d.user_id,
-        offered_price: order.price ?? 0,
+        // Valor ofertado ao motorista (nunca o valor negociado com o cliente)
+        offered_price: order.driver_amount ?? order.price ?? 0,
         expires_at: expiresAt,
       }));
       const { error: oErr } = await supabase.from("freight_offers").insert(rows);
