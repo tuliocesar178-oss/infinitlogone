@@ -48,6 +48,7 @@ export async function getRooms() {
     .from('chat_rooms')
     .select(`
       *,
+      driver_profile:profiles!chat_rooms_driver_id_fkey(full_name, avatar_url),
       order:orders(
         order_number:code,
         driver:profiles!orders_driver_id_fkey(full_name, avatar_url),
