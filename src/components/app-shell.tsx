@@ -80,6 +80,8 @@ export const NAV_GROUPS: Record<string, { label: string; items: NavItem[] }[]> =
       label: "Financeiro",
       items: [
         { label: "🗼 Torre de Controle", to: "/ops/central", icon: LayoutGrid, match: (p) => p.startsWith("/ops/central") },
+        { label: "💰 Financeiro", to: "/ops/financeiro", icon: Wallet, match: (p) => p.startsWith("/ops/financeiro") },
+        { label: "🧾 Faturamento", to: "/ops/faturamento", icon: DollarSign, match: (p) => p.startsWith("/ops/faturamento") },
         { label: "Fretes", to: "/ops/pedidos", icon: Package, match: (p) => p.startsWith("/ops/pedidos") },
         { label: "Motoristas", to: "/ops/motoristas", icon: Truck, match: (p) => p.startsWith("/ops/motoristas") },
         { label: "Chat da Operação", to: "/ops/chat", icon: MessageSquare, match: (p) => p.startsWith("/ops/chat") },
