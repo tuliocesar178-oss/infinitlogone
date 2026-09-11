@@ -13,11 +13,21 @@ export function NegotiationPanel({ orderId, onChanged }: { orderId: string; onCh
     queryFn: async () => {
       const { data, error } = await supabase
         .from("freight_offers")
-        .select("*,driver:profiles!freight_offers_driver_id_fkey(full_name),negotiations(*)")
+        .select("*,negotiations(*)")
         .eq("order_id", orderId)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data ?? [];
+      const offers = data ?? [];
+      const ids = [...new Set(offers.map((o) => o.driver_id).filter(Boolean))] as string[];
+      let names = new Map<string, string>();
+      if (ids.length > 0) {
+        const { data: profs } = await supabase
+          .from("profiles")
+          .select("id,full_name")
+          .in("id", ids);
+        names = new Map((profs ?? []).map((p) => [p.id, p.full_name ?? ""]));
+      }
+      return offers.map((o) => ({ ...o, driver: { full_name: names.get(o.driver_id) || "Motorista" } }));
     },
     refetchInterval: 5000,
   });
