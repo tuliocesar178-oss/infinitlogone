@@ -892,6 +892,7 @@ function NewOrderWizard() {
               <T label="Escolta (R$)" type="number" value={f.escort} onChange={(v) => set("escort", v)} />
               <T label="Licença (R$)" type="number" value={f.license} onChange={(v) => set("license", v)} />
               <T label="Outros custos (R$)" type="number" value={f.other_costs} onChange={(v) => set("other_costs", v)} />
+              <T label="Margem desejada (R$)" type="number" value={f.margin_amount} onChange={(v) => set("margin_amount", v)} />
               <label className="block">
                 <span className="mb-1.5 block text-xs font-medium uppercase tracking-widest text-muted-foreground">Prioridade</span>
                 <select value={f.priority} onChange={(e) => set("priority", e.target.value)}
