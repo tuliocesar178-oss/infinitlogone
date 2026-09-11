@@ -55,8 +55,8 @@ export const NAV_GROUPS: Record<string, { label: string; items: NavItem[] }[]> =
       label: "Gestão",
       items: [
         { label: "Relatórios", to: "/ops/central", icon: BarChart3, match: (p) => p === "/ops/relatorios" },
-        { label: "Faturamento", to: "/ops/central", icon: DollarSign, match: (p) => p === "/ops/faturamento" },
-        { label: "Financeiro", to: "/ops/central", icon: Wallet, match: (p) => p === "/ops/financeiro" },
+        { label: "Faturamento", to: "/ops/faturamento", icon: DollarSign, match: (p) => p.startsWith("/ops/faturamento") },
+        { label: "Financeiro", to: "/ops/financeiro", icon: Wallet, match: (p) => p.startsWith("/ops/financeiro") },
         { label: "Configurações", to: "/ops/central", icon: Settings, match: (p) => p === "/ops/configuracoes" },
       ],
     },
@@ -80,6 +80,8 @@ export const NAV_GROUPS: Record<string, { label: string; items: NavItem[] }[]> =
       label: "Financeiro",
       items: [
         { label: "🗼 Torre de Controle", to: "/ops/central", icon: LayoutGrid, match: (p) => p.startsWith("/ops/central") },
+        { label: "💰 Financeiro", to: "/ops/financeiro", icon: Wallet, match: (p) => p.startsWith("/ops/financeiro") },
+        { label: "🧾 Faturamento", to: "/ops/faturamento", icon: DollarSign, match: (p) => p.startsWith("/ops/faturamento") },
         { label: "Fretes", to: "/ops/pedidos", icon: Package, match: (p) => p.startsWith("/ops/pedidos") },
         { label: "Motoristas", to: "/ops/motoristas", icon: Truck, match: (p) => p.startsWith("/ops/motoristas") },
         { label: "Chat da Operação", to: "/ops/chat", icon: MessageSquare, match: (p) => p.startsWith("/ops/chat") },

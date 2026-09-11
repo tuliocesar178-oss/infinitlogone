@@ -29,6 +29,8 @@ import { Route as AuthenticatedDriverIndexRouteImport } from './routes/_authenti
 import { Route as AuthenticatedClientIndexRouteImport } from './routes/_authenticated/client.index'
 import { Route as AuthenticatedOpsVeiculosRouteImport } from './routes/_authenticated/ops.veiculos'
 import { Route as AuthenticatedOpsRastreamentoRouteImport } from './routes/_authenticated/ops.rastreamento'
+import { Route as AuthenticatedOpsFinanceiroRouteImport } from './routes/_authenticated/ops.financeiro'
+import { Route as AuthenticatedOpsFaturamentoRouteImport } from './routes/_authenticated/ops.faturamento'
 import { Route as AuthenticatedOpsEquipeRouteImport } from './routes/_authenticated/ops.equipe'
 import { Route as AuthenticatedOpsChatRouteImport } from './routes/_authenticated/ops.chat'
 import { Route as AuthenticatedOpsCentralRouteImport } from './routes/_authenticated/ops.central'
@@ -160,6 +162,18 @@ const AuthenticatedOpsRastreamentoRoute =
   AuthenticatedOpsRastreamentoRouteImport.update({
     id: '/rastreamento',
     path: '/rastreamento',
+    getParentRoute: () => AuthenticatedOpsRoute,
+  } as any)
+const AuthenticatedOpsFinanceiroRoute =
+  AuthenticatedOpsFinanceiroRouteImport.update({
+    id: '/financeiro',
+    path: '/financeiro',
+    getParentRoute: () => AuthenticatedOpsRoute,
+  } as any)
+const AuthenticatedOpsFaturamentoRoute =
+  AuthenticatedOpsFaturamentoRouteImport.update({
+    id: '/faturamento',
+    path: '/faturamento',
     getParentRoute: () => AuthenticatedOpsRoute,
   } as any)
 const AuthenticatedOpsEquipeRoute = AuthenticatedOpsEquipeRouteImport.update({
@@ -363,6 +377,8 @@ export interface FileRoutesByFullPath {
   '/ops/central': typeof AuthenticatedOpsCentralRoute
   '/ops/chat': typeof AuthenticatedOpsChatRoute
   '/ops/equipe': typeof AuthenticatedOpsEquipeRoute
+  '/ops/faturamento': typeof AuthenticatedOpsFaturamentoRoute
+  '/ops/financeiro': typeof AuthenticatedOpsFinanceiroRoute
   '/ops/rastreamento': typeof AuthenticatedOpsRastreamentoRoute
   '/ops/veiculos': typeof AuthenticatedOpsVeiculosRouteWithChildren
   '/client/': typeof AuthenticatedClientIndexRoute
@@ -410,6 +426,8 @@ export interface FileRoutesByTo {
   '/ops/central': typeof AuthenticatedOpsCentralRoute
   '/ops/chat': typeof AuthenticatedOpsChatRoute
   '/ops/equipe': typeof AuthenticatedOpsEquipeRoute
+  '/ops/faturamento': typeof AuthenticatedOpsFaturamentoRoute
+  '/ops/financeiro': typeof AuthenticatedOpsFinanceiroRoute
   '/ops/rastreamento': typeof AuthenticatedOpsRastreamentoRoute
   '/ops/veiculos': typeof AuthenticatedOpsVeiculosRouteWithChildren
   '/client': typeof AuthenticatedClientIndexRoute
@@ -462,6 +480,8 @@ export interface FileRoutesById {
   '/_authenticated/ops/central': typeof AuthenticatedOpsCentralRoute
   '/_authenticated/ops/chat': typeof AuthenticatedOpsChatRoute
   '/_authenticated/ops/equipe': typeof AuthenticatedOpsEquipeRoute
+  '/_authenticated/ops/faturamento': typeof AuthenticatedOpsFaturamentoRoute
+  '/_authenticated/ops/financeiro': typeof AuthenticatedOpsFinanceiroRoute
   '/_authenticated/ops/rastreamento': typeof AuthenticatedOpsRastreamentoRoute
   '/_authenticated/ops/veiculos': typeof AuthenticatedOpsVeiculosRouteWithChildren
   '/_authenticated/client/': typeof AuthenticatedClientIndexRoute
@@ -514,6 +534,8 @@ export interface FileRouteTypes {
     | '/ops/central'
     | '/ops/chat'
     | '/ops/equipe'
+    | '/ops/faturamento'
+    | '/ops/financeiro'
     | '/ops/rastreamento'
     | '/ops/veiculos'
     | '/client/'
@@ -561,6 +583,8 @@ export interface FileRouteTypes {
     | '/ops/central'
     | '/ops/chat'
     | '/ops/equipe'
+    | '/ops/faturamento'
+    | '/ops/financeiro'
     | '/ops/rastreamento'
     | '/ops/veiculos'
     | '/client'
@@ -612,6 +636,8 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/central'
     | '/_authenticated/ops/chat'
     | '/_authenticated/ops/equipe'
+    | '/_authenticated/ops/faturamento'
+    | '/_authenticated/ops/financeiro'
     | '/_authenticated/ops/rastreamento'
     | '/_authenticated/ops/veiculos'
     | '/_authenticated/client/'
@@ -784,6 +810,20 @@ declare module '@tanstack/react-router' {
       path: '/rastreamento'
       fullPath: '/ops/rastreamento'
       preLoaderRoute: typeof AuthenticatedOpsRastreamentoRouteImport
+      parentRoute: typeof AuthenticatedOpsRoute
+    }
+    '/_authenticated/ops/financeiro': {
+      id: '/_authenticated/ops/financeiro'
+      path: '/financeiro'
+      fullPath: '/ops/financeiro'
+      preLoaderRoute: typeof AuthenticatedOpsFinanceiroRouteImport
+      parentRoute: typeof AuthenticatedOpsRoute
+    }
+    '/_authenticated/ops/faturamento': {
+      id: '/_authenticated/ops/faturamento'
+      path: '/faturamento'
+      fullPath: '/ops/faturamento'
+      preLoaderRoute: typeof AuthenticatedOpsFaturamentoRouteImport
       parentRoute: typeof AuthenticatedOpsRoute
     }
     '/_authenticated/ops/equipe': {
@@ -1083,6 +1123,8 @@ interface AuthenticatedOpsRouteChildren {
   AuthenticatedOpsCentralRoute: typeof AuthenticatedOpsCentralRoute
   AuthenticatedOpsChatRoute: typeof AuthenticatedOpsChatRoute
   AuthenticatedOpsEquipeRoute: typeof AuthenticatedOpsEquipeRoute
+  AuthenticatedOpsFaturamentoRoute: typeof AuthenticatedOpsFaturamentoRoute
+  AuthenticatedOpsFinanceiroRoute: typeof AuthenticatedOpsFinanceiroRoute
   AuthenticatedOpsRastreamentoRoute: typeof AuthenticatedOpsRastreamentoRoute
   AuthenticatedOpsVeiculosRoute: typeof AuthenticatedOpsVeiculosRouteWithChildren
   AuthenticatedOpsIndexRoute: typeof AuthenticatedOpsIndexRoute
@@ -1098,6 +1140,8 @@ const AuthenticatedOpsRouteChildren: AuthenticatedOpsRouteChildren = {
   AuthenticatedOpsCentralRoute: AuthenticatedOpsCentralRoute,
   AuthenticatedOpsChatRoute: AuthenticatedOpsChatRoute,
   AuthenticatedOpsEquipeRoute: AuthenticatedOpsEquipeRoute,
+  AuthenticatedOpsFaturamentoRoute: AuthenticatedOpsFaturamentoRoute,
+  AuthenticatedOpsFinanceiroRoute: AuthenticatedOpsFinanceiroRoute,
   AuthenticatedOpsRastreamentoRoute: AuthenticatedOpsRastreamentoRoute,
   AuthenticatedOpsVeiculosRoute: AuthenticatedOpsVeiculosRouteWithChildren,
   AuthenticatedOpsIndexRoute: AuthenticatedOpsIndexRoute,
