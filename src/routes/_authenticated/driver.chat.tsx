@@ -43,7 +43,8 @@ function DriverChatPage() {
   const { data: rooms = [], isLoading } = useQuery({
     queryKey: ['chat-rooms', userId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Salas vinculadas a fretes do motorista
+      const orderRooms = await supabase
         .from('chat_rooms')
         .select(`
           *,
@@ -57,9 +58,23 @@ function DriverChatPage() {
         `)
         .eq('order.driver_id', userId!)
         .order('last_message_at', { ascending: false });
-      
-      if (error) throw error;
-      return data as unknown as ChatRoom[];
+      if (orderRooms.error) throw orderRooms.error;
+
+      // Conversa geral com a logística (sem frete vinculado)
+      const directRooms = await supabase
+        .from('chat_rooms')
+        .select('*')
+        .is('order_id', null)
+        .eq('driver_id', userId!)
+        .order('last_message_at', { ascending: false });
+      if (directRooms.error) throw directRooms.error;
+
+      const direct = (directRooms.data || []).map((r: any) => ({
+        ...r,
+        order: null,
+      }));
+
+      return [...direct, ...(orderRooms.data || [])] as unknown as ChatRoom[];
     },
     enabled: !!userId,
     refetchInterval: 10000
@@ -75,8 +90,11 @@ function DriverChatPage() {
     }
   }, [initialRoomId, orderId, rooms]);
 
-  const filteredRooms = rooms.filter(r => 
-    r.order?.order_number?.toLowerCase().includes(search.toLowerCase())
+  const roomLabel = (r: ChatRoom) =>
+    r.order?.order_number || 'Central de Logística';
+
+  const filteredRooms = rooms.filter(r =>
+    roomLabel(r).toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -113,21 +131,22 @@ function DriverChatPage() {
                 <div className="flex gap-3">
                   <Avatar className="h-12 w-12 border-2 border-background">
                     <AvatarFallback className="bg-primary/10 text-primary font-bold">
-                      {room.order?.order_number.substring(0, 2)}
+                      {roomLabel(room).substring(0, 2)}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-start mb-0.5">
-                      <span className="font-bold text-sm truncate">{room.order?.order_number}</span>
+                      <span className="font-bold text-sm truncate">{roomLabel(room)}</span>
                       <span className="text-[10px] text-muted-foreground flex items-center gap-1 shrink-0">
                         <Clock className="h-3 w-3" />
                         {new Date(room.last_message_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
                     <div className="text-xs font-medium text-muted-foreground truncate">
-                      Logística • {room.order?.client?.full_name}
+                      {room.order ? `Logística • ${room.order?.client?.full_name ?? ''}` : 'Conversa geral com a logística'}
                     </div>
                   </div>
+
                 </div>
               </div>
             ))
@@ -146,13 +165,14 @@ function DriverChatPage() {
               >
                 ← Voltar
               </button>
-              <span className="font-bold text-sm truncate">{selectedRoom.order?.order_number}</span>
+              <span className="font-bold text-sm truncate">{roomLabel(selectedRoom)}</span>
             </div>
             <div className="flex-1 p-0 md:p-6 overflow-hidden">
               <OrderChat 
                 roomId={selectedRoom.id}
                 orderId={selectedRoom.order_id}
-                title={selectedRoom.order?.order_number || "Pedido"}
+                title={roomLabel(selectedRoom)}
+
                 subtitle="Logística InfinitLog"
                 onCallClick={() => toast.info("Chamando central...")}
               />
