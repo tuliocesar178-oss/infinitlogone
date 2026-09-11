@@ -41,7 +41,7 @@ export function NegotiationPanel({ orderId, onChanged }: { orderId: string; onCh
     refetchInterval: 5000,
   });
 
-  async function acceptCounter(offerId: string, negotiationId: string, amount: number) {
+  async function acceptCounter(negotiationId: string) {
     try {
       const { error } = await supabase.rpc("respond_freight_counteroffer", {
         _negotiation_id: negotiationId,
@@ -131,7 +131,7 @@ export function NegotiationPanel({ orderId, onChanged }: { orderId: string; onCh
                             </Button>
                             <Button
                               size="sm"
-                              onClick={() => acceptCounter(o.id, n.id, Number(n.amount))}
+                              onClick={() => acceptCounter(n.id)}
                             >
                               <Check /> Aceitar
                             </Button>
