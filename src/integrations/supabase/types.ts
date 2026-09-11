@@ -2330,6 +2330,10 @@ export type Database = {
       is_finance: { Args: { _user_id: string }; Returns: boolean }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
       override_arrival: { Args: { _order_id: string }; Returns: undefined }
+      respond_freight_counteroffer: {
+        Args: { _decision: string; _negotiation_id: string }
+        Returns: Json
+      }
       review_driver_signup: {
         Args: { _decision: string; _driver_id: string; _reason?: string }
         Returns: undefined
@@ -2361,6 +2365,10 @@ export type Database = {
           _program_id: string
         }
         Returns: string
+      }
+      submit_freight_counteroffer: {
+        Args: { _amount: number; _note?: string; _offer_id: string }
+        Returns: Json
       }
     }
     Enums: {
