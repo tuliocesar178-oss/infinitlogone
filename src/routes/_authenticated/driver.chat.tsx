@@ -165,13 +165,14 @@ function DriverChatPage() {
               >
                 ← Voltar
               </button>
-              <span className="font-bold text-sm truncate">{selectedRoom.order?.order_number}</span>
+              <span className="font-bold text-sm truncate">{roomLabel(selectedRoom)}</span>
             </div>
             <div className="flex-1 p-0 md:p-6 overflow-hidden">
               <OrderChat 
                 roomId={selectedRoom.id}
                 orderId={selectedRoom.order_id}
-                title={selectedRoom.order?.order_number || "Pedido"}
+                title={roomLabel(selectedRoom)}
+
                 subtitle="Logística InfinitLog"
                 onCallClick={() => toast.info("Chamando central...")}
               />
