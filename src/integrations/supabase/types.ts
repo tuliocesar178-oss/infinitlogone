@@ -1004,7 +1004,7 @@ export type Database = {
           id: string
           kind: Database["public"]["Enums"]["message_kind"]
           metadata: Json | null
-          order_id: string
+          order_id: string | null
           read_at: string | null
           room_id: string | null
           sender_id: string
@@ -1017,7 +1017,7 @@ export type Database = {
           id?: string
           kind?: Database["public"]["Enums"]["message_kind"]
           metadata?: Json | null
-          order_id: string
+          order_id?: string | null
           read_at?: string | null
           room_id?: string | null
           sender_id: string
@@ -1030,7 +1030,7 @@ export type Database = {
           id?: string
           kind?: Database["public"]["Enums"]["message_kind"]
           metadata?: Json | null
-          order_id?: string
+          order_id?: string | null
           read_at?: string | null
           room_id?: string | null
           sender_id?: string
