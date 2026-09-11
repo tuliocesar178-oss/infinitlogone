@@ -930,6 +930,53 @@ function NewOrderWizard() {
               <KPI label="Lucro previsto" value={brl(profit)} tone={profit >= 0 ? "positive" : "negative"} />
               <KPI label="Margem" value={`${margin.toFixed(1)}%`} tone={margin >= 15 ? "positive" : margin >= 0 ? "neutral" : "negative"} />
             </div>
+
+            <div className="mt-8">
+              <div className="mb-3 text-[10px] font-bold uppercase tracking-[0.2em] text-brand">Piso mínimo ANTT</div>
+              <Grid>
+                <label className="block">
+                  <span className="mb-1.5 block text-xs font-medium uppercase tracking-widest text-muted-foreground">Tipo de operação</span>
+                  <select value={f.antt_operation_type} onChange={(e) => set("antt_operation_type", e.target.value)}
+                    className="h-11 w-full rounded-xl border border-border bg-surface px-3 text-sm outline-none focus:border-brand">
+                    {ANTT_OPERATION_TYPES.map((o) => <option key={o.code} value={o.code}>{o.label}</option>)}
+                  </select>
+                </label>
+                <label className="block">
+                  <span className="mb-1.5 block text-xs font-medium uppercase tracking-widest text-muted-foreground">Classe da carga</span>
+                  <select value={f.antt_cargo_class} onChange={(e) => set("antt_cargo_class", e.target.value)}
+                    className="h-11 w-full rounded-xl border border-border bg-surface px-3 text-sm outline-none focus:border-brand">
+                    {ANTT_CARGO_CLASSES.map((o) => <option key={o.code} value={o.code}>{o.label}</option>)}
+                  </select>
+                </label>
+                <label className="block">
+                  <span className="mb-1.5 block text-xs font-medium uppercase tracking-widest text-muted-foreground">Tipo de contratação</span>
+                  <select value={f.antt_contract_type} onChange={(e) => set("antt_contract_type", e.target.value)}
+                    className="h-11 w-full rounded-xl border border-border bg-surface px-3 text-sm outline-none focus:border-brand">
+                    {ANTT_CONTRACT_TYPES.map((o) => <option key={o.code} value={o.code}>{o.label}</option>)}
+                  </select>
+                </label>
+                <label className="block">
+                  <span className="mb-1.5 block text-xs font-medium uppercase tracking-widest text-muted-foreground">Eixos (para o piso)</span>
+                  <select value={f.req_axles} onChange={(e) => set("req_axles", e.target.value)}
+                    className="h-11 w-full rounded-xl border border-border bg-surface px-3 text-sm outline-none focus:border-brand">
+                    <option value="">Selecione</option>
+                    {ANTT_AXLE_OPTIONS.map((n) => <option key={n} value={String(n)}>{n} eixos</option>)}
+                  </select>
+                </label>
+                <label className="block">
+                  <span className="mb-1.5 block text-xs font-medium uppercase tracking-widest text-muted-foreground">Alto desempenho</span>
+                  <select value={f.antt_high_performance} onChange={(e) => set("antt_high_performance", e.target.value)}
+                    className="h-11 w-full rounded-xl border border-border bg-surface px-3 text-sm outline-none focus:border-brand">
+                    <option value="nao">Não</option>
+                    <option value="sim">Sim</option>
+                  </select>
+                </label>
+              </Grid>
+              <div className="mt-4">
+                <AnttCard calc={antt} loading={anttLoading} negotiated={negotiated}
+                  tolls={tolls} extraCosts={extraCosts} margin={marginAmount} />
+              </div>
+            </div>
           </>
         )}
 
