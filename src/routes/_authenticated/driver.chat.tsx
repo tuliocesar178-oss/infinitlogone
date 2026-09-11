@@ -90,8 +90,11 @@ function DriverChatPage() {
     }
   }, [initialRoomId, orderId, rooms]);
 
-  const filteredRooms = rooms.filter(r => 
-    r.order?.order_number?.toLowerCase().includes(search.toLowerCase())
+  const roomLabel = (r: ChatRoom) =>
+    r.order?.order_number || 'Central de Logística';
+
+  const filteredRooms = rooms.filter(r =>
+    roomLabel(r).toLowerCase().includes(search.toLowerCase())
   );
 
   return (
