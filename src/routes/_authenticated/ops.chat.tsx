@@ -202,8 +202,29 @@ function OpsChatPage() {
         {/* Lista de motoristas */}
         <aside className={cn(
           'flex w-full flex-col border-r bg-surface md:w-96',
-          active && 'hidden md:flex'
+          (active || activeTeam) && 'hidden md:flex'
         )}>
+          <div className="flex gap-1 border-b p-2">
+            {([
+              { key: 'motoristas', label: 'Motoristas' },
+              { key: 'equipe', label: 'Equipe' }
+            ] as const).map(t => (
+              <button
+                key={t.key}
+                onClick={() => setTab(t.key)}
+                className={cn(
+                  'flex-1 rounded-xl px-3 py-2 text-xs font-semibold transition-colors',
+                  tab === t.key
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-surface-2 text-muted-foreground hover:text-foreground'
+                )}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+          {tab === 'motoristas' ? (
+          <>
           <div className="space-y-3 border-b p-4">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-bold">Motoristas</h2>
