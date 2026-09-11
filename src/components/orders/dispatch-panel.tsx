@@ -17,7 +17,8 @@ function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number) {
 
 export function DispatchPanel({ order, onSent }: { order: any; onSent: () => void }) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [price, setPrice] = useState<number>(order.price ?? 0);
+  // Valor pago ao motorista — nunca o valor negociado com o cliente.
+  const [price, setPrice] = useState<number>(order.driver_amount ?? order.price ?? 0);
   const [minutes, setMinutes] = useState(15);
   const [sending, setSending] = useState(false);
 
@@ -101,7 +102,11 @@ export function DispatchPanel({ order, onSent }: { order: any; onSent: () => voi
         );
       if (error) throw error;
       const { data: u } = await supabase.auth.getUser();
-      await supabase.from("orders").update({ status: "awaiting_driver", price }).eq("id", order.id);
+      // Atualiza apenas o valor do motorista; o valor do cliente permanece intacto.
+      await supabase
+        .from("orders")
+        .update({ status: "awaiting_driver", driver_amount: price })
+        .eq("id", order.id);
       
       // Ensure chat room exists for the operation
       await supabase.from("chat_rooms" as any).upsert({ order_id: order.id } as any, { onConflict: 'order_id' });
@@ -153,7 +158,7 @@ export function DispatchPanel({ order, onSent }: { order: any; onSent: () => voi
 
       <div className="mb-4 grid grid-cols-2 gap-3">
         <label className="text-xs text-muted-foreground">
-          Valor da oferta (R$)
+          Valor ao motorista (R$)
           <input
             type="number"
             value={price}
