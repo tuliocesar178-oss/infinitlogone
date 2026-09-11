@@ -4,7 +4,8 @@ import { useState, useEffect, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   getRooms, getDriverContacts, getOrCreateDriverRoom, markRoomAsRead,
-  ChatRoom, DriverContact, DriverActiveOrder
+  getTeamContacts, getOrCreateStaffRoom,
+  ChatRoom, DriverContact, DriverActiveOrder, TeamContact
 } from '@/lib/chat';
 import { STATUS_LABEL } from '@/lib/order-status';
 import { supabase } from '@/integrations/supabase/client';
