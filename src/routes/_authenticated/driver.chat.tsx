@@ -131,21 +131,22 @@ function DriverChatPage() {
                 <div className="flex gap-3">
                   <Avatar className="h-12 w-12 border-2 border-background">
                     <AvatarFallback className="bg-primary/10 text-primary font-bold">
-                      {room.order?.order_number.substring(0, 2)}
+                      {roomLabel(room).substring(0, 2)}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-start mb-0.5">
-                      <span className="font-bold text-sm truncate">{room.order?.order_number}</span>
+                      <span className="font-bold text-sm truncate">{roomLabel(room)}</span>
                       <span className="text-[10px] text-muted-foreground flex items-center gap-1 shrink-0">
                         <Clock className="h-3 w-3" />
                         {new Date(room.last_message_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
                     <div className="text-xs font-medium text-muted-foreground truncate">
-                      Logística • {room.order?.client?.full_name}
+                      {room.order ? `Logística • ${room.order?.client?.full_name ?? ''}` : 'Conversa geral com a logística'}
                     </div>
                   </div>
+
                 </div>
               </div>
             ))
