@@ -378,11 +378,76 @@ function OpsChatPage() {
               );
             })}
           </div>
+          </>
+          ) : (
+            <div className="flex-1 overflow-y-auto">
+              {loadingTeam ? (
+                <div className="p-8 text-center text-sm text-muted-foreground">Carregando equipe...</div>
+              ) : team.length === 0 ? (
+                <div className="p-8 text-center text-sm text-muted-foreground">Nenhum colega cadastrado.</div>
+              ) : team.map(member => (
+                <button
+                  key={member.user_id}
+                  onClick={() => openTeamRoom(member)}
+                  disabled={opening === member.user_id}
+                  className={cn(
+                    'flex w-full items-center gap-3 border-b p-3 text-left transition-colors hover:bg-surface-2',
+                    activeTeam?.contact.user_id === member.user_id && 'bg-primary/5'
+                  )}
+                >
+                  <Avatar className="h-11 w-11 border-2 border-background">
+                    <AvatarImage src={member.avatar_url || ''} />
+                    <AvatarFallback className="bg-primary/10 font-bold text-primary">
+                      {member.full_name.substring(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="truncate text-sm font-bold">{member.full_name}</span>
+                      {member.unread > 0 && (
+                        <Badge className="h-5 min-w-5 justify-center rounded-full px-1.5 text-[10px]">
+                          {member.unread}
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="truncate text-[11px] text-muted-foreground">
+                      {member.position || 'Equipe interna'}
+                    </div>
+                  </div>
+                  {opening === member.user_id
+                    ? <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                    : <MessageSquare className="h-4 w-4 text-muted-foreground" />}
+                </button>
+              ))}
+            </div>
+          )}
         </aside>
 
         {/* Conversa */}
-        <section className={cn('flex flex-1 flex-col bg-surface-2/30', !active && 'hidden md:flex')}>
-          {active ? (
+        <section className={cn('flex flex-1 flex-col bg-surface-2/30', !active && !activeTeam && 'hidden md:flex')}>
+          {activeTeam ? (
+            <div className="flex h-full flex-col p-0 md:p-6">
+              <div className="flex items-center gap-2 border-b bg-surface px-3 py-2 md:hidden">
+                <Button variant="ghost" size="icon" onClick={() => setActiveTeam(null)}>
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+                <span className="text-sm font-bold">{activeTeam.contact.full_name}</span>
+              </div>
+              <div className="min-h-0 flex-1">
+                <OrderChat
+                  key={activeTeam.roomId}
+                  roomId={activeTeam.roomId}
+                  orderId={null}
+                  title={activeTeam.contact.full_name}
+                  subtitle={activeTeam.contact.position || 'Equipe interna'}
+                  avatarUrl={activeTeam.contact.avatar_url || ''}
+                  onCallClick={() => activeTeam.contact.phone
+                    ? window.open(`tel:${activeTeam.contact.phone.replace(/\D/g, '')}`)
+                    : toast.info('Colega sem telefone cadastrado.')}
+                />
+              </div>
+            </div>
+          ) : active ? (
             <div className="flex h-full flex-col p-0 md:p-6">
               <div className="flex items-center gap-2 border-b bg-surface px-3 py-2 md:hidden">
                 <Button variant="ghost" size="icon" onClick={() => setActive(null)}>
