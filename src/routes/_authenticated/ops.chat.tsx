@@ -62,13 +62,36 @@ function OpsChatPage() {
   const [filter, setFilter] = useState<PresenceFilter>('todos');
   const [vehicleFilter, setVehicleFilter] = useState<string>('todos');
   const [active, setActive] = useState<ActiveChat | null>(null);
+  const [activeTeam, setActiveTeam] = useState<{ roomId: string; contact: TeamContact } | null>(null);
   const [opening, setOpening] = useState<string | null>(null);
+  const [tab, setTab] = useState<'motoristas' | 'equipe'>('motoristas');
 
   const { data: drivers = [], isLoading } = useQuery({
     queryKey: ['chat-drivers'],
     queryFn: getDriverContacts,
     refetchInterval: 15000
   });
+
+  const { data: team = [], isLoading: loadingTeam } = useQuery({
+    queryKey: ['chat-team'],
+    queryFn: getTeamContacts,
+    refetchInterval: 20000
+  });
+
+  const openTeamRoom = async (contact: TeamContact) => {
+    try {
+      setOpening(contact.user_id);
+      const roomId = contact.room_id || (await getOrCreateStaffRoom(contact.user_id));
+      setActive(null);
+      setActiveTeam({ roomId, contact });
+      await markRoomAsRead(roomId);
+      qc.invalidateQueries({ queryKey: ['chat-team'] });
+    } catch (err: any) {
+      toast.error(err?.message || 'Não foi possível abrir a conversa.');
+    } finally {
+      setOpening(null);
+    }
+  };
 
   const { data: rooms = [] } = useQuery({
     queryKey: ['chat-rooms'],
