@@ -60,8 +60,7 @@ function DriverChatPage() {
             id,
             driver_id,
             order_number:code,
-            driver:profiles!orders_driver_id_fkey(full_name, avatar_url),
-            client:profiles!orders_client_id_fkey(full_name, avatar_url)
+            client_name
           )
         `)
         .eq('order.driver_id', userId)
@@ -173,7 +172,7 @@ function DriverChatPage() {
                       </span>
                     </div>
                     <div className="text-xs font-medium text-muted-foreground truncate">
-                      {room.order ? `Logística • ${room.order?.client?.full_name ?? ''}` : 'Conversa geral com a logística'}
+                      {room.order ? `Logística • ${room.order.order_number}` : 'Conversa geral com a logística'}
                     </div>
                   </div>
 
