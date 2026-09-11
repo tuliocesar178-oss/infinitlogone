@@ -311,9 +311,14 @@ function TorreDeControle() {
                       <div className="text-sm font-semibold truncate">{driver.profile?.full_name}</div>
                       <div className="text-[10px] text-muted-foreground uppercase">{driver.city || 'Localizando...'}</div>
                     </div>
-                    <div className="text-[10px] font-mono font-medium text-muted-foreground">
-                      {driver.status === 'on_trip' ? '🚗' : '🟢'}
-                    </div>
+                    <Link
+                      to={"/ops/chat" as any}
+                      search={{ driverId: driver.user_id } as any}
+                      title="Abrir chat"
+                      className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-surface text-muted-foreground hover:bg-accent hover:text-foreground"
+                    >
+                      💬
+                    </Link>
                   </div>
                 ))}
               </div>
