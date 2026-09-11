@@ -169,6 +169,7 @@ export type Database = {
       chat_rooms: {
         Row: {
           created_at: string | null
+          driver_id: string | null
           id: string
           last_message_at: string | null
           order_id: string | null
@@ -176,6 +177,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          driver_id?: string | null
           id?: string
           last_message_at?: string | null
           order_id?: string | null
@@ -183,12 +185,20 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          driver_id?: string | null
           id?: string
           last_message_at?: string | null
           order_id?: string | null
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "chat_rooms_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "chat_rooms_order_id_fkey"
             columns: ["order_id"]
@@ -2304,6 +2314,10 @@ export type Database = {
         Args: { _lat?: number; _lng?: number; _offer_id: string }
         Returns: Json
       }
+      can_access_direct_room: {
+        Args: { _room_id: string; _user: string }
+        Returns: boolean
+      }
       can_access_order_chat: {
         Args: { _order_id: string; _user_id: string }
         Returns: boolean
@@ -2315,6 +2329,10 @@ export type Database = {
       finalize_route: { Args: { _order_id: string }; Returns: undefined }
       generate_pf_code: { Args: never; Returns: string }
       generate_tracking_code: { Args: never; Returns: string }
+      get_or_create_driver_room: {
+        Args: { _driver_id: string }
+        Returns: string
+      }
       get_tracking: { Args: { _code: string }; Returns: Json }
       has_role: {
         Args: {
