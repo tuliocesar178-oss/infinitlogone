@@ -43,7 +43,8 @@ function DriverChatPage() {
   const { data: rooms = [], isLoading } = useQuery({
     queryKey: ['chat-rooms', userId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Salas vinculadas a fretes do motorista
+      const orderRooms = await supabase
         .from('chat_rooms')
         .select(`
           *,
@@ -57,9 +58,23 @@ function DriverChatPage() {
         `)
         .eq('order.driver_id', userId!)
         .order('last_message_at', { ascending: false });
-      
-      if (error) throw error;
-      return data as unknown as ChatRoom[];
+      if (orderRooms.error) throw orderRooms.error;
+
+      // Conversa geral com a logística (sem frete vinculado)
+      const directRooms = await supabase
+        .from('chat_rooms')
+        .select('*')
+        .is('order_id', null)
+        .eq('driver_id', userId!)
+        .order('last_message_at', { ascending: false });
+      if (directRooms.error) throw directRooms.error;
+
+      const direct = (directRooms.data || []).map((r: any) => ({
+        ...r,
+        order: null,
+      }));
+
+      return [...direct, ...(orderRooms.data || [])] as unknown as ChatRoom[];
     },
     enabled: !!userId,
     refetchInterval: 10000
