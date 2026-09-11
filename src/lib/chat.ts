@@ -20,14 +20,16 @@ export interface ChatMessage {
 
 export interface ChatRoom {
   id: string;
-  order_id: string;
+  order_id: string | null;
+  driver_id?: string | null;
   created_at: string;
   last_message_at: string;
+  driver_profile?: { full_name: string; avatar_url: string | null } | null;
   order?: {
     order_number: string;
     driver?: { full_name: string; avatar_url: string | null };
     client?: { full_name: string; avatar_url: string | null };
-  };
+  } | null;
 }
 
 export const CHAT_KIND_LABELS: Record<MessageKind, string> = {
