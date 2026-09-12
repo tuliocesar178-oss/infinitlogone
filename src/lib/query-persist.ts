@@ -36,7 +36,7 @@ export function enableOfflinePersistence(queryClient: QueryClient): () => void {
   };
 
   let idleId: number | undefined;
-  let restoreTimer: number | undefined;
+  let restoreTimer: ReturnType<typeof setTimeout> | undefined;
   if ("requestIdleCallback" in window) {
     idleId = window.requestIdleCallback(restore, { timeout: 1500 });
   } else {
