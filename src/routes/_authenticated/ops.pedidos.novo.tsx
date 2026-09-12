@@ -337,6 +337,7 @@ function NewOrderWizard() {
   const extraCosts = (num(f.fuel) ?? 0) + (num(f.escort) ?? 0) + (num(f.license) ?? 0) + (num(f.other_costs) ?? 0);
   const marginAmount = num(f.margin_amount) ?? 0;
   const negotiated = num(f.driver_price) ?? num(f.price) ?? 0;
+  const clientFreightValue = num(f.price) ?? 0;
   const suggestedValue = (antt?.minimum_freight ?? 0) + tolls + extraCosts + marginAmount;
   const belowFloor =
     !!antt?.applicable &&
@@ -932,7 +933,7 @@ function NewOrderWizard() {
             </div>
 
             <div className="mt-8">
-              <div className="mb-3 text-[10px] font-bold uppercase tracking-[0.2em] text-brand">Piso mínimo ANTT</div>
+              <div className="mb-3 text-[10px] font-bold uppercase tracking-[0.2em] text-brand">Sugestão de valor ANTT</div>
               <Grid>
                 <label className="block">
                   <span className="mb-1.5 block text-xs font-medium uppercase tracking-widest text-muted-foreground">Tipo de operação</span>
@@ -973,8 +974,18 @@ function NewOrderWizard() {
                 </label>
               </Grid>
               <div className="mt-4">
-                <AnttCard calc={antt} loading={anttLoading} negotiated={negotiated}
-                  tolls={tolls} extraCosts={extraCosts} margin={marginAmount} />
+                <AnttCard
+                  calc={antt}
+                  loading={anttLoading}
+                  negotiated={clientFreightValue}
+                  tolls={tolls}
+                  extraCosts={extraCosts}
+                  margin={marginAmount}
+                  onUseSuggested={(value) => {
+                    set("price", value.toFixed(2));
+                    toast.success("Valor sugerido aplicado ao frete. Você ainda pode ajustá-lo.");
+                  }}
+                />
               </div>
             </div>
           </>
@@ -1062,9 +1073,13 @@ function NewOrderWizard() {
                 ["Rastreamento", f.tracking_required === "sim" ? "Sim" : "Não"],
               ]} />
               <ReviewBlock title="Valores" onEdit={() => setStep(5)} rows={[
-                ["Cliente", brl(num(f.price) ?? 0)],
-                ["Motorista", brl(num(f.driver_price) ?? 0)],
-                ["Margem", `${margin.toFixed(1)}%`],
+                ["Piso mínimo ANTT", antt?.minimum_freight != null ? brl(antt.minimum_freight) : "Não calculado"],
+                ["Pedágios", brl(tolls)],
+                ["Valor sugerido", suggestedValue > 0 ? brl(suggestedValue) : "Não calculado"],
+                ["Valor negociado", brl(num(f.price) ?? 0)],
+                ["Situação ANTT", antt?.applicable && antt.minimum_freight != null
+                  ? (clientFreightValue >= antt.minimum_freight ? "Acima ou dentro do piso ANTT" : "Abaixo do piso ANTT")
+                  : "Não aplicável"],
               ]} />
             </div>
           </div>
