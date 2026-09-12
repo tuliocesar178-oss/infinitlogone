@@ -1,4 +1,5 @@
-import { AlertTriangle, CheckCircle2, Info, ShieldCheck } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Info, WalletCards } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { brl, type AnttCalculation } from "@/lib/antt";
 
@@ -9,6 +10,7 @@ export type AnttCardProps = {
   tolls: number;
   extraCosts: number;
   margin: number;
+  onUseSuggested?: (value: number) => void;
 };
 
 function Row({ label, value }: { label: string; value: string }) {
@@ -20,11 +22,11 @@ function Row({ label, value }: { label: string; value: string }) {
   );
 }
 
-export function AnttCard({ calc, loading, negotiated, tolls, extraCosts, margin }: AnttCardProps) {
+export function AnttCard({ calc, loading, negotiated, tolls, extraCosts, margin, onUseSuggested }: AnttCardProps) {
   if (loading || !calc) {
     return (
       <div className="rounded-2xl border border-border bg-surface p-5 text-sm text-muted-foreground">
-        {loading ? "Calculando piso mínimo ANTT…" : "Preencha origem, destino e dados do veículo para calcular o piso ANTT."}
+        {loading ? "Calculando sugestão ANTT…" : "Preencha origem, destino e dados do veículo para calcular a sugestão ANTT."}
       </div>
     );
   }
@@ -46,8 +48,8 @@ export function AnttCard({ calc, loading, negotiated, tolls, extraCosts, margin 
   return (
     <div className={cn("rounded-2xl border p-5", tone)}>
       <div className="mb-4 flex items-center gap-2">
-        <ShieldCheck className="h-4 w-4 text-brand" />
-        <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand">Cálculo ANTT</h3>
+        <WalletCards className="h-4 w-4 text-brand" />
+        <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand">Sugestão de valor ANTT</h3>
       </div>
 
       {!calc.applicable ? (
@@ -89,11 +91,17 @@ export function AnttCard({ calc, loading, negotiated, tolls, extraCosts, margin 
               <span className="font-semibold">Valor sugerido</span>
               <span className="text-lg font-bold tabular-nums">{brl(suggested)}</span>
             </div>
-            <Row label="Valor negociado" value={brl(negotiated)} />
+            <Row label="Valor informado do frete" value={brl(negotiated)} />
             {negotiated > 0 && calc.distance_km > 0 && (
               <Row label="Negociado por km" value={`${brl(negotiated / calc.distance_km)}/km`} />
             )}
           </div>
+
+          {onUseSuggested && (
+            <Button type="button" className="w-full" onClick={() => onUseSuggested(suggested)}>
+              Usar valor sugerido
+            </Button>
+          )}
 
           <div
             className={cn(
@@ -103,10 +111,10 @@ export function AnttCard({ calc, loading, negotiated, tolls, extraCosts, margin 
           >
             {below ? <AlertTriangle className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
             {below
-              ? `Valor abaixo do piso mínimo ANTT (faltam ${brl(floor! - negotiated)})`
+              ? `Atenção: valor informado ${brl(negotiated)}, abaixo do piso ${brl(floor)}. Diferença de ${brl((floor ?? 0) - negotiated)}.`
               : negotiated > 0
-                ? "Valor dentro do piso ANTT"
-                : "Informe o valor negociado para comparar"}
+                ? "Valor informado está acima ou dentro do piso ANTT"
+                : "Informe o valor do frete para comparar com o piso ANTT"}
           </div>
         </div>
       )}
