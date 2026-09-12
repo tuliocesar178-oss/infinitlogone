@@ -13,19 +13,34 @@ type Snapshot = { savedAt: number; state: unknown };
 export function enableOfflinePersistence(queryClient: QueryClient): () => void {
   if (typeof window === "undefined") return () => {};
 
-  // 1) Restaura o último snapshot válido.
-  try {
-    const raw = window.localStorage.getItem(CACHE_KEY);
-    if (raw) {
-      const snapshot = JSON.parse(raw) as Snapshot;
-      if (Date.now() - snapshot.savedAt <= MAX_AGE) {
-        hydrate(queryClient, snapshot.state);
-      } else {
-        window.localStorage.removeItem(CACHE_KEY);
+  // 1) Restaura o snapshot fora do caminho crítico da primeira pintura.
+  const restore = () => {
+    try {
+      const raw = window.localStorage.getItem(CACHE_KEY);
+      if (raw) {
+        const snapshot = JSON.parse(raw) as Snapshot;
+        if (Date.now() - snapshot.savedAt <= MAX_AGE) {
+          // Não substitui dados que já tenham chegado da rede.
+          const hasFreshData = queryClient
+            .getQueryCache()
+            .getAll()
+            .some((query) => query.state.status === "success");
+          if (!hasFreshData) hydrate(queryClient, snapshot.state);
+        } else {
+          window.localStorage.removeItem(CACHE_KEY);
+        }
       }
+    } catch (error) {
+      console.warn("[Offline] cache inválido, ignorando", error);
     }
-  } catch (error) {
-    console.warn("[Offline] cache inválido, ignorando", error);
+  };
+
+  let idleId: number | undefined;
+  let restoreTimer: number | undefined;
+  if ("requestIdleCallback" in window) {
+    idleId = window.requestIdleCallback(restore, { timeout: 1500 });
+  } else {
+    restoreTimer = window.setTimeout(restore, 0);
   }
 
   // 2) Grava alterações com throttle para não pesar no dispositivo.
@@ -49,6 +64,8 @@ export function enableOfflinePersistence(queryClient: QueryClient): () => void {
   });
 
   return () => {
+    if (idleId !== undefined) window.cancelIdleCallback(idleId);
+    if (restoreTimer !== undefined) window.clearTimeout(restoreTimer);
     if (timer) window.clearTimeout(timer);
     unsubscribe();
   };

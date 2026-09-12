@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchUserRoles, homeForRole, primaryRole } from "@/lib/roles";
+import { getUserRolesCached, homeForRole, primaryRole } from "@/lib/roles";
 
 export const Route = createFileRoute("/_authenticated/app")({
   head: () => ({ meta: [{ title: "InfinitLog" }, { name: "robots", content: "noindex" }] }),
@@ -10,28 +10,37 @@ export const Route = createFileRoute("/_authenticated/app")({
 
 function RoleRouter() {
   const navigate = useNavigate();
+  const { user } = Route.useRouteContext();
+
   useEffect(() => {
-    (async () => {
-      const { data } = await supabase.auth.getUser();
-      if (!data.user) {
-        navigate({ to: "/auth" });
-        return;
-      }
+    let active = true;
+
+    const routeToProfile = async () => {
       // Check if user is a driver awaiting approval
-      const { data: driver } = await supabase
+      const [roles, driverResult] = await Promise.all([
+        getUserRolesCached(user.id),
+        supabase
         .from("drivers")
         .select("approval_status")
-        .eq("user_id", data.user.id)
-        .maybeSingle();
-      if (driver && driver.approval_status !== "active") {
+        .eq("user_id", user.id)
+        .maybeSingle(),
+      ]);
+
+      if (!active) return;
+      const driver = driverResult.data;
+      if (roles.includes("driver") && driver && driver.approval_status !== "active") {
         navigate({ to: "/aguardando-aprovacao", replace: true });
         return;
       }
-      const roles = await fetchUserRoles(data.user.id);
       const target = homeForRole(primaryRole(roles));
       navigate({ to: target, replace: true });
-    })();
-  }, [navigate]);
+    };
+
+    void routeToProfile();
+    return () => {
+      active = false;
+    };
+  }, [navigate, user.id]);
 
   return (
     <div className="flex min-h-screen items-center justify-center">

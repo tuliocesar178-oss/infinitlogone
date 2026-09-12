@@ -4,7 +4,6 @@ import { WifiOff } from "lucide-react";
 import { registerServiceWorker } from "@/lib/pwa";
 import { enablePush, pushSupported } from "@/lib/push";
 import { supabase } from "@/integrations/supabase/client";
-import logoAsset from "@/assets/infinitlog-logo.png.asset.json";
 
 const PERMISSIONS_KEY = "infinitlog-permissions-asked";
 
@@ -61,28 +60,6 @@ async function requestPermissionsOnce() {
   }
 }
 
-/** Splash com a logo exibida por ~2s ao abrir o app. */
-function SplashScreen() {
-  return (
-    <div
-      className="fixed inset-0 z-[9999] flex flex-col items-center justify-center gap-6"
-      style={{ background: "#0d1b4a" }}
-      aria-hidden
-    >
-      <img
-        src={logoAsset.url}
-        alt=""
-        width={112}
-        height={112}
-        className="h-28 w-28 animate-pulse object-contain"
-      />
-      <p className="text-sm font-medium tracking-wide text-white/80">
-        InfinitLog Transportes
-      </p>
-    </div>
-  );
-}
-
 /** Faixa fixa exibida quando o dispositivo perde a conexão. */
 function OfflineBanner() {
   return (
@@ -97,17 +74,19 @@ function OfflineBanner() {
  * Infraestrutura PWA: service worker, splash, estado offline e sincronização.
  */
 export function PwaProvider({ children }: { children: React.ReactNode }) {
-  const [showSplash, setShowSplash] = useState(true);
   const [offline, setOffline] = useState(false);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => setShowSplash(false), 600);
-    return () => window.clearTimeout(timer);
-  }, []);
-
-  useEffect(() => {
     void registerServiceWorker(() => window.location.reload());
-    void requestPermissionsOnce().then(syncPushSubscription);
+
+    // Permissões e push não participam do primeiro carregamento visual.
+    const runDeferredSetup = () => void requestPermissionsOnce().then(syncPushSubscription);
+    if ("requestIdleCallback" in window) {
+      const idleId = window.requestIdleCallback(runDeferredSetup, { timeout: 3000 });
+      return () => window.cancelIdleCallback(idleId);
+    }
+    const timer = window.setTimeout(runDeferredSetup, 1500);
+    return () => window.clearTimeout(timer);
   }, []);
 
   useEffect(() => {
@@ -133,7 +112,6 @@ export function PwaProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      {showSplash && <SplashScreen />}
       {offline && <OfflineBanner />}
       {children}
     </>

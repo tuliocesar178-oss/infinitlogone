@@ -1,4 +1,4 @@
-import logoAsset from "@/assets/infinitlog-logo.png.asset.json";
+const OPTIMIZED_LOGO_URL = "/pwa-192x192.png";
 
 type LogoProps = {
   /** Height in pixels. Width scales automatically. */
@@ -18,7 +18,7 @@ export function Logo({ size = 32, withWordmark = true, className = "" }: LogoPro
   return (
     <span className={`inline-flex items-center gap-2.5 ${className}`}>
       <img
-        src={logoAsset.url}
+        src={OPTIMIZED_LOGO_URL}
         alt="InfinitLog"
         width={size}
         height={size}
@@ -39,4 +39,4 @@ export function Logo({ size = 32, withWordmark = true, className = "" }: LogoPro
   );
 }
 
-export const logoUrl = logoAsset.url;
+export const logoUrl = OPTIMIZED_LOGO_URL;
