@@ -1,7 +1,7 @@
-import { createFileRoute, Outlet, redirect, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, Outlet, redirect, useNavigate, useRouterState } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { getUserRolesCached, homeForRole, primaryRole } from "@/lib/roles";
+import { getUserRolesCached, primaryRole } from "@/lib/roles";
 import { useEffect } from "react";
 
 export const Route = createFileRoute("/_authenticated")({
@@ -19,6 +19,7 @@ export const Route = createFileRoute("/_authenticated")({
 
 function AuthenticatedLayout() {
   const { user } = Route.useRouteContext();
+  const navigate = useNavigate();
   const path = useRouterState({ select: (s) => s.location.pathname });
   
   const { data: role } = useQuery({
@@ -33,23 +34,17 @@ function AuthenticatedLayout() {
   useEffect(() => {
     if (!role) return;
 
-    // Redireciona se o usuário tentar acessar a raiz /app ou se estiver em um local não permitido para o seu papel
-    if (path === "/app") {
-      window.location.href = homeForRole(role);
-      return;
-    }
-
     // Proteção básica de rotas por prefixo
     const isAdminPath = path.startsWith("/ops") || path.startsWith("/admin");
     const isClientPath = path.startsWith("/client");
     const isDriverPath = path.startsWith("/driver");
 
     if (role === "client" && (isAdminPath || isDriverPath)) {
-      window.location.href = "/client";
+      void navigate({ to: "/client", replace: true });
     } else if (role === "driver" && (isAdminPath || isClientPath)) {
-      window.location.href = "/driver";
+      void navigate({ to: "/driver", replace: true });
     }
-  }, [role, path]);
+  }, [navigate, role, path]);
 
   return <Outlet />;
 }
