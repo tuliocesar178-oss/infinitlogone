@@ -33,7 +33,7 @@ export function FreightCard({ order }: FreightCardProps) {
       </div>
       {(total != null || remaining != null || pct != null) && <div className="mt-4">
         <div className="mb-2 flex flex-wrap justify-between gap-2 text-xs text-muted-foreground"><span>{total != null ? `${total.toFixed(0)} km total` : "Distância total indisponível"}</span><span>{traveled != null ? `${traveled.toFixed(0)} km percorridos` : ""}</span><span>{remaining != null ? `${remaining.toFixed(0)} km restantes` : ""}</span></div>
-        {pct != null && <div className="h-2 overflow-hidden rounded-full bg-muted"><div className="h-full bg-brand" style={{ width: `${pct}%` }} /></div>}
+        {pct != null && <progress className="h-2 w-full accent-brand" max={100} value={pct} aria-label={`${pct}% concluído`} />}
       </div>}
       <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
         <span className="flex items-center gap-1.5"><Clock3 className="h-4 w-4 text-muted-foreground" /> ETA {fmt(etaDate(order))}</span>
