@@ -1,7 +1,7 @@
 import { createFileRoute, Outlet, redirect, useNavigate, useRouterState } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { getUserRolesCached, homeForRole, primaryRole } from "@/lib/roles";
+import { getUserRolesCached, primaryRole } from "@/lib/roles";
 import { useEffect } from "react";
 
 export const Route = createFileRoute("/_authenticated")({
@@ -33,12 +33,6 @@ function AuthenticatedLayout() {
 
   useEffect(() => {
     if (!role) return;
-
-    // Redireciona se o usuário tentar acessar a raiz /app ou se estiver em um local não permitido para o seu papel
-    if (path === "/app") {
-      void navigate({ to: homeForRole(role), replace: true });
-      return;
-    }
 
     // Proteção básica de rotas por prefixo
     const isAdminPath = path.startsWith("/ops") || path.startsWith("/admin");
