@@ -85,8 +85,8 @@ export function PwaProvider({ children }: { children: React.ReactNode }) {
       const idleId = window.requestIdleCallback(runDeferredSetup, { timeout: 3000 });
       return () => window.cancelIdleCallback(idleId);
     }
-    const timer = window.setTimeout(runDeferredSetup, 1500);
-    return () => window.clearTimeout(timer);
+    const timer = globalThis.setTimeout(runDeferredSetup, 1500);
+    return () => globalThis.clearTimeout(timer);
   }, []);
 
   useEffect(() => {

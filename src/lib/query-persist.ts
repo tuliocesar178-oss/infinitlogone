@@ -40,7 +40,7 @@ export function enableOfflinePersistence(queryClient: QueryClient): () => void {
   if ("requestIdleCallback" in window) {
     idleId = window.requestIdleCallback(restore, { timeout: 1500 });
   } else {
-    restoreTimer = window.setTimeout(restore, 0);
+    restoreTimer = globalThis.setTimeout(restore, 0);
   }
 
   // 2) Grava alterações com throttle para não pesar no dispositivo.
