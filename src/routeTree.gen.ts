@@ -19,6 +19,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as RastreioIndexRouteImport } from './routes/rastreio.index'
 import { Route as RastreioCodeRouteImport } from './routes/rastreio.$code'
+import { Route as AuthenticatedPainelOperacaoRouteImport } from './routes/_authenticated/painel-operacao'
 import { Route as AuthenticatedOpsRouteImport } from './routes/_authenticated/ops'
 import { Route as AuthenticatedDriverRouteImport } from './routes/_authenticated/driver'
 import { Route as AuthenticatedClientRouteImport } from './routes/_authenticated/client'
@@ -110,6 +111,12 @@ const RastreioCodeRoute = RastreioCodeRouteImport.update({
   path: '/rastreio/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedPainelOperacaoRoute =
+  AuthenticatedPainelOperacaoRouteImport.update({
+    id: '/painel-operacao',
+    path: '/painel-operacao',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOpsRoute = AuthenticatedOpsRouteImport.update({
   id: '/ops',
   path: '/ops',
@@ -358,6 +365,7 @@ export interface FileRoutesByFullPath {
   '/client': typeof AuthenticatedClientRouteWithChildren
   '/driver': typeof AuthenticatedDriverRouteWithChildren
   '/ops': typeof AuthenticatedOpsRouteWithChildren
+  '/painel-operacao': typeof AuthenticatedPainelOperacaoRoute
   '/rastreio/$code': typeof RastreioCodeRoute
   '/rastreio/': typeof RastreioIndexRoute
   '/client/bi': typeof AuthenticatedClientBiRoute
@@ -407,6 +415,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/app': typeof AuthenticatedAppRoute
+  '/painel-operacao': typeof AuthenticatedPainelOperacaoRoute
   '/rastreio/$code': typeof RastreioCodeRoute
   '/rastreio': typeof RastreioIndexRoute
   '/client/bi': typeof AuthenticatedClientBiRoute
@@ -461,6 +470,7 @@ export interface FileRoutesById {
   '/_authenticated/client': typeof AuthenticatedClientRouteWithChildren
   '/_authenticated/driver': typeof AuthenticatedDriverRouteWithChildren
   '/_authenticated/ops': typeof AuthenticatedOpsRouteWithChildren
+  '/_authenticated/painel-operacao': typeof AuthenticatedPainelOperacaoRoute
   '/rastreio/$code': typeof RastreioCodeRoute
   '/rastreio/': typeof RastreioIndexRoute
   '/_authenticated/client/bi': typeof AuthenticatedClientBiRoute
@@ -515,6 +525,7 @@ export interface FileRouteTypes {
     | '/client'
     | '/driver'
     | '/ops'
+    | '/painel-operacao'
     | '/rastreio/$code'
     | '/rastreio/'
     | '/client/bi'
@@ -564,6 +575,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/admin'
     | '/app'
+    | '/painel-operacao'
     | '/rastreio/$code'
     | '/rastreio'
     | '/client/bi'
@@ -617,6 +629,7 @@ export interface FileRouteTypes {
     | '/_authenticated/client'
     | '/_authenticated/driver'
     | '/_authenticated/ops'
+    | '/_authenticated/painel-operacao'
     | '/rastreio/$code'
     | '/rastreio/'
     | '/_authenticated/client/bi'
@@ -741,6 +754,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/rastreio/$code'
       preLoaderRoute: typeof RastreioCodeRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/painel-operacao': {
+      id: '/_authenticated/painel-operacao'
+      path: '/painel-operacao'
+      fullPath: '/painel-operacao'
+      preLoaderRoute: typeof AuthenticatedPainelOperacaoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/ops': {
       id: '/_authenticated/ops'
@@ -1163,6 +1183,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedClientRoute: typeof AuthenticatedClientRouteWithChildren
   AuthenticatedDriverRoute: typeof AuthenticatedDriverRouteWithChildren
   AuthenticatedOpsRoute: typeof AuthenticatedOpsRouteWithChildren
+  AuthenticatedPainelOperacaoRoute: typeof AuthenticatedPainelOperacaoRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -1171,6 +1192,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedClientRoute: AuthenticatedClientRouteWithChildren,
   AuthenticatedDriverRoute: AuthenticatedDriverRouteWithChildren,
   AuthenticatedOpsRoute: AuthenticatedOpsRouteWithChildren,
+  AuthenticatedPainelOperacaoRoute: AuthenticatedPainelOperacaoRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
