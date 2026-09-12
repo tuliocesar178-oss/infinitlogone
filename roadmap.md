@@ -5,4 +5,4 @@
 - [x] Exibir indicadores, fretes, atrasos e ocorrências com dados reais
 - [x] Integrar mapa, filtros, detalhes e chat existentes
 - [x] Adicionar atualização ao vivo, rotação e modo TV
-- [ ] Validar visual e funcionamento em desktop e celular
+- [x] Validar visual e funcionamento em desktop e celular
