@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchUserRoles, primaryRole, homeForRole } from "@/lib/roles";
+import { getUserRolesCached, primaryRole, homeForRole } from "@/lib/roles";
 import { useState, type FormEvent } from "react";
 import { ArrowRight, MapPin, Phone, Search, ShieldCheck, Zap } from "lucide-react";
 import { Logo } from "@/components/logo";
@@ -34,7 +34,7 @@ function LandingPage() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) {
-        fetchUserRoles(data.session.user.id).then(roles => {
+        getUserRolesCached(data.session.user.id).then(roles => {
           const target = homeForRole(primaryRole(roles));
           navigate({ to: target, replace: true });
         });
