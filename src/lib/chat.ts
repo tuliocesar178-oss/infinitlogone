@@ -370,6 +370,13 @@ export async function getOrCreateStaffRoom(otherId: string): Promise<string> {
   return data as unknown as string;
 }
 
+/** Abre ou cria a sala unica da equipe de operacao. */
+export async function getOrCreateOperationRoom(): Promise<string> {
+  const { data, error } = await supabase.rpc('get_or_create_operation_room' as any);
+  if (error) throw error;
+  return data as unknown as string;
+}
+
 /** Marca como lidas as mensagens recebidas de uma sala. */
 export async function markRoomAsRead(roomId: string) {
   const { data: { user } } = await supabase.auth.getUser();
