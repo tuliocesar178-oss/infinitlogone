@@ -1,400 +1,249 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { AppShell } from "@/components/app-shell";
-import { 
-  MapPin, 
-  Truck, 
-  Clock, 
-  Navigation,
-  CheckCircle2,
-  Circle,
-  Package,
-  Calendar,
-  ChevronRight,
-  Share2,
-  User,
-  Info
-} from "lucide-react";
-import { useState, useMemo, useEffect } from "react";
-import { TripMap } from "@/components/trip-map";
-import { statusLabel, STATUS_LABEL, publicStatus, PUBLIC_TIMELINE } from "@/lib/order-status";
+import { createFileRoute } from "@tanstack/react-router";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Button } from "@/components/ui/button";
+import { CheckCircle2, ChevronRight, Circle, Clock, MapPin, Package, Truck } from "lucide-react";
+import { AppShell } from "@/components/app-shell";
+import { DriverDetails, VehicleDetails } from "@/components/client/tracking-details";
 import { ShareTracking } from "@/components/share-tracking";
+import { TripMap } from "@/components/trip-map";
+import { supabase } from "@/integrations/supabase/client";
+import { getClientTrackingOrders } from "@/lib/client-tracking.functions";
+import {
+  CLOSED_STATUSES,
+  relativeUpdate,
+  vehicleName,
+  type ClientTrackingOrder,
+} from "@/lib/client-tracking";
+import { PUBLIC_TIMELINE, publicStatus, statusLabel } from "@/lib/order-status";
 
 export const Route = createFileRoute("/_authenticated/client/")({
+  head: () => ({
+    meta: [
+      { title: "Rastreamento de entregas — InfinitLog" },
+      { name: "description", content: "Acompanhe suas entregas, motoristas e veículos em tempo real." },
+      { property: "og:title", content: "Rastreamento de entregas — InfinitLog" },
+      { property: "og:description", content: "Acompanhe suas entregas, motoristas e veículos em tempo real." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      { name: "robots", content: "noindex" },
+    ],
+  }),
   component: ClientTrackingHome,
 });
 
 function ClientTrackingHome() {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
-  
-  const { data: orders, isLoading } = useQuery({
-    queryKey: ["client-active-tracking-orders"],
-    queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return [];
-
-      const { data } = await supabase
-        .from("orders")
-        .select(`
-          *,
-          vehicle:vehicles(
-            id,
-            plate,
-            brand,
-            model,
-            year,
-            color,
-            vehicle_type,
-            body_type,
-            capacity_kg,
-            axles,
-            photo_url
-          )
-        `)
-        .eq("client_id", user.id)
-        .order("created_at", { ascending: false });
-      
-      if (!data) return [];
-
-      // Fetch driver profiles manually to avoid relation errors
-      const driverIds = [...new Set(data.map(o => o.driver_id).filter(Boolean))] as string[];
-      let driversMap: Record<string, any> = {};
-      
-      if (driverIds.length > 0) {
-        const { data: profiles } = await supabase
-          .from("profiles")
-          .select("id, full_name, avatar_url, phone")
-          .in("id", driverIds);
-        
-        profiles?.forEach(p => {
-          driversMap[p.id] = p;
-        });
-      }
-
-      return data.map(order => ({
-        ...order,
-        driver: order.driver_id ? driversMap[order.driver_id] : null
-      }));
-    },
-    refetchInterval: 10000
+  const queryClient = useQueryClient();
+  const fetchOrders = useServerFn(getClientTrackingOrders);
+  const queryKey = ["client-tracking-orders"] as const;
+  const { data: orders = [], isLoading, isError } = useQuery({
+    queryKey,
+    queryFn: async () => (await fetchOrders()) as ClientTrackingOrder[],
+    refetchInterval: 15_000,
   });
 
-  const activeOrders = useMemo(() => 
-    orders?.filter(o => !["delivered", "finalized", "cancelled"].includes(o.status)) || []
-  , [orders]);
-
-  const historyOrders = useMemo(() => 
-    orders?.filter(o => ["delivered", "finalized"].includes(o.status)) || []
-  , [orders]);
-
-  // Se houver apenas um frete ativo e nenhum selecionado, seleciona ele automaticamente
   useEffect(() => {
-    if (activeOrders.length === 1 && !selectedOrderId) {
-      setSelectedOrderId(activeOrders[0].id);
-    }
-  }, [activeOrders, selectedOrderId]);
+    const refresh = () => void queryClient.invalidateQueries({ queryKey });
+    const channel = supabase
+      .channel("client-tracking-live")
+      .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, refresh)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "order_tracking_points" }, refresh)
+      .subscribe();
+    return () => { void supabase.removeChannel(channel); };
+  }, [queryClient]);
 
-  const selectedOrder = useMemo(() => {
-    if (!orders) return null;
-    return orders.find(o => o.id === selectedOrderId) || activeOrders[0] || null;
-  }, [orders, selectedOrderId, activeOrders]);
+  const activeOrders = useMemo(
+    () => orders.filter((order) => !CLOSED_STATUSES.includes(order.status)),
+    [orders],
+  );
+  const historyOrders = useMemo(
+    () => orders.filter((order) => ["delivered", "finalized"].includes(order.status)),
+    [orders],
+  );
+  const selectedOrder = useMemo(
+    () => orders.find((order) => order.id === selectedOrderId) ?? activeOrders[0] ?? null,
+    [activeOrders, orders, selectedOrderId],
+  );
 
-  if (isLoading) {
-    return (
-      <AppShell title="Rastreamento" subtitle="Carregando suas entregas...">
-        <div className="flex h-[60vh] items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-        </div>
-      </AppShell>
-    );
-  }
-
-  if (orders?.length === 0) {
-    return (
-      <AppShell title="Rastreamento" subtitle="Bem-vindo ao seu portal">
-        <div className="flex flex-col items-center justify-center py-20 text-center">
-          <div className="mb-6 rounded-full bg-slate-50 p-6">
-            <Package className="h-12 w-12 text-slate-300" />
-          </div>
-          <h2 className="text-2xl font-bold tracking-tight text-slate-900">Nenhum frete encontrado</h2>
-          <p className="mt-2 max-w-sm text-muted-foreground">
-            Você ainda não possui entregas cadastradas no sistema.
-          </p>
-        </div>
-      </AppShell>
-    );
-  }
+  if (isLoading) return <TrackingLoading />;
+  if (isError) return <TrackingError />;
+  if (orders.length === 0) return <TrackingEmpty />;
 
   return (
-    <AppShell 
-      title="Rastreamento" 
-      subtitle={selectedOrder ? `Acompanhando ${selectedOrder.code}` : "Selecione uma entrega para rastrear"}
-    >
-      <div className="flex flex-col gap-6 lg:flex-row h-full">
-        {/* Lado Esquerdo: Lista e Detalhes */}
-        <div className="flex flex-col w-full lg:w-[400px] gap-6 shrink-0">
-          
-          {/* Saudação e Seleção */}
-          <div className="card-soft p-5 bg-primary text-primary-foreground border-none">
+    <AppShell title="Rastreamento" subtitle={selectedOrder ? `Acompanhando ${selectedOrder.code}` : "Selecione uma entrega"}>
+      <div className="grid min-w-0 gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
+        <aside className="min-w-0 space-y-7">
+          <div className="rounded-lg bg-primary p-5 text-primary-foreground">
             <h2 className="text-lg font-bold">Olá, Cliente</h2>
-            <p className="text-primary-foreground/80 text-sm">Suas entregas em tempo real</p>
+            <p className="mt-1 text-sm text-primary-foreground/80">Suas entregas em tempo real</p>
           </div>
 
-          {/* Lista de Ativos */}
-          <div className="space-y-3">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-2">Entregas Ativas</h3>
-            <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+          <section aria-labelledby="active-orders-heading">
+            <h2 id="active-orders-heading" className="mb-3 px-1 text-xs font-bold uppercase text-muted-foreground">Entregas ativas</h2>
+            <div className="max-h-[470px] space-y-2 overflow-y-auto pr-1">
               {activeOrders.map((order) => (
-                <button
+                <ActiveOrderButton
                   key={order.id}
-                  onClick={() => setSelectedOrderId(order.id)}
-                  className={`w-full text-left card-soft p-4 transition-all hover:border-brand/40 ${selectedOrderId === order.id ? 'border-brand ring-2 ring-brand/10 bg-brand/5' : ''}`}
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <span className="font-bold text-sm">{order.code}</span>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
-                      order.status === 'incident' ? 'bg-red-100 text-red-700' : 'bg-brand/10 text-brand'
-                    }`}>
-                      {statusLabel(order.status)}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <MapPin className="h-3 w-3" />
-                    <span className="truncate">{order.origin_city}</span>
-                    <ChevronRight className="h-3 w-3" />
-                    <span className="truncate">{order.destination_city}</span>
-                  </div>
-                  <div className="mt-3 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="h-6 w-6 rounded-full bg-slate-200 overflow-hidden">
-                        {(order.driver as any)?.avatar_url && <img src={(order.driver as any).avatar_url} className="h-full w-full object-cover" />}
-                      </div>
-                      <span className="text-[11px] font-medium">{(order.driver as any)?.full_name || "A definir"}</span>
-                    </div>
-                    <div className="text-[10px] text-muted-foreground font-mono">{(order.vehicle as any)?.plate}</div>
-                  </div>
-                </button>
+                  order={order}
+                  selected={selectedOrder?.id === order.id}
+                  onSelect={() => setSelectedOrderId(order.id)}
+                />
               ))}
               {activeOrders.length === 0 && (
-                <div className="p-4 text-center text-xs text-muted-foreground border border-dashed rounded-xl">
-                  Nenhuma entrega ativa no momento.
-                </div>
+                <p className="rounded-lg border border-dashed p-5 text-center text-sm text-muted-foreground">Nenhuma entrega ativa no momento.</p>
               )}
             </div>
-          </div>
+          </section>
 
-          {/* Histórico Rápido */}
-          <div className="space-y-3">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-2">Histórico Recente</h3>
+          <section aria-labelledby="history-heading">
+            <h2 id="history-heading" className="mb-3 px-1 text-xs font-bold uppercase text-muted-foreground">Histórico recente</h2>
             <div className="space-y-2">
               {historyOrders.slice(0, 3).map((order) => (
-                <div key={order.id} className="card-soft p-3 bg-surface-2/50 border-dashed opacity-70">
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="font-bold">{order.code}</span>
-                    <span className="text-emerald-600 font-bold">Entregue</span>
-                  </div>
+                <div key={order.id} className="flex items-center justify-between rounded-lg border bg-card p-3 text-xs">
+                  <span className="font-bold">{order.code}</span>
+                  <span className="font-semibold text-success">Entregue</span>
                 </div>
               ))}
+              {historyOrders.length === 0 && <p className="px-1 text-xs text-muted-foreground">Nenhum frete concluído.</p>}
             </div>
-          </div>
-        </div>
+          </section>
+        </aside>
 
-        {/* Lado Direito: Mapa e Timeline */}
-        <div className="flex-1 flex flex-col gap-6">
-          {selectedOrder ? (
-            <>
-              {/* Info Bar Superior */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="card-soft p-4 flex flex-col gap-1">
-                  <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Status</span>
-                  <span className="font-bold text-sm text-brand">{statusLabel(selectedOrder.status)}</span>
-                </div>
-                <div className="card-soft p-4 flex flex-col gap-1">
-                  <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Previsão</span>
-                  <span className="font-bold text-sm">
-                    {selectedOrder.delivery_window_end 
-                      ? format(new Date(selectedOrder.delivery_window_end), "HH:mm 'de' dd/MM", { locale: ptBR })
-                      : "Sob consulta"}
-                  </span>
-                </div>
-                <div className="card-soft p-4 flex flex-col gap-1">
-                  <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Distância Restante</span>
-                  <span className="font-bold text-sm">-- km</span>
-                </div>
-                <div className="card-soft p-4 flex flex-col gap-1">
-                  <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Motorista</span>
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-sm truncate">{(selectedOrder.driver as any)?.full_name}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Mapa Full */}
-              <div className="card-soft overflow-hidden h-[500px] relative border-none">
-                <TripMap
-                  className="h-full w-full"
-                  origin={selectedOrder.origin_lat && selectedOrder.origin_lng ? { lat: selectedOrder.origin_lat, lng: selectedOrder.origin_lng } : null}
-                  destination={selectedOrder.destination_lat && selectedOrder.destination_lng ? { lat: selectedOrder.destination_lat, lng: selectedOrder.destination_lng } : null}
-                  driver={selectedOrder.current_lat && selectedOrder.current_lng ? { lat: selectedOrder.current_lat, lng: selectedOrder.current_lng } : null}
-                  interactive={true}
-                />
-                
-                {/* Floating Actions */}
-                <div className="absolute bottom-6 left-6 right-6 flex justify-between items-end">
-                   <div className="bg-white/90 backdrop-blur p-3 rounded-2xl shadow-xl border border-white/20 flex flex-col gap-1">
-                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Última Atualização</span>
-                      <div className="flex items-center gap-2">
-                        <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                        <span className="text-xs font-bold">Agora mesmo</span>
-                      </div>
-                   </div>
-                   
-                   <div className="flex gap-2">
-                      <ShareTracking code={selectedOrder.tracking_code || ''} />
-                   </div>
-                </div>
-              </div>
-
-              {/* Motorista e veículo */}
-              <div className="grid gap-4 md:grid-cols-2">
-                {selectedOrder.driver && (
-                  <div className="card-soft p-5">
-                    <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                      Motorista
-                    </h3>
-                    <div className="mt-4 flex items-center gap-3">
-                      {(selectedOrder.driver as any).avatar_url ? (
-                        <img
-                          src={(selectedOrder.driver as any).avatar_url}
-                          alt={(selectedOrder.driver as any).full_name ?? "Motorista"}
-                          className="h-14 w-14 rounded-full object-cover"
-                        />
-                      ) : (
-                        <div className="grid h-14 w-14 place-items-center rounded-full bg-primary/10 text-lg font-semibold text-primary">
-                          {((selectedOrder.driver as any).full_name ?? "M").slice(0, 1).toUpperCase()}
-                        </div>
-                      )}
-                      <div className="min-w-0">
-                        <div className="font-semibold">
-                          {(selectedOrder.driver as any).full_name ?? "Motorista não informado"}
-                        </div>
-                        {(selectedOrder.driver as any).phone && (
-                          <div className="text-sm text-muted-foreground">
-                            {(selectedOrder.driver as any).phone}
-                          </div>
-                        )}
-                        <div className="mt-1 text-xs text-muted-foreground">
-                          Frete {selectedOrder.code}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {(selectedOrder.vehicle as any) && (
-                  <div className="card-soft p-5">
-                    <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                      Veículo
-                    </h3>
-                    <div className="mt-4 flex items-center gap-3">
-                      {(selectedOrder.vehicle as any).photo_url ? (
-                        <img
-                          src={(selectedOrder.vehicle as any).photo_url}
-                          alt={[
-                            (selectedOrder.vehicle as any).brand,
-                            (selectedOrder.vehicle as any).model,
-                          ].filter(Boolean).join(" ") || "Veículo"}
-                          className="h-14 w-20 rounded-xl object-cover"
-                        />
-                      ) : (
-                        <div className="grid h-14 w-20 place-items-center rounded-xl bg-primary/10 text-xs font-semibold text-primary">
-                          Veículo
-                        </div>
-                      )}
-                      <div className="min-w-0">
-                        <div className="font-semibold">
-                          {[
-                            (selectedOrder.vehicle as any).brand,
-                            (selectedOrder.vehicle as any).model,
-                          ].filter(Boolean).join(" ") || "Veículo não informado"}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          Placa: {(selectedOrder.vehicle as any).plate ?? "—"}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {[
-                            (selectedOrder.vehicle as any).year,
-                            (selectedOrder.vehicle as any).vehicle_type,
-                            (selectedOrder.vehicle as any).body_type,
-                          ].filter(Boolean).join(" · ") || "Especificações não informadas"}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Timeline Bottom */}
-              <div className="card-soft p-6">
-                <div className="flex items-center gap-2 mb-6">
-                  <Clock className="h-4 w-4 text-brand" />
-                  <h3 className="font-bold text-sm uppercase tracking-widest">Linha do Tempo da Operação</h3>
-                </div>
-                <div className="relative">
-                  {/* Linha vertical (Desktop/Mobile adjust) */}
-                  <div className="absolute left-[11px] top-0 bottom-0 w-0.5 bg-slate-100 lg:left-0 lg:top-[11px] lg:bottom-auto lg:right-0 lg:w-auto lg:h-0.5" />
-                  
-                  <div className="flex flex-col lg:flex-row lg:justify-between relative gap-6 lg:gap-2">
-                    {PUBLIC_TIMELINE.map((step, idx) => {
-                      const orderPublicStatus = publicStatus(selectedOrder.status || '');
-                      const currentIdx = PUBLIC_TIMELINE.findIndex(t => t.key === orderPublicStatus.key);
-                      const done = currentIdx > idx;
-                      const isCurrent = currentIdx === idx;
-                      
-                      return (
-                        <div key={step.key} className="flex items-start lg:flex-col lg:items-center lg:flex-1 gap-4 lg:gap-3 z-10">
-                          <div className={`shrink-0 h-6 w-6 rounded-full border-2 bg-white flex items-center justify-center transition-all ${
-                            done ? 'border-emerald-500 bg-emerald-500' : 
-                            isCurrent ? 'border-brand ring-4 ring-brand/10' : 'border-slate-200'
-                          }`}>
-                            {done ? (
-                              <CheckCircle2 className="h-4 w-4 text-white" />
-                            ) : isCurrent ? (
-                              <div className="h-2 w-2 rounded-full bg-brand animate-pulse" />
-                            ) : (
-                              <Circle className="h-3 w-3 text-slate-200" />
-                            )}
-                          </div>
-                          <div className="flex flex-col lg:items-center">
-                            <span className={`text-xs font-bold lg:text-center ${done || isCurrent ? 'text-foreground' : 'text-muted-foreground'}`}>
-                              {step.label}
-                            </span>
-                            <span className="text-[10px] text-muted-foreground lg:text-center">
-                              {done ? "Concluído" : isCurrent ? "Em andamento" : "Pendente"}
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            </>
-          ) : (
-            <div className="flex-1 card-soft flex flex-col items-center justify-center p-12 text-center border-dashed">
-              <Truck className="h-12 w-12 text-slate-200 mb-4" />
-              <h3 className="text-lg font-semibold">Selecione uma entrega</h3>
-              <p className="text-sm text-muted-foreground mt-2 max-w-xs">
-                Escolha um dos seus fretes ativos na lista ao lado para ver o rastreamento detalhado.
-              </p>
-            </div>
-          )}
-        </div>
+        <main className="min-w-0 space-y-6">
+          {selectedOrder ? <SelectedTracking order={selectedOrder} /> : <NoSelection />}
+        </main>
       </div>
     </AppShell>
   );
+}
+
+function ActiveOrderButton({ order, selected, onSelect }: { order: ClientTrackingOrder; selected: boolean; onSelect: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      aria-pressed={selected}
+      className={`w-full rounded-lg border bg-card p-4 text-left shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${selected ? "border-brand ring-1 ring-brand" : "hover:border-brand/50"}`}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <span className="text-sm font-bold">{order.code}</span>
+        <span className="rounded-full bg-brand/10 px-2 py-1 text-[10px] font-bold uppercase text-brand">{statusLabel(order.status)}</span>
+      </div>
+      <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+        <MapPin className="h-3.5 w-3.5 shrink-0" />
+        <span className="truncate">{order.origin_city ?? "Origem"}</span><ChevronRight className="h-3 w-3 shrink-0" />
+        <span className="truncate">{order.destination_city ?? "Destino"}</span>
+      </div>
+      <div className="mt-4 border-t pt-3">
+        <div className="flex items-center gap-2 text-xs">
+          <span className="h-2 w-2 rounded-full bg-success" />
+          <span className="font-semibold">{order.driver ? "Motorista confirmado" : "Aguardando motorista"}</span>
+        </div>
+        <div className="mt-2 flex items-center justify-between gap-3 text-xs text-muted-foreground">
+          <span className="truncate">{order.driver?.name ?? "A definir"}</span>
+          <span className="truncate font-mono">{order.vehicle ? `${vehicleName(order.vehicle)} · ${order.vehicle.plate}` : "Veículo a definir"}</span>
+        </div>
+      </div>
+    </button>
+  );
+}
+
+function SelectedTracking({ order }: { order: ClientTrackingOrder }) {
+  const publicStep = publicStatus(order.status);
+  const currentIdx = PUBLIC_TIMELINE.findIndex((step) => step.key === publicStep.key);
+  const eta = order.eta_minutes != null ? `~${order.eta_minutes} min` : order.delivery_window_end
+    ? format(new Date(order.delivery_window_end), "HH:mm 'de' dd/MM", { locale: ptBR })
+    : "Sob consulta";
+
+  return (
+    <>
+      <section className="grid grid-cols-2 gap-3 lg:grid-cols-4" aria-label="Resumo do frete">
+        <Metric label="Status" value={statusLabel(order.status)} highlight />
+        <Metric label="Previsão" value={eta} />
+        <Metric label="Distância restante" value={order.distance_to_destination_km != null ? `${order.distance_to_destination_km.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} km` : "Sob consulta"} />
+        <Metric label="Motorista" value={order.driver?.name ?? "Aguardando definição"} />
+      </section>
+
+      <section className="relative h-[360px] overflow-hidden rounded-lg border bg-secondary sm:h-[500px]" aria-label="Mapa do rastreamento">
+        <TripMap
+          className="h-full w-full"
+          origin={point(order.origin_lat, order.origin_lng)}
+          destination={point(order.destination_lat, order.destination_lng)}
+          driver={point(order.current_lat, order.current_lng)}
+          interactive
+        />
+        <div className="absolute bottom-4 left-4 rounded-lg border bg-background/95 px-3 py-2 shadow-lg backdrop-blur">
+          <p className="text-[10px] font-bold uppercase text-muted-foreground">Última atualização</p>
+          <p className="mt-1 flex items-center gap-2 text-xs font-semibold"><span className="h-2 w-2 rounded-full bg-success" />{relativeUpdate(order.last_ping_at ?? order.updated_at)}</p>
+        </div>
+      </section>
+
+      <div className="grid items-start gap-4 lg:grid-cols-2">
+        <DriverDetails driver={order.driver} />
+        <VehicleDetails vehicle={order.vehicle} />
+      </div>
+
+      <Timeline currentIdx={currentIdx} />
+
+      <section className="card-soft p-5 sm:p-6">
+        <div className="mb-4 flex items-center gap-2">
+          <Package className="h-5 w-5 text-brand" />
+          <h2 className="text-sm font-bold uppercase text-muted-foreground">Compartilhar rastreamento</h2>
+        </div>
+        <ShareTracking code={order.tracking_code} />
+      </section>
+    </>
+  );
+}
+
+function Metric({ label, value, highlight = false }: { label: string; value: string; highlight?: boolean }) {
+  return (
+    <div className="card-soft min-h-24 p-4">
+      <p className="text-[10px] font-bold uppercase text-muted-foreground">{label}</p>
+      <p className={`mt-2 break-words text-sm font-bold ${highlight ? "text-brand" : "text-foreground"}`}>{value}</p>
+    </div>
+  );
+}
+
+function Timeline({ currentIdx }: { currentIdx: number }) {
+  return (
+    <section className="card-soft p-5 sm:p-6">
+      <div className="mb-6 flex items-center gap-2"><Clock className="h-4 w-4 text-brand" /><h2 className="text-sm font-bold uppercase">Linha do tempo da operação</h2></div>
+      <ol className="grid gap-5 md:grid-cols-3 xl:grid-cols-6">
+        {PUBLIC_TIMELINE.map((step, index) => {
+          const done = currentIdx > index;
+          const current = currentIdx === index;
+          return (
+            <li key={step.key} className="flex items-center gap-3 md:flex-col md:text-center">
+              {done ? <CheckCircle2 className="h-6 w-6 text-success" /> : current ? <span className="grid h-6 w-6 place-items-center rounded-full border-2 border-brand"><span className="h-2 w-2 rounded-full bg-brand" /></span> : <Circle className="h-6 w-6 text-muted-foreground/40" />}
+              <div><p className={`text-xs font-bold ${done || current ? "text-foreground" : "text-muted-foreground"}`}>{step.label}</p><p className="text-[10px] text-muted-foreground">{done ? "Concluído" : current ? "Em andamento" : "Pendente"}</p></div>
+            </li>
+          );
+        })}
+      </ol>
+    </section>
+  );
+}
+
+function point(lat: number | null, lng: number | null) {
+  return lat != null && lng != null ? { lat, lng } : null;
+}
+
+function TrackingLoading() {
+  return <AppShell title="Rastreamento" subtitle="Carregando suas entregas..."><div className="grid h-[60vh] place-items-center"><div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" /></div></AppShell>;
+}
+
+function TrackingError() {
+  return <AppShell title="Rastreamento" subtitle="Não foi possível carregar"><div className="card-soft p-10 text-center"><h2 className="text-lg font-semibold">Falha ao carregar suas entregas</h2><p className="mt-2 text-sm text-muted-foreground">Tente novamente em alguns instantes.</p></div></AppShell>;
+}
+
+function TrackingEmpty() {
+  return <AppShell title="Rastreamento" subtitle="Bem-vindo ao seu portal"><div className="flex flex-col items-center justify-center py-20 text-center"><div className="mb-6 rounded-full bg-secondary p-6"><Package className="h-12 w-12 text-muted-foreground" /></div><h2 className="text-2xl font-bold">Nenhum frete encontrado</h2><p className="mt-2 max-w-sm text-muted-foreground">Você ainda não possui entregas cadastradas no sistema.</p></div></AppShell>;
+}
+
+function NoSelection() {
+  return <div className="card-soft flex min-h-96 flex-col items-center justify-center border-dashed p-10 text-center"><Truck className="mb-4 h-12 w-12 text-muted-foreground" /><h2 className="text-lg font-semibold">Selecione uma entrega</h2><p className="mt-2 text-sm text-muted-foreground">Escolha um frete ativo para ver o rastreamento detalhado.</p></div>;
 }
