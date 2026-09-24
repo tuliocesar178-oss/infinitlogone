@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CheckCircle2, ChevronRight, Circle, Clock, MapPin, Package, Truck } from "lucide-react";
+import { Camera, ChevronRight, FileText, MapPin, Package, Truck } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { DriverDetails, VehicleDetails } from "@/components/client/tracking-details";
 import { TrackingEvidence } from "@/components/client/tracking-evidence";
@@ -18,7 +18,7 @@ import {
   vehicleName,
   type ClientTrackingOrder,
 } from "@/lib/client-tracking";
-import { PUBLIC_TIMELINE, publicStatus, statusLabel } from "@/lib/order-status";
+import { statusLabel } from "@/lib/order-status";
 
 export const Route = createFileRoute("/_authenticated/client/")({
   head: () => ({
@@ -147,14 +147,18 @@ function ActiveOrderButton({ order, selected, onSelect }: { order: ClientTrackin
           <span className="truncate">{order.driver?.name ?? "A definir"}</span>
           <span className="truncate font-mono">{order.vehicle ? `${vehicleName(order.vehicle)} · ${order.vehicle.plate}` : "Veículo a definir"}</span>
         </div>
+        {(order.evidence_summary.photos > 0 || order.evidence_summary.documents > 0) && (
+          <div className="mt-3 flex flex-wrap gap-3 text-xs font-medium text-muted-foreground">
+            {order.evidence_summary.photos > 0 && <span className="flex items-center gap-1"><Camera className="h-3.5 w-3.5" />{order.evidence_summary.photos} foto(s)</span>}
+            {order.evidence_summary.documents > 0 && <span className="flex items-center gap-1"><FileText className="h-3.5 w-3.5" />{order.evidence_summary.documents} documento(s)</span>}
+          </div>
+        )}
       </div>
     </button>
   );
 }
 
 function SelectedTracking({ order }: { order: ClientTrackingOrder }) {
-  const publicStep = publicStatus(order.status);
-  const currentIdx = PUBLIC_TIMELINE.findIndex((step) => step.key === publicStep.key);
   const eta = order.eta_minutes != null ? `~${order.eta_minutes} min` : order.delivery_window_end
     ? format(new Date(order.delivery_window_end), "HH:mm 'de' dd/MM", { locale: ptBR })
     : "Sob consulta";
@@ -189,9 +193,7 @@ function SelectedTracking({ order }: { order: ClientTrackingOrder }) {
         <VehicleDetails vehicle={order.vehicle} />
       </div>
 
-      <Timeline currentIdx={currentIdx} />
-
-      <TrackingEvidence orderId={order.id} />
+      <TrackingEvidence orderId={order.id} currentStatus={order.status} />
 
       <section className="card-soft p-5 sm:p-6">
         <div className="mb-4 flex items-center gap-2">
@@ -210,26 +212,6 @@ function Metric({ label, value, highlight = false }: { label: string; value: str
       <p className="text-[10px] font-bold uppercase text-muted-foreground">{label}</p>
       <p className={`mt-2 break-words text-sm font-bold ${highlight ? "text-brand" : "text-foreground"}`}>{value}</p>
     </div>
-  );
-}
-
-function Timeline({ currentIdx }: { currentIdx: number }) {
-  return (
-    <section className="card-soft p-5 sm:p-6">
-      <div className="mb-6 flex items-center gap-2"><Clock className="h-4 w-4 text-brand" /><h2 className="text-sm font-bold uppercase">Linha do tempo da operação</h2></div>
-      <ol className="grid gap-5 md:grid-cols-3 xl:grid-cols-6">
-        {PUBLIC_TIMELINE.map((step, index) => {
-          const done = currentIdx > index;
-          const current = currentIdx === index;
-          return (
-            <li key={step.key} className="flex items-center gap-3 md:flex-col md:text-center">
-              {done ? <CheckCircle2 className="h-6 w-6 text-success" /> : current ? <span className="grid h-6 w-6 place-items-center rounded-full border-2 border-brand"><span className="h-2 w-2 rounded-full bg-brand" /></span> : <Circle className="h-6 w-6 text-muted-foreground/40" />}
-              <div><p className={`text-xs font-bold ${done || current ? "text-foreground" : "text-muted-foreground"}`}>{step.label}</p><p className="text-[10px] text-muted-foreground">{done ? "Concluído" : current ? "Em andamento" : "Pendente"}</p></div>
-            </li>
-          );
-        })}
-      </ol>
-    </section>
   );
 }
 

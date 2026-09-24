@@ -44,6 +44,7 @@ export interface ClientTrackingOrder {
   last_ping_at: string | null;
   created_at: string;
   updated_at: string;
+  evidence_summary: { photos: number; documents: number };
   driver: TrackingDriver | null;
   vehicle: TrackingVehicle | null;
 }

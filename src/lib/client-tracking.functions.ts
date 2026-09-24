@@ -33,7 +33,7 @@ export const getClientTrackingOrders = createServerFn({ method: "GET" })
     );
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const [profilesResult, driversResult, vehiclesResult, vehiclePhotosResult] = await Promise.all([
+    const [profilesResult, driversResult, vehiclesResult, vehiclePhotosResult, evidenceResult] = await Promise.all([
       driverIds.length
         ? supabaseAdmin.from("profiles").select("id, full_name, avatar_url").in("id", driverIds)
         : Promise.resolve({ data: [], error: null }),
@@ -56,15 +56,27 @@ export const getClientTrackingOrders = createServerFn({ method: "GET" })
             .in("vehicle_id", vehicleIds)
             .like("mime_type", "image/%")
         : Promise.resolve({ data: [], error: null }),
+      context.supabase
+        .from("order_attachments")
+        .select("order_id, mime_type, kind")
+        .in("order_id", orders.map((order) => order.id)),
     ]);
 
-    if (profilesResult.error || driversResult.error || vehiclesResult.error || vehiclePhotosResult.error) {
+    if (profilesResult.error || driversResult.error || vehiclesResult.error || vehiclePhotosResult.error || evidenceResult.error) {
       throw new Error("Não foi possível carregar os dados operacionais do rastreamento.");
     }
 
     const profiles = new Map((profilesResult.data ?? []).map((profile) => [profile.id, profile]));
     const drivers = new Map((driversResult.data ?? []).map((driver) => [driver.user_id, driver]));
     const vehicles = new Map((vehiclesResult.data ?? []).map((vehicle) => [vehicle.id, vehicle]));
+    const evidenceByOrder = new Map<string, { photos: number; documents: number }>();
+    for (const item of evidenceResult.data ?? []) {
+      const summary = evidenceByOrder.get(item.order_id) ?? { photos: 0, documents: 0 };
+      const isPhoto = item.mime_type?.startsWith("image/") && !["canhoto", "assinatura", "foto_nf"].includes(item.kind);
+      if (isPhoto) summary.photos += 1;
+      else summary.documents += 1;
+      evidenceByOrder.set(item.order_id, summary);
+    }
     const photoRows = await Promise.all((vehiclePhotosResult.data ?? []).map(async (photo) => {
       const { data } = await supabaseAdmin.storage.from("vehicle-files").createSignedUrl(photo.file_path, 60 * 60);
       return data?.signedUrl ? { vehicle_id: photo.vehicle_id, url: data.signedUrl, label: photo.label } : null;
@@ -79,6 +91,7 @@ export const getClientTrackingOrders = createServerFn({ method: "GET" })
       const driver = order.driver_id ? drivers.get(order.driver_id) : undefined;
       return {
         ...order,
+        evidence_summary: evidenceByOrder.get(order.id) ?? { photos: 0, documents: 0 },
         driver: order.driver_id
           ? {
               id: order.driver_id,
