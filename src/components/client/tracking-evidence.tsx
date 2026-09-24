@@ -44,6 +44,7 @@ const STAGES = [
   { key: "at_destination", statuses: ["at_destination"], label: "Chegada ao destino", description: "A chegada ao local de entrega foi registrada." },
   { key: "unloading", statuses: ["unloading"], label: "Descarga iniciada", description: "A descarga da mercadoria está em andamento." },
   { key: "delivered", statuses: ["delivered"], label: "Carga entregue", description: "A entrega foi confirmada pelo motorista." },
+  { key: "proof_available", statuses: [], label: "Comprovante disponível", description: "Os comprovantes enviados pelo motorista já estão disponíveis." },
   { key: "finalized", statuses: ["finalized"], label: "Finalizado", description: "A operação foi concluída." },
 ] as const;
 
@@ -92,6 +93,7 @@ export function TrackingEvidence({ orderId, currentStatus }: { orderId: string; 
   const events = (query.data?.events ?? []) as TrackingEvent[];
   const photos = evidence.filter(isEvidencePhoto);
   const documents = evidence.filter((item) => !isEvidencePhoto(item));
+  const proofAvailable = evidence.some((item) => ["canhoto", "assinatura", "comprovante_entrega"].includes(item.kind));
   const currentIndex = STAGES.findIndex((stage) => stage.statuses.some((status) => status === currentStatus));
   const eventByStatus = useMemo(() => {
     const map = new Map<string, TrackingEvent>();
@@ -114,10 +116,13 @@ export function TrackingEvidence({ orderId, currentStatus }: { orderId: string; 
         <div className="flex items-center gap-2"><Clock3 className="h-5 w-5 text-brand" /><h2 id="operation-timeline-heading" className="text-sm font-bold uppercase">Acompanhamento da operação</h2></div>
         <ol className="mt-6 space-y-0">
           {STAGES.map((stage, index) => {
-            const done = index < currentIndex || (index === currentIndex && ["delivered", "finalized"].includes(currentStatus));
-            const current = index === currentIndex && !done;
+            const isProofStage = stage.key === "proof_available";
+            const done = isProofStage ? proofAvailable : index < currentIndex || (index === currentIndex && ["delivered", "finalized"].includes(currentStatus));
+            const current = !isProofStage && index === currentIndex && !done;
             const event = [...stage.statuses].reverse().map((status) => eventByStatus.get(status)).find(Boolean);
-            const stageEvidence = evidence.filter((item) => item.event_status && stage.statuses.some((status) => status === item.event_status));
+            const stageEvidence = isProofStage
+              ? evidence.filter((item) => ["canhoto", "assinatura", "comprovante_entrega"].includes(item.kind))
+              : evidence.filter((item) => item.event_status && stage.statuses.some((status) => status === item.event_status));
             return <TimelineStage key={stage.key} stage={stage} done={done} current={current} event={event} evidence={stageEvidence} onOpen={setSelected} />;
           })}
         </ol>
@@ -126,13 +131,18 @@ export function TrackingEvidence({ orderId, currentStatus }: { orderId: string; 
       {evidence.length > 0 && (
         <section className="card-soft p-5 sm:p-6" aria-labelledby="proofs-heading">
           <div className="flex items-center gap-2"><FileText className="h-5 w-5 text-brand" /><h2 id="proofs-heading" className="text-sm font-bold uppercase">Comprovantes da operação</h2></div>
-          <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {evidence.map((item) => <EvidenceTile key={item.id} item={item} onOpen={() => setSelected(item)} />)}
+          <div className="mt-5 space-y-3">
+            {groupEvidence(evidence).map((group) => (
+              <details key={group.label} className="rounded-md border bg-card" open={group.items.length <= 4}>
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 font-semibold"><span>{group.label}</span><span className="text-xs font-medium text-muted-foreground">{group.items.length} arquivo(s)</span></summary>
+                <div className="grid gap-3 border-t p-4 sm:grid-cols-2 lg:grid-cols-3">{group.items.map((item) => <EvidenceTile key={item.id} item={item} onOpen={() => setSelected(item)} />)}</div>
+              </details>
+            ))}
           </div>
         </section>
       )}
 
-      <EvidenceViewer item={selected} onClose={() => setSelected(null)} />
+      <EvidenceViewer item={selected} items={evidence} onSelect={setSelected} onClose={() => setSelected(null)} />
     </>
   );
 }
@@ -166,6 +176,22 @@ function EvidenceTile({ item, onOpen }: { item: ClientEvidenceItem; onOpen: () =
   return <Button variant="outline" className="h-auto justify-start overflow-hidden p-0 text-left" onClick={onOpen}><div className="grid h-20 w-24 shrink-0 place-items-center bg-secondary/50">{photo && item.url ? <img src={item.url} alt={evidenceLabel(item)} className="h-full w-full object-cover" /> : <FileText className="h-6 w-6 text-muted-foreground" />}</div><div className="min-w-0 p-3"><p className="truncate font-semibold">{evidenceLabel(item)}</p><p className="mt-1 text-xs font-normal text-muted-foreground">{new Date(item.created_at).toLocaleString("pt-BR")}</p></div></Button>;
 }
 
-function EvidenceViewer({ item, onClose }: { item: ClientEvidenceItem | null; onClose: () => void }) {
-  return <Dialog open={Boolean(item)} onOpenChange={(open) => !open && onClose()}><DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto"><DialogHeader><DialogTitle>{item ? evidenceLabel(item) : "Evidência"}</DialogTitle></DialogHeader>{item && <div className="space-y-4">{item.url && item.mime_type?.startsWith("image/") ? <img src={item.url} alt={evidenceLabel(item)} className="max-h-[60vh] w-full rounded-md object-contain" /> : item.url && item.mime_type === "application/pdf" ? <iframe title={evidenceLabel(item)} src={item.url} className="h-[60vh] w-full rounded-md border" /> : <div className="grid min-h-52 place-items-center rounded-md border bg-secondary/30"><FileText className="h-10 w-10 text-muted-foreground" /></div>}<div className="grid gap-2 text-sm text-muted-foreground sm:grid-cols-2"><p>Enviado por: <span className="font-medium text-foreground">{item.uploader_name}</span></p><p>Data e hora: <span className="font-medium text-foreground">{new Date(item.created_at).toLocaleString("pt-BR")}</span></p>{item.latitude != null && item.longitude != null && <p className="flex items-center gap-1"><MapPin className="h-4 w-4" /> Local do registro disponível</p>}<p>Etapa: <span className="font-medium text-foreground">{statusLabel(item.event_status)}</span></p></div>{item.url && <Button asChild><a href={item.url} target="_blank" rel="noopener noreferrer"><Download />Visualizar / baixar</a></Button>}</div>}</DialogContent></Dialog>;
+function EvidenceViewer({ item, items, onSelect, onClose }: { item: ClientEvidenceItem | null; items: ClientEvidenceItem[]; onSelect: (item: ClientEvidenceItem) => void; onClose: () => void }) {
+  const related = item ? items.filter((candidate) => candidate.event_status === item.event_status && isEvidencePhoto(candidate)) : [];
+  return <Dialog open={Boolean(item)} onOpenChange={(open) => !open && onClose()}><DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto"><DialogHeader><DialogTitle>{item ? evidenceLabel(item) : "Evidência"}</DialogTitle></DialogHeader>{item && <div className="space-y-4">{item.url && item.mime_type?.startsWith("image/") ? <img src={item.url} alt={evidenceLabel(item)} className="max-h-[60vh] w-full rounded-md object-contain" /> : item.url && item.mime_type === "application/pdf" ? <iframe title={evidenceLabel(item)} src={item.url} className="h-[60vh] w-full rounded-md border" /> : <div className="grid min-h-52 place-items-center rounded-md border bg-secondary/30"><FileText className="h-10 w-10 text-muted-foreground" /></div>}{related.length > 1 && <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">{related.map((photo) => <button key={photo.id} type="button" onClick={() => onSelect(photo)} aria-label={`Abrir ${evidenceLabel(photo)}`} className={`aspect-square overflow-hidden rounded-md border ${photo.id === item.id ? "ring-2 ring-ring" : ""}`}>{photo.url && <img src={photo.url} alt="" className="h-full w-full object-cover" />}</button>)}</div>}<div className="grid gap-2 text-sm text-muted-foreground sm:grid-cols-2"><p>Enviado por: <span className="font-medium text-foreground">{item.uploader_name}</span></p><p>Data e hora: <span className="font-medium text-foreground">{new Date(item.created_at).toLocaleString("pt-BR")}</span></p>{item.latitude != null && item.longitude != null && <p className="flex items-center gap-1"><MapPin className="h-4 w-4" /> Local do registro disponível</p>}<p>Etapa: <span className="font-medium text-foreground">{statusLabel(item.event_status)}</span></p></div>{item.url && <Button asChild><a href={item.url} target="_blank" rel="noopener noreferrer"><Download />Visualizar / baixar</a></Button>}</div>}</DialogContent></Dialog>;
+}
+
+function groupEvidence(items: ClientEvidenceItem[]) {
+  const groups = [
+    { label: "Fotos do carregamento", kinds: ["foto_carga"] },
+    { label: "Fotos da entrega", kinds: ["foto_entrega"] },
+    { label: "Canhoto assinado", kinds: ["canhoto", "assinatura", "comprovante_entrega"] },
+    { label: "Nota fiscal", kinds: ["foto_nf", "nota_fiscal"] },
+    { label: "Outros documentos", kinds: [] },
+  ];
+  const knownKinds = new Set(groups.flatMap((group) => group.kinds));
+  return groups.map((group) => ({
+    label: group.label,
+    items: group.kinds.length ? items.filter((item) => group.kinds.includes(item.kind)) : items.filter((item) => !knownKinds.has(item.kind)),
+  })).filter((group) => group.items.length > 0);
 }
