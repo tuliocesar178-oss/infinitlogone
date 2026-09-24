@@ -26,6 +26,7 @@ export type Work = {
   responsible_whatsapp: string | null;
   responsible_email: string | null;
   status: WorkStatus;
+  allow_new_freights: boolean;
   start_date: string | null;
   expected_end_date: string | null;
   notes: string | null;
