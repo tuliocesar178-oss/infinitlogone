@@ -511,7 +511,8 @@ function PickupEvidenceForm({ orderId, userId, position, onDone, onCancel }: { o
         event_status: "loaded", latitude: position?.[1] ?? null, longitude: position?.[0] ?? null,
         metadata: { source: "driver_pickup_checklist" },
       }));
-      await supabase.from("order_attachments").insert(rows as never);
+      const { error: attachmentError } = await supabase.from("order_attachments").insert(rows as never);
+      if (attachmentError) throw attachmentError;
       const firstCargo = uploads.find((u) => u.kind === "foto_carga");
       await supabase.from("deliveries").upsert({
         order_id: orderId, pickup_photo_url: firstCargo?.path ?? null,
@@ -605,12 +606,13 @@ function DeliveryEvidenceForm({ orderId, userId, position, onDone, onCancel }: {
         }
       }
       if (uploads.length) {
-        await supabase.from("order_attachments").insert(uploads.map((u) => ({
+        const { error: attachmentError } = await supabase.from("order_attachments").insert(uploads.map((u) => ({
           order_id: orderId, kind: u.kind, label: u.name, file_path: u.path,
           mime_type: u.type, size_bytes: u.size, uploaded_by: userId,
           event_status: "delivered", latitude: position?.[1] ?? null, longitude: position?.[0] ?? null,
           metadata: { source: "driver_delivery_checklist" },
         })) as never);
+        if (attachmentError) throw attachmentError;
       }
       await supabase.from("deliveries").upsert({
         order_id: orderId,
