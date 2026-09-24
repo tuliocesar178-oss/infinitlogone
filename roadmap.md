@@ -9,3 +9,8 @@
 - [x] Mostrar somente clientes cadastrados na seleção de cliente responsável
 
 - [x] Reorganizar o rastreamento do cliente com motorista, veículo e atualização ao vivo
+- [ ] Vincular evidências reais às etapas do frete e registrar autor, horário e localização
+- [ ] Exibir linha do tempo com fotos e documentos no rastreamento do cliente
+- [ ] Unificar rastreamento e Central de Documentos sem duplicar arquivos
+- [ ] Reforçar acesso às evidências apenas ao cliente proprietário, motorista atribuído e equipe
+- [ ] Validar atualizações ao vivo e visualização em desktop e celular
