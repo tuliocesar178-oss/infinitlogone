@@ -2292,6 +2292,7 @@ export type Database = {
       works: {
         Row: {
           address: string | null
+          allow_new_freights: boolean
           city: string | null
           client_id: string
           code: string | null
@@ -2318,6 +2319,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          allow_new_freights?: boolean
           city?: string | null
           client_id: string
           code?: string | null
@@ -2344,6 +2346,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          allow_new_freights?: boolean
           city?: string | null
           client_id?: string
           code?: string | null
