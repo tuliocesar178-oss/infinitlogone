@@ -24,12 +24,71 @@ export interface ChatRoom {
   driver_id?: string | null;
   created_at: string;
   last_message_at: string;
+  team_members?: { full_name: string; avatar_url: string | null }[];
   driver_profile?: { full_name: string; avatar_url: string | null } | null;
   order?: {
     order_number: string;
+    client_name?: string | null;
     driver?: { full_name: string; avatar_url: string | null };
     client?: { full_name: string; avatar_url: string | null };
   } | null;
+}
+
+interface RoomParticipantMessage {
+  room_id: string | null;
+  sender_id: string;
+  created_at: string;
+}
+
+/** Acrescenta os integrantes da equipe que realmente participaram de cada sala. */
+export async function attachTeamMembersToRooms(
+  rooms: ChatRoom[],
+  driverId: string,
+): Promise<ChatRoom[]> {
+  if (!rooms.length) return rooms;
+
+  const roomIds = rooms.map((room) => room.id);
+  const { data: participantMessages, error: messagesError } = await supabase
+    .from('messages')
+    .select('room_id, sender_id, created_at')
+    .in('room_id', roomIds)
+    .neq('sender_id', driverId)
+    .order('created_at', { ascending: false });
+
+  if (messagesError) throw messagesError;
+
+  const messages = (participantMessages || []) as RoomParticipantMessage[];
+  const participantIds = Array.from(new Set(messages.map((message) => message.sender_id)));
+  if (!participantIds.length) return rooms;
+
+  const { data: profiles, error: profilesError } = await supabase
+    .from('profiles')
+    .select('id, full_name, avatar_url')
+    .in('id', participantIds);
+
+  if (profilesError) throw profilesError;
+
+  const profileById = new Map(
+    (profiles || [])
+      .filter((profile) => Boolean(profile.full_name?.trim()))
+      .map((profile) => [profile.id, {
+        full_name: profile.full_name?.trim() || 'Equipe de Operação',
+        avatar_url: profile.avatar_url,
+      }]),
+  );
+
+  return rooms.map((room) => {
+    const seen = new Set<string>();
+    const teamMembers = messages
+      .filter((message) => message.room_id === room.id && !seen.has(message.sender_id))
+      .map((message) => {
+        seen.add(message.sender_id);
+        return profileById.get(message.sender_id);
+      })
+      .filter((profile): profile is { full_name: string; avatar_url: string | null } => Boolean(profile));
+
+    return { ...room, team_members: teamMembers };
+  });
 }
 
 export const CHAT_KIND_LABELS: Record<MessageKind, string> = {

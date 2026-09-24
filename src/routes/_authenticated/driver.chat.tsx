@@ -2,7 +2,7 @@ import { createFileRoute, redirect } from '@tanstack/react-router';
 import { DriverShell } from '@/components/driver/shell';
 import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { getOrCreateDriverRoom, ChatRoom } from '@/lib/chat';
+import { attachTeamMembersToRooms, getOrCreateDriverRoom, ChatRoom } from '@/lib/chat';
 import { OrderChat } from '@/components/orders/order-chat';
 import { Search, MessageSquare, Clock } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -81,7 +81,8 @@ function DriverChatPage() {
         order: null,
       }));
 
-      return [...direct, ...(orderRooms.data || [])] as unknown as ChatRoom[];
+      const driverRooms = [...direct, ...(orderRooms.data || [])] as unknown as ChatRoom[];
+      return attachTeamMembersToRooms(driverRooms, userId);
     },
     enabled: !!userId,
     refetchInterval: 10000
@@ -114,10 +115,14 @@ function DriverChatPage() {
     }
   }, [initialRoomId, orderId, rooms]);
 
-  // O chat do motorista é sempre uma conversa com a equipe de operação.
-  // O frete permanece identificado apenas como contexto da conversa,
-  // evitando que o código PED seja exibido como nome principal.
-  const roomLabel = (_r: ChatRoom) => 'Equipe de Operação';
+  const roomLabel = (room: ChatRoom) => {
+    const names = room.team_members?.map((member) => member.full_name) || [];
+    if (names.length === 0) return 'Equipe de Operação';
+    if (names.length <= 2) return names.join(' e ');
+    return `${names.slice(0, 2).join(', ')} +${names.length - 2}`;
+  };
+
+  const roomAvatar = (room: ChatRoom) => room.team_members?.[0]?.avatar_url || '';
 
   const roomSearchText = (r: ChatRoom) =>
     [roomLabel(r), r.order?.order_number, r.order?.client_name]
@@ -166,8 +171,9 @@ function DriverChatPage() {
               >
                 <div className="flex gap-3">
                   <Avatar className="h-12 w-12 border-2 border-background">
+                    <AvatarImage src={roomAvatar(room)} />
                     <AvatarFallback className="bg-primary/10 text-primary font-bold">
-                      {roomLabel(room).substring(0, 2)}
+                      {roomLabel(room).substring(0, 2).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
@@ -214,9 +220,10 @@ function DriverChatPage() {
                 title={roomLabel(selectedRoom)}
                 subtitle={
                   selectedRoom.order
-                    ? `Equipe de Operação • Frete ${selectedRoom.order.order_number}`
+                    ? `Equipe de Operação • ${selectedRoom.order.order_number}`
                     : 'Equipe de Operação • InfinitLog Transportes'
                 }
+                avatarUrl={roomAvatar(selectedRoom)}
                 onCallClick={() => toast.info("Chamando central...")}
               />
             </div>
