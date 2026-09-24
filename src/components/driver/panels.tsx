@@ -388,10 +388,10 @@ export function ActiveOrderPanel({
       </div>
 
       {step === "pickup" && (
-        <PickupEvidenceForm orderId={order.id} userId={userId} onDone={() => { setStep("idle"); runAction("loaded"); }} onCancel={() => setStep("idle")} />
+        <PickupEvidenceForm orderId={order.id} userId={userId} position={driverPos} onDone={() => { setStep("idle"); runAction("loaded"); }} onCancel={() => setStep("idle")} />
       )}
       {step === "delivery" && (
-        <DeliveryEvidenceForm orderId={order.id} userId={userId} onDone={() => { setStep("idle"); runAction("delivered"); }} onCancel={() => setStep("idle")} />
+        <DeliveryEvidenceForm orderId={order.id} userId={userId} position={driverPos} onDone={() => { setStep("idle"); runAction("delivered"); }} onCancel={() => setStep("idle")} />
       )}
 
       {step === "idle" && nextAction && (
@@ -481,7 +481,7 @@ function ActionBtn({
   );
 }
 
-function PickupEvidenceForm({ orderId, userId, onDone, onCancel }: { orderId: string; userId: string; onDone: () => void; onCancel: () => void }) {
+function PickupEvidenceForm({ orderId, userId, position, onDone, onCancel }: { orderId: string; userId: string; position: [number, number] | null; onDone: () => void; onCancel: () => void }) {
   const [files, setFiles] = useState<File[]>([]);
   const [invoiceFile, setInvoiceFile] = useState<File | null>(null);
   const [volumes, setVolumes] = useState("");
@@ -508,6 +508,8 @@ function PickupEvidenceForm({ orderId, userId, onDone, onCancel }: { orderId: st
       const rows = uploads.map((u) => ({
         order_id: orderId, kind: u.kind, label: u.name, file_path: u.path,
         mime_type: u.type, size_bytes: u.size, uploaded_by: userId,
+        event_status: "loaded", latitude: position?.[1] ?? null, longitude: position?.[0] ?? null,
+        metadata: { source: "driver_pickup_checklist" },
       }));
       await supabase.from("order_attachments").insert(rows as never);
       const firstCargo = uploads.find((u) => u.kind === "foto_carga");
@@ -549,7 +551,7 @@ function PickupEvidenceForm({ orderId, userId, onDone, onCancel }: { orderId: st
   );
 }
 
-function DeliveryEvidenceForm({ orderId, userId, onDone, onCancel }: { orderId: string; userId: string; onDone: () => void; onCancel: () => void }) {
+function DeliveryEvidenceForm({ orderId, userId, position, onDone, onCancel }: { orderId: string; userId: string; position: [number, number] | null; onDone: () => void; onCancel: () => void }) {
   const [signedInvoice, setSignedInvoice] = useState<File | null>(null);
   const [deliveryPhotos, setDeliveryPhotos] = useState<File[]>([]);
   const [receiverName, setReceiverName] = useState("");
@@ -606,6 +608,8 @@ function DeliveryEvidenceForm({ orderId, userId, onDone, onCancel }: { orderId: 
         await supabase.from("order_attachments").insert(uploads.map((u) => ({
           order_id: orderId, kind: u.kind, label: u.name, file_path: u.path,
           mime_type: u.type, size_bytes: u.size, uploaded_by: userId,
+          event_status: "delivered", latitude: position?.[1] ?? null, longitude: position?.[0] ?? null,
+          metadata: { source: "driver_delivery_checklist" },
         })) as never);
       }
       await supabase.from("deliveries").upsert({
