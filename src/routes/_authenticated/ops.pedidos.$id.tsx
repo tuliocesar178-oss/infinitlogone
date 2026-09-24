@@ -11,6 +11,7 @@ import { FreightProgramPanel } from "@/components/freight-program-panel";
 import { DispatchPanel } from "@/components/orders/dispatch-panel";
 import { NegotiationPanel } from "@/components/orders/negotiation-panel";
 import { OrderChat } from "@/components/orders/order-chat";
+import { workAddress, workStatusLabel, type Work } from "@/lib/work";
 import { z } from "zod";
 
 export const Route = createFileRoute("/_authenticated/ops/pedidos/$id")({
@@ -47,7 +48,16 @@ function OrderDetail() {
         .eq("id", id)
         .single();
       if (error) throw error;
-      return data;
+
+      if (!data.work_id) return data;
+
+      const { data: work } = await supabase
+        .from("works" as any)
+        .select("*")
+        .eq("id", data.work_id)
+        .maybeSingle();
+
+      return { ...data, work: (work ?? null) as Work | null };
     },
   });
 
@@ -169,6 +179,9 @@ function OrderDetail() {
               <div className="space-y-6 lg:col-span-2">
                 <Panel title="Cliente" icon={<User className="h-4 w-4" />}>
                   <Info k="Cliente" v={order.client_name} />
+                  <Info k="Obra" v={order.work?.name} />
+                  <Info k="Status da obra" v={workStatusLabel(order.work?.status)} />
+                  <Info k="Endereço da obra" v={order.work ? workAddress(order.work) : null} />
                   <Info k="Contato" v={order.contact_name} />
                   <Info k="Telefone" v={order.contact_phone} />
                 </Panel>

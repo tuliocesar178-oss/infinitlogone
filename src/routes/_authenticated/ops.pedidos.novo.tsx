@@ -19,6 +19,7 @@ import {
   type AnttOperationType,
 } from "@/lib/antt";
 import { AnttCard } from "@/components/freight/antt-card";
+import type { Work } from "@/lib/work";
 
 const MAPBOX_TOKEN = import.meta.env.VITE_LOVABLE_CONNECTOR_MAPBOX_PUBLIC_TOKEN;
 
@@ -170,6 +171,9 @@ function NewOrderWizard() {
   const [saving, setSaving] = useState(false);
   const [clients, setClients] = useState<{ id: string; company_name: string; cnpj: string; full_name: string; phone: string; whatsapp: string; email: string; zip_code: string; address: string; address_number: string; neighborhood: string; city: string; state: string }[]>([]);
   const [selectedClientId, setSelectedClientId] = useState<string>("");
+  const [works, setWorks] = useState<Work[]>([]);
+  const [selectedWorkId, setSelectedWorkId] = useState<string>("");
+  const [loadingWorks, setLoadingWorks] = useState(false);
   const [result, setResult] = useState<{
     id: string;
     code: string;
@@ -178,6 +182,59 @@ function NewOrderWizard() {
   } | null>(null);
 
   function set<K extends keyof Form>(k: K, v: string) { setF((s) => ({ ...s, [k]: v })); }
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadWorks() {
+      setWorks([]);
+      setSelectedWorkId("");
+
+      if (!selectedClientId) return;
+
+      setLoadingWorks(true);
+      try {
+        const { data, error } = await supabase
+          .from("works" as any)
+          .select("*")
+          .eq("client_id", selectedClientId)
+          .in("status", ["active", "paused"])
+          .order("name");
+
+        if (error) throw error;
+        if (!cancelled) setWorks((data ?? []) as Work[]);
+      } catch (error) {
+        console.error("Erro ao carregar obras:", error);
+        if (!cancelled) toast.error("Não foi possível carregar as obras do cliente.");
+      } finally {
+        if (!cancelled) setLoadingWorks(false);
+      }
+    }
+
+    void loadWorks();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedClientId]);
+
+  useEffect(() => {
+    const work = works.find((item) => item.id === selectedWorkId);
+    if (!work) return;
+
+    const address = [work.address, work.number].filter(Boolean).join(", ");
+
+    setF((current) => ({
+      ...current,
+      destination_address: current.destination_address || address,
+      destination_city: current.destination_city || work.city || "",
+      destination_state: current.destination_state || work.state || "",
+      destination_zip: current.destination_zip || work.zip_code || "",
+      destination_neighborhood: current.destination_neighborhood || work.neighborhood || "",
+      destination_lat: current.destination_lat || String(work.latitude ?? ""),
+      destination_lng: current.destination_lng || String(work.longitude ?? ""),
+    }));
+  }, [selectedWorkId, works]);
 
   useEffect(() => {
     async function loadClients() {
@@ -256,6 +313,9 @@ function NewOrderWizard() {
 
   function canAdvance(): string | null {
     if (step === 0 && !f.client_name.trim()) return "Informe o nome do cliente";
+    if (step === 0 && works.length > 0 && !selectedWorkId) {
+      return "Selecione a obra de destino";
+    }
     if (step === 1 && !f.origin_address.trim()) return "Informe o endereço de coleta";
     if (step === 2 && !f.destination_address.trim()) return "Informe o endereço de entrega";
     if (step === 5 && !f.price) return "Informe o valor cobrado do cliente";
@@ -394,6 +454,8 @@ function NewOrderWizard() {
       const { data: u } = await supabase.auth.getUser();
       const payload = {
         client_id: selectedClientId || null,
+        work_id: selectedWorkId || null,
+        recorded_distance_km: routeInfo?.distance_km ?? null,
         antt_applicable: antt?.applicable ?? null,
         antt_not_applicable_reason: antt?.not_applicable_reason ?? null,
         antt_cargo_class: f.antt_cargo_class || null,
@@ -758,6 +820,44 @@ function NewOrderWizard() {
               </label>
             </div>
             <T label="Nome do Cliente" required value={f.client_name} onChange={(v) => set("client_name", v)} />
+
+            <div className="sm:col-span-2">
+              <label className="block">
+                <span className="mb-1.5 block text-xs font-medium uppercase tracking-widest text-muted-foreground">
+                  Obra de destino
+                  {works.length > 0 && <span className="ml-1 text-destructive">*</span>}
+                </span>
+
+                <select
+                  value={selectedWorkId}
+                  disabled={!selectedClientId || loadingWorks}
+                  onChange={(event) => setSelectedWorkId(event.target.value)}
+                  className="h-11 w-full rounded-xl border border-border bg-surface px-3 text-sm outline-none focus:border-brand disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <option value="">
+                    {!selectedClientId
+                      ? "Selecione primeiro o cliente"
+                      : loadingWorks
+                        ? "Carregando obras..."
+                        : works.length === 0
+                          ? "Este cliente ainda não possui obras cadastradas"
+                          : "Selecione a obra de destino"}
+                  </option>
+                  {works.map((work) => (
+                    <option key={work.id} value={work.id}>
+                      {work.name}{work.code ? ` · ${work.code}` : ""}
+                    </option>
+                  ))}
+                </select>
+
+                {selectedClientId && !loadingWorks && works.length === 0 && (
+                  <p className="mt-1.5 text-xs text-muted-foreground">
+                    Cadastre uma obra para tornar este frete rastreável por projeto.
+                  </p>
+                )}
+              </label>
+            </div>
+
             <T label="Empresa" value={f.company} onChange={(v) => set("company", v)} />
             <T label="Contato" value={f.contact_name} onChange={(v) => set("contact_name", v)} />
             <T label="Telefone" value={f.contact_phone} onChange={(v) => set("contact_phone", v)} />

@@ -22,7 +22,15 @@ export function FreightCard({ order }: FreightCardProps) {
   return (
     <article className={cn("border bg-card p-4 shadow-card", incident || order.status === "incident" ? "border-destructive" : late ? "border-warning" : "border-border")}>
       <div className="flex items-start justify-between gap-3">
-        <div><p className="font-mono text-sm font-bold text-brand">#{order.code}</p><h2 className="mt-1 text-lg font-bold">{order.client_name || "Cliente não informado"}</h2></div>
+        <div>
+          <p className="font-mono text-sm font-bold text-brand">#{order.code}</p>
+          <h2 className="mt-1 text-lg font-bold">{order.client_name || "Cliente não informado"}</h2>
+          {(order as BoardOrder & { work?: { name?: string | null } | null }).work?.name && (
+            <p className="mt-1 text-xs font-semibold text-brand">
+              Obra: {(order as BoardOrder & { work?: { name?: string | null } | null }).work?.name}
+            </p>
+          )}
+        </div>
         <span className={cn("rounded-md px-2.5 py-1 text-xs font-bold", incident ? "bg-destructive text-destructive-foreground" : late ? "bg-warning text-warning-foreground" : "bg-primary text-primary-foreground")}>
           {incident ? "Ocorrência" : late ? "Atrasado" : STATUS_LABEL[order.status] ?? order.status}
         </span>
