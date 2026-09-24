@@ -114,11 +114,18 @@ function DriverChatPage() {
     }
   }, [initialRoomId, orderId, rooms]);
 
-  const roomLabel = (r: ChatRoom) =>
-    r.order?.order_number || 'Central de Logística';
+  // O chat do motorista é sempre uma conversa com a equipe de operação.
+  // O frete permanece identificado apenas como contexto da conversa,
+  // evitando que o código PED seja exibido como nome principal.
+  const roomLabel = (_r: ChatRoom) => 'Equipe de Operação';
+
+  const roomSearchText = (r: ChatRoom) =>
+    [roomLabel(r), r.order?.order_number, r.order?.client_name]
+      .filter(Boolean)
+      .join(' ');
 
   const filteredRooms = rooms.filter(r =>
-    roomLabel(r).toLowerCase().includes(search.toLowerCase())
+    roomSearchText(r).toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -132,7 +139,7 @@ function DriverChatPage() {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input 
-              placeholder="Buscar pedido..." 
+              placeholder="Buscar conversa..." 
               className="pl-9 bg-surface-2 border-none rounded-xl"
               value={search}
               onChange={e => setSearch(e.target.value)}
@@ -172,7 +179,9 @@ function DriverChatPage() {
                       </span>
                     </div>
                     <div className="text-xs font-medium text-muted-foreground truncate">
-                      {room.order ? `Logística • ${room.order.order_number}` : 'Conversa geral com a logística'}
+                      {room.order
+                        ? `Frete • ${room.order.order_number}`
+                        : 'Comunicação interna da operação'}
                     </div>
                   </div>
 
@@ -194,15 +203,20 @@ function DriverChatPage() {
               >
                 ← Voltar
               </button>
-              <span className="font-bold text-sm truncate">{roomLabel(selectedRoom)}</span>
+              <span className="font-bold text-sm truncate">
+                {roomLabel(selectedRoom)}
+              </span>
             </div>
             <div className="flex-1 p-0 md:p-6 overflow-hidden">
               <OrderChat 
                 roomId={selectedRoom.id}
                 orderId={selectedRoom.order_id}
                 title={roomLabel(selectedRoom)}
-
-                subtitle="Logística InfinitLog"
+                subtitle={
+                  selectedRoom.order
+                    ? `Equipe de Operação • Frete ${selectedRoom.order.order_number}`
+                    : 'Equipe de Operação • InfinitLog Transportes'
+                }
                 onCallClick={() => toast.info("Chamando central...")}
               />
             </div>
@@ -212,9 +226,9 @@ function DriverChatPage() {
             <div className="w-20 h-20 bg-surface rounded-full flex items-center justify-center mb-6 shadow-sm">
               <MessageSquare className="h-10 w-10 text-primary/40" />
             </div>
-            <h3 className="text-xl font-bold text-foreground mb-2">Central de Apoio</h3>
+            <h3 className="text-xl font-bold text-foreground mb-2">Equipe de Operação</h3>
             <p className="max-w-xs text-sm leading-relaxed">
-              Selecione uma viagem para falar com a nossa equipe de logística em tempo real.
+              Selecione uma conversa para falar com a equipe de operação em tempo real.
             </p>
           </div>
         )}
