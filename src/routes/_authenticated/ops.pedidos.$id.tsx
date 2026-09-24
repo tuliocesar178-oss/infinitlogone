@@ -209,7 +209,7 @@ function OrderDetail() {
                   <Info k="Observações" v={order.notes} />
                 </Panel>
 
-                <Attachments orderId={id} />
+                <Attachments orderId={id} currentStatus={order.status} />
 
                 <Panel title="Linha do tempo">
                   <ul className="space-y-3 text-sm">
@@ -348,7 +348,7 @@ function OfferPanel({ order, onChanged }: { order: any; onChanged: () => void })
   );
 }
 
-function Attachments({ orderId }: { orderId: string }) {
+function Attachments({ orderId, currentStatus }: { orderId: string; currentStatus: string }) {
   const [uploading, setUploading] = useState(false);
   const [kind, setKind] = useState("nota_fiscal");
   const q = useQuery({
@@ -384,6 +384,8 @@ function Attachments({ orderId }: { orderId: string }) {
         mime_type: file.type,
         size_bytes: file.size,
         uploaded_by: u.user?.id ?? null,
+        event_status: currentStatus,
+        metadata: { source: "operations_order_detail" },
       });
       if (insErr) throw insErr;
       toast.success("Arquivo enviado");
