@@ -49,7 +49,7 @@ interface VehicleDetailsProps {
 }
 
 export function VehicleDetails({ vehicle }: VehicleDetailsProps) {
-  const [photoOpen, setPhotoOpen] = useState(false);
+  const [openPhoto, setOpenPhoto] = useState<{ url: string; label: string | null } | null>(null);
   const details = vehicle
     ? [
         ["Tipo", vehicle.vehicle_type], ["Marca", vehicle.brand], ["Modelo", vehicle.model],
@@ -74,7 +74,7 @@ export function VehicleDetails({ vehicle }: VehicleDetailsProps) {
                <button
                  type="button"
                  disabled={!vehicle.photo_url}
-                 onClick={() => setPhotoOpen(true)}
+                 onClick={() => vehicle.photo_url && setOpenPhoto({ url: vehicle.photo_url, label: vehicleName(vehicle) })}
                  className="aspect-[16/10] overflow-hidden rounded-lg bg-secondary text-left disabled:cursor-default"
                  aria-label={vehicle.photo_url ? "Ampliar foto do veículo" : "Veículo sem foto"}
                >
@@ -106,7 +106,7 @@ export function VehicleDetails({ vehicle }: VehicleDetailsProps) {
             {vehicle.photos.length > 1 && (
               <div className="mt-5 flex gap-2 overflow-x-auto border-t pt-5" aria-label="Galeria do veículo">
                 {vehicle.photos.map((photo) => (
-                  <button key={photo.url} type="button" onClick={() => setPhotoOpen(true)} className="h-16 w-24 shrink-0 overflow-hidden rounded-md border">
+                  <button key={photo.url} type="button" onClick={() => setOpenPhoto(photo)} className="h-16 w-24 shrink-0 overflow-hidden rounded-md border">
                     <img src={photo.url} alt={photo.label ?? "Foto do veículo"} className="h-full w-full object-cover" />
                   </button>
                 ))}
@@ -115,10 +115,10 @@ export function VehicleDetails({ vehicle }: VehicleDetailsProps) {
           </>
         )}
       </div>
-      {photoOpen && vehicle?.photo_url && (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-black/75 p-4" role="dialog" aria-modal="true" onClick={() => setPhotoOpen(false)}>
-          <button type="button" onClick={() => setPhotoOpen(false)} className="absolute right-5 top-5 rounded-full bg-background p-2" aria-label="Fechar foto"><X className="h-5 w-5" /></button>
-          <img src={vehicle.photo_url} alt={vehicleName(vehicle)} className="max-h-[85vh] max-w-full rounded-lg object-contain" onClick={(event) => event.stopPropagation()} />
+      {openPhoto && vehicle && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/75 p-4" role="dialog" aria-modal="true" onClick={() => setOpenPhoto(null)}>
+          <button type="button" onClick={() => setOpenPhoto(null)} className="absolute right-5 top-5 rounded-full bg-background p-2" aria-label="Fechar foto"><X className="h-5 w-5" /></button>
+          <img src={openPhoto.url} alt={openPhoto.label ?? vehicleName(vehicle)} className="max-h-[85vh] max-w-full rounded-lg object-contain" onClick={(event) => event.stopPropagation()} />
         </div>
       )}
     </section>
