@@ -1444,8 +1444,6 @@ export type Database = {
           helpers_required: boolean
           id: string
           initial_distance_km: number | null
-          work_id: string | null
-          recorded_distance_km: number | null
           invoice_number: string | null
           invoice_url: string | null
           invoice_value: number | null
@@ -1572,8 +1570,6 @@ export type Database = {
           helpers_required?: boolean
           id?: string
           initial_distance_km?: number | null
-          work_id?: string | null
-          recorded_distance_km?: number | null
           invoice_number?: string | null
           invoice_url?: string | null
           invoice_value?: number | null
@@ -1700,8 +1696,6 @@ export type Database = {
           helpers_required?: boolean
           id?: string
           initial_distance_km?: number | null
-          work_id?: string | null
-          recorded_distance_km?: number | null
           invoice_number?: string | null
           invoice_url?: string | null
           invoice_value?: number | null

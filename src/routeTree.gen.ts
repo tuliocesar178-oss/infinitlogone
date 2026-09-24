@@ -50,12 +50,14 @@ import { Route as AuthenticatedClientFinanceiroRouteImport } from './routes/_aut
 import { Route as AuthenticatedClientDocumentosRouteImport } from './routes/_authenticated/client.documentos'
 import { Route as AuthenticatedClientBiRouteImport } from './routes/_authenticated/client.bi'
 import { Route as AuthenticatedOpsPedidosIndexRouteImport } from './routes/_authenticated/ops.pedidos.index'
+import { Route as AuthenticatedOpsObrasIndexRouteImport } from './routes/_authenticated/ops.obras.index'
 import { Route as AuthenticatedOpsMotoristasIndexRouteImport } from './routes/_authenticated/ops.motoristas.index'
 import { Route as AuthenticatedOpsVeiculosNovoRouteImport } from './routes/_authenticated/ops.veiculos.novo'
 import { Route as AuthenticatedOpsVeiculosListaRouteImport } from './routes/_authenticated/ops.veiculos.lista'
 import { Route as AuthenticatedOpsVeiculosIdRouteImport } from './routes/_authenticated/ops.veiculos.$id'
 import { Route as AuthenticatedOpsPedidosNovoRouteImport } from './routes/_authenticated/ops.pedidos.novo'
 import { Route as AuthenticatedOpsPedidosIdRouteImport } from './routes/_authenticated/ops.pedidos.$id'
+import { Route as AuthenticatedOpsObrasNovaRouteImport } from './routes/_authenticated/ops.obras.nova'
 import { Route as AuthenticatedOpsMotoristasAprovacoesRouteImport } from './routes/_authenticated/ops.motoristas.aprovacoes'
 import { Route as AuthenticatedOpsMotoristasIdRouteImport } from './routes/_authenticated/ops.motoristas.$id'
 import { Route as AuthenticatedDriverOfertasHistoricoRouteImport } from './routes/_authenticated/driver.ofertas.historico'
@@ -285,6 +287,12 @@ const AuthenticatedOpsPedidosIndexRoute =
     path: '/pedidos/',
     getParentRoute: () => AuthenticatedOpsRoute,
   } as any)
+const AuthenticatedOpsObrasIndexRoute =
+  AuthenticatedOpsObrasIndexRouteImport.update({
+    id: '/obras/',
+    path: '/obras/',
+    getParentRoute: () => AuthenticatedOpsRoute,
+  } as any)
 const AuthenticatedOpsMotoristasIndexRoute =
   AuthenticatedOpsMotoristasIndexRouteImport.update({
     id: '/motoristas/',
@@ -319,6 +327,12 @@ const AuthenticatedOpsPedidosIdRoute =
   AuthenticatedOpsPedidosIdRouteImport.update({
     id: '/pedidos/$id',
     path: '/pedidos/$id',
+    getParentRoute: () => AuthenticatedOpsRoute,
+  } as any)
+const AuthenticatedOpsObrasNovaRoute =
+  AuthenticatedOpsObrasNovaRouteImport.update({
+    id: '/obras/nova',
+    path: '/obras/nova',
     getParentRoute: () => AuthenticatedOpsRoute,
   } as any)
 const AuthenticatedOpsMotoristasAprovacoesRoute =
@@ -397,12 +411,14 @@ export interface FileRoutesByFullPath {
   '/driver/ofertas/historico': typeof AuthenticatedDriverOfertasHistoricoRoute
   '/ops/motoristas/$id': typeof AuthenticatedOpsMotoristasIdRoute
   '/ops/motoristas/aprovacoes': typeof AuthenticatedOpsMotoristasAprovacoesRoute
+  '/ops/obras/nova': typeof AuthenticatedOpsObrasNovaRoute
   '/ops/pedidos/$id': typeof AuthenticatedOpsPedidosIdRoute
   '/ops/pedidos/novo': typeof AuthenticatedOpsPedidosNovoRoute
   '/ops/veiculos/$id': typeof AuthenticatedOpsVeiculosIdRoute
   '/ops/veiculos/lista': typeof AuthenticatedOpsVeiculosListaRoute
   '/ops/veiculos/novo': typeof AuthenticatedOpsVeiculosNovoRoute
   '/ops/motoristas/': typeof AuthenticatedOpsMotoristasIndexRoute
+  '/ops/obras/': typeof AuthenticatedOpsObrasIndexRoute
   '/ops/pedidos/': typeof AuthenticatedOpsPedidosIndexRoute
 }
 export interface FileRoutesByTo {
@@ -447,12 +463,14 @@ export interface FileRoutesByTo {
   '/driver/ofertas/historico': typeof AuthenticatedDriverOfertasHistoricoRoute
   '/ops/motoristas/$id': typeof AuthenticatedOpsMotoristasIdRoute
   '/ops/motoristas/aprovacoes': typeof AuthenticatedOpsMotoristasAprovacoesRoute
+  '/ops/obras/nova': typeof AuthenticatedOpsObrasNovaRoute
   '/ops/pedidos/$id': typeof AuthenticatedOpsPedidosIdRoute
   '/ops/pedidos/novo': typeof AuthenticatedOpsPedidosNovoRoute
   '/ops/veiculos/$id': typeof AuthenticatedOpsVeiculosIdRoute
   '/ops/veiculos/lista': typeof AuthenticatedOpsVeiculosListaRoute
   '/ops/veiculos/novo': typeof AuthenticatedOpsVeiculosNovoRoute
   '/ops/motoristas': typeof AuthenticatedOpsMotoristasIndexRoute
+  '/ops/obras': typeof AuthenticatedOpsObrasIndexRoute
   '/ops/pedidos': typeof AuthenticatedOpsPedidosIndexRoute
 }
 export interface FileRoutesById {
@@ -502,12 +520,14 @@ export interface FileRoutesById {
   '/_authenticated/driver/ofertas/historico': typeof AuthenticatedDriverOfertasHistoricoRoute
   '/_authenticated/ops/motoristas/$id': typeof AuthenticatedOpsMotoristasIdRoute
   '/_authenticated/ops/motoristas/aprovacoes': typeof AuthenticatedOpsMotoristasAprovacoesRoute
+  '/_authenticated/ops/obras/nova': typeof AuthenticatedOpsObrasNovaRoute
   '/_authenticated/ops/pedidos/$id': typeof AuthenticatedOpsPedidosIdRoute
   '/_authenticated/ops/pedidos/novo': typeof AuthenticatedOpsPedidosNovoRoute
   '/_authenticated/ops/veiculos/$id': typeof AuthenticatedOpsVeiculosIdRoute
   '/_authenticated/ops/veiculos/lista': typeof AuthenticatedOpsVeiculosListaRoute
   '/_authenticated/ops/veiculos/novo': typeof AuthenticatedOpsVeiculosNovoRoute
   '/_authenticated/ops/motoristas/': typeof AuthenticatedOpsMotoristasIndexRoute
+  '/_authenticated/ops/obras/': typeof AuthenticatedOpsObrasIndexRoute
   '/_authenticated/ops/pedidos/': typeof AuthenticatedOpsPedidosIndexRoute
 }
 export interface FileRouteTypes {
@@ -557,12 +577,14 @@ export interface FileRouteTypes {
     | '/driver/ofertas/historico'
     | '/ops/motoristas/$id'
     | '/ops/motoristas/aprovacoes'
+    | '/ops/obras/nova'
     | '/ops/pedidos/$id'
     | '/ops/pedidos/novo'
     | '/ops/veiculos/$id'
     | '/ops/veiculos/lista'
     | '/ops/veiculos/novo'
     | '/ops/motoristas/'
+    | '/ops/obras/'
     | '/ops/pedidos/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -607,12 +629,14 @@ export interface FileRouteTypes {
     | '/driver/ofertas/historico'
     | '/ops/motoristas/$id'
     | '/ops/motoristas/aprovacoes'
+    | '/ops/obras/nova'
     | '/ops/pedidos/$id'
     | '/ops/pedidos/novo'
     | '/ops/veiculos/$id'
     | '/ops/veiculos/lista'
     | '/ops/veiculos/novo'
     | '/ops/motoristas'
+    | '/ops/obras'
     | '/ops/pedidos'
   id:
     | '__root__'
@@ -661,12 +685,14 @@ export interface FileRouteTypes {
     | '/_authenticated/driver/ofertas/historico'
     | '/_authenticated/ops/motoristas/$id'
     | '/_authenticated/ops/motoristas/aprovacoes'
+    | '/_authenticated/ops/obras/nova'
     | '/_authenticated/ops/pedidos/$id'
     | '/_authenticated/ops/pedidos/novo'
     | '/_authenticated/ops/veiculos/$id'
     | '/_authenticated/ops/veiculos/lista'
     | '/_authenticated/ops/veiculos/novo'
     | '/_authenticated/ops/motoristas/'
+    | '/_authenticated/ops/obras/'
     | '/_authenticated/ops/pedidos/'
   fileRoutesById: FileRoutesById
 }
@@ -972,6 +998,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsPedidosIndexRouteImport
       parentRoute: typeof AuthenticatedOpsRoute
     }
+    '/_authenticated/ops/obras/': {
+      id: '/_authenticated/ops/obras/'
+      path: '/obras'
+      fullPath: '/ops/obras/'
+      preLoaderRoute: typeof AuthenticatedOpsObrasIndexRouteImport
+      parentRoute: typeof AuthenticatedOpsRoute
+    }
     '/_authenticated/ops/motoristas/': {
       id: '/_authenticated/ops/motoristas/'
       path: '/motoristas'
@@ -1012,6 +1045,13 @@ declare module '@tanstack/react-router' {
       path: '/pedidos/$id'
       fullPath: '/ops/pedidos/$id'
       preLoaderRoute: typeof AuthenticatedOpsPedidosIdRouteImport
+      parentRoute: typeof AuthenticatedOpsRoute
+    }
+    '/_authenticated/ops/obras/nova': {
+      id: '/_authenticated/ops/obras/nova'
+      path: '/obras/nova'
+      fullPath: '/ops/obras/nova'
+      preLoaderRoute: typeof AuthenticatedOpsObrasNovaRouteImport
       parentRoute: typeof AuthenticatedOpsRoute
     }
     '/_authenticated/ops/motoristas/aprovacoes': {
@@ -1150,9 +1190,11 @@ interface AuthenticatedOpsRouteChildren {
   AuthenticatedOpsIndexRoute: typeof AuthenticatedOpsIndexRoute
   AuthenticatedOpsMotoristasIdRoute: typeof AuthenticatedOpsMotoristasIdRoute
   AuthenticatedOpsMotoristasAprovacoesRoute: typeof AuthenticatedOpsMotoristasAprovacoesRoute
+  AuthenticatedOpsObrasNovaRoute: typeof AuthenticatedOpsObrasNovaRoute
   AuthenticatedOpsPedidosIdRoute: typeof AuthenticatedOpsPedidosIdRoute
   AuthenticatedOpsPedidosNovoRoute: typeof AuthenticatedOpsPedidosNovoRoute
   AuthenticatedOpsMotoristasIndexRoute: typeof AuthenticatedOpsMotoristasIndexRoute
+  AuthenticatedOpsObrasIndexRoute: typeof AuthenticatedOpsObrasIndexRoute
   AuthenticatedOpsPedidosIndexRoute: typeof AuthenticatedOpsPedidosIndexRoute
 }
 
@@ -1168,9 +1210,11 @@ const AuthenticatedOpsRouteChildren: AuthenticatedOpsRouteChildren = {
   AuthenticatedOpsMotoristasIdRoute: AuthenticatedOpsMotoristasIdRoute,
   AuthenticatedOpsMotoristasAprovacoesRoute:
     AuthenticatedOpsMotoristasAprovacoesRoute,
+  AuthenticatedOpsObrasNovaRoute: AuthenticatedOpsObrasNovaRoute,
   AuthenticatedOpsPedidosIdRoute: AuthenticatedOpsPedidosIdRoute,
   AuthenticatedOpsPedidosNovoRoute: AuthenticatedOpsPedidosNovoRoute,
   AuthenticatedOpsMotoristasIndexRoute: AuthenticatedOpsMotoristasIndexRoute,
+  AuthenticatedOpsObrasIndexRoute: AuthenticatedOpsObrasIndexRoute,
   AuthenticatedOpsPedidosIndexRoute: AuthenticatedOpsPedidosIndexRoute,
 }
 
