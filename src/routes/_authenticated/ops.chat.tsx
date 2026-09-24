@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   getRooms, getDriverContacts, getOrCreateDriverRoom, markRoomAsRead,
-  getTeamContacts, getOrCreateStaffRoom,
+  getTeamContacts, getOrCreateStaffRoom, getOrCreateOperationRoom,
   ChatRoom, DriverContact, DriverActiveOrder, TeamContact
 } from '@/lib/chat';
 import { STATUS_LABEL } from '@/lib/order-status';
@@ -65,6 +65,31 @@ function OpsChatPage() {
   const [activeTeam, setActiveTeam] = useState<{ roomId: string; contact: TeamContact } | null>(null);
   const [opening, setOpening] = useState<string | null>(null);
   const [tab, setTab] = useState<'motoristas' | 'equipe'>('motoristas');
+
+  const { data: operationRoomId } = useQuery({
+    queryKey: ['chat-operation-room'],
+    queryFn: getOrCreateOperationRoom,
+    enabled: tab === 'equipe',
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const operationContact: TeamContact = {
+    user_id: 'operation',
+    full_name: 'OPERAÇÃO',
+    avatar_url: null,
+    position: 'Equipe de Operação',
+    phone: null,
+    status: 'ativo',
+    room_id: operationRoomId || null,
+    unread: 0,
+  };
+
+  const openOperationRoom = async () => {
+    if (!operationRoomId) return;
+    setActive(null);
+    setActiveTeam({ roomId: operationRoomId, contact: operationContact });
+    await markRoomAsRead(operationRoomId);
+  };
 
   const { data: drivers = [], isLoading } = useQuery({
     queryKey: ['chat-drivers'],
@@ -403,6 +428,32 @@ function OpsChatPage() {
           </>
           ) : (
             <div className="flex-1 overflow-y-auto">
+              <div className="border-b p-3">
+                <button
+                  onClick={openOperationRoom}
+                  disabled={!operationRoomId}
+                  className={cn(
+                    'flex w-full items-center gap-3 rounded-xl border border-primary/20 bg-primary/5 p-3 text-left transition-colors hover:bg-primary/10',
+                    activeTeam?.roomId === operationRoomId && 'ring-2 ring-primary/20',
+                  )}
+                >
+                  <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-primary/10 text-lg">
+                    👥
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-bold">OPERAÇÃO</div>
+                    <div className="truncate text-[11px] text-muted-foreground">
+                      Equipe de Operação
+                    </div>
+                  </div>
+                  <MessageSquare className="h-4 w-4 text-primary" />
+                </button>
+              </div>
+
+              <div className="px-4 pb-2 pt-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                Conversas individuais
+              </div>
+
               {loadingTeam ? (
                 <div className="p-8 text-center text-sm text-muted-foreground">Carregando equipe...</div>
               ) : team.length === 0 ? (

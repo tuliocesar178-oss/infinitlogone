@@ -302,14 +302,25 @@ export async function getTeamContacts(): Promise<TeamContact[]> {
   if (!members?.length) return [];
 
   const ids = members.map((m) => m.user_id);
-  const [profilesRes, roomsRes] = await Promise.all([
+  const [profilesRes, roomsRes, rolesRes] = await Promise.all([
     supabase.from('profiles').select('id, full_name, avatar_url').in('id', ids),
     supabase
       .from('chat_rooms')
       .select('id, staff_a, staff_b, order_id')
       .is('order_id', null)
       .or(`staff_a.eq.${user.id},staff_b.eq.${user.id}`),
+    supabase
+      .from('user_roles')
+      .select('user_id, role')
+      .in('user_id', ids),
   ]);
+
+  const operationRoles = new Set(['admin', 'supervisor', 'logistics', 'operacional']);
+  const operationUserIds = new Set(
+    (rolesRes.data || [])
+      .filter((r: any) => operationRoles.has(r.role))
+      .map((r: any) => r.user_id),
+  );
 
   const profiles = new Map((profilesRes.data || []).map((p: any) => [p.id, p]));
   const rooms = (roomsRes.data || []) as any[];
@@ -334,6 +345,7 @@ export async function getTeamContacts(): Promise<TeamContact[]> {
   }
 
   return members
+    .filter((m) => operationUserIds.has(m.user_id))
     .map((m) => {
       const profile: any = profiles.get(m.user_id);
       const roomId = roomByPeer.get(m.user_id) || null;

@@ -145,7 +145,16 @@ export function OrderChat({ roomId, orderId, title, subtitle, avatarUrl, onCallC
                       : 'bg-white border rounded-tl-none'
                   }`}
                 >
-                  {msg.kind === 'text' && <span>{msg.content}</span>}
+                  {msg.kind === 'text' && (
+                    <span>
+                      {msg.sender?.full_name && !isMe && (
+                        <span className="mb-1 block text-[10px] font-semibold text-muted-foreground">
+                          {msg.sender.full_name}
+                        </span>
+                      )}
+                      {msg.content}
+                    </span>
+                  )}
                   {msg.kind === 'location' && (
                     <div className="flex items-center gap-2">
                       <MapPin className="h-4 w-4" /> Localização enviada
