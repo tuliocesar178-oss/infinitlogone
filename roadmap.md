@@ -14,4 +14,4 @@
 - [x] Unificar rastreamento e Central de Documentos sem duplicar arquivos
 - [x] Reforçar acesso às evidências apenas ao cliente proprietário, motorista atribuído e equipe
 - [x] Validar atualizações ao vivo e visualização em desktop e celular
-- [ ] Exibir nomes reais dos integrantes da equipe no chat do motorista
+- [x] Exibir nomes reais dos integrantes da equipe no chat do motorista
