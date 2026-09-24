@@ -1,12 +1,12 @@
-#lovable-badge {
-  display: none !important;
-}
-
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
+
+#lovable-badge {
+  display: none !important;
+}
 
 /*
  * InfinitLog Design System
