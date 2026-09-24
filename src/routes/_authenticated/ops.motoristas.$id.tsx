@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ArrowLeft, Upload, UserRound } from "lucide-react";
 import { DRIVER_COLUMNS } from "@/lib/driver-columns";
-import { getDriverFinancials } from "@/lib/driver-financials.functions";
+import { getDriverFinancials } from "@/lib/secure-driver-financials.functions";
 import { useServerFn } from "@tanstack/react-start";
 import {
   BANK_ACCOUNT_TYPES,

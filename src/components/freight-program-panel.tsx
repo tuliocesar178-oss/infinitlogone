@@ -17,7 +17,7 @@ import { FileDown, Plus, Send, Trash2 } from "lucide-react";
 import { DRIVER_COLUMNS } from "@/lib/driver-columns";
 import { sendProgramToDriver } from "@/lib/freight.functions";
 import { useServerFn } from "@tanstack/react-start";
-import { getDriverFinancials } from "@/lib/driver-financials.functions";
+import { getDriverFinancials } from "@/lib/secure-driver-financials.functions";
 
 export function FreightProgramPanel({ order }: { order: any }) {
   const qc = useQueryClient();
