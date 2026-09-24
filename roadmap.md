@@ -7,3 +7,5 @@
 - [x] Adicionar atualização ao vivo, rotação e modo TV
 - [x] Validar visual e funcionamento em desktop e celular
 - [x] Mostrar somente clientes cadastrados na seleção de cliente responsável
+
+- [ ] Reorganizar o rastreamento do cliente com motorista, veículo e atualização ao vivo
