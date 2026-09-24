@@ -1199,10 +1199,15 @@ export type Database = {
       order_attachments: {
         Row: {
           created_at: string
+          event_id: string | null
+          event_status: string | null
           file_path: string
           id: string
           kind: string
           label: string | null
+          latitude: number | null
+          longitude: number | null
+          metadata: Json
           mime_type: string | null
           order_id: string
           size_bytes: number | null
@@ -1210,10 +1215,15 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          event_id?: string | null
+          event_status?: string | null
           file_path: string
           id?: string
           kind: string
           label?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          metadata?: Json
           mime_type?: string | null
           order_id: string
           size_bytes?: number | null
@@ -1221,16 +1231,28 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          event_id?: string | null
+          event_status?: string | null
           file_path?: string
           id?: string
           kind?: string
           label?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          metadata?: Json
           mime_type?: string | null
           order_id?: string
           size_bytes?: number | null
           uploaded_by?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "order_attachments_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "order_events"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "order_attachments_order_id_fkey"
             columns: ["order_id"]
