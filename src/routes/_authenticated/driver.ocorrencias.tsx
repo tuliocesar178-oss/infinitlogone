@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { AlertTriangle, ArrowLeft, Plus } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Paperclip, Plus, X } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/driver/ocorrencias")({
   head: () => ({ meta: [{ title: "Ocorrências — Motorista" }, { name: "robots", content: "noindex" }] }),
@@ -35,6 +35,7 @@ function DriverIncidents() {
   const [type, setType] = useState("traffic");
   const [severity, setSeverity] = useState("medium");
   const [description, setDescription] = useState("");
+  const [photos, setPhotos] = useState<File[]>([]);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -82,18 +83,43 @@ function DriverIncidents() {
     }
     setBusy(true);
     try {
-      const { error } = await supabase.from("incidents").insert({
+      const { data: incident, error } = await supabase.from("incidents").insert({
         order_id: orderId,
         reported_by: userId,
         type,
         severity,
         description: description.trim() || null,
-      });
+      }).select("id").single();
       if (error) throw error;
+      if (photos.length > 0) {
+        const position = await getOptionalPosition();
+        const uploaded: Array<{ path: string; file: File }> = [];
+        for (const file of photos) {
+          const path = `${orderId}/incident-${Date.now()}-${file.name.replace(/[^\w.\-]/g, "_")}`;
+          const upload = await supabase.storage.from("order-files").upload(path, file, { contentType: file.type });
+          if (upload.error) throw upload.error;
+          uploaded.push({ path, file });
+        }
+        const { error: attachmentError } = await supabase.from("order_attachments").insert(uploaded.map(({ path, file }) => ({
+          order_id: orderId,
+          kind: "incidente",
+          label: file.name,
+          file_path: path,
+          mime_type: file.type,
+          size_bytes: file.size,
+          uploaded_by: userId,
+          event_status: "incident",
+          latitude: position?.latitude ?? null,
+          longitude: position?.longitude ?? null,
+          metadata: { source: "driver_incident", incident_id: incident.id, incident_type: type, severity },
+        })));
+        if (attachmentError) throw attachmentError;
+      }
       toast.success("Ocorrência registrada. A logística foi notificada.");
       setOpen(false);
       setDescription("");
       setOrderId("");
+      setPhotos([]);
       qc.invalidateQueries({ queryKey: ["driver-incidents", userId] });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro ao registrar");
@@ -189,6 +215,16 @@ function DriverIncidents() {
             </div>
 
             <div className="space-y-1.5">
+              <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Fotos da ocorrência (opcional)</label>
+              <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-dashed border-border bg-surface px-4 py-3 hover:bg-accent">
+                <Paperclip className="h-4 w-4 text-brand" />
+                <span className="flex-1 text-sm">{photos.length > 0 ? `${photos.length} foto(s) selecionada(s)` : "Adicionar fotos"}</span>
+                <input type="file" hidden accept="image/*" capture="environment" multiple onChange={(event) => setPhotos(Array.from(event.target.files ?? []))} />
+              </label>
+              {photos.length > 0 && <button type="button" onClick={() => setPhotos([])} className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"><X className="h-3.5 w-3.5" />Remover fotos</button>}
+            </div>
+
+            <div className="space-y-1.5">
               <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Tipo</label>
               <div className="flex flex-wrap gap-1.5">
                 {TYPES.map((t) => (
@@ -255,4 +291,15 @@ function DriverIncidents() {
       )}
     </div>
   );
+}
+
+function getOptionalPosition(): Promise<{ latitude: number; longitude: number } | null> {
+  if (typeof navigator === "undefined" || !navigator.geolocation) return Promise.resolve(null);
+  return new Promise((resolve) => {
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => resolve({ latitude: coords.latitude, longitude: coords.longitude }),
+      () => resolve(null),
+      { enableHighAccuracy: true, timeout: 5_000, maximumAge: 30_000 },
+    );
+  });
 }
