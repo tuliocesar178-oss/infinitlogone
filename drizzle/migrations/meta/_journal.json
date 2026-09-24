@@ -22,6 +22,13 @@
       "when": 1790286505430,
       "tag": "0002_secure_order_evidence_by_stage",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1790288004353,
+      "tag": "0003_expose_chat_team_names_to_room_members",
+      "breakpoints": true
     }
   ]
 }

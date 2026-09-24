@@ -2480,6 +2480,15 @@ export type Database = {
       finalize_route: { Args: { _order_id: string }; Returns: undefined }
       generate_pf_code: { Args: never; Returns: string }
       generate_tracking_code: { Args: never; Returns: string }
+      get_chat_room_team_members: {
+        Args: { _room_ids: string[] }
+        Returns: {
+          avatar_url: string
+          full_name: string
+          latest_message_at: string
+          room_id: string
+        }[]
+      }
       get_or_create_driver_room: {
         Args: { _driver_id: string }
         Returns: string
