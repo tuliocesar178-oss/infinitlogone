@@ -1,10 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { WORK_STATUSES, type Work } from "@/lib/work";
-import { MapPin, Plus, Target } from "lucide-react";
+import { MapPin, Plus, Target, BarChart3 } from "lucide-react";
+import { WorkKmReport } from "@/components/work-km-report";
 
 export const Route = createFileRoute("/_authenticated/ops/obras/")({
   head: () => ({
@@ -14,6 +16,8 @@ export const Route = createFileRoute("/_authenticated/ops/obras/")({
 });
 
 function WorksList() {
+  const [reportWork, setReportWork] = useState<Work | null>(null);
+
   const worksQuery = useQuery({
     queryKey: ["works-list"],
     queryFn: async () => {
@@ -83,13 +87,34 @@ function WorksList() {
                 </span>
               </div>
 
-              <div className="mt-5 border-t border-border pt-4 text-xs text-muted-foreground">
-                {work.allow_new_freights
-                  ? "Disponível para novos fretes"
-                  : "Bloqueada para novos fretes"}
+              <div className="mt-5 border-t border-border pt-4">
+                <div className="text-xs text-muted-foreground">
+                  {work.allow_new_freights
+                    ? "Disponível para novos fretes"
+                    : "Bloqueada para novos fretes"}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-3 w-full"
+                  onClick={() => setReportWork(work)}
+                >
+                  <BarChart3 /> Relatório de KM
+                </Button>
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {reportWork && (
+        <div className="mt-8" id="relatorio-km">
+          <div className="mb-4 flex justify-end">
+            <Button variant="ghost" onClick={() => setReportWork(null)}>
+              Fechar relatório
+            </Button>
+          </div>
+          <WorkKmReport work={reportWork} />
         </div>
       )}
     </AppShell>
