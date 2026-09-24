@@ -6,3 +6,4 @@
 - [x] Integrar mapa, filtros, detalhes e chat existentes
 - [x] Adicionar atualização ao vivo, rotação e modo TV
 - [x] Validar visual e funcionamento em desktop e celular
+- [x] Mostrar somente clientes cadastrados na seleção de cliente responsável
