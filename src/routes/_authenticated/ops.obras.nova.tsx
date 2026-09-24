@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -85,20 +85,54 @@ function NewWork() {
   const [saving, setSaving] = useState(false);
   const [locationConfirmed, setLocationConfirmed] = useState(false);
 
-  useState(() => {
+  useEffect(() => {
     void loadClients();
-  });
+  }, []);
 
   async function loadClients() {
     setLoadingClients(true);
     try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id, company_name, full_name, cnpj, city, state")
-        .order("company_name", { ascending: true });
+      const { data: registeredClients, error: clientsError } = await supabase
+        .from("clients")
+        .select("user_id, company_name, document");
 
-      if (error) throw error;
-      setClients((data ?? []) as Client[]);
+      if (clientsError) throw clientsError;
+
+      const clientIds = (registeredClients ?? []).map((client) => client.user_id);
+      if (clientIds.length === 0) {
+        setClients([]);
+        return;
+      }
+
+      const { data: profiles, error: profilesError } = await supabase
+        .from("profiles")
+        .select("id, full_name, city, state")
+        .in("id", clientIds);
+
+      if (profilesError) throw profilesError;
+
+      const profilesById = new Map((profiles ?? []).map((profile) => [profile.id, profile]));
+      const clientOptions = (registeredClients ?? [])
+        .map((client): Client => {
+          const profile = profilesById.get(client.user_id);
+          return {
+            id: client.user_id,
+            company_name: client.company_name,
+            full_name: profile?.full_name ?? null,
+            cnpj: client.document,
+            city: profile?.city ?? null,
+            state: profile?.state ?? null,
+          };
+        })
+        .filter((client) => Boolean(client.company_name || client.full_name))
+        .sort((a, b) =>
+          (a.company_name || a.full_name || "").localeCompare(
+            b.company_name || b.full_name || "",
+            "pt-BR",
+          ),
+        );
+
+      setClients(clientOptions);
     } catch (error) {
       console.error("Erro ao carregar clientes:", error);
       toast.error("Não foi possível carregar os clientes.");
@@ -300,7 +334,6 @@ function NewWork() {
               {clients.map((client) => (
                 <option key={client.id} value={client.id}>
                   {client.company_name || client.full_name || "Cliente sem nome"}
-                  {client.cnpj ? ` · ${client.cnpj}` : ""}
                 </option>
               ))}
             </select>
