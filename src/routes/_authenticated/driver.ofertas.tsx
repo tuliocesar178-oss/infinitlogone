@@ -72,19 +72,19 @@ function DriverOffers() {
         .eq("driver_id", userId)
         .in("status", ["pending", "negotiating"])
         .order("created_at", { ascending: false });
-      
+
       if (offErr) {
         console.error("Erro ao buscar todas ofertas:", offErr);
         return [];
       }
       if (!offers?.length) return [];
-      
+
       const ids = offers.map((o) => o.order_id);
       const [{ data: orders }, { data: programs }] = await Promise.all([
         supabase.from("orders").select("*, distance_km, estimated_minutes").in("id", ids),
         supabase.from("freight_programs").select("*").in("order_id", ids),
       ]);
-      
+
       return offers.map((o) => ({
         offer: o,
         order: orders?.find((x) => x.id === o.order_id),
@@ -116,12 +116,22 @@ function DriverOffers() {
 
   const all = q.data ?? [];
 
+  const activeOffers = useMemo(
+    () =>
+      all.filter(
+        (item) =>
+          !item.offer.expires_at ||
+          new Date(item.offer.expires_at).getTime() > now,
+      ),
+    [all, now],
+  );
+
   const counts = useMemo(() => {
     let novas = 0,
       negociacao = 0,
       expirando = 0,
       favoritas = 0;
-    for (const it of all) {
+    for (const it of activeOffers) {
       if (it.offer.status === "negotiating") negociacao++;
       else {
         novas++;
@@ -134,22 +144,24 @@ function DriverOffers() {
         favoritas++;
     }
     return { novas, negociacao, expirando, favoritas, todas: all.length };
-  }, [all, now, favorites]);
+  }, [activeOffers, now, favorites]);
 
   const items = useMemo(() => {
-    if (filter === "todas") return all;
-    if (filter === "negociacao") return all.filter((i) => i.offer.status === "negotiating");
-    if (filter === "novas") return all.filter((i) => i.offer.status === "pending");
+    if (filter === "todas") return activeOffers;
+    if (filter === "negociacao")
+      return activeOffers.filter((i) => i.offer.status === "negotiating");
+    if (filter === "novas")
+      return activeOffers.filter((i) => i.offer.status === "pending");
     if (filter === "favoritas")
-      return all.filter((i) =>
+      return activeOffers.filter((i) =>
         favorites.includes(routeKey(i.order?.origin_city, i.order?.destination_city)),
       );
-    return all.filter((i) => {
+    return activeOffers.filter((i) => {
       if (i.offer.status !== "pending" || !i.offer.expires_at) return false;
       const ms = new Date(i.offer.expires_at).getTime() - now;
       return ms > 0 && ms <= EXPIRING_WINDOW_MS;
     });
-  }, [all, filter, now, favorites]);
+}, [activeOffers, filter, now, favorites]);
 
   const tabs: { key: FilterKey; label: string; count: number; tone?: string }[] = [
     { key: "novas", label: "Novas", count: counts.novas },
