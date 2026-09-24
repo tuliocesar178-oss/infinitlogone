@@ -1478,6 +1478,7 @@ export type Database = {
           priority: string
           published_at: string | null
           purchase_order: string | null
+          recorded_distance_km: number | null
           required_axles: number | null
           required_body_type: string | null
           required_capacity_kg: number | null
@@ -1495,6 +1496,7 @@ export type Database = {
           updated_at: string
           vehicle_id: string | null
           volumes: number | null
+          work_id: string | null
         }
         Insert: {
           antt_applicable?: boolean | null
@@ -1604,6 +1606,7 @@ export type Database = {
           priority?: string
           published_at?: string | null
           purchase_order?: string | null
+          recorded_distance_km?: number | null
           required_axles?: number | null
           required_body_type?: string | null
           required_capacity_kg?: number | null
@@ -1621,6 +1624,7 @@ export type Database = {
           updated_at?: string
           vehicle_id?: string | null
           volumes?: number | null
+          work_id?: string | null
         }
         Update: {
           antt_applicable?: boolean | null
@@ -1730,6 +1734,7 @@ export type Database = {
           priority?: string
           published_at?: string | null
           purchase_order?: string | null
+          recorded_distance_km?: number | null
           required_axles?: number | null
           required_body_type?: string | null
           required_capacity_kg?: number | null
@@ -1747,6 +1752,7 @@ export type Database = {
           updated_at?: string
           vehicle_id?: string | null
           volumes?: number | null
+          work_id?: string | null
         }
         Relationships: [
           {
@@ -1775,6 +1781,13 @@ export type Database = {
             columns: ["vehicle_id"]
             isOneToOne: false
             referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_work_id_fkey"
+            columns: ["work_id"]
+            isOneToOne: false
+            referencedRelation: "works"
             referencedColumns: ["id"]
           },
         ]
@@ -2273,6 +2286,98 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "chat_rooms"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      works: {
+        Row: {
+          address: string | null
+          allow_new_freights: boolean
+          city: string | null
+          client_id: string
+          code: string | null
+          complement: string | null
+          created_at: string
+          description: string | null
+          expected_end_date: string | null
+          id: string
+          latitude: number | null
+          longitude: number | null
+          name: string
+          neighborhood: string | null
+          notes: string | null
+          number: string | null
+          responsible_email: string | null
+          responsible_name: string | null
+          responsible_phone: string | null
+          responsible_whatsapp: string | null
+          start_date: string | null
+          state: string | null
+          status: string
+          updated_at: string
+          zip_code: string | null
+        }
+        Insert: {
+          address?: string | null
+          allow_new_freights?: boolean
+          city?: string | null
+          client_id: string
+          code?: string | null
+          complement?: string | null
+          created_at?: string
+          description?: string | null
+          expected_end_date?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          name: string
+          neighborhood?: string | null
+          notes?: string | null
+          number?: string | null
+          responsible_email?: string | null
+          responsible_name?: string | null
+          responsible_phone?: string | null
+          responsible_whatsapp?: string | null
+          start_date?: string | null
+          state?: string | null
+          status?: string
+          updated_at?: string
+          zip_code?: string | null
+        }
+        Update: {
+          address?: string | null
+          allow_new_freights?: boolean
+          city?: string | null
+          client_id?: string
+          code?: string | null
+          complement?: string | null
+          created_at?: string
+          description?: string | null
+          expected_end_date?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          name?: string
+          neighborhood?: string | null
+          notes?: string | null
+          number?: string | null
+          responsible_email?: string | null
+          responsible_name?: string | null
+          responsible_phone?: string | null
+          responsible_whatsapp?: string | null
+          start_date?: string | null
+          state?: string | null
+          status?: string
+          updated_at?: string
+          zip_code?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "works_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["user_id"]
           },
         ]
       }

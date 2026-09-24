@@ -32,7 +32,7 @@ import {
 } from "lucide-react";
 import { TripMap } from "@/components/trip-map";
 import { DRIVER_COLUMNS } from "@/lib/driver-columns";
-import { getDriverFinancials } from "@/lib/driver-financials.functions";
+import { getDriverFinancials } from "@/lib/secure-driver-financials.functions";
 
 export function DriverSidePanel({
   driverId,

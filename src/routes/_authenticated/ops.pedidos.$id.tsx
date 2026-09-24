@@ -49,10 +49,10 @@ function OrderDetail() {
         .single();
       if (error) throw error;
 
-      if (!data.work_id) return data;
+      if (!data.work_id) return { ...data, work: null as Work | null };
 
       const { data: work } = await supabase
-        .from("works" as any)
+        .from("works")
         .select("*")
         .eq("id", data.work_id)
         .maybeSingle();

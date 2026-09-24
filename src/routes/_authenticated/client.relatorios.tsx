@@ -124,7 +124,7 @@ function ClientReports() {
       const [{ data: works, error: worksError }, { data: orders, error: ordersError }] =
         await Promise.all([
           supabase
-            .from("works" as any)
+            .from("works")
             .select("id, name, code")
             .eq("client_id", user.id)
             .order("name"),

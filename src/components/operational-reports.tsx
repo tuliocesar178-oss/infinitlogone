@@ -116,7 +116,7 @@ export function OperationalReports() {
           ordersQuery,
           (() => {
             let query = supabase
-              .from("works" as any)
+              .from("works")
               .select("id, client_id, name, code")
               .order("name");
             if (isClient && userId) query = query.eq("client_id", userId);

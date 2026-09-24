@@ -209,7 +209,7 @@ function NewWork() {
     try {
       if (form.code.trim()) {
         const { data: duplicate, error: duplicateError } = await supabase
-          .from("works" as any)
+          .from("works")
           .select("id")
           .eq("client_id", form.clientId)
           .eq("code", form.code.trim())
@@ -222,7 +222,7 @@ function NewWork() {
         }
       }
 
-      const { error } = await supabase.from("works" as any).insert({
+      const { error } = await supabase.from("works").insert({
         client_id: form.clientId,
         name: form.name.trim(),
         code: form.code.trim() || null,

@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { brl } from "@/lib/pf";
 import { CircleDollarSign, Clock, Truck, Wallet } from "lucide-react";
 import { STATUS_LABEL } from "@/lib/order-status";
-import { getDriverFinancials } from "@/lib/driver-financials.functions";
+import { getDriverFinancials } from "@/lib/secure-driver-financials.functions";
 import { useServerFn } from "@tanstack/react-start";
 
 export const Route = createFileRoute("/_authenticated/driver/faturamento")({

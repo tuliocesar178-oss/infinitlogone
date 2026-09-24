@@ -3,6 +3,7 @@ import QRCode from "qrcode";
 import { Copy, Link2, Mail, MessageCircle, QrCode, X } from "lucide-react";
 import { toast } from "sonner";
 import { shareMessage, trackingUrl } from "@/lib/order-status";
+import { Button } from "@/components/ui/button";
 
 export function ShareTracking({ code, phone }: { code: string; phone?: string | null }) {
   const [qrOpen, setQrOpen] = useState(false);
@@ -30,36 +31,42 @@ export function ShareTracking({ code, phone }: { code: string; phone?: string | 
 
   return (
     <>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <a
           href={whatsappHref}
           target="_blank"
           rel="noopener"
-          className="col-span-2 inline-flex items-center justify-center gap-2 rounded-2xl bg-[#25D366] px-4 py-3 text-sm font-semibold text-white hover:opacity-90"
+          className="inline-flex items-center justify-center gap-2 rounded-md bg-success px-4 py-3 text-sm font-semibold text-success-foreground hover:opacity-90 sm:col-span-2"
         >
           <MessageCircle className="h-4 w-4" /> Compartilhar no WhatsApp
         </a>
-        <button
+        <Button
+          type="button"
+          variant="outline"
           onClick={() => copy(url, "Link")}
-          className="inline-flex items-center justify-center gap-2 rounded-2xl border border-border bg-background px-4 py-3 text-sm font-medium hover:bg-accent"
+          className="h-11"
         >
           <Link2 className="h-4 w-4" /> Copiar link
-        </button>
-        <button
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
           onClick={() => copy(code, "Código")}
-          className="inline-flex items-center justify-center gap-2 rounded-2xl border border-border bg-background px-4 py-3 text-sm font-medium hover:bg-accent"
+          className="h-11"
         >
           <Copy className="h-4 w-4" /> Copiar código
-        </button>
-        <button
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
           onClick={() => setQrOpen(true)}
-          className="inline-flex items-center justify-center gap-2 rounded-2xl border border-border bg-background px-4 py-3 text-sm font-medium hover:bg-accent"
+          className="h-11"
         >
           <QrCode className="h-4 w-4" /> Ver QR Code
-        </button>
+        </Button>
         <a
           href={mailHref}
-          className="inline-flex items-center justify-center gap-2 rounded-2xl border border-border bg-background px-4 py-3 text-sm font-medium hover:bg-accent"
+          className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-input bg-background px-4 text-sm font-medium shadow-sm hover:bg-accent"
         >
           <Mail className="h-4 w-4" /> Enviar por e-mail
         </a>
@@ -101,24 +108,28 @@ function QrModal({ code, url, onClose }: { code: string; url: string; onClose: (
             <h3 className="text-lg font-semibold tracking-tight">QR Code do pedido</h3>
             <p className="mt-1 text-xs text-muted-foreground">Ao escanear, abre o rastreamento.</p>
           </div>
-          <button
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
             onClick={onClose}
-            className="grid h-8 w-8 place-items-center rounded-full hover:bg-accent"
+            className="absolute right-4 top-4"
             aria-label="Fechar"
           >
             <X className="h-4 w-4" />
-          </button>
+          </Button>
         </div>
         <div className="mt-4 grid place-items-center rounded-2xl bg-white p-4">
           <canvas ref={canvasRef} />
         </div>
         <div className="mt-3 rounded-xl bg-surface-2 p-3 text-center font-mono text-sm">{code}</div>
-        <button
+        <Button
+          type="button"
           onClick={download}
-          className="mt-4 inline-flex w-full items-center justify-center rounded-2xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground hover:opacity-90"
+          className="mt-4 h-11 w-full"
         >
           Baixar QR Code
-        </button>
+        </Button>
       </div>
     </div>
   );

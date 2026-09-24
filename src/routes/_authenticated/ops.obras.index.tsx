@@ -22,7 +22,7 @@ function WorksList() {
     queryKey: ["works-list"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("works" as any)
+        .from("works")
         .select("*")
         .order("created_at", { ascending: false });
 
