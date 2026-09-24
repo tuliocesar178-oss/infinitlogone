@@ -7,6 +7,7 @@ import { ptBR } from "date-fns/locale";
 import { CheckCircle2, ChevronRight, Circle, Clock, MapPin, Package, Truck } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { DriverDetails, VehicleDetails } from "@/components/client/tracking-details";
+import { TrackingEvidence } from "@/components/client/tracking-evidence";
 import { ShareTracking } from "@/components/share-tracking";
 import { TripMap } from "@/components/trip-map";
 import { supabase } from "@/integrations/supabase/client";
@@ -189,6 +190,8 @@ function SelectedTracking({ order }: { order: ClientTrackingOrder }) {
       </div>
 
       <Timeline currentIdx={currentIdx} />
+
+      <TrackingEvidence orderId={order.id} />
 
       <section className="card-soft p-5 sm:p-6">
         <div className="mb-4 flex items-center gap-2">
