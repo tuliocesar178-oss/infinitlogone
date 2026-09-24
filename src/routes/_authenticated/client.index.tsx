@@ -41,7 +41,19 @@ function ClientTrackingHome() {
         .from("orders")
         .select(`
           *,
-          vehicle:vehicles(plate, model, color)
+          vehicle:vehicles(
+            id,
+            plate,
+            brand,
+            model,
+            year,
+            color,
+            vehicle_type,
+            body_type,
+            capacity_kg,
+            axles,
+            photo_url
+          )
         `)
         .eq("client_id", user.id)
         .order("created_at", { ascending: false });
@@ -55,7 +67,7 @@ function ClientTrackingHome() {
       if (driverIds.length > 0) {
         const { data: profiles } = await supabase
           .from("profiles")
-          .select("id, full_name, avatar_url")
+          .select("id, full_name, avatar_url, phone")
           .in("id", driverIds);
         
         profiles?.forEach(p => {
@@ -245,6 +257,85 @@ function ClientTrackingHome() {
                       <ShareTracking code={selectedOrder.tracking_code || ''} />
                    </div>
                 </div>
+              </div>
+
+              {/* Motorista e veículo */}
+              <div className="grid gap-4 md:grid-cols-2">
+                {selectedOrder.driver && (
+                  <div className="card-soft p-5">
+                    <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                      Motorista
+                    </h3>
+                    <div className="mt-4 flex items-center gap-3">
+                      {(selectedOrder.driver as any).avatar_url ? (
+                        <img
+                          src={(selectedOrder.driver as any).avatar_url}
+                          alt={(selectedOrder.driver as any).full_name ?? "Motorista"}
+                          className="h-14 w-14 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="grid h-14 w-14 place-items-center rounded-full bg-primary/10 text-lg font-semibold text-primary">
+                          {((selectedOrder.driver as any).full_name ?? "M").slice(0, 1).toUpperCase()}
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <div className="font-semibold">
+                          {(selectedOrder.driver as any).full_name ?? "Motorista não informado"}
+                        </div>
+                        {(selectedOrder.driver as any).phone && (
+                          <div className="text-sm text-muted-foreground">
+                            {(selectedOrder.driver as any).phone}
+                          </div>
+                        )}
+                        <div className="mt-1 text-xs text-muted-foreground">
+                          Frete {selectedOrder.code}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {(selectedOrder.vehicle as any) && (
+                  <div className="card-soft p-5">
+                    <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                      Veículo
+                    </h3>
+                    <div className="mt-4 flex items-center gap-3">
+                      {(selectedOrder.vehicle as any).photo_url ? (
+                        <img
+                          src={(selectedOrder.vehicle as any).photo_url}
+                          alt={[
+                            (selectedOrder.vehicle as any).brand,
+                            (selectedOrder.vehicle as any).model,
+                          ].filter(Boolean).join(" ") || "Veículo"}
+                          className="h-14 w-20 rounded-xl object-cover"
+                        />
+                      ) : (
+                        <div className="grid h-14 w-20 place-items-center rounded-xl bg-primary/10 text-xs font-semibold text-primary">
+                          Veículo
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <div className="font-semibold">
+                          {[
+                            (selectedOrder.vehicle as any).brand,
+                            (selectedOrder.vehicle as any).model,
+                          ].filter(Boolean).join(" ") || "Veículo não informado"}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          Placa: {(selectedOrder.vehicle as any).plate ?? "—"}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {[
+                            (selectedOrder.vehicle as any).year,
+                            (selectedOrder.vehicle as any).vehicle_type,
+                            (selectedOrder.vehicle as any).body_type,
+                          ].filter(Boolean).join(" · ") || "Especificações não informadas"}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Timeline Bottom */}

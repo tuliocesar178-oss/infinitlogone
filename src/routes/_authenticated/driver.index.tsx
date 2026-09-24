@@ -49,7 +49,20 @@ function DriverHome() {
     queryFn: async () => {
       const { data } = await supabase
         .from("orders")
-        .select("*")
+        .select(`
+          *,
+          vehicle:vehicles(
+            id,
+            plate,
+            brand,
+            model,
+            year,
+            color,
+            vehicle_type,
+            body_type,
+            photo_url
+          )
+        `)
         .eq("driver_id", userId)
         .not("status", "in", "(delivered,finalized,cancelled)")
         .order("updated_at", { ascending: false })

@@ -47,10 +47,27 @@ type TrackingResult = {
   delivery_window_start: string | null;
   delivery_window_end: string | null;
   driver_first_name: string | null;
+  driver_name?: string | null;
+  driver_avatar_url?: string | null;
+  driver_phone?: string | null;
+  driver_license_category?: string | null;
   driver_lat: number | null;
   driver_lng: number | null;
   driver_speed: number | null;
   driver_heading: number | null;
+  vehicle?: {
+    id: string;
+    brand: string | null;
+    model: string | null;
+    year: number | null;
+    plate: string | null;
+    color: string | null;
+    vehicle_type: string | null;
+    body_type: string | null;
+    capacity_kg: number | null;
+    axles: number | null;
+    photo_url: string | null;
+  } | null;
   distance_to_destination_km: number | null;
   initial_distance_km: number | null;
   eta_minutes: number | null;
@@ -253,6 +270,104 @@ function TrackingPage() {
                 </div>
               </div>
             </div>
+
+            {(data.driver_name || data.driver_first_name || data.vehicle) && (
+              <div className="card-soft mt-6 p-6">
+                <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
+                  Motorista e veículo
+                </h2>
+
+                <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                  {(data.driver_name || data.driver_first_name) && (
+                    <div className="rounded-2xl border border-border bg-surface-2 p-4">
+                      <div className="flex items-center gap-3">
+                        {data.driver_avatar_url ? (
+                          <img
+                            src={data.driver_avatar_url}
+                            alt={data.driver_name ?? data.driver_first_name ?? "Motorista"}
+                            className="h-14 w-14 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="grid h-14 w-14 place-items-center rounded-full bg-primary/10 text-lg font-semibold text-primary">
+                            {(data.driver_name ?? data.driver_first_name ?? "M").slice(0, 1).toUpperCase()}
+                          </div>
+                        )}
+
+                        <div className="min-w-0">
+                          <div className="text-xs uppercase tracking-widest text-muted-foreground">
+                            Motorista
+                          </div>
+                          <div className="truncate font-semibold">
+                            {data.driver_name ?? data.driver_first_name}
+                          </div>
+                          {data.driver_license_category && (
+                            <div className="mt-1 text-xs text-muted-foreground">
+                              Categoria CNH: {data.driver_license_category}
+                            </div>
+                          )}
+                          {data.driver_phone && (
+                            <div className="text-xs text-muted-foreground">
+                              {data.driver_phone}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {data.vehicle && (
+                    <div className="rounded-2xl border border-border bg-surface-2 p-4">
+                      <div className="flex items-center gap-3">
+                        {data.vehicle.photo_url ? (
+                          <img
+                            src={data.vehicle.photo_url}
+                            alt={[data.vehicle.brand, data.vehicle.model].filter(Boolean).join(" ") || "Veículo"}
+                            className="h-14 w-20 rounded-xl object-cover"
+                          />
+                        ) : (
+                          <div className="grid h-14 w-20 place-items-center rounded-xl bg-primary/10 text-xs font-semibold text-primary">
+                            Veículo
+                          </div>
+                        )}
+
+                        <div className="min-w-0">
+                          <div className="text-xs uppercase tracking-widest text-muted-foreground">
+                            Veículo
+                          </div>
+                          <div className="truncate font-semibold">
+                            {[data.vehicle.brand, data.vehicle.model].filter(Boolean).join(" ") || "—"}
+                          </div>
+                          <div className="mt-1 text-xs text-muted-foreground">
+                            {data.vehicle.plate ?? "Placa não informada"}
+                            {data.vehicle.year ? ` · ${data.vehicle.year}` : ""}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {[data.vehicle.vehicle_type, data.vehicle.body_type, data.vehicle.color]
+                              .filter(Boolean)
+                              .join(" · ") || "Especificações não informadas"}
+                          </div>
+                        </div>
+                      </div>
+
+                      {(data.vehicle.capacity_kg != null || data.vehicle.axles != null) && (
+                        <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted-foreground">
+                          {data.vehicle.capacity_kg != null && (
+                            <span className="rounded-full bg-background px-2.5 py-1">
+                              Capacidade: {data.vehicle.capacity_kg.toLocaleString("pt-BR")} kg
+                            </span>
+                          )}
+                          {data.vehicle.axles != null && (
+                            <span className="rounded-full bg-background px-2.5 py-1">
+                              {data.vehicle.axles} eixo(s)
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Live map + approach mode */}
             {(data.driver_lat != null && data.driver_lng != null) ||

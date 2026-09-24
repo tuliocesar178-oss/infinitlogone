@@ -43,6 +43,17 @@ export type Order = {
   eta_minutes: number | null;
   pickup_window_start: string | null;
   delivery_window_end: string | null;
+  vehicle?: {
+    id: string;
+    plate: string | null;
+    brand: string | null;
+    model: string | null;
+    year: number | null;
+    color: string | null;
+    vehicle_type: string | null;
+    body_type: string | null;
+    photo_url: string | null;
+  } | null;
 };
 
 export function OfferCard({
@@ -334,6 +345,40 @@ export function ActiveOrderPanel({
           </span>
         </div>
       </div>
+
+      {order.vehicle && (
+        <div className="border-b border-border bg-surface-2 p-6">
+          <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+            Veículo utilizado
+          </div>
+          <div className="mt-3 flex items-center gap-3">
+            {order.vehicle.photo_url ? (
+              <img
+                src={order.vehicle.photo_url}
+                alt={[order.vehicle.brand, order.vehicle.model].filter(Boolean).join(" ") || "Veículo"}
+                className="h-16 w-24 rounded-xl object-cover"
+              />
+            ) : (
+              <div className="grid h-16 w-24 place-items-center rounded-xl bg-background text-xs font-semibold text-muted-foreground">
+                Veículo
+              </div>
+            )}
+            <div className="min-w-0">
+              <div className="truncate font-semibold">
+                {[order.vehicle.brand, order.vehicle.model].filter(Boolean).join(" ") || "Veículo"}
+              </div>
+              <div className="text-sm text-muted-foreground">
+                Placa: {order.vehicle.plate ?? "—"}
+              </div>
+              <div className="text-xs text-muted-foreground">
+                {[order.vehicle.year, order.vehicle.vehicle_type, order.vehicle.body_type, order.vehicle.color]
+                  .filter(Boolean)
+                  .join(" · ") || "Especificações não informadas"}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid gap-4 p-6 sm:grid-cols-2">
         <I icon={<MapPin className="h-4 w-4" />} k="Origem" v={order.origin_city ?? order.origin_address} />
