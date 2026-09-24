@@ -195,7 +195,7 @@ function NewOrderWizard() {
       setLoadingWorks(true);
       try {
         const { data, error } = await supabase
-          .from("works" as any)
+          .from("works")
           .select("*")
           .eq("client_id", selectedClientId)
           .in("status", ["active", "paused"])

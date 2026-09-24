@@ -19,6 +19,7 @@ export interface TrackingVehicle {
   capacity_kg: number | null;
   axles: number | null;
   photo_url: string | null;
+  photos: Array<{ url: string; label: string | null }>;
   status: string;
 }
 
@@ -52,6 +53,20 @@ export const CLOSED_STATUSES = ["delivered", "finalized", "cancelled"];
 export function vehicleName(vehicle: TrackingVehicle | null): string {
   if (!vehicle) return "Aguardando definição do veículo";
   return [vehicle.brand, vehicle.model].filter(Boolean).join(" ") || vehicle.vehicle_type || "Veículo";
+}
+
+export function driverStatusLabel(driver: TrackingDriver): string {
+  const value = driver.availability ?? driver.status;
+  const labels: Record<string, string> = {
+    available: "Disponível",
+    unavailable: "Indisponível",
+    busy: "Em viagem",
+    on_trip: "Em viagem",
+    active: "Ativo",
+    inactive: "Inativo",
+    pending: "Cadastro em análise",
+  };
+  return value ? (labels[value] ?? "Status atualizado") : "Motorista confirmado";
 }
 
 export function relativeUpdate(value: string | null): string {

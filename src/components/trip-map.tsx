@@ -14,6 +14,8 @@ export type TripMapProps = {
   routeGeoJSON?: { type: "LineString"; coordinates: [number, number][] } | null;
   className?: string;
   interactive?: boolean;
+  driverLabel?: string | null;
+  vehicleLabel?: string | null;
 };
 
 export function TripMap({
@@ -23,6 +25,8 @@ export function TripMap({
   routeGeoJSON,
   className,
   interactive = true,
+  driverLabel,
+  vehicleLabel,
 }: TripMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
@@ -82,12 +86,14 @@ export function TripMap({
         el.textContent = "🚚";
         el.style.cssText =
           "font-size:24px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.3));transition:transform 300ms ease";
+        const popupText = [driverLabel, vehicleLabel].filter(Boolean).join(" · ");
         driverMarker.current = new mapboxgl.Marker({ element: el, anchor: "center" })
           .setLngLat([driver.lng, driver.lat])
+          .setPopup(popupText ? new mapboxgl.Popup({ offset: 18 }).setText(popupText) : new mapboxgl.Popup().setText("Veículo em rota"))
           .addTo(map);
       } else driverMarker.current.setLngLat([driver.lng, driver.lat]);
     }
-  }, [driver, destination, origin, ready]);
+  }, [driver, destination, origin, ready, driverLabel, vehicleLabel]);
 
   // fit bounds
   useEffect(() => {

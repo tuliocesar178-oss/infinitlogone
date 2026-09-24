@@ -1,6 +1,8 @@
-import { BadgeCheck, Camera, CircleUserRound, Gauge, Truck } from "lucide-react";
+import type { ReactNode } from "react";
+import { useState } from "react";
+import { BadgeCheck, Camera, CircleUserRound, X, Truck } from "lucide-react";
 import type { TrackingDriver, TrackingVehicle } from "@/lib/client-tracking";
-import { vehicleName } from "@/lib/client-tracking";
+import { driverStatusLabel, vehicleName } from "@/lib/client-tracking";
 
 interface DriverDetailsProps {
   driver: TrackingDriver | null;
@@ -29,7 +31,7 @@ export function DriverDetails({ driver }: DriverDetailsProps) {
             <p className="mt-0.5 text-sm text-muted-foreground">Motorista responsável pelo frete</p>
             <div className="mt-2 flex flex-wrap gap-2">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2.5 py-1 text-xs font-semibold text-success">
-                <span className="h-2 w-2 rounded-full bg-success" /> Em operação
+                <span className="h-2 w-2 rounded-full bg-success" /> {driverStatusLabel(driver)}
               </span>
               {driver.license_category && (
                 <span className="rounded-full bg-secondary px-2.5 py-1 text-xs text-secondary-foreground">CNH {driver.license_category}</span>
@@ -47,6 +49,7 @@ interface VehicleDetailsProps {
 }
 
 export function VehicleDetails({ vehicle }: VehicleDetailsProps) {
+  const [photoOpen, setPhotoOpen] = useState(false);
   const details = vehicle
     ? [
         ["Tipo", vehicle.vehicle_type], ["Marca", vehicle.brand], ["Modelo", vehicle.model],
@@ -68,13 +71,19 @@ export function VehicleDetails({ vehicle }: VehicleDetailsProps) {
         ) : (
           <>
             <div className="mt-5 grid gap-5 sm:grid-cols-[minmax(180px,0.8fr)_1fr]">
-              <div className="aspect-[16/10] overflow-hidden rounded-lg bg-secondary">
+               <button
+                 type="button"
+                 disabled={!vehicle.photo_url}
+                 onClick={() => setPhotoOpen(true)}
+                 className="aspect-[16/10] overflow-hidden rounded-lg bg-secondary text-left disabled:cursor-default"
+                 aria-label={vehicle.photo_url ? "Ampliar foto do veículo" : "Veículo sem foto"}
+               >
                 {vehicle.photo_url ? (
                   <img src={vehicle.photo_url} alt={vehicleName(vehicle)} className="h-full w-full object-cover" />
                 ) : (
                   <div className="grid h-full place-items-center text-muted-foreground"><Camera className="h-8 w-8" /></div>
                 )}
-              </div>
+               </button>
               <div className="self-center">
                 <p className="text-xl font-semibold">{vehicleName(vehicle)}</p>
                 <p className="mt-1 font-mono text-sm font-semibold text-brand">{vehicle.plate}</p>
@@ -94,14 +103,29 @@ export function VehicleDetails({ vehicle }: VehicleDetailsProps) {
                 ))}
               </dl>
             )}
+            {vehicle.photos.length > 1 && (
+              <div className="mt-5 flex gap-2 overflow-x-auto border-t pt-5" aria-label="Galeria do veículo">
+                {vehicle.photos.map((photo) => (
+                  <button key={photo.url} type="button" onClick={() => setPhotoOpen(true)} className="h-16 w-24 shrink-0 overflow-hidden rounded-md border">
+                    <img src={photo.url} alt={photo.label ?? "Foto do veículo"} className="h-full w-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
           </>
         )}
       </div>
+      {photoOpen && vehicle?.photo_url && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/75 p-4" role="dialog" aria-modal="true" onClick={() => setPhotoOpen(false)}>
+          <button type="button" onClick={() => setPhotoOpen(false)} className="absolute right-5 top-5 rounded-full bg-background p-2" aria-label="Fechar foto"><X className="h-5 w-5" /></button>
+          <img src={vehicle.photo_url} alt={vehicleName(vehicle)} className="max-h-[85vh] max-w-full rounded-lg object-contain" onClick={(event) => event.stopPropagation()} />
+        </div>
+      )}
     </section>
   );
 }
 
-function EmptyAssignment({ icon, text }: { icon: React.ReactNode; text: string }) {
+function EmptyAssignment({ icon, text }: { icon: ReactNode; text: string }) {
   return (
     <div className="mt-5 flex items-center gap-3 rounded-lg border border-dashed bg-secondary/50 p-4 text-muted-foreground">
       {icon}<span className="text-sm font-medium">{text}</span>

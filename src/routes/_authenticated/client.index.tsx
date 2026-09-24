@@ -173,6 +173,8 @@ function SelectedTracking({ order }: { order: ClientTrackingOrder }) {
           origin={point(order.origin_lat, order.origin_lng)}
           destination={point(order.destination_lat, order.destination_lng)}
           driver={point(order.current_lat, order.current_lng)}
+          driverLabel={order.driver?.name}
+          vehicleLabel={order.vehicle ? `${vehicleName(order.vehicle)} · ${order.vehicle.plate}` : null}
           interactive
         />
         <div className="absolute bottom-4 left-4 rounded-lg border bg-background/95 px-3 py-2 shadow-lg backdrop-blur">
