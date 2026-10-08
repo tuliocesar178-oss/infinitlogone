@@ -27,7 +27,10 @@ export const Route = createFileRoute("/")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  validateSearch: (search: Record<string, unknown>) => ({ design: homeDesignSchema.safeParse(search.design).success ? homeDesignSchema.parse(search.design) : undefined }),
+  validateSearch: (search: Record<string, unknown>): { design?: "current" | "premium-map" } => {
+    const parsed = homeDesignSchema.safeParse(search.design);
+    return parsed.success ? { design: parsed.data } : {};
+  },
   component: LandingPage,
 });
 

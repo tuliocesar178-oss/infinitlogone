@@ -17,7 +17,6 @@ export default function PublicLogisticsMap() {
         if (disposed) return;
         setFailed(false);
         map.addSource('illustrative-routes', { type: 'geojson', data: { type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: [[-46.63,-23.55],[-44.0,-19.92],[-47.88,-15.79],[-38.5,-12.97]] } } });
-        const color = getComputedStyle(container.current ?? document.documentElement).getPropertyValue('--brand').trim();
         const probe = document.createElement('span'); probe.style.color = `var(--brand)`; document.body.append(probe); const rgb = getComputedStyle(probe).color; probe.remove();
         map.addLayer({ id: 'illustrative-routes', type: 'line', source: 'illustrative-routes', paint: { 'line-color': rgb, 'line-width': 3 } });
         for (const coordinates of [[-46.63,-23.55],[-38.5,-12.97]] as [number,number][]) {

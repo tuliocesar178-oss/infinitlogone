@@ -4,7 +4,7 @@ import { Activity, DollarSign, MapPin, Package, TruckIcon, Users } from "lucide-
 import { HomeDesignSettings } from "@/components/home-design-settings";
 
 export const Route = createFileRoute("/_authenticated/admin")({
-  head: () => ({ meta: [{ title: "Administração — InfinitLog" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Administração — InfinitLog" }, { name: "description", content: "Administração e personalização da página inicial da InfinitLog." }, { property: "og:title", content: "Administração — InfinitLog" }, { property: "og:description", content: "Configurações administrativas da InfinitLog Transportes." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }] }),
   component: AdminDashboard,
 });
 

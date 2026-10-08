@@ -41,7 +41,7 @@ export function PremiumHome() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="border-b border-border/60 bg-background/95">
-        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6">
+        <div className="mx-auto grid h-20 max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 sm:flex sm:justify-between sm:px-6">
           <Link to="/" aria-label="InfinitLog — início">
             <Logo size={32} />
           </Link>
@@ -74,7 +74,7 @@ export function PremiumHome() {
         <section className="relative overflow-hidden bg-surface-2">
           <img src={premiumHero} alt="Caminhão em rodovia brasileira" width={1536} height={864} className="absolute inset-0 h-full w-full object-cover object-right" />
           <div className="absolute inset-0 bg-gradient-to-r from-background via-background/90 to-background/10" />
-          <div className="relative mx-auto grid min-h-[570px] max-w-7xl items-center gap-8 px-5 py-12 lg:grid-cols-[1fr_1fr] lg:py-16">
+          <div className="relative mx-auto grid min-h-[530px] max-w-7xl items-center gap-5 px-5 py-8 lg:grid-cols-[1fr_1fr] lg:py-12">
             <div className="relative z-10 max-w-xl">
               <span className="inline-flex items-center gap-2 rounded-full border border-brand/20 bg-background px-4 py-2 text-xs font-semibold uppercase tracking-normal text-brand">
                 <ShieldCheck className="h-4 w-4" /> Tecnologia & logística
@@ -114,7 +114,7 @@ export function PremiumHome() {
               </form>
             </div>
 
-            <div className="relative h-[300px] lg:h-[390px]">
+            <div className="relative h-[240px] lg:h-[390px]">
               <div className="absolute left-0 top-0 h-[230px] w-[75%] overflow-hidden rounded-xl border border-border bg-background shadow-elevated lg:h-[280px]">
                 <Suspense fallback={<div className="h-full bg-accent" />}><PublicLogisticsMap /></Suspense>
               </div>
@@ -129,7 +129,7 @@ export function PremiumHome() {
         </section>
 
         <section id="servicos" className="mx-auto max-w-7xl px-6 py-20">
-          <div className="grid gap-10 xl:grid-cols-[0.65fr_2fr]">
+          <div className="grid gap-10">
             <div>
               <span className="text-xs font-semibold uppercase tracking-normal text-brand">Nossos serviços</span>
               <h2 className="mt-4 text-4xl font-semibold tracking-normal text-primary">
@@ -191,7 +191,7 @@ function Feature({
   body: string;
 }) {
   return (
-    <div className="group rounded-2xl border border-border bg-card p-5 shadow-card motion-safe:transition-all motion-safe:hover:-translate-y-1 hover:border-brand/30 hover:shadow-elevated">
+    <div className="group min-w-0 rounded-xl border border-border bg-card p-5 shadow-card motion-safe:transition-all motion-safe:hover:-translate-y-1 hover:border-brand/30 hover:shadow-elevated">
       <span className="grid h-11 w-11 place-items-center rounded-full bg-brand/10 text-brand">
         <Icon className="h-5 w-5" />
       </span>
@@ -200,8 +200,4 @@ function Feature({
       <ArrowRight className="mt-5 h-4 w-4 text-brand transition-transform group-hover:translate-x-1" />
     </div>
   );
-}
-
-function MapPinIcon({ className }: { className?: string }) {
-  return <span className={className}>⌖</span>;
 }
