@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
 import { Activity, DollarSign, MapPin, Package, TruckIcon, Users } from "lucide-react";
+import { HomeDesignSettings } from "@/components/home-design-settings";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({ meta: [{ title: "Administração — InfinitLog" }, { name: "robots", content: "noindex" }] }),
@@ -26,6 +27,10 @@ function AdminDashboard() {
         <Panel title="Últimas atividades" icon={<Activity className="h-4 w-4" />}>
           <p className="text-sm text-muted-foreground">Nenhuma atividade ainda.</p>
         </Panel>
+      </div>
+
+      <div className="mt-8">
+        <HomeDesignSettings />
       </div>
 
       <div className="mt-8 grid gap-6 md:grid-cols-2">

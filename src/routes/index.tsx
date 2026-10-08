@@ -5,6 +5,8 @@ import { getUserRolesCached, primaryRole, homeForRole } from "@/lib/roles";
 import { useState, type FormEvent } from "react";
 import { ArrowRight, MapPin, Phone, Search, ShieldCheck, Zap } from "lucide-react";
 import { Logo } from "@/components/logo";
+import { PremiumHome } from "@/components/premium-home";
+import type { HomeDesign } from "@/components/home-design-settings";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -30,6 +32,45 @@ export const Route = createFileRoute("/")({
 function LandingPage() {
   const navigate = useNavigate();
   const [code, setCode] = useState("");
+  const [design, setDesign] = useState<HomeDesign>("current");
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadHomeDesign() {
+      try {
+        const localValue = window.localStorage.getItem("public_home_design");
+        if (localValue === "premium-map" && mounted) setDesign("premium-map");
+
+        const { data } = await supabase
+          .from("app_settings")
+          .select("value")
+          .eq("key", "public_home_design")
+          .maybeSingle();
+
+        const databaseValue =
+          data?.value &&
+          typeof data.value === "object" &&
+          "design" in data.value &&
+          (data.value as { design?: unknown }).design;
+
+        if (mounted && (databaseValue === "premium-map" || databaseValue === "current")) {
+          setDesign(databaseValue);
+        }
+      } catch {
+        // Mantém o design atual quando a configuração pública ainda não estiver disponível.
+      }
+    }
+
+    void loadHomeDesign();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  if (design === "premium-map") {
+    return <PremiumHome />;
+  }
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
