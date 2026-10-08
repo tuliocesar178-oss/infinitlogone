@@ -76,7 +76,8 @@ export function OrderChat({ roomId, orderId, title, subtitle, avatarUrl, onCallC
       void markRoomAsRead(roomId).then(() => qc.invalidateQueries({ queryKey: ['unified-chat-directory'] })).catch(() => undefined);
     }
     if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      const viewport = scrollRef.current.closest('[data-radix-scroll-area-viewport]');
+      if (viewport) viewport.scrollTop = viewport.scrollHeight;
     }
   }, [messages, roomId, qc]);
 
@@ -155,11 +156,6 @@ export function OrderChat({ roomId, orderId, title, subtitle, avatarUrl, onCallC
                 >
                   {msg.kind === 'text' && (
                     <span className="whitespace-pre-wrap break-words">
-                      {msg.sender?.full_name && !isMe && (
-                        <span className="mb-1 block text-[10px] font-semibold text-muted-foreground">
-                          {msg.sender.full_name}
-                        </span>
-                      )}
                       {msg.content}
                     </span>
                   )}
