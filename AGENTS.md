@@ -13,4 +13,5 @@
 - Share one chat workspace between staff and driver routes; enforce participant access in database RPCs and restrictive policies, and keep ambiguous legacy histories read-only.
 - Store public home appearance in the existing app_settings key through narrow public-read and admin-write RPCs; query previews never change saved settings, keeping operational configuration private.
 - Dynamically load the public illustrative map after hydration with no operational data; public visuals must not imply active shipments.
+- Render the reference homepage for the current public theme while keeping the alternate theme and preview selection intact; visual redesigns must not modify portal authentication or saved appearance settings.
 
