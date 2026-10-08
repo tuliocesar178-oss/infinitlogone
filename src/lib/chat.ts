@@ -9,7 +9,10 @@ export interface ChatMessage {
   sender_id: string;
   kind: MessageKind;
   content: string;
-  metadata: any;
+  metadata: Record<string, unknown>;
+  order_id?: string | null;
+  order_code?: string | null;
+  attachment_url?: string | null;
   read_at: string | null;
   created_at: string;
   sender?: {
@@ -90,44 +93,17 @@ export async function getRooms() {
   return data as unknown as ChatRoom[];
 }
 
-export async function getMessages(roomId: string) {
-  const { data, error } = await supabase
-    .from('messages')
-    .select('*')
-    .eq('room_id', roomId)
-    .order('created_at', { ascending: true });
-  
+export async function getMessages(roomId: string): Promise<ChatMessage[]> {
+  const { data, error } = await supabase.rpc('get_unified_chat_messages', { _room: roomId });
   if (error) throw error;
-  if (!data?.length) return [];
-
-  const senderIds = Array.from(new Set(data.map(message => message.sender_id)));
-  const { data: profiles, error: profilesError } = await supabase
-    .from('profiles')
-    .select('id, full_name, avatar_url')
-    .in('id', senderIds);
-
-  if (profilesError) throw profilesError;
-  const profileById = new Map((profiles || []).map(profile => [profile.id, profile]));
-
-  return data.map(message => ({
-    ...message,
-    sender: profileById.get(message.sender_id),
-  })) as unknown as ChatMessage[];
+  return data as unknown as ChatMessage[];
 }
 
-export async function sendMessage(roomId: string, content: string, kind: MessageKind = 'text', metadata: any = {}, orderId?: string) {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error("Usuário não autenticado");
-
-  const { error } = await supabase.from('messages').insert({
-    room_id: roomId,
-    order_id: orderId || null,
-    sender_id: user.id,
-    kind: kind as any,
-    content,
-    metadata
-  } as any);
-
+export async function sendMessage(roomId: string, content: string, kind: MessageKind = 'text', metadata: Record<string, unknown> = {}, orderId?: string) {
+  const kinds = { text: 'text', image: 'photo', video: 'video', document: 'pdf', location: 'text', audio: 'audio', system: 'text', occurrence: 'text' } as const;
+  const { error } = await supabase.rpc('send_unified_chat_message', {
+    _room: roomId, _content: content, _order: orderId, _kind: kinds[kind], _metadata: metadata as import('@/integrations/supabase/types').Json,
+  });
   if (error) throw error;
 }
 
@@ -408,12 +384,6 @@ export async function getOrCreateOperationRoom(): Promise<string> {
 
 /** Marca como lidas as mensagens recebidas de uma sala. */
 export async function markRoomAsRead(roomId: string) {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return;
-  await supabase
-    .from('messages')
-    .update({ read_at: new Date().toISOString() })
-    .eq('room_id', roomId)
-    .is('read_at', null)
-    .neq('sender_id', user.id);
+  const { error } = await supabase.rpc('mark_unified_chat_read', { _room: roomId });
+  if (error) throw error;
 }
