@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { lazy, Suspense, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import {
   ArrowRight,
@@ -6,11 +6,13 @@ import {
   FileText,
   MessageCircle,
   Search,
+  MapPin,
   ShieldCheck,
   Truck,
   Users,
 } from "lucide-react";
-import premiumHero from "@/assets/uploads/6646.png";
+import premiumHero from "@/assets/logistics-highway.jpg";
+const PublicLogisticsMap = lazy(() => import("@/components/public-logistics-map"));
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,9 +41,9 @@ export function PremiumHome() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="border-b border-border/60 bg-background/95">
-        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-6 px-6">
+        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6">
           <Link to="/" aria-label="InfinitLog — início">
-            <Logo size={42} />
+            <Logo size={32} />
           </Link>
 
           <nav className="hidden items-center gap-8 text-sm font-medium text-primary lg:flex">
@@ -60,7 +62,7 @@ export function PremiumHome() {
             </Link>
             <Link
               to="/auth"
-              className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90"
+              className="inline-flex items-center gap-2 rounded-full bg-primary px-3 sm:px-5 py-2.5 text-xs sm:text-sm font-semibold text-primary-foreground hover:opacity-90"
             >
               Acesso Restrito <ArrowRight className="h-4 w-4" />
             </Link>
@@ -70,13 +72,14 @@ export function PremiumHome() {
 
       <main>
         <section className="relative overflow-hidden bg-surface-2">
-          <div className="absolute inset-0 bg-gradient-to-r from-background via-background/90 to-transparent lg:w-3/5" />
-          <div className="relative mx-auto grid min-h-[600px] max-w-7xl items-center gap-10 px-6 py-16 lg:grid-cols-[0.9fr_1.1fr]">
+          <img src={premiumHero} alt="Caminhão em rodovia brasileira" width={1536} height={864} className="absolute inset-0 h-full w-full object-cover object-right" />
+          <div className="absolute inset-0 bg-gradient-to-r from-background via-background/90 to-background/10" />
+          <div className="relative mx-auto grid min-h-[570px] max-w-7xl items-center gap-8 px-5 py-12 lg:grid-cols-[1fr_1fr] lg:py-16">
             <div className="relative z-10 max-w-xl">
-              <span className="inline-flex items-center gap-2 rounded-full border border-brand/20 bg-background px-4 py-2 text-xs font-semibold uppercase tracking-widest text-brand">
+              <span className="inline-flex items-center gap-2 rounded-full border border-brand/20 bg-background px-4 py-2 text-xs font-semibold uppercase tracking-normal text-brand">
                 <ShieldCheck className="h-4 w-4" /> Tecnologia & logística
               </span>
-              <h1 className="mt-7 text-5xl font-semibold leading-[0.98] tracking-tight text-primary sm:text-7xl">
+              <h1 className="mt-7 text-4xl font-semibold leading-tight text-primary sm:text-6xl">
                 Sua carga em{" "}
                 <span className="text-brand">boas mãos.</span>
               </h1>
@@ -95,9 +98,9 @@ export function PremiumHome() {
                     }}
                     placeholder="Digite o código de rastreamento..."
                     aria-label="Código de rastreamento"
-                    className="h-12 border-0 bg-transparent shadow-none focus-visible:ring-0"
+                    className="min-w-0 h-12 border-0 bg-transparent shadow-none focus-visible:ring-0"
                   />
-                  <Button type="submit" className="h-12 rounded-full px-6">
+                  <Button type="submit" className="h-12 shrink-0 rounded-full bg-brand px-4 text-brand-foreground hover:bg-brand/90">
                     Rastrear <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </div>
@@ -111,35 +114,25 @@ export function PremiumHome() {
               </form>
             </div>
 
-            <div className="relative min-h-[420px] overflow-hidden rounded-[2rem] border border-white/70 shadow-elevated">
-              <img
-                src={premiumHero}
-                alt="Composição visual de mapa e transporte logístico"
-                className="absolute inset-0 h-full w-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-tr from-primary/70 via-transparent to-brand/20" />
-              <div className="absolute left-6 top-6 rounded-2xl border border-white/50 bg-background/90 p-4 shadow-card backdrop-blur">
-                <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-                  Visibilidade logística
-                </div>
-                <div className="mt-1 flex items-center gap-2 font-semibold text-primary">
-                  <span className="h-2.5 w-2.5 rounded-full bg-success" />
-                  Consulte seu frete
-                </div>
+            <div className="relative h-[300px] lg:h-[390px]">
+              <div className="absolute left-0 top-0 h-[230px] w-[75%] overflow-hidden rounded-xl border border-border bg-background shadow-elevated lg:h-[280px]">
+                <Suspense fallback={<div className="h-full bg-accent" />}><PublicLogisticsMap /></Suspense>
               </div>
-              <div className="absolute bottom-6 right-6 rounded-2xl border border-white/50 bg-background/95 p-4 shadow-card backdrop-blur">
-                <div className="text-xs text-muted-foreground">Rotas, dados e operação</div>
-                <div className="mt-1 text-lg font-semibold text-primary">Em um só lugar</div>
+              <div className="absolute right-0 top-5 max-w-[190px] rounded-xl border bg-background/95 p-4 shadow-elevated">
+                <ShieldCheck className="mb-2 h-6 w-6 text-brand" />
+                <p className="font-semibold text-primary">Visibilidade de ponta a ponta</p>
+                <p className="mt-2 text-xs text-muted-foreground">Consulte seu código para ver o status real da carga.</p>
+                <Button asChild size="sm" variant="outline" className="mt-3"><Link to="/rastreio">Consultar carga</Link></Button>
               </div>
             </div>
           </div>
         </section>
 
         <section id="servicos" className="mx-auto max-w-7xl px-6 py-20">
-          <div className="grid gap-10 lg:grid-cols-[0.7fr_1.3fr]">
+          <div className="grid gap-10 xl:grid-cols-[0.65fr_2fr]">
             <div>
-              <span className="text-xs font-semibold uppercase tracking-widest text-brand">Nossos serviços</span>
-              <h2 className="mt-4 text-4xl font-semibold tracking-tight text-primary">
+              <span className="text-xs font-semibold uppercase tracking-normal text-brand">Nossos serviços</span>
+              <h2 className="mt-4 text-4xl font-semibold tracking-normal text-primary">
                 Tudo o que você precisa em um só lugar.
               </h2>
               <p className="mt-5 text-muted-foreground">
@@ -147,8 +140,8 @@ export function PremiumHome() {
               </p>
             </div>
 
-            <div id="solucoes" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-              <Feature icon={MapPinIcon} title="Rastreamento em tempo real" body="Acompanhe suas cargas do início ao destino." />
+            <div id="solucoes" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+              <Feature icon={MapPin} title="Rastreamento em tempo real" body="Acompanhe suas cargas do início ao destino." />
               <Feature icon={Truck} title="Gestão de frotas e motoristas" body="Controle sua frota e suas operações." />
               <Feature icon={BarChart3} title="Relatórios personalizados" body="Dados completos para decisões melhores." />
               <Feature icon={FileText} title="Documentos e comprovantes" body="Acesse canhotos, notas e comprovantes." />
@@ -158,7 +151,7 @@ export function PremiumHome() {
         </section>
 
         <section id="contato" className="bg-primary text-primary-foreground">
-          <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-6 px-6 py-12 sm:flex-row sm:items-center">
+          <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-3 px-4 sm:px-6 py-12 sm:flex-row sm:items-center">
             <div className="flex items-start gap-4">
               <Users className="mt-1 h-8 w-8 text-brand" />
               <div>
@@ -168,12 +161,12 @@ export function PremiumHome() {
                 </p>
               </div>
             </div>
-            <a
-              href="mailto:contato@infinitlog.com.br"
+            <Button asChild variant="outline" className="shrink-0 border-primary-foreground/50 bg-transparent text-primary-foreground hover:bg-primary-foreground/10"><Link
+              to="/auth"
               className="inline-flex items-center rounded-full border border-primary-foreground/50 px-6 py-3 text-sm font-semibold hover:bg-primary-foreground/10"
             >
               Falar com a equipe <ArrowRight className="ml-2 h-4 w-4" />
-            </a>
+            </Link></Button>
           </div>
         </section>
       </main>
@@ -198,7 +191,7 @@ function Feature({
   body: string;
 }) {
   return (
-    <div className="group rounded-2xl border border-border bg-card p-5 shadow-card transition-all hover:-translate-y-1 hover:border-brand/30 hover:shadow-elevated">
+    <div className="group rounded-2xl border border-border bg-card p-5 shadow-card motion-safe:transition-all motion-safe:hover:-translate-y-1 hover:border-brand/30 hover:shadow-elevated">
       <span className="grid h-11 w-11 place-items-center rounded-full bg-brand/10 text-brand">
         <Icon className="h-5 w-5" />
       </span>

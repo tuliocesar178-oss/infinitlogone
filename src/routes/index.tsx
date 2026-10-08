@@ -6,7 +6,8 @@ import { useState, type FormEvent } from "react";
 import { ArrowRight, MapPin, Phone, Search, ShieldCheck, Zap } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { PremiumHome } from "@/components/premium-home";
-import type { HomeDesign } from "@/components/home-design-settings";
+import { homeDesignQuery, homeDesignSchema } from "@/lib/home-design";
+import { useQuery } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -26,62 +27,29 @@ export const Route = createFileRoute("/")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
+  validateSearch: (search: Record<string, unknown>) => ({ design: homeDesignSchema.safeParse(search.design).success ? homeDesignSchema.parse(search.design) : undefined }),
   component: LandingPage,
 });
 
 function LandingPage() {
   const navigate = useNavigate();
   const [code, setCode] = useState("");
-  const [design, setDesign] = useState<HomeDesign>("current");
-
-  useEffect(() => {
-    let mounted = true;
-
-    async function loadHomeDesign() {
-      try {
-        const localValue = window.localStorage.getItem("public_home_design");
-        if (localValue === "premium-map" && mounted) setDesign("premium-map");
-
-        const { data } = await supabase
-          .from("app_settings")
-          .select("value")
-          .eq("key", "public_home_design")
-          .maybeSingle();
-
-        const databaseValue =
-          data?.value &&
-          typeof data.value === "object" &&
-          "design" in data.value &&
-          (data.value as { design?: unknown }).design;
-
-        if (mounted && (databaseValue === "premium-map" || databaseValue === "current")) {
-          setDesign(databaseValue);
-        }
-      } catch {
-        // Mantém o design atual quando a configuração pública ainda não estiver disponível.
-      }
-    }
-
-    void loadHomeDesign();
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
-  if (design === "premium-map") {
-    return <PremiumHome />;
-  }
+  const { design: preview } = Route.useSearch();
+  const settings = useQuery(homeDesignQuery);
+  const design = preview ?? settings.data?.design ?? 'current';
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) {
+      if (data.session && !preview) {
         getUserRolesCached(data.session.user.id).then(roles => {
           const target = homeForRole(primaryRole(roles));
           navigate({ to: target, replace: true });
         });
       }
     });
-  }, [navigate]);
+  }, [navigate, preview]);
+
+  if (design === "premium-map") return <PremiumHome />;
 
   function onTrack(e: FormEvent) {
     e.preventDefault();
