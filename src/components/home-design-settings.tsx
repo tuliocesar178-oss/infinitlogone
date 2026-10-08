@@ -1,225 +1,40 @@
-import { useEffect, useState } from "react";
-import { Check, Eye, RotateCcw, Save } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-
-export type HomeDesign = "current" | "premium-map";
-
-const SETTING_KEY = "public_home_design";
-
-const designs: {
-  id: HomeDesign;
-  name: string;
-  description: string;
-  previewClass: string;
-}[] = [
-  {
-    id: "current",
-    name: "Design atual",
-    description: "Página inicial institucional já publicada.",
-    previewClass: "bg-gradient-to-br from-background via-surface-2 to-accent",
-  },
-  {
-    id: "premium-map",
-    name: "Mapa Logístico Premium",
-    description: "Hero com rastreamento, rotas e identidade visual logística.",
-    previewClass: "bg-gradient-to-br from-blue-100 via-background to-primary/20",
-  },
-];
-
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Check, Eye, RotateCcw, Save, MapPin } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { homeDesignQuery, saveHomeDesign, type HomeDesign } from '@/lib/home-design';
+import highway from '@/assets/logistics-highway.jpg';
+import { cn } from '@/lib/utils';
+export type { HomeDesign } from '@/lib/home-design';
+const designs = [{ id: 'current', name: 'Design atual' }, { id: 'premium-map', name: 'Mapa Logístico Premium' }] as const;
 export function HomeDesignSettings() {
-  const [selected, setSelected] = useState<HomeDesign>("current");
-  const [saved, setSaved] = useState<HomeDesign>("current");
-  const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState("");
-
-  useEffect(() => {
-    let mounted = true;
-
-    async function loadDesign() {
-      const localValue = readLocalDesign();
-
-      try {
-        const { data } = await supabase
-          .from("app_settings")
-          .select("value")
-          .eq("key", SETTING_KEY)
-          .maybeSingle();
-
-        const databaseValue = getDesignValue(data?.value);
-        const value = databaseValue ?? localValue ?? "current";
-
-        if (mounted) {
-          setSelected(value);
-          setSaved(value);
-        }
-      } catch {
-        if (mounted) {
-          setSelected(localValue ?? "current");
-          setSaved(localValue ?? "current");
-        }
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    }
-
-    void loadDesign();
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
-  async function saveDesign() {
-    setMessage("");
-
-    const { error } = await supabase.from("app_settings").upsert(
-      {
-        key: SETTING_KEY,
-        value: { design: selected },
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "key" },
-    );
-
-    if (error) {
-      // Mantém uma cópia local para que a escolha continue disponível
-      // mesmo quando a política de configuração ainda não estiver publicada.
-      writeLocalDesign(selected);
-      setMessage("Design salvo neste navegador. A configuração central não está disponível.");
-      setSaved(selected);
-      return;
-    }
-
-    writeLocalDesign(selected);
-    setSaved(selected);
-    setMessage("Design da página inicial salvo.");
-  }
-
-  function restorePrevious() {
-    setSelected(saved);
-    setMessage("A seleção anterior foi restaurada. Clique em Salvar alterações para confirmar.");
-  }
-
-  if (loading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Design da Página Inicial</CardTitle>
-          <CardDescription>Carregando as opções disponíveis...</CardDescription>
-        </CardHeader>
-      </Card>
-    );
-  }
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Personalização do Site</CardTitle>
-        <CardDescription>
-          Escolha apenas o visual da página inicial pública. Os portais internos permanecem inalterados.
-        </CardDescription>
-      </CardHeader>
-
-      <CardContent className="space-y-6">
-        <div>
-          <h3 className="text-sm font-semibold">Design da Página Inicial</h3>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Pré-visualize um tema antes de aplicá-lo.
-          </p>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2">
-          {designs.map((design) => {
-            const active = selected === design.id;
-
-            return (
-              <div
-                key={design.id}
-                className={`overflow-hidden rounded-2xl border ${
-                  active ? "border-brand ring-2 ring-brand/20" : "border-border"
-                }`}
-              >
-                <div className={`relative h-32 ${design.previewClass}`}>
-                  <div className="absolute inset-x-5 top-5 h-3 rounded-full bg-primary/80" />
-                  <div className="absolute left-5 top-14 h-3 w-2/5 rounded-full bg-primary/30" />
-                  <div className="absolute bottom-5 right-5 h-12 w-24 rounded-xl border border-white/70 bg-white/70 shadow-sm" />
-                  {active && (
-                    <span className="absolute right-3 top-3 grid h-7 w-7 place-items-center rounded-full bg-brand text-brand-foreground">
-                      <Check className="h-4 w-4" />
-                    </span>
-                  )}
-                </div>
-
-                <div className="space-y-3 p-4">
-                  <div>
-                    <h4 className="font-semibold">{design.name}</h4>
-                    <p className="mt-1 text-sm text-muted-foreground">{design.description}</p>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant={active ? "default" : "outline"}
-                      onClick={() => setSelected(design.id)}
-                    >
-                      <Check className="mr-2 h-4 w-4" />
-                      {active ? "Selecionado" : "Aplicar design"}
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => {
-                        window.open(`/?design=${design.id}`, "_blank", "noopener,noreferrer");
-                      }}
-                    >
-                      <Eye className="mr-2 h-4 w-4" />
-                      Pré-visualizar
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2 border-t border-border pt-4">
-          <Button type="button" onClick={() => void saveDesign()}>
-            <Save className="mr-2 h-4 w-4" />
-            Salvar alterações
-          </Button>
-          <Button type="button" variant="outline" onClick={restorePrevious}>
-            <RotateCcw className="mr-2 h-4 w-4" />
-            Restaurar design anterior
-          </Button>
-          {message && <span className="text-sm text-muted-foreground">{message}</span>}
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function getDesignValue(value: unknown): HomeDesign | null {
-  if (!value || typeof value !== "object" || !("design" in value)) return null;
-  const design = (value as { design?: unknown }).design;
-  return design === "premium-map" || design === "current" ? design : null;
-}
-
-function readLocalDesign(): HomeDesign | null {
-  try {
-    const value = window.localStorage.getItem(SETTING_KEY);
-    return value === "premium-map" || value === "current" ? value : null;
-  } catch {
-    return null;
-  }
-}
-
-function writeLocalDesign(value: HomeDesign) {
-  try {
-    window.localStorage.setItem(SETTING_KEY, value);
-  } catch {
-    // O banco continua sendo a fonte principal quando o armazenamento local não existe.
-  }
+  const query = useQuery(homeDesignQuery);
+  const qc = useQueryClient();
+  const [choice, setChoice] = useState<HomeDesign | null>(null);
+  const [previewed, setPreviewed] = useState<HomeDesign | null>(null);
+  const [message, setMessage] = useState('');
+  const selected = choice ?? query.data?.design ?? 'current';
+  const save = useMutation({ mutationFn: saveHomeDesign, onSuccess: data => {
+    qc.setQueryData(homeDesignQuery.queryKey, data); setChoice(null); setMessage('Design da página inicial salvo para todos os visitantes.');
+  }});
+  function preview(id: HomeDesign) { setPreviewed(id); window.open(`/?design=${id}`, '_blank', 'noopener,noreferrer'); }
+  return <section className="space-y-6" aria-label="Personalização do Site">
+    <header><h2 className="text-xl font-semibold">Personalização do Site</h2><h3 className="mt-2 text-sm text-muted-foreground">Design da Página Inicial</h3></header>
+    {query.isLoading ? <p>Carregando opções...</p> : <div className="grid gap-5 md:grid-cols-2">{designs.map(design => <article key={design.id} className={cn('overflow-hidden rounded-xl border bg-card', selected === design.id && 'border-brand ring-2 ring-brand/20')}>
+      <div className="relative h-40 overflow-hidden bg-surface-2" aria-hidden="true">
+        {design.id === 'premium-map' && <img src={highway} alt="" width={1536} height={864} loading="lazy" className="absolute inset-0 h-full w-full object-cover" />}
+        <div className="absolute inset-y-0 left-0 w-1/2 bg-background/90 p-5"><div className="h-2 w-12 rounded bg-brand"/><p className="mt-3 text-lg font-bold text-primary">{design.id === 'premium-map' ? 'Sua carga em boas mãos.' : 'Sua carga em movimento.'}</p><div className="mt-4 h-4 rounded-full bg-brand/20"/></div>
+        {design.id === 'premium-map' && <MapPin className="absolute right-8 top-5 h-8 w-8 text-brand"/>}
+        {query.data?.design === design.id && <span className="absolute bottom-2 right-2 rounded bg-background px-2 py-1 text-xs">Design ativo</span>}
+      </div>
+      <div className="space-y-4 p-5"><h4 className="font-semibold">{design.name}</h4><div className="flex gap-2">
+        <Button variant="outline" onClick={() => preview(design.id)}><Eye className="mr-2 h-4 w-4"/>Pré-visualizar</Button>
+        <Button disabled={save.isPending} onClick={() => { if (design.id !== query.data?.design && previewed !== design.id) { preview(design.id); setMessage('Confira a pré-visualização e clique novamente em Aplicar design.'); return; } setChoice(design.id); setMessage('Seleção pronta. Salve para aplicar à página pública.'); }}><Check className="mr-2 h-4 w-4"/>Aplicar design</Button>
+      </div></div>
+    </article>)}</div>}
+    <div className="flex flex-wrap gap-3"><Button disabled={save.isPending || query.isLoading || selected === query.data?.design} onClick={() => save.mutate(selected)}><Save className="mr-2 h-4 w-4"/>Salvar alterações</Button>
+      <Button variant="outline" disabled={!query.data || save.isPending || query.data.previous === query.data.design} onClick={() => { if (query.data) { setChoice(query.data.previous); preview(query.data.previous); setMessage('Design anterior selecionado. Salve para confirmar a restauração.'); } }}><RotateCcw className="mr-2 h-4 w-4"/>Restaurar design anterior</Button></div>
+    {(query.error || save.error) && <p role="alert" className="text-sm text-destructive">Não foi possível salvar ou carregar a configuração. Tente novamente.</p>}
+    {message && <p role="status" className="text-sm text-muted-foreground">{message}</p>}
+  </section>;
 }
