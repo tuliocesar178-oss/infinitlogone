@@ -15,3 +15,6 @@
 - [x] Reforçar acesso às evidências apenas ao cliente proprietário, motorista atribuído e equipe
 - [x] Validar atualizações ao vivo e visualização em desktop e celular
 - [x] Exibir nomes reais dos integrantes da equipe no chat do motorista
+- [ ] Unificar chats individuais por par de usuários, preservando históricos e acesso autorizado
+- [ ] Manter grupo OPERAÇÃO separado e referências de fretes nas mensagens
+- [ ] Validar busca, mensagens não lidas e acesso entre perfis
