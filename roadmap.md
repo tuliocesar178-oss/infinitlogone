@@ -1,5 +1,7 @@
 # Roadmap
 
+- [x] Ajustar e ativar a homepage conforme a referência enviada, preservando rastreio e portais
+
 - [x] Criar rota protegida `/painel-operacao`
 - [x] Adicionar acesso no menu de Administração e Logística
 - [x] Exibir indicadores, fretes, atrasos e ocorrências com dados reais

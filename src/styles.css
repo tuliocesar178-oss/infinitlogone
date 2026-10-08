@@ -60,6 +60,7 @@
 
   --shadow-card: 0 1px 2px 0 rgb(0 0 0 / 0.04), 0 8px 24px -12px rgb(0 0 0 / 0.08);
   --shadow-elevated: 0 4px 12px -2px rgb(0 0 0 / 0.06), 0 24px 48px -24px rgb(0 0 0 / 0.14);
+  --shadow-home: 0 3px 18px color-mix(in oklab, var(--brand) 16%, transparent);
 }
 
 :root {
@@ -214,4 +215,31 @@
   color: var(--color-brand-foreground);
   font-size: 1.05rem;
   font-weight: 600;
+}
+
+.reference-home {
+  --background: oklch(0.995 0.003 250);
+  --foreground: oklch(0.24 0.10 265);
+  --primary: oklch(0.24 0.10 265);
+  --primary-foreground: oklch(0.995 0 0);
+  --brand: oklch(0.58 0.23 258);
+  --brand-foreground: oklch(1 0 0);
+  --card: oklch(1 0 0);
+  --muted-foreground: oklch(0.51 0.07 260);
+  --surface-2: oklch(0.97 0.015 250);
+  --accent: oklch(0.94 0.035 250);
+  --border: oklch(0.91 0.02 250);
+}
+.home-container { width: min(100% - 48px, 1280px); margin-inline: auto; }
+.home-hero { min-height: 470px; }
+.home-hero-image { object-position: center; }
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .home-hero-copy { max-width: 420px; }
+}
+@media (max-width: 767px) {
+  .home-container { width: calc(100% - 32px); }
+  .home-hero { min-height: 600px; }
+  .home-hero-image { object-position: 74% bottom; object-fit: cover; }
+  .home-hero::before { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(to bottom, var(--background) 0%, color-mix(in oklab, var(--background) 94%, transparent) 48%, transparent 76%); }
+  .home-hero-copy { max-width: 490px; }
 }
