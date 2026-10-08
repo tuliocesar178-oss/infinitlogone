@@ -11,6 +11,7 @@ import { FreightProgramPanel } from "@/components/freight-program-panel";
 import { DispatchPanel } from "@/components/orders/dispatch-panel";
 import { NegotiationPanel } from "@/components/orders/negotiation-panel";
 import { OrderChat } from "@/components/orders/order-chat";
+import { Button } from "@/components/ui/button";
 import { workAddress, workStatusLabel, type Work } from "@/lib/work";
 import { z } from "zod";
 
