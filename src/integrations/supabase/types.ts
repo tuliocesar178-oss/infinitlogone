@@ -2561,6 +2561,7 @@ export type Database = {
       }
       get_or_create_operation_room: { Args: never; Returns: string }
       get_or_create_staff_room: { Args: { _other_id: string }; Returns: string }
+      get_public_home_design: { Args: never; Returns: Json }
       get_tracking: { Args: { _code: string }; Returns: Json }
       get_unified_chat_directory: { Args: never; Returns: Json }
       get_unified_chat_messages: { Args: { _room: string }; Returns: Json }
@@ -2596,6 +2597,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      save_public_home_design: { Args: { _design: string }; Returns: Json }
       search_unified_chat: { Args: { _term: string }; Returns: Json }
       send_program_to_driver: {
         Args: {
