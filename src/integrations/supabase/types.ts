@@ -166,13 +166,56 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_read_receipts: {
+        Row: {
+          created_at: string
+          last_read_at: string
+          room_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          last_read_at?: string
+          room_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          last_read_at?: string
+          room_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_read_receipts_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "chat_rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_read_receipts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_rooms: {
         Row: {
           created_at: string | null
           driver_id: string | null
           id: string
+          is_operation: boolean
           last_message_at: string | null
+          merged_into_room_id: string | null
           order_id: string | null
+          participant_a: string | null
+          participant_b: string | null
           staff_a: string | null
           staff_b: string | null
           updated_at: string | null
@@ -181,8 +224,12 @@ export type Database = {
           created_at?: string | null
           driver_id?: string | null
           id?: string
+          is_operation?: boolean
           last_message_at?: string | null
+          merged_into_room_id?: string | null
           order_id?: string | null
+          participant_a?: string | null
+          participant_b?: string | null
           staff_a?: string | null
           staff_b?: string | null
           updated_at?: string | null
@@ -191,8 +238,12 @@ export type Database = {
           created_at?: string | null
           driver_id?: string | null
           id?: string
+          is_operation?: boolean
           last_message_at?: string | null
+          merged_into_room_id?: string | null
           order_id?: string | null
+          participant_a?: string | null
+          participant_b?: string | null
           staff_a?: string | null
           staff_b?: string | null
           updated_at?: string | null
@@ -203,6 +254,13 @@ export type Database = {
             columns: ["driver_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_rooms_merged_into_room_id_fkey"
+            columns: ["merged_into_room_id"]
+            isOneToOne: false
+            referencedRelation: "chat_rooms"
             referencedColumns: ["id"]
           },
           {
@@ -2473,6 +2531,10 @@ export type Database = {
         Args: { _room_id: string; _user: string }
         Returns: boolean
       }
+      can_access_unified_chat: {
+        Args: { _room: string; _user: string }
+        Returns: boolean
+      }
       decline_freight_offer: {
         Args: { _offer_id: string; _reason?: string }
         Returns: Json
@@ -2493,8 +2555,15 @@ export type Database = {
         Args: { _driver_id: string }
         Returns: string
       }
+      get_or_create_individual_chat: {
+        Args: { _other: string }
+        Returns: string
+      }
+      get_or_create_operation_room: { Args: never; Returns: string }
       get_or_create_staff_room: { Args: { _other_id: string }; Returns: string }
       get_tracking: { Args: { _code: string }; Returns: Json }
+      get_unified_chat_directory: { Args: never; Returns: Json }
+      get_unified_chat_messages: { Args: { _room: string }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -2508,6 +2577,7 @@ export type Database = {
       }
       is_finance: { Args: { _user_id: string }; Returns: boolean }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
+      mark_unified_chat_read: { Args: { _room: string }; Returns: undefined }
       override_arrival: { Args: { _order_id: string }; Returns: undefined }
       respond_freight_counteroffer: {
         Args: { _decision: string; _negotiation_id: string }
@@ -2526,6 +2596,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      search_unified_chat: { Args: { _term: string }; Returns: Json }
       send_program_to_driver: {
         Args: {
           _driver_id: string
@@ -2542,6 +2613,16 @@ export type Database = {
           _expires_minutes?: number
           _price: number
           _program_id: string
+        }
+        Returns: string
+      }
+      send_unified_chat_message: {
+        Args: {
+          _content: string
+          _kind?: Database["public"]["Enums"]["message_kind"]
+          _metadata?: Json
+          _order?: string
+          _room: string
         }
         Returns: string
       }
