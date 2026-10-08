@@ -9,89 +9,65 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
-import { Route as AguardandoAprovacaoRouteImport } from './routes/aguardando-aprovacao'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as CadastroClienteRouteImport } from './routes/cadastro-cliente'
-import { Route as CadastroMotoristaRouteImport } from './routes/cadastro-motorista'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
-import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
-import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
-import { Route as AuthenticatedClientRouteImport } from './routes/_authenticated/client'
-import { Route as AuthenticatedDriverRouteImport } from './routes/_authenticated/driver'
-import { Route as AuthenticatedOpsRouteImport } from './routes/_authenticated/ops'
-import { Route as AuthenticatedPainelOperacaoRouteImport } from './routes/_authenticated/painel-operacao'
-import { Route as AuthenticatedRelatoriosRouteImport } from './routes/_authenticated/relatorios'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as CadastroMotoristaRouteImport } from './routes/cadastro-motorista'
+import { Route as CadastroClienteRouteImport } from './routes/cadastro-cliente'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AguardandoAprovacaoRouteImport } from './routes/aguardando-aprovacao'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as RastreioIndexRouteImport } from './routes/rastreio.index'
 import { Route as RastreioCodeRouteImport } from './routes/rastreio.$code'
-import { Route as AuthenticatedClientIndexRouteImport } from './routes/_authenticated/client.index'
-import { Route as AuthenticatedClientBiRouteImport } from './routes/_authenticated/client.bi'
-import { Route as AuthenticatedClientDocumentosRouteImport } from './routes/_authenticated/client.documentos'
-import { Route as AuthenticatedClientFinanceiroRouteImport } from './routes/_authenticated/client.financeiro'
-import { Route as AuthenticatedClientFretesRouteImport } from './routes/_authenticated/client.fretes'
-import { Route as AuthenticatedClientIndicadoresRouteImport } from './routes/_authenticated/client.indicadores'
-import { Route as AuthenticatedClientInsightsRouteImport } from './routes/_authenticated/client.insights'
-import { Route as AuthenticatedClientMapaRouteImport } from './routes/_authenticated/client.mapa'
-import { Route as AuthenticatedClientRelatoriosRouteImport } from './routes/_authenticated/client.relatorios'
-import { Route as AuthenticatedDriverIndexRouteImport } from './routes/_authenticated/driver.index'
-import { Route as AuthenticatedDriverChatRouteImport } from './routes/_authenticated/driver.chat'
-import { Route as AuthenticatedDriverFaturamentoRouteImport } from './routes/_authenticated/driver.faturamento'
-import { Route as AuthenticatedDriverFretesRouteImport } from './routes/_authenticated/driver.fretes'
-import { Route as AuthenticatedDriverOcorrenciasRouteImport } from './routes/_authenticated/driver.ocorrencias'
-import { Route as AuthenticatedDriverOfertasRouteImport } from './routes/_authenticated/driver.ofertas'
-import { Route as AuthenticatedDriverPerfilRouteImport } from './routes/_authenticated/driver.perfil'
+import { Route as AuthenticatedRelatoriosRouteImport } from './routes/_authenticated/relatorios'
+import { Route as AuthenticatedPainelOperacaoRouteImport } from './routes/_authenticated/painel-operacao'
+import { Route as AuthenticatedOpsRouteImport } from './routes/_authenticated/ops'
+import { Route as AuthenticatedDriverRouteImport } from './routes/_authenticated/driver'
+import { Route as AuthenticatedClientRouteImport } from './routes/_authenticated/client'
+import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedOpsIndexRouteImport } from './routes/_authenticated/ops.index'
-import { Route as AuthenticatedOpsCentralRouteImport } from './routes/_authenticated/ops.central'
-import { Route as AuthenticatedOpsChatRouteImport } from './routes/_authenticated/ops.chat'
-import { Route as AuthenticatedOpsEquipeRouteImport } from './routes/_authenticated/ops.equipe'
-import { Route as AuthenticatedOpsFaturamentoRouteImport } from './routes/_authenticated/ops.faturamento'
-import { Route as AuthenticatedOpsFinanceiroRouteImport } from './routes/_authenticated/ops.financeiro'
-import { Route as AuthenticatedOpsRastreamentoRouteImport } from './routes/_authenticated/ops.rastreamento'
+import { Route as AuthenticatedDriverIndexRouteImport } from './routes/_authenticated/driver.index'
+import { Route as AuthenticatedClientIndexRouteImport } from './routes/_authenticated/client.index'
 import { Route as AuthenticatedOpsVeiculosRouteImport } from './routes/_authenticated/ops.veiculos'
-import { Route as AuthenticatedDriverNavegacaoIdRouteImport } from './routes/_authenticated/driver.navegacao.$id'
-import { Route as AuthenticatedDriverOfertasIdRouteImport } from './routes/_authenticated/driver.ofertas.$id'
-import { Route as AuthenticatedDriverOfertasHistoricoRouteImport } from './routes/_authenticated/driver.ofertas.historico'
-import { Route as AuthenticatedOpsMotoristasIndexRouteImport } from './routes/_authenticated/ops.motoristas.index'
-import { Route as AuthenticatedOpsMotoristasIdRouteImport } from './routes/_authenticated/ops.motoristas.$id'
-import { Route as AuthenticatedOpsMotoristasAprovacoesRouteImport } from './routes/_authenticated/ops.motoristas.aprovacoes'
-import { Route as AuthenticatedOpsObrasIndexRouteImport } from './routes/_authenticated/ops.obras.index'
-import { Route as AuthenticatedOpsObrasNovaRouteImport } from './routes/_authenticated/ops.obras.nova'
+import { Route as AuthenticatedOpsRastreamentoRouteImport } from './routes/_authenticated/ops.rastreamento'
+import { Route as AuthenticatedOpsFinanceiroRouteImport } from './routes/_authenticated/ops.financeiro'
+import { Route as AuthenticatedOpsFaturamentoRouteImport } from './routes/_authenticated/ops.faturamento'
+import { Route as AuthenticatedOpsEquipeRouteImport } from './routes/_authenticated/ops.equipe'
+import { Route as AuthenticatedOpsChatRouteImport } from './routes/_authenticated/ops.chat'
+import { Route as AuthenticatedOpsCentralRouteImport } from './routes/_authenticated/ops.central'
+import { Route as AuthenticatedDriverPerfilRouteImport } from './routes/_authenticated/driver.perfil'
+import { Route as AuthenticatedDriverOfertasRouteImport } from './routes/_authenticated/driver.ofertas'
+import { Route as AuthenticatedDriverOcorrenciasRouteImport } from './routes/_authenticated/driver.ocorrencias'
+import { Route as AuthenticatedDriverFretesRouteImport } from './routes/_authenticated/driver.fretes'
+import { Route as AuthenticatedDriverFaturamentoRouteImport } from './routes/_authenticated/driver.faturamento'
+import { Route as AuthenticatedDriverChatRouteImport } from './routes/_authenticated/driver.chat'
+import { Route as AuthenticatedClientRelatoriosRouteImport } from './routes/_authenticated/client.relatorios'
+import { Route as AuthenticatedClientMapaRouteImport } from './routes/_authenticated/client.mapa'
+import { Route as AuthenticatedClientInsightsRouteImport } from './routes/_authenticated/client.insights'
+import { Route as AuthenticatedClientIndicadoresRouteImport } from './routes/_authenticated/client.indicadores'
+import { Route as AuthenticatedClientFretesRouteImport } from './routes/_authenticated/client.fretes'
+import { Route as AuthenticatedClientFinanceiroRouteImport } from './routes/_authenticated/client.financeiro'
+import { Route as AuthenticatedClientDocumentosRouteImport } from './routes/_authenticated/client.documentos'
+import { Route as AuthenticatedClientBiRouteImport } from './routes/_authenticated/client.bi'
 import { Route as AuthenticatedOpsPedidosIndexRouteImport } from './routes/_authenticated/ops.pedidos.index'
-import { Route as AuthenticatedOpsPedidosIdRouteImport } from './routes/_authenticated/ops.pedidos.$id'
-import { Route as AuthenticatedOpsPedidosNovoRouteImport } from './routes/_authenticated/ops.pedidos.novo'
-import { Route as AuthenticatedOpsVeiculosIdRouteImport } from './routes/_authenticated/ops.veiculos.$id'
-import { Route as AuthenticatedOpsVeiculosListaRouteImport } from './routes/_authenticated/ops.veiculos.lista'
+import { Route as AuthenticatedOpsObrasIndexRouteImport } from './routes/_authenticated/ops.obras.index'
+import { Route as AuthenticatedOpsMotoristasIndexRouteImport } from './routes/_authenticated/ops.motoristas.index'
 import { Route as AuthenticatedOpsVeiculosNovoRouteImport } from './routes/_authenticated/ops.veiculos.novo'
+import { Route as AuthenticatedOpsVeiculosListaRouteImport } from './routes/_authenticated/ops.veiculos.lista'
+import { Route as AuthenticatedOpsVeiculosIdRouteImport } from './routes/_authenticated/ops.veiculos.$id'
+import { Route as AuthenticatedOpsPedidosNovoRouteImport } from './routes/_authenticated/ops.pedidos.novo'
+import { Route as AuthenticatedOpsPedidosIdRouteImport } from './routes/_authenticated/ops.pedidos.$id'
+import { Route as AuthenticatedOpsObrasNovaRouteImport } from './routes/_authenticated/ops.obras.nova'
+import { Route as AuthenticatedOpsMotoristasAprovacoesRouteImport } from './routes/_authenticated/ops.motoristas.aprovacoes'
+import { Route as AuthenticatedOpsMotoristasIdRouteImport } from './routes/_authenticated/ops.motoristas.$id'
+import { Route as AuthenticatedDriverOfertasHistoricoRouteImport } from './routes/_authenticated/driver.ofertas.historico'
+import { Route as AuthenticatedDriverOfertasIdRouteImport } from './routes/_authenticated/driver.ofertas.$id'
+import { Route as AuthenticatedDriverNavegacaoIdRouteImport } from './routes/_authenticated/driver.navegacao.$id'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
-  id: '/_authenticated',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AguardandoAprovacaoRoute = AguardandoAprovacaoRouteImport.update({
-  id: '/aguardando-aprovacao',
-  path: '/aguardando-aprovacao',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CadastroClienteRoute = CadastroClienteRouteImport.update({
-  id: '/cadastro-cliente',
-  path: '/cadastro-cliente',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CadastroMotoristaRoute = CadastroMotoristaRouteImport.update({
-  id: '/cadastro-motorista',
-  path: '/cadastro-motorista',
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -99,46 +75,34 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
   path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
-  id: '/sitemap.xml',
-  path: '/sitemap.xml',
+const CadastroMotoristaRoute = CadastroMotoristaRouteImport.update({
+  id: '/cadastro-motorista',
+  path: '/cadastro-motorista',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
-  getParentRoute: () => AuthenticatedRouteRoute,
+const CadastroClienteRoute = CadastroClienteRouteImport.update({
+  id: '/cadastro-cliente',
+  path: '/cadastro-cliente',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedAppRoute = AuthenticatedAppRouteImport.update({
-  id: '/app',
-  path: '/app',
-  getParentRoute: () => AuthenticatedRouteRoute,
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedClientRoute = AuthenticatedClientRouteImport.update({
-  id: '/client',
-  path: '/client',
-  getParentRoute: () => AuthenticatedRouteRoute,
+const AguardandoAprovacaoRoute = AguardandoAprovacaoRouteImport.update({
+  id: '/aguardando-aprovacao',
+  path: '/aguardando-aprovacao',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedDriverRoute = AuthenticatedDriverRouteImport.update({
-  id: '/driver',
-  path: '/driver',
-  getParentRoute: () => AuthenticatedRouteRoute,
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedOpsRoute = AuthenticatedOpsRouteImport.update({
-  id: '/ops',
-  path: '/ops',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedPainelOperacaoRoute =
-  AuthenticatedPainelOperacaoRouteImport.update({
-    id: '/painel-operacao',
-    path: '/painel-operacao',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedRelatoriosRoute = AuthenticatedRelatoriosRouteImport.update({
-  id: '/relatorios',
-  path: '/relatorios',
-  getParentRoute: () => AuthenticatedRouteRoute,
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const RastreioIndexRoute = RastreioIndexRouteImport.update({
   id: '/rastreio/',
@@ -150,129 +114,63 @@ const RastreioCodeRoute = RastreioCodeRouteImport.update({
   path: '/rastreio/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedClientIndexRoute =
-  AuthenticatedClientIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => AuthenticatedClientRoute,
-  } as any)
-const AuthenticatedClientBiRoute = AuthenticatedClientBiRouteImport.update({
-  id: '/bi',
-  path: '/bi',
-  getParentRoute: () => AuthenticatedClientRoute,
+const AuthenticatedRelatoriosRoute = AuthenticatedRelatoriosRouteImport.update({
+  id: '/relatorios',
+  path: '/relatorios',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedClientDocumentosRoute =
-  AuthenticatedClientDocumentosRouteImport.update({
-    id: '/documentos',
-    path: '/documentos',
-    getParentRoute: () => AuthenticatedClientRoute,
+const AuthenticatedPainelOperacaoRoute =
+  AuthenticatedPainelOperacaoRouteImport.update({
+    id: '/painel-operacao',
+    path: '/painel-operacao',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedClientFinanceiroRoute =
-  AuthenticatedClientFinanceiroRouteImport.update({
-    id: '/financeiro',
-    path: '/financeiro',
-    getParentRoute: () => AuthenticatedClientRoute,
-  } as any)
-const AuthenticatedClientFretesRoute =
-  AuthenticatedClientFretesRouteImport.update({
-    id: '/fretes',
-    path: '/fretes',
-    getParentRoute: () => AuthenticatedClientRoute,
-  } as any)
-const AuthenticatedClientIndicadoresRoute =
-  AuthenticatedClientIndicadoresRouteImport.update({
-    id: '/indicadores',
-    path: '/indicadores',
-    getParentRoute: () => AuthenticatedClientRoute,
-  } as any)
-const AuthenticatedClientInsightsRoute =
-  AuthenticatedClientInsightsRouteImport.update({
-    id: '/insights',
-    path: '/insights',
-    getParentRoute: () => AuthenticatedClientRoute,
-  } as any)
-const AuthenticatedClientMapaRoute = AuthenticatedClientMapaRouteImport.update({
-  id: '/mapa',
-  path: '/mapa',
-  getParentRoute: () => AuthenticatedClientRoute,
+const AuthenticatedOpsRoute = AuthenticatedOpsRouteImport.update({
+  id: '/ops',
+  path: '/ops',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedClientRelatoriosRoute =
-  AuthenticatedClientRelatoriosRouteImport.update({
-    id: '/relatorios',
-    path: '/relatorios',
-    getParentRoute: () => AuthenticatedClientRoute,
-  } as any)
+const AuthenticatedDriverRoute = AuthenticatedDriverRouteImport.update({
+  id: '/driver',
+  path: '/driver',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedClientRoute = AuthenticatedClientRouteImport.update({
+  id: '/client',
+  path: '/client',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAppRoute = AuthenticatedAppRouteImport.update({
+  id: '/app',
+  path: '/app',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedOpsIndexRoute = AuthenticatedOpsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedOpsRoute,
+} as any)
 const AuthenticatedDriverIndexRoute =
   AuthenticatedDriverIndexRouteImport.update({
     id: '/',
     path: '/',
     getParentRoute: () => AuthenticatedDriverRoute,
   } as any)
-const AuthenticatedDriverChatRoute = AuthenticatedDriverChatRouteImport.update({
-  id: '/chat',
-  path: '/chat',
-  getParentRoute: () => AuthenticatedDriverRoute,
-} as any)
-const AuthenticatedDriverFaturamentoRoute =
-  AuthenticatedDriverFaturamentoRouteImport.update({
-    id: '/faturamento',
-    path: '/faturamento',
-    getParentRoute: () => AuthenticatedDriverRoute,
+const AuthenticatedClientIndexRoute =
+  AuthenticatedClientIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedClientRoute,
   } as any)
-const AuthenticatedDriverFretesRoute =
-  AuthenticatedDriverFretesRouteImport.update({
-    id: '/fretes',
-    path: '/fretes',
-    getParentRoute: () => AuthenticatedDriverRoute,
-  } as any)
-const AuthenticatedDriverOcorrenciasRoute =
-  AuthenticatedDriverOcorrenciasRouteImport.update({
-    id: '/ocorrencias',
-    path: '/ocorrencias',
-    getParentRoute: () => AuthenticatedDriverRoute,
-  } as any)
-const AuthenticatedDriverOfertasRoute =
-  AuthenticatedDriverOfertasRouteImport.update({
-    id: '/ofertas',
-    path: '/ofertas',
-    getParentRoute: () => AuthenticatedDriverRoute,
-  } as any)
-const AuthenticatedDriverPerfilRoute =
-  AuthenticatedDriverPerfilRouteImport.update({
-    id: '/perfil',
-    path: '/perfil',
-    getParentRoute: () => AuthenticatedDriverRoute,
-  } as any)
-const AuthenticatedOpsIndexRoute = AuthenticatedOpsIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AuthenticatedOpsRoute,
-} as any)
-const AuthenticatedOpsCentralRoute = AuthenticatedOpsCentralRouteImport.update({
-  id: '/central',
-  path: '/central',
-  getParentRoute: () => AuthenticatedOpsRoute,
-} as any)
-const AuthenticatedOpsChatRoute = AuthenticatedOpsChatRouteImport.update({
-  id: '/chat',
-  path: '/chat',
-  getParentRoute: () => AuthenticatedOpsRoute,
-} as any)
-const AuthenticatedOpsEquipeRoute = AuthenticatedOpsEquipeRouteImport.update({
-  id: '/equipe',
-  path: '/equipe',
-  getParentRoute: () => AuthenticatedOpsRoute,
-} as any)
-const AuthenticatedOpsFaturamentoRoute =
-  AuthenticatedOpsFaturamentoRouteImport.update({
-    id: '/faturamento',
-    path: '/faturamento',
-    getParentRoute: () => AuthenticatedOpsRoute,
-  } as any)
-const AuthenticatedOpsFinanceiroRoute =
-  AuthenticatedOpsFinanceiroRouteImport.update({
-    id: '/financeiro',
-    path: '/financeiro',
+const AuthenticatedOpsVeiculosRoute =
+  AuthenticatedOpsVeiculosRouteImport.update({
+    id: '/veiculos',
+    path: '/veiculos',
     getParentRoute: () => AuthenticatedOpsRoute,
   } as any)
 const AuthenticatedOpsRastreamentoRoute =
@@ -281,46 +179,118 @@ const AuthenticatedOpsRastreamentoRoute =
     path: '/rastreamento',
     getParentRoute: () => AuthenticatedOpsRoute,
   } as any)
-const AuthenticatedOpsVeiculosRoute =
-  AuthenticatedOpsVeiculosRouteImport.update({
-    id: '/veiculos',
-    path: '/veiculos',
+const AuthenticatedOpsFinanceiroRoute =
+  AuthenticatedOpsFinanceiroRouteImport.update({
+    id: '/financeiro',
+    path: '/financeiro',
     getParentRoute: () => AuthenticatedOpsRoute,
   } as any)
-const AuthenticatedDriverNavegacaoIdRoute =
-  AuthenticatedDriverNavegacaoIdRouteImport.update({
-    id: '/navegacao/$id',
-    path: '/navegacao/$id',
+const AuthenticatedOpsFaturamentoRoute =
+  AuthenticatedOpsFaturamentoRouteImport.update({
+    id: '/faturamento',
+    path: '/faturamento',
+    getParentRoute: () => AuthenticatedOpsRoute,
+  } as any)
+const AuthenticatedOpsEquipeRoute = AuthenticatedOpsEquipeRouteImport.update({
+  id: '/equipe',
+  path: '/equipe',
+  getParentRoute: () => AuthenticatedOpsRoute,
+} as any)
+const AuthenticatedOpsChatRoute = AuthenticatedOpsChatRouteImport.update({
+  id: '/chat',
+  path: '/chat',
+  getParentRoute: () => AuthenticatedOpsRoute,
+} as any)
+const AuthenticatedOpsCentralRoute = AuthenticatedOpsCentralRouteImport.update({
+  id: '/central',
+  path: '/central',
+  getParentRoute: () => AuthenticatedOpsRoute,
+} as any)
+const AuthenticatedDriverPerfilRoute =
+  AuthenticatedDriverPerfilRouteImport.update({
+    id: '/perfil',
+    path: '/perfil',
     getParentRoute: () => AuthenticatedDriverRoute,
   } as any)
-const AuthenticatedDriverOfertasIdRoute =
-  AuthenticatedDriverOfertasIdRouteImport.update({
-    id: '/$id',
-    path: '/$id',
-    getParentRoute: () => AuthenticatedDriverOfertasRoute,
+const AuthenticatedDriverOfertasRoute =
+  AuthenticatedDriverOfertasRouteImport.update({
+    id: '/ofertas',
+    path: '/ofertas',
+    getParentRoute: () => AuthenticatedDriverRoute,
   } as any)
-const AuthenticatedDriverOfertasHistoricoRoute =
-  AuthenticatedDriverOfertasHistoricoRouteImport.update({
-    id: '/historico',
-    path: '/historico',
-    getParentRoute: () => AuthenticatedDriverOfertasRoute,
+const AuthenticatedDriverOcorrenciasRoute =
+  AuthenticatedDriverOcorrenciasRouteImport.update({
+    id: '/ocorrencias',
+    path: '/ocorrencias',
+    getParentRoute: () => AuthenticatedDriverRoute,
   } as any)
-const AuthenticatedOpsMotoristasIndexRoute =
-  AuthenticatedOpsMotoristasIndexRouteImport.update({
-    id: '/motoristas/',
-    path: '/motoristas/',
-    getParentRoute: () => AuthenticatedOpsRoute,
+const AuthenticatedDriverFretesRoute =
+  AuthenticatedDriverFretesRouteImport.update({
+    id: '/fretes',
+    path: '/fretes',
+    getParentRoute: () => AuthenticatedDriverRoute,
   } as any)
-const AuthenticatedOpsMotoristasIdRoute =
-  AuthenticatedOpsMotoristasIdRouteImport.update({
-    id: '/motoristas/$id',
-    path: '/motoristas/$id',
-    getParentRoute: () => AuthenticatedOpsRoute,
+const AuthenticatedDriverFaturamentoRoute =
+  AuthenticatedDriverFaturamentoRouteImport.update({
+    id: '/faturamento',
+    path: '/faturamento',
+    getParentRoute: () => AuthenticatedDriverRoute,
   } as any)
-const AuthenticatedOpsMotoristasAprovacoesRoute =
-  AuthenticatedOpsMotoristasAprovacoesRouteImport.update({
-    id: '/motoristas/aprovacoes',
-    path: '/motoristas/aprovacoes',
+const AuthenticatedDriverChatRoute = AuthenticatedDriverChatRouteImport.update({
+  id: '/chat',
+  path: '/chat',
+  getParentRoute: () => AuthenticatedDriverRoute,
+} as any)
+const AuthenticatedClientRelatoriosRoute =
+  AuthenticatedClientRelatoriosRouteImport.update({
+    id: '/relatorios',
+    path: '/relatorios',
+    getParentRoute: () => AuthenticatedClientRoute,
+  } as any)
+const AuthenticatedClientMapaRoute = AuthenticatedClientMapaRouteImport.update({
+  id: '/mapa',
+  path: '/mapa',
+  getParentRoute: () => AuthenticatedClientRoute,
+} as any)
+const AuthenticatedClientInsightsRoute =
+  AuthenticatedClientInsightsRouteImport.update({
+    id: '/insights',
+    path: '/insights',
+    getParentRoute: () => AuthenticatedClientRoute,
+  } as any)
+const AuthenticatedClientIndicadoresRoute =
+  AuthenticatedClientIndicadoresRouteImport.update({
+    id: '/indicadores',
+    path: '/indicadores',
+    getParentRoute: () => AuthenticatedClientRoute,
+  } as any)
+const AuthenticatedClientFretesRoute =
+  AuthenticatedClientFretesRouteImport.update({
+    id: '/fretes',
+    path: '/fretes',
+    getParentRoute: () => AuthenticatedClientRoute,
+  } as any)
+const AuthenticatedClientFinanceiroRoute =
+  AuthenticatedClientFinanceiroRouteImport.update({
+    id: '/financeiro',
+    path: '/financeiro',
+    getParentRoute: () => AuthenticatedClientRoute,
+  } as any)
+const AuthenticatedClientDocumentosRoute =
+  AuthenticatedClientDocumentosRouteImport.update({
+    id: '/documentos',
+    path: '/documentos',
+    getParentRoute: () => AuthenticatedClientRoute,
+  } as any)
+const AuthenticatedClientBiRoute = AuthenticatedClientBiRouteImport.update({
+  id: '/bi',
+  path: '/bi',
+  getParentRoute: () => AuthenticatedClientRoute,
+} as any)
+const AuthenticatedOpsPedidosIndexRoute =
+  AuthenticatedOpsPedidosIndexRouteImport.update({
+    id: '/pedidos/',
+    path: '/pedidos/',
     getParentRoute: () => AuthenticatedOpsRoute,
   } as any)
 const AuthenticatedOpsObrasIndexRoute =
@@ -329,34 +299,16 @@ const AuthenticatedOpsObrasIndexRoute =
     path: '/obras/',
     getParentRoute: () => AuthenticatedOpsRoute,
   } as any)
-const AuthenticatedOpsObrasNovaRoute =
-  AuthenticatedOpsObrasNovaRouteImport.update({
-    id: '/obras/nova',
-    path: '/obras/nova',
+const AuthenticatedOpsMotoristasIndexRoute =
+  AuthenticatedOpsMotoristasIndexRouteImport.update({
+    id: '/motoristas/',
+    path: '/motoristas/',
     getParentRoute: () => AuthenticatedOpsRoute,
   } as any)
-const AuthenticatedOpsPedidosIndexRoute =
-  AuthenticatedOpsPedidosIndexRouteImport.update({
-    id: '/pedidos/',
-    path: '/pedidos/',
-    getParentRoute: () => AuthenticatedOpsRoute,
-  } as any)
-const AuthenticatedOpsPedidosIdRoute =
-  AuthenticatedOpsPedidosIdRouteImport.update({
-    id: '/pedidos/$id',
-    path: '/pedidos/$id',
-    getParentRoute: () => AuthenticatedOpsRoute,
-  } as any)
-const AuthenticatedOpsPedidosNovoRoute =
-  AuthenticatedOpsPedidosNovoRouteImport.update({
-    id: '/pedidos/novo',
-    path: '/pedidos/novo',
-    getParentRoute: () => AuthenticatedOpsRoute,
-  } as any)
-const AuthenticatedOpsVeiculosIdRoute =
-  AuthenticatedOpsVeiculosIdRouteImport.update({
-    id: '/$id',
-    path: '/$id',
+const AuthenticatedOpsVeiculosNovoRoute =
+  AuthenticatedOpsVeiculosNovoRouteImport.update({
+    id: '/novo',
+    path: '/novo',
     getParentRoute: () => AuthenticatedOpsVeiculosRoute,
   } as any)
 const AuthenticatedOpsVeiculosListaRoute =
@@ -365,11 +317,59 @@ const AuthenticatedOpsVeiculosListaRoute =
     path: '/lista',
     getParentRoute: () => AuthenticatedOpsVeiculosRoute,
   } as any)
-const AuthenticatedOpsVeiculosNovoRoute =
-  AuthenticatedOpsVeiculosNovoRouteImport.update({
-    id: '/novo',
-    path: '/novo',
+const AuthenticatedOpsVeiculosIdRoute =
+  AuthenticatedOpsVeiculosIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
     getParentRoute: () => AuthenticatedOpsVeiculosRoute,
+  } as any)
+const AuthenticatedOpsPedidosNovoRoute =
+  AuthenticatedOpsPedidosNovoRouteImport.update({
+    id: '/pedidos/novo',
+    path: '/pedidos/novo',
+    getParentRoute: () => AuthenticatedOpsRoute,
+  } as any)
+const AuthenticatedOpsPedidosIdRoute =
+  AuthenticatedOpsPedidosIdRouteImport.update({
+    id: '/pedidos/$id',
+    path: '/pedidos/$id',
+    getParentRoute: () => AuthenticatedOpsRoute,
+  } as any)
+const AuthenticatedOpsObrasNovaRoute =
+  AuthenticatedOpsObrasNovaRouteImport.update({
+    id: '/obras/nova',
+    path: '/obras/nova',
+    getParentRoute: () => AuthenticatedOpsRoute,
+  } as any)
+const AuthenticatedOpsMotoristasAprovacoesRoute =
+  AuthenticatedOpsMotoristasAprovacoesRouteImport.update({
+    id: '/motoristas/aprovacoes',
+    path: '/motoristas/aprovacoes',
+    getParentRoute: () => AuthenticatedOpsRoute,
+  } as any)
+const AuthenticatedOpsMotoristasIdRoute =
+  AuthenticatedOpsMotoristasIdRouteImport.update({
+    id: '/motoristas/$id',
+    path: '/motoristas/$id',
+    getParentRoute: () => AuthenticatedOpsRoute,
+  } as any)
+const AuthenticatedDriverOfertasHistoricoRoute =
+  AuthenticatedDriverOfertasHistoricoRouteImport.update({
+    id: '/historico',
+    path: '/historico',
+    getParentRoute: () => AuthenticatedDriverOfertasRoute,
+  } as any)
+const AuthenticatedDriverOfertasIdRoute =
+  AuthenticatedDriverOfertasIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedDriverOfertasRoute,
+  } as any)
+const AuthenticatedDriverNavegacaoIdRoute =
+  AuthenticatedDriverNavegacaoIdRouteImport.update({
+    id: '/navegacao/$id',
+    path: '/navegacao/$id',
+    getParentRoute: () => AuthenticatedDriverRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -723,46 +723,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated': {
-      id: '/_authenticated'
-      path: ''
-      fullPath: '/'
-      preLoaderRoute: typeof AuthenticatedRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/aguardando-aprovacao': {
-      id: '/aguardando-aprovacao'
-      path: '/aguardando-aprovacao'
-      fullPath: '/aguardando-aprovacao'
-      preLoaderRoute: typeof AguardandoAprovacaoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/cadastro-cliente': {
-      id: '/cadastro-cliente'
-      path: '/cadastro-cliente'
-      fullPath: '/cadastro-cliente'
-      preLoaderRoute: typeof CadastroClienteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/cadastro-motorista': {
-      id: '/cadastro-motorista'
-      path: '/cadastro-motorista'
-      fullPath: '/cadastro-motorista'
-      preLoaderRoute: typeof CadastroMotoristaRouteImport
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -772,61 +737,47 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/sitemap.xml': {
-      id: '/sitemap.xml'
-      path: '/sitemap.xml'
-      fullPath: '/sitemap.xml'
-      preLoaderRoute: typeof SitemapDotxmlRouteImport
+    '/cadastro-motorista': {
+      id: '/cadastro-motorista'
+      path: '/cadastro-motorista'
+      fullPath: '/cadastro-motorista'
+      preLoaderRoute: typeof CadastroMotoristaRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/admin': {
-      id: '/_authenticated/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AuthenticatedAdminRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/cadastro-cliente': {
+      id: '/cadastro-cliente'
+      path: '/cadastro-cliente'
+      fullPath: '/cadastro-cliente'
+      preLoaderRoute: typeof CadastroClienteRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/app': {
-      id: '/_authenticated/app'
-      path: '/app'
-      fullPath: '/app'
-      preLoaderRoute: typeof AuthenticatedAppRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/client': {
-      id: '/_authenticated/client'
-      path: '/client'
-      fullPath: '/client'
-      preLoaderRoute: typeof AuthenticatedClientRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/aguardando-aprovacao': {
+      id: '/aguardando-aprovacao'
+      path: '/aguardando-aprovacao'
+      fullPath: '/aguardando-aprovacao'
+      preLoaderRoute: typeof AguardandoAprovacaoRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/driver': {
-      id: '/_authenticated/driver'
-      path: '/driver'
-      fullPath: '/driver'
-      preLoaderRoute: typeof AuthenticatedDriverRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/ops': {
-      id: '/_authenticated/ops'
-      path: '/ops'
-      fullPath: '/ops'
-      preLoaderRoute: typeof AuthenticatedOpsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/painel-operacao': {
-      id: '/_authenticated/painel-operacao'
-      path: '/painel-operacao'
-      fullPath: '/painel-operacao'
-      preLoaderRoute: typeof AuthenticatedPainelOperacaoRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/relatorios': {
-      id: '/_authenticated/relatorios'
-      path: '/relatorios'
-      fullPath: '/relatorios'
-      preLoaderRoute: typeof AuthenticatedRelatoriosRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/rastreio/': {
       id: '/rastreio/'
@@ -842,117 +793,54 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RastreioCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/client/': {
-      id: '/_authenticated/client/'
-      path: '/'
-      fullPath: '/client/'
-      preLoaderRoute: typeof AuthenticatedClientIndexRouteImport
-      parentRoute: typeof AuthenticatedClientRoute
-    }
-    '/_authenticated/client/bi': {
-      id: '/_authenticated/client/bi'
-      path: '/bi'
-      fullPath: '/client/bi'
-      preLoaderRoute: typeof AuthenticatedClientBiRouteImport
-      parentRoute: typeof AuthenticatedClientRoute
-    }
-    '/_authenticated/client/documentos': {
-      id: '/_authenticated/client/documentos'
-      path: '/documentos'
-      fullPath: '/client/documentos'
-      preLoaderRoute: typeof AuthenticatedClientDocumentosRouteImport
-      parentRoute: typeof AuthenticatedClientRoute
-    }
-    '/_authenticated/client/financeiro': {
-      id: '/_authenticated/client/financeiro'
-      path: '/financeiro'
-      fullPath: '/client/financeiro'
-      preLoaderRoute: typeof AuthenticatedClientFinanceiroRouteImport
-      parentRoute: typeof AuthenticatedClientRoute
-    }
-    '/_authenticated/client/fretes': {
-      id: '/_authenticated/client/fretes'
-      path: '/fretes'
-      fullPath: '/client/fretes'
-      preLoaderRoute: typeof AuthenticatedClientFretesRouteImport
-      parentRoute: typeof AuthenticatedClientRoute
-    }
-    '/_authenticated/client/indicadores': {
-      id: '/_authenticated/client/indicadores'
-      path: '/indicadores'
-      fullPath: '/client/indicadores'
-      preLoaderRoute: typeof AuthenticatedClientIndicadoresRouteImport
-      parentRoute: typeof AuthenticatedClientRoute
-    }
-    '/_authenticated/client/insights': {
-      id: '/_authenticated/client/insights'
-      path: '/insights'
-      fullPath: '/client/insights'
-      preLoaderRoute: typeof AuthenticatedClientInsightsRouteImport
-      parentRoute: typeof AuthenticatedClientRoute
-    }
-    '/_authenticated/client/mapa': {
-      id: '/_authenticated/client/mapa'
-      path: '/mapa'
-      fullPath: '/client/mapa'
-      preLoaderRoute: typeof AuthenticatedClientMapaRouteImport
-      parentRoute: typeof AuthenticatedClientRoute
-    }
-    '/_authenticated/client/relatorios': {
-      id: '/_authenticated/client/relatorios'
+    '/_authenticated/relatorios': {
+      id: '/_authenticated/relatorios'
       path: '/relatorios'
-      fullPath: '/client/relatorios'
-      preLoaderRoute: typeof AuthenticatedClientRelatoriosRouteImport
-      parentRoute: typeof AuthenticatedClientRoute
+      fullPath: '/relatorios'
+      preLoaderRoute: typeof AuthenticatedRelatoriosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/driver/': {
-      id: '/_authenticated/driver/'
-      path: '/'
-      fullPath: '/driver/'
-      preLoaderRoute: typeof AuthenticatedDriverIndexRouteImport
-      parentRoute: typeof AuthenticatedDriverRoute
+    '/_authenticated/painel-operacao': {
+      id: '/_authenticated/painel-operacao'
+      path: '/painel-operacao'
+      fullPath: '/painel-operacao'
+      preLoaderRoute: typeof AuthenticatedPainelOperacaoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/driver/chat': {
-      id: '/_authenticated/driver/chat'
-      path: '/chat'
-      fullPath: '/driver/chat'
-      preLoaderRoute: typeof AuthenticatedDriverChatRouteImport
-      parentRoute: typeof AuthenticatedDriverRoute
+    '/_authenticated/ops': {
+      id: '/_authenticated/ops'
+      path: '/ops'
+      fullPath: '/ops'
+      preLoaderRoute: typeof AuthenticatedOpsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/driver/faturamento': {
-      id: '/_authenticated/driver/faturamento'
-      path: '/faturamento'
-      fullPath: '/driver/faturamento'
-      preLoaderRoute: typeof AuthenticatedDriverFaturamentoRouteImport
-      parentRoute: typeof AuthenticatedDriverRoute
+    '/_authenticated/driver': {
+      id: '/_authenticated/driver'
+      path: '/driver'
+      fullPath: '/driver'
+      preLoaderRoute: typeof AuthenticatedDriverRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/driver/fretes': {
-      id: '/_authenticated/driver/fretes'
-      path: '/fretes'
-      fullPath: '/driver/fretes'
-      preLoaderRoute: typeof AuthenticatedDriverFretesRouteImport
-      parentRoute: typeof AuthenticatedDriverRoute
+    '/_authenticated/client': {
+      id: '/_authenticated/client'
+      path: '/client'
+      fullPath: '/client'
+      preLoaderRoute: typeof AuthenticatedClientRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/driver/ocorrencias': {
-      id: '/_authenticated/driver/ocorrencias'
-      path: '/ocorrencias'
-      fullPath: '/driver/ocorrencias'
-      preLoaderRoute: typeof AuthenticatedDriverOcorrenciasRouteImport
-      parentRoute: typeof AuthenticatedDriverRoute
+    '/_authenticated/app': {
+      id: '/_authenticated/app'
+      path: '/app'
+      fullPath: '/app'
+      preLoaderRoute: typeof AuthenticatedAppRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/driver/ofertas': {
-      id: '/_authenticated/driver/ofertas'
-      path: '/ofertas'
-      fullPath: '/driver/ofertas'
-      preLoaderRoute: typeof AuthenticatedDriverOfertasRouteImport
-      parentRoute: typeof AuthenticatedDriverRoute
-    }
-    '/_authenticated/driver/perfil': {
-      id: '/_authenticated/driver/perfil'
-      path: '/perfil'
-      fullPath: '/driver/perfil'
-      preLoaderRoute: typeof AuthenticatedDriverPerfilRouteImport
-      parentRoute: typeof AuthenticatedDriverRoute
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/ops/': {
       id: '/_authenticated/ops/'
@@ -961,39 +849,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsIndexRouteImport
       parentRoute: typeof AuthenticatedOpsRoute
     }
-    '/_authenticated/ops/central': {
-      id: '/_authenticated/ops/central'
-      path: '/central'
-      fullPath: '/ops/central'
-      preLoaderRoute: typeof AuthenticatedOpsCentralRouteImport
-      parentRoute: typeof AuthenticatedOpsRoute
+    '/_authenticated/driver/': {
+      id: '/_authenticated/driver/'
+      path: '/'
+      fullPath: '/driver/'
+      preLoaderRoute: typeof AuthenticatedDriverIndexRouteImport
+      parentRoute: typeof AuthenticatedDriverRoute
     }
-    '/_authenticated/ops/chat': {
-      id: '/_authenticated/ops/chat'
-      path: '/chat'
-      fullPath: '/ops/chat'
-      preLoaderRoute: typeof AuthenticatedOpsChatRouteImport
-      parentRoute: typeof AuthenticatedOpsRoute
+    '/_authenticated/client/': {
+      id: '/_authenticated/client/'
+      path: '/'
+      fullPath: '/client/'
+      preLoaderRoute: typeof AuthenticatedClientIndexRouteImport
+      parentRoute: typeof AuthenticatedClientRoute
     }
-    '/_authenticated/ops/equipe': {
-      id: '/_authenticated/ops/equipe'
-      path: '/equipe'
-      fullPath: '/ops/equipe'
-      preLoaderRoute: typeof AuthenticatedOpsEquipeRouteImport
-      parentRoute: typeof AuthenticatedOpsRoute
-    }
-    '/_authenticated/ops/faturamento': {
-      id: '/_authenticated/ops/faturamento'
-      path: '/faturamento'
-      fullPath: '/ops/faturamento'
-      preLoaderRoute: typeof AuthenticatedOpsFaturamentoRouteImport
-      parentRoute: typeof AuthenticatedOpsRoute
-    }
-    '/_authenticated/ops/financeiro': {
-      id: '/_authenticated/ops/financeiro'
-      path: '/financeiro'
-      fullPath: '/ops/financeiro'
-      preLoaderRoute: typeof AuthenticatedOpsFinanceiroRouteImport
+    '/_authenticated/ops/veiculos': {
+      id: '/_authenticated/ops/veiculos'
+      path: '/veiculos'
+      fullPath: '/ops/veiculos'
+      preLoaderRoute: typeof AuthenticatedOpsVeiculosRouteImport
       parentRoute: typeof AuthenticatedOpsRoute
     }
     '/_authenticated/ops/rastreamento': {
@@ -1003,53 +877,144 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsRastreamentoRouteImport
       parentRoute: typeof AuthenticatedOpsRoute
     }
-    '/_authenticated/ops/veiculos': {
-      id: '/_authenticated/ops/veiculos'
-      path: '/veiculos'
-      fullPath: '/ops/veiculos'
-      preLoaderRoute: typeof AuthenticatedOpsVeiculosRouteImport
+    '/_authenticated/ops/financeiro': {
+      id: '/_authenticated/ops/financeiro'
+      path: '/financeiro'
+      fullPath: '/ops/financeiro'
+      preLoaderRoute: typeof AuthenticatedOpsFinanceiroRouteImport
       parentRoute: typeof AuthenticatedOpsRoute
     }
-    '/_authenticated/driver/navegacao/$id': {
-      id: '/_authenticated/driver/navegacao/$id'
-      path: '/navegacao/$id'
-      fullPath: '/driver/navegacao/$id'
-      preLoaderRoute: typeof AuthenticatedDriverNavegacaoIdRouteImport
+    '/_authenticated/ops/faturamento': {
+      id: '/_authenticated/ops/faturamento'
+      path: '/faturamento'
+      fullPath: '/ops/faturamento'
+      preLoaderRoute: typeof AuthenticatedOpsFaturamentoRouteImport
+      parentRoute: typeof AuthenticatedOpsRoute
+    }
+    '/_authenticated/ops/equipe': {
+      id: '/_authenticated/ops/equipe'
+      path: '/equipe'
+      fullPath: '/ops/equipe'
+      preLoaderRoute: typeof AuthenticatedOpsEquipeRouteImport
+      parentRoute: typeof AuthenticatedOpsRoute
+    }
+    '/_authenticated/ops/chat': {
+      id: '/_authenticated/ops/chat'
+      path: '/chat'
+      fullPath: '/ops/chat'
+      preLoaderRoute: typeof AuthenticatedOpsChatRouteImport
+      parentRoute: typeof AuthenticatedOpsRoute
+    }
+    '/_authenticated/ops/central': {
+      id: '/_authenticated/ops/central'
+      path: '/central'
+      fullPath: '/ops/central'
+      preLoaderRoute: typeof AuthenticatedOpsCentralRouteImport
+      parentRoute: typeof AuthenticatedOpsRoute
+    }
+    '/_authenticated/driver/perfil': {
+      id: '/_authenticated/driver/perfil'
+      path: '/perfil'
+      fullPath: '/driver/perfil'
+      preLoaderRoute: typeof AuthenticatedDriverPerfilRouteImport
       parentRoute: typeof AuthenticatedDriverRoute
     }
-    '/_authenticated/driver/ofertas/$id': {
-      id: '/_authenticated/driver/ofertas/$id'
-      path: '/$id'
-      fullPath: '/driver/ofertas/$id'
-      preLoaderRoute: typeof AuthenticatedDriverOfertasIdRouteImport
-      parentRoute: typeof AuthenticatedDriverOfertasRoute
+    '/_authenticated/driver/ofertas': {
+      id: '/_authenticated/driver/ofertas'
+      path: '/ofertas'
+      fullPath: '/driver/ofertas'
+      preLoaderRoute: typeof AuthenticatedDriverOfertasRouteImport
+      parentRoute: typeof AuthenticatedDriverRoute
     }
-    '/_authenticated/driver/ofertas/historico': {
-      id: '/_authenticated/driver/ofertas/historico'
-      path: '/historico'
-      fullPath: '/driver/ofertas/historico'
-      preLoaderRoute: typeof AuthenticatedDriverOfertasHistoricoRouteImport
-      parentRoute: typeof AuthenticatedDriverOfertasRoute
+    '/_authenticated/driver/ocorrencias': {
+      id: '/_authenticated/driver/ocorrencias'
+      path: '/ocorrencias'
+      fullPath: '/driver/ocorrencias'
+      preLoaderRoute: typeof AuthenticatedDriverOcorrenciasRouteImport
+      parentRoute: typeof AuthenticatedDriverRoute
     }
-    '/_authenticated/ops/motoristas/': {
-      id: '/_authenticated/ops/motoristas/'
-      path: '/motoristas'
-      fullPath: '/ops/motoristas/'
-      preLoaderRoute: typeof AuthenticatedOpsMotoristasIndexRouteImport
-      parentRoute: typeof AuthenticatedOpsRoute
+    '/_authenticated/driver/fretes': {
+      id: '/_authenticated/driver/fretes'
+      path: '/fretes'
+      fullPath: '/driver/fretes'
+      preLoaderRoute: typeof AuthenticatedDriverFretesRouteImport
+      parentRoute: typeof AuthenticatedDriverRoute
     }
-    '/_authenticated/ops/motoristas/$id': {
-      id: '/_authenticated/ops/motoristas/$id'
-      path: '/motoristas/$id'
-      fullPath: '/ops/motoristas/$id'
-      preLoaderRoute: typeof AuthenticatedOpsMotoristasIdRouteImport
-      parentRoute: typeof AuthenticatedOpsRoute
+    '/_authenticated/driver/faturamento': {
+      id: '/_authenticated/driver/faturamento'
+      path: '/faturamento'
+      fullPath: '/driver/faturamento'
+      preLoaderRoute: typeof AuthenticatedDriverFaturamentoRouteImport
+      parentRoute: typeof AuthenticatedDriverRoute
     }
-    '/_authenticated/ops/motoristas/aprovacoes': {
-      id: '/_authenticated/ops/motoristas/aprovacoes'
-      path: '/motoristas/aprovacoes'
-      fullPath: '/ops/motoristas/aprovacoes'
-      preLoaderRoute: typeof AuthenticatedOpsMotoristasAprovacoesRouteImport
+    '/_authenticated/driver/chat': {
+      id: '/_authenticated/driver/chat'
+      path: '/chat'
+      fullPath: '/driver/chat'
+      preLoaderRoute: typeof AuthenticatedDriverChatRouteImport
+      parentRoute: typeof AuthenticatedDriverRoute
+    }
+    '/_authenticated/client/relatorios': {
+      id: '/_authenticated/client/relatorios'
+      path: '/relatorios'
+      fullPath: '/client/relatorios'
+      preLoaderRoute: typeof AuthenticatedClientRelatoriosRouteImport
+      parentRoute: typeof AuthenticatedClientRoute
+    }
+    '/_authenticated/client/mapa': {
+      id: '/_authenticated/client/mapa'
+      path: '/mapa'
+      fullPath: '/client/mapa'
+      preLoaderRoute: typeof AuthenticatedClientMapaRouteImport
+      parentRoute: typeof AuthenticatedClientRoute
+    }
+    '/_authenticated/client/insights': {
+      id: '/_authenticated/client/insights'
+      path: '/insights'
+      fullPath: '/client/insights'
+      preLoaderRoute: typeof AuthenticatedClientInsightsRouteImport
+      parentRoute: typeof AuthenticatedClientRoute
+    }
+    '/_authenticated/client/indicadores': {
+      id: '/_authenticated/client/indicadores'
+      path: '/indicadores'
+      fullPath: '/client/indicadores'
+      preLoaderRoute: typeof AuthenticatedClientIndicadoresRouteImport
+      parentRoute: typeof AuthenticatedClientRoute
+    }
+    '/_authenticated/client/fretes': {
+      id: '/_authenticated/client/fretes'
+      path: '/fretes'
+      fullPath: '/client/fretes'
+      preLoaderRoute: typeof AuthenticatedClientFretesRouteImport
+      parentRoute: typeof AuthenticatedClientRoute
+    }
+    '/_authenticated/client/financeiro': {
+      id: '/_authenticated/client/financeiro'
+      path: '/financeiro'
+      fullPath: '/client/financeiro'
+      preLoaderRoute: typeof AuthenticatedClientFinanceiroRouteImport
+      parentRoute: typeof AuthenticatedClientRoute
+    }
+    '/_authenticated/client/documentos': {
+      id: '/_authenticated/client/documentos'
+      path: '/documentos'
+      fullPath: '/client/documentos'
+      preLoaderRoute: typeof AuthenticatedClientDocumentosRouteImport
+      parentRoute: typeof AuthenticatedClientRoute
+    }
+    '/_authenticated/client/bi': {
+      id: '/_authenticated/client/bi'
+      path: '/bi'
+      fullPath: '/client/bi'
+      preLoaderRoute: typeof AuthenticatedClientBiRouteImport
+      parentRoute: typeof AuthenticatedClientRoute
+    }
+    '/_authenticated/ops/pedidos/': {
+      id: '/_authenticated/ops/pedidos/'
+      path: '/pedidos'
+      fullPath: '/ops/pedidos/'
+      preLoaderRoute: typeof AuthenticatedOpsPedidosIndexRouteImport
       parentRoute: typeof AuthenticatedOpsRoute
     }
     '/_authenticated/ops/obras/': {
@@ -1059,39 +1024,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsObrasIndexRouteImport
       parentRoute: typeof AuthenticatedOpsRoute
     }
-    '/_authenticated/ops/obras/nova': {
-      id: '/_authenticated/ops/obras/nova'
-      path: '/obras/nova'
-      fullPath: '/ops/obras/nova'
-      preLoaderRoute: typeof AuthenticatedOpsObrasNovaRouteImport
+    '/_authenticated/ops/motoristas/': {
+      id: '/_authenticated/ops/motoristas/'
+      path: '/motoristas'
+      fullPath: '/ops/motoristas/'
+      preLoaderRoute: typeof AuthenticatedOpsMotoristasIndexRouteImport
       parentRoute: typeof AuthenticatedOpsRoute
     }
-    '/_authenticated/ops/pedidos/': {
-      id: '/_authenticated/ops/pedidos/'
-      path: '/pedidos'
-      fullPath: '/ops/pedidos/'
-      preLoaderRoute: typeof AuthenticatedOpsPedidosIndexRouteImport
-      parentRoute: typeof AuthenticatedOpsRoute
-    }
-    '/_authenticated/ops/pedidos/$id': {
-      id: '/_authenticated/ops/pedidos/$id'
-      path: '/pedidos/$id'
-      fullPath: '/ops/pedidos/$id'
-      preLoaderRoute: typeof AuthenticatedOpsPedidosIdRouteImport
-      parentRoute: typeof AuthenticatedOpsRoute
-    }
-    '/_authenticated/ops/pedidos/novo': {
-      id: '/_authenticated/ops/pedidos/novo'
-      path: '/pedidos/novo'
-      fullPath: '/ops/pedidos/novo'
-      preLoaderRoute: typeof AuthenticatedOpsPedidosNovoRouteImport
-      parentRoute: typeof AuthenticatedOpsRoute
-    }
-    '/_authenticated/ops/veiculos/$id': {
-      id: '/_authenticated/ops/veiculos/$id'
-      path: '/$id'
-      fullPath: '/ops/veiculos/$id'
-      preLoaderRoute: typeof AuthenticatedOpsVeiculosIdRouteImport
+    '/_authenticated/ops/veiculos/novo': {
+      id: '/_authenticated/ops/veiculos/novo'
+      path: '/novo'
+      fullPath: '/ops/veiculos/novo'
+      preLoaderRoute: typeof AuthenticatedOpsVeiculosNovoRouteImport
       parentRoute: typeof AuthenticatedOpsVeiculosRoute
     }
     '/_authenticated/ops/veiculos/lista': {
@@ -1101,12 +1045,68 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsVeiculosListaRouteImport
       parentRoute: typeof AuthenticatedOpsVeiculosRoute
     }
-    '/_authenticated/ops/veiculos/novo': {
-      id: '/_authenticated/ops/veiculos/novo'
-      path: '/novo'
-      fullPath: '/ops/veiculos/novo'
-      preLoaderRoute: typeof AuthenticatedOpsVeiculosNovoRouteImport
+    '/_authenticated/ops/veiculos/$id': {
+      id: '/_authenticated/ops/veiculos/$id'
+      path: '/$id'
+      fullPath: '/ops/veiculos/$id'
+      preLoaderRoute: typeof AuthenticatedOpsVeiculosIdRouteImport
       parentRoute: typeof AuthenticatedOpsVeiculosRoute
+    }
+    '/_authenticated/ops/pedidos/novo': {
+      id: '/_authenticated/ops/pedidos/novo'
+      path: '/pedidos/novo'
+      fullPath: '/ops/pedidos/novo'
+      preLoaderRoute: typeof AuthenticatedOpsPedidosNovoRouteImport
+      parentRoute: typeof AuthenticatedOpsRoute
+    }
+    '/_authenticated/ops/pedidos/$id': {
+      id: '/_authenticated/ops/pedidos/$id'
+      path: '/pedidos/$id'
+      fullPath: '/ops/pedidos/$id'
+      preLoaderRoute: typeof AuthenticatedOpsPedidosIdRouteImport
+      parentRoute: typeof AuthenticatedOpsRoute
+    }
+    '/_authenticated/ops/obras/nova': {
+      id: '/_authenticated/ops/obras/nova'
+      path: '/obras/nova'
+      fullPath: '/ops/obras/nova'
+      preLoaderRoute: typeof AuthenticatedOpsObrasNovaRouteImport
+      parentRoute: typeof AuthenticatedOpsRoute
+    }
+    '/_authenticated/ops/motoristas/aprovacoes': {
+      id: '/_authenticated/ops/motoristas/aprovacoes'
+      path: '/motoristas/aprovacoes'
+      fullPath: '/ops/motoristas/aprovacoes'
+      preLoaderRoute: typeof AuthenticatedOpsMotoristasAprovacoesRouteImport
+      parentRoute: typeof AuthenticatedOpsRoute
+    }
+    '/_authenticated/ops/motoristas/$id': {
+      id: '/_authenticated/ops/motoristas/$id'
+      path: '/motoristas/$id'
+      fullPath: '/ops/motoristas/$id'
+      preLoaderRoute: typeof AuthenticatedOpsMotoristasIdRouteImport
+      parentRoute: typeof AuthenticatedOpsRoute
+    }
+    '/_authenticated/driver/ofertas/historico': {
+      id: '/_authenticated/driver/ofertas/historico'
+      path: '/historico'
+      fullPath: '/driver/ofertas/historico'
+      preLoaderRoute: typeof AuthenticatedDriverOfertasHistoricoRouteImport
+      parentRoute: typeof AuthenticatedDriverOfertasRoute
+    }
+    '/_authenticated/driver/ofertas/$id': {
+      id: '/_authenticated/driver/ofertas/$id'
+      path: '/$id'
+      fullPath: '/driver/ofertas/$id'
+      preLoaderRoute: typeof AuthenticatedDriverOfertasIdRouteImport
+      parentRoute: typeof AuthenticatedDriverOfertasRoute
+    }
+    '/_authenticated/driver/navegacao/$id': {
+      id: '/_authenticated/driver/navegacao/$id'
+      path: '/navegacao/$id'
+      fullPath: '/driver/navegacao/$id'
+      preLoaderRoute: typeof AuthenticatedDriverNavegacaoIdRouteImport
+      parentRoute: typeof AuthenticatedDriverRoute
     }
   }
 }
