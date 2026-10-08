@@ -29,6 +29,13 @@
       "when": 1790288004353,
       "tag": "0003_expose_chat_team_names_to_room_members",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791494853598,
+      "tag": "0004_unify_chat_by_participant_pair",
+      "breakpoints": true
     }
   ]
 }
