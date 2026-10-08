@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { AppShell } from "@/components/app-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, ArrowRight, Check, Upload, X, Copy, MessageCircle, Mail, MapPin, MessageSquare } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Upload, X, Copy, MessageCircle, Mail, MapPin, MessageSquare, Truck } from "lucide-react";
 import QRCode from "qrcode";
 import { shareMessage, trackingUrl } from "@/lib/order-status";
 import { MapboxAutocomplete, type MapboxLocation } from "@/components/mapbox-autocomplete";
@@ -148,6 +148,31 @@ const EMPTY: Form = {
 
 export const VEHICLE_TYPES = ["Fiorino", "Van", "VUC", "3/4", "Toco", "Truck", "Carreta", "Bitrem", "Rodotrem", "Outro"];
 export const BODY_TYPES = ["Baú", "Sider", "Aberta", "Graneleiro", "Frigorífica", "Tanque", "Prancha", "Outra"];
+
+type VehicleAnttOption = {
+  key: string;
+  value: string;
+  label: string;
+  description: string;
+  axles: number | null;
+  heavy: boolean;
+};
+
+const VEHICLE_ANTT_OPTIONS: VehicleAnttOption[] = [
+  { key: "fiorino", value: "Fiorino", label: "Fiorino", description: "Carga leve urbana", axles: null, heavy: false },
+  { key: "van", value: "Van", label: "Van de carga", description: "Carga leve e urbana", axles: null, heavy: false },
+  { key: "vuc", value: "VUC", label: "VUC", description: "Veículo urbano de carga", axles: null, heavy: false },
+  { key: "34", value: "3/4", label: "Caminhão 3/4", description: "Configuração leve", axles: 2, heavy: false },
+  { key: "toco", value: "Toco", label: "Caminhão toco", description: "Caminhão rígido", axles: 2, heavy: true },
+  { key: "truck", value: "Truck", label: "Caminhão truck", description: "Caminhão de 3 eixos", axles: 3, heavy: true },
+  { key: "carreta-2", value: "Carreta", label: "Carreta de 2 eixos", description: "Composição cadastrada", axles: 2, heavy: true },
+  { key: "carreta-3", value: "Carreta", label: "Carreta de 3 eixos", description: "Composição cadastrada", axles: 3, heavy: true },
+  { key: "carreta-ls", value: "Carreta LS", label: "Carreta LS", description: "Configuração cadastrada", axles: 3, heavy: true },
+  { key: "bitruck", value: "Bitruck", label: "Bitruck", description: "Caminhão de 4 eixos", axles: 4, heavy: true },
+  { key: "bitrem", value: "Bitrem", label: "Bitrem", description: "Composição pesada", axles: 7, heavy: true },
+  { key: "bitrenzao", value: "Bitrenzão", label: "Bitrenzão", description: "Composição pesada", axles: 9, heavy: true },
+  { key: "rodotrem", value: "Rodotrem", label: "Rodotrem", description: "Composição pesada", axles: 9, heavy: true },
+];
 
 const STEPS = ["Cliente", "Coleta", "Entrega", "Carga", "Veículo", "Valores", "Documentos", "Revisão"] as const;
 
@@ -355,7 +380,9 @@ function NewOrderWizard() {
   // ---- Cálculo do piso mínimo ANTT (coeficientes vindos da tabela vigente) ----
   const [antt, setAntt] = useState<AnttCalculation | null>(null);
   const [anttLoading, setAnttLoading] = useState(false);
+  const [selectedVehicleKey, setSelectedVehicleKey] = useState<string | null>(null);
   const anttDistance = routeInfo?.distance_km ?? 0;
+  const selectedVehicle = VEHICLE_ANTT_OPTIONS.find((item) => item.key === selectedVehicleKey) ?? null;
   const anttAxles = Number(f.req_axles) || 0;
 
   useEffect(() => {
@@ -985,6 +1012,82 @@ function NewOrderWizard() {
 
         {step === 5 && (
           <>
+            <section className="mb-8">
+              <div className="mb-4">
+                <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand">
+                  Seleção de veículo
+                </div>
+                <h2 className="mt-1 text-xl font-semibold tracking-tight">
+                  Selecione o veículo e consulte o valor ANTT
+                </h2>
+                <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+                  Escolha a configuração que será usada neste frete. O piso ANTT só aparece quando a
+                  metodologia vigente for aplicável e houver dados suficientes para o cálculo.
+                </p>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {VEHICLE_ANTT_OPTIONS.map((vehicle) => {
+                  const selected = selectedVehicleKey === vehicle.key;
+                  const isCalculated = selected && antt?.status === "ok" && antt.minimum_freight != null;
+
+                  return (
+                    <button
+                      key={vehicle.key}
+                      type="button"
+                      onClick={() => {
+                        setSelectedVehicleKey(vehicle.key);
+                        set("req_vehicle_type", vehicle.value);
+                        set("req_axles", vehicle.axles ? String(vehicle.axles) : "");
+                      }}
+                      className={`group rounded-2xl border p-4 text-left transition hover:-translate-y-0.5 hover:shadow-md ${
+                        selected
+                          ? "border-brand bg-brand/5 ring-2 ring-brand/20"
+                          : "border-border bg-surface hover:border-brand/50"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <span className={`grid h-11 w-11 place-items-center rounded-xl ${
+                          selected ? "bg-brand text-brand-foreground" : "bg-surface-2 text-brand"
+                        }`}>
+                          <Truck className="h-5 w-5" />
+                        </span>
+                        <span className={`rounded-full px-2 py-1 text-[10px] font-semibold ${
+                          selected ? "bg-brand/10 text-brand" : "bg-surface-2 text-muted-foreground"
+                        }`}>
+                          {selected ? "Selecionado" : "Selecionar"}
+                        </span>
+                      </div>
+
+                      <div className="mt-4 font-semibold">{vehicle.label}</div>
+                      <div className="mt-1 text-xs text-muted-foreground">{vehicle.description}</div>
+
+                      <div className="mt-4 space-y-1 border-t border-border pt-3 text-xs">
+                        <div className="flex justify-between gap-3">
+                          <span className="text-muted-foreground">Eixos</span>
+                          <span className="font-medium">{vehicle.axles ? `${vehicle.axles} eixos` : "Não aplicável"}</span>
+                        </div>
+                        <div className="flex justify-between gap-3">
+                          <span className="text-muted-foreground">
+                            {vehicle.heavy ? "Valor mínimo ANTT" : "Valor comercial"}
+                          </span>
+                          <span className="font-semibold">
+                            {isCalculated ? brl(antt.minimum_freight) : "—"}
+                          </span>
+                        </div>
+                      </div>
+
+                      {!vehicle.heavy && (
+                        <div className="mt-3 text-[11px] text-muted-foreground">
+                          Piso ANTT não aplicado automaticamente a esta configuração.
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+
             <Grid>
               <T label="Valor negociado com cliente (R$)" required type="number" value={f.price} onChange={(v) => set("price", v)} />
               <T label="Valor do motorista (R$)" type="number" value={f.driver_price} onChange={(v) => set("driver_price", v)} />
@@ -1074,6 +1177,30 @@ function NewOrderWizard() {
                 </label>
               </Grid>
               <div className="mt-4">
+                {selectedVehicle && (
+                  <div className="mb-4 rounded-2xl border border-brand/20 bg-brand/5 p-4">
+                    <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand">
+                      Resumo do frete
+                    </div>
+                    <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                      <SummaryItem label="Veículo selecionado" value={selectedVehicle.label} />
+                      <SummaryItem
+                        label="Distância total"
+                        value={anttDistance > 0 ? `${anttDistance.toFixed(1)} km` : "Aguardando rota"}
+                      />
+                      <SummaryItem
+                        label="Piso mínimo ANTT"
+                        value={antt?.minimum_freight != null ? brl(antt.minimum_freight) : "Não aplicável"}
+                      />
+                      <SummaryItem label="Valor negociado" value={brl(clientFreightValue)} />
+                    </div>
+                    <p className="mt-3 text-xs text-muted-foreground">
+                      Pedágios, custos adicionais e margem aparecem separados abaixo. Eles não são
+                      apresentados como parte do piso oficial da ANTT.
+                    </p>
+                  </div>
+                )}
+
                 <AnttCard
                   calc={antt}
                   loading={anttLoading}
@@ -1082,6 +1209,12 @@ function NewOrderWizard() {
                   extraCosts={extraCosts}
                   margin={marginAmount}
                   onUseSuggested={(value) => {
+                    if (f.price.trim()) {
+                      const confirmed = window.confirm(
+                        "Já existe um valor informado. Deseja substituir pelo valor sugerido?",
+                      );
+                      if (!confirmed) return;
+                    }
                     set("price", value.toFixed(2));
                     toast.success("Valor sugerido aplicado ao frete. Você ainda pode ajustá-lo.");
                   }}
@@ -1243,6 +1376,15 @@ function T({
         className="h-11 w-full rounded-xl border border-border bg-surface px-3 text-sm outline-none focus:border-brand"
       />
     </label>
+  );
+}
+
+function SummaryItem({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{label}</div>
+      <div className="mt-1 text-sm font-semibold">{value}</div>
+    </div>
   );
 }
 
