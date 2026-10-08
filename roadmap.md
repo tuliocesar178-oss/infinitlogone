@@ -18,6 +18,6 @@
 - [x] Unificar chats individuais por par de usuários, preservando históricos e acesso autorizado
 - [x] Manter grupo OPERAÇÃO separado e referências de fretes nas mensagens
 - [x] Validar busca, mensagens não lidas e acesso entre perfis
-- [ ] Adicionar Mapa Logístico Premium com pré-visualização sem alterar o design ativo
-- [ ] Persistir escolha administrativa e permitir restaurar o design anterior
-- [ ] Validar rastreio público, aparência e preservação dos portais internos
+- [x] Adicionar Mapa Logístico Premium com pré-visualização sem alterar o design ativo
+- [x] Persistir escolha administrativa e permitir restaurar o design anterior
+- [x] Validar rastreio público, aparência e preservação dos portais internos

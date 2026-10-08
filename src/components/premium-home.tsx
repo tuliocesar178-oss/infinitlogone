@@ -114,11 +114,11 @@ export function PremiumHome() {
               </form>
             </div>
 
-            <div className="relative h-[240px] lg:h-[390px]">
-              <div className="absolute left-0 top-0 h-[230px] w-[75%] overflow-hidden rounded-xl border border-border bg-background shadow-elevated lg:h-[280px]">
+            <div className="relative h-[180px] sm:h-[240px] lg:h-[390px]">
+              <div className="absolute left-0 top-0 h-[175px] w-full overflow-hidden rounded-xl border border-border bg-background shadow-elevated sm:h-[230px] sm:w-[75%] lg:h-[280px]">
                 <Suspense fallback={<div className="h-full bg-accent" />}><PublicLogisticsMap /></Suspense>
               </div>
-              <div className="absolute right-0 top-5 max-w-[190px] rounded-xl border bg-background/95 p-4 shadow-elevated">
+              <div className="absolute right-0 top-5 hidden max-w-[190px] rounded-xl border bg-background/95 p-4 shadow-elevated sm:block">
                 <ShieldCheck className="mb-2 h-6 w-6 text-brand" />
                 <p className="font-semibold text-primary">Visibilidade de ponta a ponta</p>
                 <p className="mt-2 text-xs text-muted-foreground">Consulte seu código para ver o status real da carga.</p>
