@@ -2630,6 +2630,10 @@ export type Database = {
         Args: { _amount: number; _note?: string; _offer_id: string }
         Returns: Json
       }
+      valid_unified_chat_context: {
+        Args: { _order: string; _room: string; _user: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role:

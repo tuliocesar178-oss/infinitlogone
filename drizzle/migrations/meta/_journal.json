@@ -36,6 +36,13 @@
       "when": 1791494853598,
       "tag": "0004_unify_chat_by_participant_pair",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791495061355,
+      "tag": "0005_tighten_unified_chat_message_context",
+      "breakpoints": true
     }
   ]
 }
