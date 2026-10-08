@@ -1,6 +1,6 @@
 # Roadmap
 
-- [ ] Ajustar e ativar a homepage conforme a referência enviada, preservando rastreio e portais
+- [x] Ajustar e ativar a homepage conforme a referência enviada, preservando rastreio e portais
 
 - [x] Criar rota protegida `/painel-operacao`
 - [x] Adicionar acesso no menu de Administração e Logística
