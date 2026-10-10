@@ -1,5 +1,7 @@
 # Roadmap
 
+- [x] Corrigir e validar carregamento do chat no portal do motorista
+
 - [x] Criar rota protegida `/painel-operacao`
 - [x] Adicionar acesso no menu de Administração e Logística
 - [x] Exibir indicadores, fretes, atrasos e ocorrências com dados reais

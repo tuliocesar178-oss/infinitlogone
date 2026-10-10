@@ -1072,7 +1072,7 @@ function NewOrderWizard() {
                             {vehicle.heavy ? "Valor mínimo ANTT" : "Valor comercial"}
                           </span>
                           <span className="font-semibold">
-                            {isCalculated ? brl(antt.minimum_freight) : "—"}
+                            {isCalculated && antt.minimum_freight !== null ? brl(antt.minimum_freight) : "—"}
                           </span>
                         </div>
                       </div>
