@@ -1,5 +1,10 @@
 # Roadmap
 
+- [x] Endereços completos com número/sem número, pesquisa e confirmação manual
+- [x] Persistir precisão e invalidar rotas ao criar/editar endereços
+- [x] Testar validação e geocodificação real em desktop/mobile: números 100 e 1000 retornam pontos distintos; 13 testes passam
+- [ ] Validar gravação ponta a ponta e recálculo após edição de um frete autorizado, sem alterar fretes reais durante testes
+
 - [x] Corrigir geometria, desenho persistente e enquadramento da rota Mapbox
 - [x] Separar diagnóstico GPS/sincronização e mostrar horário somente após confirmação
 - [x] Validar linha rodoviária real e restauração de estilo; testar recálculo sem duplicação e troca de destino

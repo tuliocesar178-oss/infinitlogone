@@ -14,12 +14,13 @@ import { OrderChat } from "@/components/orders/order-chat";
 import { Button } from "@/components/ui/button";
 import { workAddress, workStatusLabel, type Work } from "@/lib/work";
 import { z } from "zod";
+import { EditAddresses } from '@/components/addresses/edit-addresses';
 
 export const Route = createFileRoute("/_authenticated/ops/pedidos/$id")({
   validateSearch: (search: Record<string, unknown>) => z.object({
     tab: z.enum(["op", "pf"]).optional()
   }).parse(search),
-  head: () => ({ meta: [{ title: "Pedido — InfinitLog" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Detalhes e endereços do frete — InfinitLog" }, { name: "description", content: "Endereços de coleta e entrega, operação e histórico do frete na InfinitLog." }, { property: "og:title", content: "Detalhes do frete — InfinitLog" }, { property: "og:description", content: "Endereços e acompanhamento operacional do frete." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }] }),
   component: OrderDetail,
 });
 
@@ -188,6 +189,7 @@ function OrderDetail() {
                 </Panel>
 
                 <Panel title="Rota" icon={<MapPin className="h-4 w-4" />}>
+                  <EditAddresses order={order} />
                   <Info k="Origem" v={`${order.origin_address}${order.origin_city ? ` · ${order.origin_city}` : ""}`} />
                   <Info k="Destino" v={`${order.destination_address}${order.destination_city ? ` · ${order.destination_city}` : ""}`} />
                   <Info

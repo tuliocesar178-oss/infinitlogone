@@ -7,7 +7,9 @@ import { toast } from "sonner";
 import { ArrowLeft, ArrowRight, Check, Upload, X, Copy, MessageCircle, Mail, MapPin, MessageSquare } from "lucide-react";
 import QRCode from "qrcode";
 import { shareMessage, trackingUrl } from "@/lib/order-status";
-import { MapboxAutocomplete, type MapboxLocation } from "@/components/mapbox-autocomplete";
+import { AddressFields } from "@/components/addresses/address-fields";
+import { emptyAddress, fullAddress, addressError, type FreightAddress } from "@/lib/addresses/model";
+import { fetchDrivingRoute } from "@/lib/tracking.functions";
 import { sendOffersToEligibleDrivers } from "@/lib/freight-publish";
 import {
   ANTT_CARGO_CLASSES,
@@ -191,6 +193,15 @@ function NewOrderWizard() {
     qr: string;
   } | null>(null);
 
+  const [addressDetails, setAddressDetails] = useState<{origin: FreightAddress; destination: FreightAddress}>({ origin: {...emptyAddress}, destination: {...emptyAddress} });
+  function addressValue(type: 'origin'|'destination'): FreightAddress {
+    const d=addressDetails[type];
+    return {...d,street:f[`${type}_address`],number:f[`${type}_number`],city:f[`${type}_city`],state:f[`${type}_state`],zip:f[`${type}_zip`],neighborhood:f[`${type}_neighborhood`],reference:type==='origin'?f.pickup_reference:f.delivery_reference,lat:d.precision==='unconfirmed'?null:num(f[`${type}_lat`]),lng:d.precision==='unconfirmed'?null:num(f[`${type}_lng`])};
+  }
+  function updateAddress(type:'origin'|'destination', a:FreightAddress) {
+    setAddressDetails(s=>({...s,[type]:a}));
+    setF(s=>({...s,[`${type}_address`]:a.street,[`${type}_number`]:a.number,[`${type}_city`]:a.city,[`${type}_state`]:a.state,[`${type}_zip`]:a.zip,[`${type}_neighborhood`]:a.neighborhood,[`${type}_lat`]:a.lat==null?'':String(a.lat),[`${type}_lng`]:a.lng==null?'':String(a.lng),[type==='origin'?'pickup_reference':'delivery_reference']:a.reference}));
+  }
   function set<K extends keyof Form>(k: K, v: string) {
     if (k === "req_vehicle_type") setSelectedVehicleKey(null);
     setF((s) => ({ ...s, [k]: v }));
@@ -235,17 +246,17 @@ function NewOrderWizard() {
     const work = works.find((item) => item.id === selectedWorkId);
     if (!work) return;
 
-    const address = [work.address, work.number].filter(Boolean).join(", ");
-
+    setAddressDetails(current => ({...current,destination:{...current.destination,precision:'unconfirmed',lat:null,lng:null}}));
     setF((current) => ({
       ...current,
-      destination_address: current.destination_address || address,
+      destination_address: current.destination_address || work.address || "",
+      destination_number: current.destination_number || work.number || "",
       destination_city: current.destination_city || work.city || "",
       destination_state: current.destination_state || work.state || "",
       destination_zip: current.destination_zip || work.zip_code || "",
       destination_neighborhood: current.destination_neighborhood || work.neighborhood || "",
-      destination_lat: current.destination_lat || String(work.latitude ?? ""),
-      destination_lng: current.destination_lng || String(work.longitude ?? ""),
+      destination_lat: "",
+      destination_lng: "",
     }));
   }, [selectedWorkId, works]);
 
@@ -329,8 +340,8 @@ function NewOrderWizard() {
     if (step === 0 && works.length > 0 && !selectedWorkId) {
       return "Selecione a obra de destino";
     }
-    if (step === 1 && !f.origin_address.trim()) return "Informe o endereço de coleta";
-    if (step === 2 && !f.destination_address.trim()) return "Informe o endereço de entrega";
+    if (step === 1) { const e=addressError(addressValue("origin")); if(e) return `Coleta: ${e}`; }
+    if (step === 2) { const e=addressError(addressValue("destination")); if(e) return `Entrega: ${e}`; }
     if (step === 5 && !hasEffectiveConfiguration()) return "Escolha a configuração efetiva do veículo e informe os eixos";
     if (step === 5 && !isBodyCompatible(selectedVehicle, f.req_body_type)) return "Escolha uma carroceria compatível";
     if (step === 5 && !f.price) return "Informe o valor cobrado do cliente";
@@ -349,16 +360,8 @@ function NewOrderWizard() {
     async function calc() {
       if (!f.origin_lat || !f.origin_lng || !f.destination_lat || !f.destination_lng || !MAPBOX_TOKEN) return;
       try {
-        const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${f.origin_lng},${f.origin_lat};${f.destination_lng},${f.destination_lat}?geometries=geojson&overview=full&access_token=${MAPBOX_TOKEN}`;
-        const res = await fetch(url);
-        if (!res.ok) throw new Error("Não foi possível calcular a rota");
-        const data = await res.json();
-        const route = data.routes?.[0];
-        if (!cancelled && route?.distance > 0) setRouteInfo({
-          distance_km: Number((route.distance / 1000).toFixed(1)),
-          duration_minutes: Math.round(route.duration / 60),
-          geometry: JSON.stringify(route.geometry),
-        });
+        const route = await fetchDrivingRoute({data:{fromLat:Number(f.origin_lat),fromLng:Number(f.origin_lng),toLat:Number(f.destination_lat),toLng:Number(f.destination_lng)}});
+        if (!cancelled && route.geometry && route.distance != null && route.duration != null) setRouteInfo({distance_km:route.distance,duration_minutes:route.duration,geometry:JSON.stringify(route.geometry)});
       } catch (error) {
         if (!cancelled) toast.error("Não foi possível calcular a distância da rota.");
       }
@@ -438,34 +441,6 @@ function NewOrderWizard() {
     negotiated > 0 &&
     negotiated < antt.minimum_freight;
 
-  function handleLocationSelect(type: "origin" | "destination", loc: MapboxLocation) {
-    if (type === "origin") {
-      setF(s => ({
-        ...s,
-        origin_address: loc.address,
-        origin_city: loc.city,
-        origin_state: loc.state,
-        origin_zip: loc.zip,
-        origin_neighborhood: loc.neighborhood,
-        origin_number: loc.number,
-        origin_lat: String(loc.lat),
-        origin_lng: String(loc.lng),
-      }));
-    } else {
-      setF(s => ({
-        ...s,
-        destination_address: loc.address,
-        destination_city: loc.city,
-        destination_state: loc.state,
-        destination_zip: loc.zip,
-        destination_neighborhood: loc.neighborhood,
-        destination_number: loc.number,
-        destination_lat: String(loc.lat),
-        destination_lng: String(loc.lng),
-      }));
-    }
-  }
-
   function next() {
     const err = canAdvance();
     if (err) return toast.error(err);
@@ -476,6 +451,7 @@ function NewOrderWizard() {
   async function save(publish: boolean) {
     const err = canAdvance();
     if (err) return toast.error(err);
+    for(const type of ['origin','destination'] as const){const problem=addressError(addressValue(type));if(problem)return toast.error(`${type==='origin'?'Coleta':'Entrega'}: ${problem}`);}
     // Bloqueio legal: não é permitido publicar carga lotação abaixo do piso mínimo ANTT.
     if (publish && belowFloor && antt?.minimum_freight != null) {
       return toast.error(
@@ -512,7 +488,8 @@ function NewOrderWizard() {
         client_name: f.client_name || null,
         contact_name: f.contact_name || null,
         contact_phone: f.contact_phone || null,
-        origin_address: f.origin_address,
+        origin_address: fullAddress(addressValue("origin")),
+        origin_location_details: addressValue("origin"),
         origin_city: f.origin_city || null,
         origin_state: f.origin_state || null,
         origin_zip: f.origin_zip || null,
@@ -520,7 +497,8 @@ function NewOrderWizard() {
         origin_number: f.origin_number || null,
         origin_lat: num(f.origin_lat),
         origin_lng: num(f.origin_lng),
-        destination_address: f.destination_address,
+        destination_address: fullAddress(addressValue("destination")),
+        destination_location_details: addressValue("destination"),
         destination_city: f.destination_city || null,
         destination_state: f.destination_state || null,
         destination_zip: f.destination_zip || null,
@@ -911,22 +889,9 @@ function NewOrderWizard() {
             <T label="Empresa da coleta" value={f.pickup_company} onChange={(v) => set("pickup_company", v)} />
             <T label="Responsável" value={f.pickup_contact} onChange={(v) => set("pickup_contact", v)} />
             <T label="WhatsApp" value={f.pickup_whatsapp} onChange={(v) => set("pickup_whatsapp", v)} />
-            <div className="sm:col-span-2">
-              <MapboxAutocomplete
-                label="Endereço de coleta"
-                required
-                value={f.origin_address}
-                onChange={(v) => set("origin_address", v)}
-                onSelect={(loc) => handleLocationSelect("origin", loc)}
-              />
-            </div>
-            <T label="Número" value={f.origin_number} onChange={(v) => set("origin_number", v)} />
-            <T label="Bairro" value={f.origin_neighborhood} onChange={(v) => set("origin_neighborhood", v)} />
-            <T label="Cidade" value={f.origin_city} onChange={(v) => set("origin_city", v)} />
-            <T label="UF" value={f.origin_state} onChange={(v) => set("origin_state", v)} />
+            <div className="sm:col-span-2"><AddressFields label="Endereço de coleta" value={addressValue("origin")} onChange={a=>updateAddress("origin",a)} /></div>
             <T label="Data da coleta" type="date" value={f.pickup_date} onChange={(v) => set("pickup_date", v)} />
             <T label="Hora" type="time" value={f.pickup_time} onChange={(v) => set("pickup_time", v)} />
-            <T label="Referência" value={f.pickup_reference} onChange={(v) => set("pickup_reference", v)} />
             <T label="Doca" value={f.pickup_dock} onChange={(v) => set("pickup_dock", v)} />
             <T label="Portaria" value={f.pickup_gate} onChange={(v) => set("pickup_gate", v)} />
             <T label="Instruções" value={f.pickup_instructions} onChange={(v) => set("pickup_instructions", v)} full />
@@ -938,22 +903,9 @@ function NewOrderWizard() {
             <T label="Empresa da entrega" value={f.delivery_company} onChange={(v) => set("delivery_company", v)} />
             <T label="Responsável" value={f.delivery_contact} onChange={(v) => set("delivery_contact", v)} />
             <T label="WhatsApp" value={f.delivery_whatsapp} onChange={(v) => set("delivery_whatsapp", v)} />
-            <div className="sm:col-span-2">
-              <MapboxAutocomplete
-                label="Endereço de entrega"
-                required
-                value={f.destination_address}
-                onChange={(v) => set("destination_address", v)}
-                onSelect={(loc) => handleLocationSelect("destination", loc)}
-              />
-            </div>
-            <T label="Número" value={f.destination_number} onChange={(v) => set("destination_number", v)} />
-            <T label="Bairro" value={f.destination_neighborhood} onChange={(v) => set("destination_neighborhood", v)} />
-            <T label="Cidade" value={f.destination_city} onChange={(v) => set("destination_city", v)} />
-            <T label="UF" value={f.destination_state} onChange={(v) => set("destination_state", v)} />
+            <div className="sm:col-span-2"><AddressFields label="Endereço de entrega" value={addressValue("destination")} onChange={a=>updateAddress("destination",a)} /></div>
             <T label="Data prevista" type="date" value={f.delivery_date} onChange={(v) => set("delivery_date", v)} />
             <T label="Hora prevista" type="time" value={f.delivery_time} onChange={(v) => set("delivery_time", v)} />
-            <T label="Referência" value={f.delivery_reference} onChange={(v) => set("delivery_reference", v)} />
             <T label="Doca" value={f.delivery_dock} onChange={(v) => set("delivery_dock", v)} />
             <T label="Portaria" value={f.delivery_gate} onChange={(v) => set("delivery_gate", v)} />
           </Grid>
@@ -1231,12 +1183,12 @@ function NewOrderWizard() {
                 ["Telefone", f.contact_phone],
               ]} />
               <ReviewBlock title="Coleta" onEdit={() => setStep(1)} rows={[
-                ["Endereço", f.origin_address],
+                ["Endereço", fullAddress(addressValue("origin"))],
                 ["Cidade/UF", `${f.origin_city} ${f.origin_state}`],
                 ["Data", `${f.pickup_date} ${f.pickup_time}`],
               ]} />
               <ReviewBlock title="Entrega" onEdit={() => setStep(2)} rows={[
-                ["Endereço", f.destination_address],
+                ["Endereço", fullAddress(addressValue("destination"))],
                 ["Cidade/UF", `${f.destination_city} ${f.destination_state}`],
                 ["Data", `${f.delivery_date} ${f.delivery_time}`],
               ]} />

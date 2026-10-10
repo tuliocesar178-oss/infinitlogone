@@ -1508,6 +1508,7 @@ export type Database = {
           destination_city: string | null
           destination_lat: number | null
           destination_lng: number | null
+          destination_location_details: Json | null
           destination_neighborhood: string | null
           destination_number: string | null
           destination_state: string | null
@@ -1538,6 +1539,7 @@ export type Database = {
           origin_city: string | null
           origin_lat: number | null
           origin_lng: number | null
+          origin_location_details: Json | null
           origin_neighborhood: string | null
           origin_number: string | null
           origin_state: string | null
@@ -1636,6 +1638,7 @@ export type Database = {
           destination_city?: string | null
           destination_lat?: number | null
           destination_lng?: number | null
+          destination_location_details?: Json | null
           destination_neighborhood?: string | null
           destination_number?: string | null
           destination_state?: string | null
@@ -1666,6 +1669,7 @@ export type Database = {
           origin_city?: string | null
           origin_lat?: number | null
           origin_lng?: number | null
+          origin_location_details?: Json | null
           origin_neighborhood?: string | null
           origin_number?: string | null
           origin_state?: string | null
@@ -1764,6 +1768,7 @@ export type Database = {
           destination_city?: string | null
           destination_lat?: number | null
           destination_lng?: number | null
+          destination_location_details?: Json | null
           destination_neighborhood?: string | null
           destination_number?: string | null
           destination_state?: string | null
@@ -1794,6 +1799,7 @@ export type Database = {
           origin_city?: string | null
           origin_lat?: number | null
           origin_lng?: number | null
+          origin_location_details?: Json | null
           origin_neighborhood?: string | null
           origin_number?: string | null
           origin_state?: string | null

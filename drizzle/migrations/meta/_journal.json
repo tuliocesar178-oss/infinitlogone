@@ -50,6 +50,20 @@
       "when": 1791495429585,
       "tag": "0006_public_home_design_settings",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1791648580140,
+      "tag": "0007_freight_address_precision",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1791648828593,
+      "tag": "0008_invalidate_all_changed_address_route_metrics",
+      "breakpoints": true
     }
   ]
 }
