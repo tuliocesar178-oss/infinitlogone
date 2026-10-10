@@ -1,9 +1,10 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { AppShell } from "@/components/app-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, ArrowRight, Check, Upload, X, Copy, MessageCircle, Mail, MapPin, MessageSquare, Truck } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Upload, X, Copy, MessageCircle, Mail, MapPin, MessageSquare } from "lucide-react";
 import QRCode from "qrcode";
 import { shareMessage, trackingUrl } from "@/lib/order-status";
 import { MapboxAutocomplete, type MapboxLocation } from "@/components/mapbox-autocomplete";
@@ -19,12 +20,21 @@ import {
   type AnttOperationType,
 } from "@/lib/antt";
 import { AnttCard } from "@/components/freight/antt-card";
+import { VehicleCatalog } from "@/components/freight/vehicle-catalog";
+import { buildFreightConfigurations, calculateConfigurationFloors, isBodyCompatible, type FreightVehicleConfiguration } from "@/lib/vehicle-antt";
 import type { Work } from "@/lib/work";
 
 const MAPBOX_TOKEN = import.meta.env.VITE_LOVABLE_CONNECTOR_MAPBOX_PUBLIC_TOKEN;
 
 export const Route = createFileRoute("/_authenticated/ops/pedidos/novo")({
-  head: () => ({ meta: [{ title: "Novo frete — InfinitLog" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [
+    { title: "Novo frete — InfinitLog" },
+    { name: "description", content: "Cadastro de fretes com comparação de veículos, pisos ANTT vigentes e valores negociados na InfinitLog." },
+    { property: "og:title", content: "Novo frete — InfinitLog" },
+    { property: "og:description", content: "Compare configurações de veículos e pisos ANTT antes de confirmar o frete." },
+    { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
+    { name: "robots", content: "noindex" },
+  ] }),
   component: NewOrderWizard,
 });
 
@@ -149,31 +159,6 @@ const EMPTY: Form = {
 export const VEHICLE_TYPES = ["Fiorino", "Van", "VUC", "3/4", "Toco", "Truck", "Carreta", "Bitrem", "Rodotrem", "Outro"];
 export const BODY_TYPES = ["Baú", "Sider", "Aberta", "Graneleiro", "Frigorífica", "Tanque", "Prancha", "Outra"];
 
-type VehicleAnttOption = {
-  key: string;
-  value: string;
-  label: string;
-  description: string;
-  axles: number | null;
-  heavy: boolean;
-};
-
-const VEHICLE_ANTT_OPTIONS: VehicleAnttOption[] = [
-  { key: "fiorino", value: "Fiorino", label: "Fiorino", description: "Carga leve urbana", axles: null, heavy: false },
-  { key: "van", value: "Van", label: "Van de carga", description: "Carga leve e urbana", axles: null, heavy: false },
-  { key: "vuc", value: "VUC", label: "VUC", description: "Veículo urbano de carga", axles: null, heavy: false },
-  { key: "34", value: "3/4", label: "Caminhão 3/4", description: "Configuração leve", axles: 2, heavy: false },
-  { key: "toco", value: "Toco", label: "Caminhão toco", description: "Caminhão rígido", axles: 2, heavy: true },
-  { key: "truck", value: "Truck", label: "Caminhão truck", description: "Caminhão de 3 eixos", axles: 3, heavy: true },
-  { key: "carreta-2", value: "Carreta", label: "Carreta de 2 eixos", description: "Composição cadastrada", axles: 2, heavy: true },
-  { key: "carreta-3", value: "Carreta", label: "Carreta de 3 eixos", description: "Composição cadastrada", axles: 3, heavy: true },
-  { key: "carreta-ls", value: "Carreta LS", label: "Carreta LS", description: "Configuração cadastrada", axles: 3, heavy: true },
-  { key: "bitruck", value: "Bitruck", label: "Bitruck", description: "Caminhão de 4 eixos", axles: 4, heavy: true },
-  { key: "bitrem", value: "Bitrem", label: "Bitrem", description: "Composição pesada", axles: 7, heavy: true },
-  { key: "bitrenzao", value: "Bitrenzão", label: "Bitrenzão", description: "Composição pesada", axles: 9, heavy: true },
-  { key: "rodotrem", value: "Rodotrem", label: "Rodotrem", description: "Composição pesada", axles: 9, heavy: true },
-];
-
 const STEPS = ["Cliente", "Coleta", "Entrega", "Carga", "Veículo", "Valores", "Documentos", "Revisão"] as const;
 
 function combineDateTime(d: string, t: string): string | null {
@@ -206,7 +191,10 @@ function NewOrderWizard() {
     qr: string;
   } | null>(null);
 
-  function set<K extends keyof Form>(k: K, v: string) { setF((s) => ({ ...s, [k]: v })); }
+  function set<K extends keyof Form>(k: K, v: string) {
+    if (k === "req_vehicle_type") setSelectedVehicleKey(null);
+    setF((s) => ({ ...s, [k]: v }));
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -343,6 +331,8 @@ function NewOrderWizard() {
     }
     if (step === 1 && !f.origin_address.trim()) return "Informe o endereço de coleta";
     if (step === 2 && !f.destination_address.trim()) return "Informe o endereço de entrega";
+    if (step === 5 && !hasEffectiveConfiguration()) return "Escolha a configuração efetiva do veículo e informe os eixos";
+    if (step === 5 && !isBodyCompatible(selectedVehicle, f.req_body_type)) return "Escolha uma carroceria compatível";
     if (step === 5 && !f.price) return "Informe o valor cobrado do cliente";
     return null;
   }
@@ -354,71 +344,87 @@ function NewOrderWizard() {
   } | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
+    setRouteInfo(null);
     async function calc() {
-      if (f.origin_lat && f.origin_lng && f.destination_lat && f.destination_lng && MAPBOX_TOKEN) {
-        try {
-          const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${f.origin_lng},${f.origin_lat};${f.destination_lng},${f.destination_lat}?geometries=geojson&overview=full&access_token=${MAPBOX_TOKEN}`;
-          const res = await fetch(url);
-          const data = await res.json();
-          const route = data.routes?.[0];
-          if (route) {
-            setRouteInfo({
-              distance_km: Number((route.distance / 1000).toFixed(1)),
-              duration_minutes: Math.round(route.duration / 60),
-              geometry: JSON.stringify(route.geometry),
-            });
-            // Auto fill price/tolls if needed, but usually operators do this
-          }
-        } catch (e) {
-          console.error("Route calc error:", e);
-        }
+      if (!f.origin_lat || !f.origin_lng || !f.destination_lat || !f.destination_lng || !MAPBOX_TOKEN) return;
+      try {
+        const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${f.origin_lng},${f.origin_lat};${f.destination_lng},${f.destination_lat}?geometries=geojson&overview=full&access_token=${MAPBOX_TOKEN}`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("Não foi possível calcular a rota");
+        const data = await res.json();
+        const route = data.routes?.[0];
+        if (!cancelled && route?.distance > 0) setRouteInfo({
+          distance_km: Number((route.distance / 1000).toFixed(1)),
+          duration_minutes: Math.round(route.duration / 60),
+          geometry: JSON.stringify(route.geometry),
+        });
+      } catch (error) {
+        if (!cancelled) toast.error("Não foi possível calcular a distância da rota.");
       }
     }
-    calc();
+    void calc();
+    return () => { cancelled = true; };
   }, [f.origin_lat, f.origin_lng, f.destination_lat, f.destination_lng]);
 
   // ---- Cálculo do piso mínimo ANTT (coeficientes vindos da tabela vigente) ----
-  const [antt, setAntt] = useState<AnttCalculation | null>(null);
-  const [anttLoading, setAnttLoading] = useState(false);
   const [selectedVehicleKey, setSelectedVehicleKey] = useState<string | null>(null);
+  const vehicleCatalog = useQuery({
+    queryKey: ["freight-vehicle-configurations"],
+    queryFn: async () => {
+      const [vehicles, types] = await Promise.all([
+        supabase.from("vehicles").select("id,vehicle_type,axles,capacity_kg,body_type").eq("active", true),
+        supabase.from("vehicle_types").select("name").eq("active", true).order("name"),
+      ]);
+      if (vehicles.error) throw vehicles.error;
+      if (types.error) throw types.error;
+      const registered = vehicles.data ?? [];
+      const names = types.data ?? [];
+      // Type names have no axle metadata and cannot provide a price by themselves.
+      return buildFreightConfigurations([...registered, ...names
+        .filter((type) => !registered.some((vehicle) => vehicle.vehicle_type === type.name))
+        .map((type) => ({ id: `type:${type.name}`, vehicle_type: type.name, axles: null, capacity_kg: null, body_type: null }))]);
+    },
+    staleTime: 60_000,
+  });
+  const configurations = useMemo(() => vehicleCatalog.data ?? buildFreightConfigurations([]), [vehicleCatalog.data]);
+  const selectedBase = configurations.find((item) => item.key === selectedVehicleKey);
+  const selectedVehicle: FreightVehicleConfiguration | null = selectedBase && selectedBase.value === f.req_vehicle_type
+    ? { ...selectedBase, axles: Number(f.req_axles) || null }
+    : f.req_vehicle_type ? { key: "manual", label: f.req_vehicle_type, value: f.req_vehicle_type, axles: Number(f.req_axles) || null, capacity: num(f.req_capacity_kg), bodyTypes: [], registered: false } : null;
   const anttDistance = routeInfo?.distance_km ?? 0;
-  const selectedVehicle = VEHICLE_ANTT_OPTIONS.find((item) => item.key === selectedVehicleKey) ?? null;
   const anttAxles = Number(f.req_axles) || 0;
-
-  useEffect(() => {
-    let cancelled = false;
-    async function run() {
-      if (!anttDistance || !anttAxles) {
-        setAntt(null);
-        return;
-      }
-      setAnttLoading(true);
-      try {
-        const res = await calculateANTTMinimumFreight({
-          distance_km: anttDistance,
-          cargo_class: f.antt_cargo_class,
-          axles: anttAxles,
-          contract_type: f.antt_contract_type as AnttContractType,
-          high_performance: f.antt_high_performance === "sim",
-          operation_type: f.antt_operation_type as AnttOperationType,
-        });
-        if (!cancelled) setAntt(res);
-      } finally {
-        if (!cancelled) setAnttLoading(false);
-      }
-    }
-    void run();
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    anttDistance,
-    anttAxles,
-    f.antt_cargo_class,
-    f.antt_contract_type,
-    f.antt_high_performance,
-    f.antt_operation_type,
-  ]);
+  const calculationInput = {
+    distance_km: anttDistance, cargo_class: f.antt_cargo_class,
+    contract_type: f.antt_contract_type as AnttContractType,
+    high_performance: f.antt_high_performance === "sim",
+    operation_type: f.antt_operation_type as AnttOperationType,
+  };
+  const comparisonConfigurations = useMemo(() => configurations.map((item) => item.key === selectedVehicleKey && anttAxles
+    ? { ...item, axles: anttAxles } : item), [configurations, selectedVehicleKey, anttAxles]);
+  const floors = useQuery({
+    queryKey: ["freight-configuration-floors", comparisonConfigurations, calculationInput],
+    queryFn: () => calculateConfigurationFloors(comparisonConfigurations, calculationInput, calculateANTTMinimumFreight),
+    enabled: step === 5 && anttDistance > 0,
+    staleTime: 30_000,
+  });
+  const selectedCalculation = useQuery({
+    queryKey: ["freight-selected-antt", calculationInput, anttAxles],
+    queryFn: () => calculateANTTMinimumFreight({ ...calculationInput, axles: anttAxles }),
+    enabled: anttDistance > 0 && anttAxles > 0,
+    staleTime: 30_000,
+  });
+  const antt: AnttCalculation | null = anttDistance > 0 && anttAxles > 0 ? selectedCalculation.data ?? null : null;
+  const anttLoading = selectedCalculation.isFetching;
+  const bodyTypes = [...new Set([...BODY_TYPES, ...configurations.flatMap((item) => item.bodyTypes)])];
+  function hasEffectiveConfiguration() { return !!selectedVehicle && Number.isInteger(anttAxles) && anttAxles > 0; }
+  function selectVehicle(vehicle: FreightVehicleConfiguration) {
+    setSelectedVehicleKey(vehicle.key);
+    setF((current) => ({ ...current, req_vehicle_type: vehicle.value,
+      req_axles: vehicle.axles ? String(vehicle.axles) : "",
+      req_capacity_kg: vehicle.capacity ? String(vehicle.capacity) : current.req_capacity_kg,
+    }));
+  }
 
   const tolls = num(f.toll) ?? 0;
   const extraCosts = (num(f.fuel) ?? 0) + (num(f.escort) ?? 0) + (num(f.license) ?? 0) + (num(f.other_costs) ?? 0);
@@ -476,6 +482,9 @@ function NewOrderWizard() {
         `Valor abaixo do piso mínimo ANTT (${brl(antt.minimum_freight)}). Ajuste o valor do motorista ou reclassifique a operação.`,
       );
     }
+    if (publish && !hasEffectiveConfiguration()) return toast.error("Escolha a configuração efetiva do veículo e informe os eixos.");
+    if (!isBodyCompatible(selectedVehicle, f.req_body_type)) return toast.error("Escolha uma carroceria compatível.");
+    if (selectedCalculation.isFetching) return toast.warning("Aguarde o cálculo ANTT terminar.");
     setSaving(true);
     try {
       const { data: u } = await supabase.auth.getUser();
@@ -663,6 +672,8 @@ function NewOrderWizard() {
       await supabase.from("order_events").insert({
         order_id: order.id, event_type: "order_created",
         to_status: (publish ? "awaiting_driver" : "planning") as any, actor_id: u.user?.id ?? null,
+        payload: { vehicle_configuration: selectedVehicle ? { name: selectedVehicle.label, axles: anttAxles, capacity_kg: num(f.req_capacity_kg), body_type: f.req_body_type || null } : null,
+          antt_calculation: antt, suggested_value: suggestedValue, negotiated_value: num(f.price) },
       });
 
       let offersSent = 0;
@@ -1012,81 +1023,15 @@ function NewOrderWizard() {
 
         {step === 5 && (
           <>
-            <section className="mb-8">
-              <div className="mb-4">
-                <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand">
-                  Seleção de veículo
-                </div>
-                <h2 className="mt-1 text-xl font-semibold tracking-tight">
-                  Selecione o veículo e consulte o valor ANTT
-                </h2>
-                <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-                  Escolha a configuração que será usada neste frete. O piso ANTT só aparece quando a
-                  metodologia vigente for aplicável e houver dados suficientes para o cálculo.
-                </p>
-              </div>
-
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {VEHICLE_ANTT_OPTIONS.map((vehicle) => {
-                  const selected = selectedVehicleKey === vehicle.key;
-                  const isCalculated = selected && antt?.status === "ok" && antt.minimum_freight != null;
-
-                  return (
-                    <button
-                      key={vehicle.key}
-                      type="button"
-                      onClick={() => {
-                        setSelectedVehicleKey(vehicle.key);
-                        set("req_vehicle_type", vehicle.value);
-                        set("req_axles", vehicle.axles ? String(vehicle.axles) : "");
-                      }}
-                      className={`group rounded-2xl border p-4 text-left transition hover:-translate-y-0.5 hover:shadow-md ${
-                        selected
-                          ? "border-brand bg-brand/5 ring-2 ring-brand/20"
-                          : "border-border bg-surface hover:border-brand/50"
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <span className={`grid h-11 w-11 place-items-center rounded-xl ${
-                          selected ? "bg-brand text-brand-foreground" : "bg-surface-2 text-brand"
-                        }`}>
-                          <Truck className="h-5 w-5" />
-                        </span>
-                        <span className={`rounded-full px-2 py-1 text-[10px] font-semibold ${
-                          selected ? "bg-brand/10 text-brand" : "bg-surface-2 text-muted-foreground"
-                        }`}>
-                          {selected ? "Selecionado" : "Selecionar"}
-                        </span>
-                      </div>
-
-                      <div className="mt-4 font-semibold">{vehicle.label}</div>
-                      <div className="mt-1 text-xs text-muted-foreground">{vehicle.description}</div>
-
-                      <div className="mt-4 space-y-1 border-t border-border pt-3 text-xs">
-                        <div className="flex justify-between gap-3">
-                          <span className="text-muted-foreground">Eixos</span>
-                          <span className="font-medium">{vehicle.axles ? `${vehicle.axles} eixos` : "Não aplicável"}</span>
-                        </div>
-                        <div className="flex justify-between gap-3">
-                          <span className="text-muted-foreground">
-                            {vehicle.heavy ? "Valor mínimo ANTT" : "Valor comercial"}
-                          </span>
-                          <span className="font-semibold">
-                            {isCalculated && antt.minimum_freight !== null ? brl(antt.minimum_freight) : "—"}
-                          </span>
-                        </div>
-                      </div>
-
-                      {!vehicle.heavy && (
-                        <div className="mt-3 text-[11px] text-muted-foreground">
-                          Piso ANTT não aplicado automaticamente a esta configuração.
-                        </div>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </section>
+            <div className="mb-4 grid gap-2 border-b border-border pb-4 sm:grid-cols-[minmax(0,1fr)_auto]">
+              <div className="min-w-0 text-sm text-muted-foreground">{f.origin_city || f.origin_address || "Origem"} → {f.destination_city || f.destination_address || "Destino"}</div>
+              <div className="text-sm font-semibold">{anttDistance > 0 ? `${anttDistance.toLocaleString("pt-BR")} km` : "Aguardando rota"}</div>
+            </div>
+            <VehicleCatalog configurations={comparisonConfigurations} calculations={floors.data ?? {}}
+              selected={selectedVehicle} loading={vehicleCatalog.isLoading || floors.isFetching}
+              error={vehicleCatalog.isError || floors.isError} distance={anttDistance}
+              bodyTypes={bodyTypes} bodyType={f.req_body_type} onSelect={selectVehicle}
+              onBodySelect={(body) => set("req_body_type", body)} />
 
             <Grid>
               <T label="Valor negociado com cliente (R$)" required type="number" value={f.price} onChange={(v) => set("price", v)} />
@@ -1201,7 +1146,7 @@ function NewOrderWizard() {
                   </div>
                 )}
 
-                <AnttCard
+                {selectedVehicle && <AnttCard
                   calc={antt}
                   loading={anttLoading}
                   negotiated={clientFreightValue}
@@ -1218,7 +1163,7 @@ function NewOrderWizard() {
                     set("price", value.toFixed(2));
                     toast.success("Valor sugerido aplicado ao frete. Você ainda pode ajustá-lo.");
                   }}
-                />
+                />}
               </div>
             </div>
           </>
