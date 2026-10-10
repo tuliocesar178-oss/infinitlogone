@@ -246,17 +246,17 @@ function NewOrderWizard() {
     const work = works.find((item) => item.id === selectedWorkId);
     if (!work) return;
 
-    const address = [work.address, work.number].filter(Boolean).join(", ");
-
+    setAddressDetails(current => ({...current,destination:{...current.destination,precision:'unconfirmed',lat:null,lng:null}}));
     setF((current) => ({
       ...current,
-      destination_address: current.destination_address || address,
+      destination_address: current.destination_address || work.address || "",
+      destination_number: current.destination_number || work.number || "",
       destination_city: current.destination_city || work.city || "",
       destination_state: current.destination_state || work.state || "",
       destination_zip: current.destination_zip || work.zip_code || "",
       destination_neighborhood: current.destination_neighborhood || work.neighborhood || "",
-      destination_lat: current.destination_lat || String(work.latitude ?? ""),
-      destination_lng: current.destination_lng || String(work.longitude ?? ""),
+      destination_lat: "",
+      destination_lng: "",
     }));
   }, [selectedWorkId, works]);
 
