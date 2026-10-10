@@ -2,8 +2,7 @@ import { createServerFn } from '@tanstack/react-start';
 import { z } from 'zod';
 import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
 import { navigationActive, navigationTarget } from './model';
-const position = z.tuple([z.number().min(-180).max(180), z.number().min(-90).max(90)]);
-const geometry = z.object({ type: z.literal('LineString'), coordinates: z.array(z.array(z.number())).min(2) });
+import { positionSchema as position, geometrySchema as geometry } from './map-route';
 const route = z.object({ distance: z.number().nonnegative(), duration: z.number().nonnegative(), geometry, legs: z.array(z.object({ steps: z.array(z.object({ distance: z.number(), duration: z.number(), geometry, maneuver: z.object({ instruction: z.string(), type: z.string(), modifier: z.string().optional(), location: z.array(z.number()) }) })) })) });
 export const getNavigationDirections = createServerFn({ method: 'POST' })
   .middleware([requireSupabaseAuth])
@@ -35,11 +34,17 @@ export const syncNavigationPosition = createServerFn({ method: 'POST' })
     const now = new Date().toISOString();
     const [lng, lat] = data.position;
     const results = await Promise.all([
-      context.supabase.from('drivers').update({ current_lat: lat, current_lng: lng, current_accuracy: data.accuracy, current_heading: data.heading, current_speed: data.speed, last_seen_at: now }).eq('user_id', context.userId),
+      context.supabase.from('drivers').update({ current_lat: lat, current_lng: lng, current_accuracy: data.accuracy, current_heading: data.heading, current_speed: data.speed, last_seen_at: now }).eq('user_id', context.userId).select('user_id'),
       context.supabase.from('order_tracking_points').insert({ order_id: data.orderId, driver_id: context.userId, lat, lng, accuracy: data.accuracy, heading: data.heading, speed: data.speed }),
-      context.supabase.from('orders').update({ current_lat: lat, current_lng: lng, last_ping_at: now, ...(data.status === order.status ? { eta_minutes: data.etaMinutes, distance_to_destination_km: data.distanceKm } : {}) }).eq('id', data.orderId).eq('driver_id', context.userId).eq('status', order.status),
+      context.supabase.from('orders').update({ current_lat: lat, current_lng: lng, last_ping_at: now, ...(data.status === order.status ? { eta_minutes: data.etaMinutes, distance_to_destination_km: data.distanceKm } : {}) }).eq('id', data.orderId).eq('driver_id', context.userId).eq('status', order.status).select('id'),
     ]);
-    const failed = results.find(result => result.error);
-    if (failed?.error) throw failed.error;
+    const names = ['posição do motorista', 'histórico de localização', 'rastreamento do frete'];
+    const failedIndex = results.findIndex(result => result.error);
+    if (failedIndex >= 0) {
+      const problem = results[failedIndex].error;
+      console.error(`Navigation sync ${names[failedIndex]}: ${problem?.code} ${problem?.message}`);
+      throw new Error(`Falha ao salvar ${names[failedIndex]}: ${problem?.message ?? 'Tente novamente.'}`);
+    }
+    if (!results[0].data?.length || !results[2].data?.length) throw new Error('Localização não confirmada: acesso ao motorista ou frete mudou. Atualize a tela.');
     return { savedAt: now };
   });
