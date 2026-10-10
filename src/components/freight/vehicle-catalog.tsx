@@ -46,7 +46,7 @@ export function VehicleCatalog(props: VehicleCatalogProps) {
         const selected = props.selected?.key === vehicle.key;
         return <Button key={vehicle.key} type="button" variant="outline" aria-pressed={selected}
           onClick={() => props.onSelect(vehicle)}
-          className={cn("grid h-auto min-h-24 w-full grid-cols-[auto_minmax(0,1fr)_minmax(0,7rem)] items-center gap-2 whitespace-normal rounded-lg p-3 text-left sm:gap-3", selected ? "border-brand bg-brand/5 ring-1 ring-brand/30 hover:bg-brand/10" : "border-border bg-surface hover:border-brand/50")}>
+          className={cn("grid h-auto min-h-24 w-full grid-cols-[auto_minmax(0,1fr)_minmax(0,6rem)] items-center gap-2 whitespace-normal rounded-lg p-3 text-left shadow-none [&_svg]:h-10 [&_svg]:w-12 sm:gap-3 sm:[&_svg]:w-16", selected ? "border-brand bg-brand/5 ring-1 ring-brand/30 hover:bg-brand/10" : "border-border bg-surface hover:border-brand/50")}>
           <TruckSilhouette articulated={(vehicle.axles ?? 0) >= 7} />
           <span className="min-w-0">
             <span className="block text-sm font-semibold">{vehicle.label}</span>
