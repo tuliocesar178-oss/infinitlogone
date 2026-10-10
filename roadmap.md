@@ -1,6 +1,6 @@
 # Roadmap
 
-- [ ] Corrigir e validar carregamento do chat no portal do motorista
+- [x] Corrigir e validar carregamento do chat no portal do motorista
 
 - [x] Criar rota protegida `/painel-operacao`
 - [x] Adicionar acesso no menu de Administração e Logística
