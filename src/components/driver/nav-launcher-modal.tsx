@@ -1,55 +1,15 @@
-import { NAV_PROVIDERS, openNavigation, type NavTarget } from "@/lib/nav-launcher";
-import { Navigation, X } from "lucide-react";
-
-export function NavLauncherModal({
-  open,
-  target,
-  onClose,
-}: {
-  open: boolean;
-  target: NavTarget | null;
-  onClose: () => void;
-}) {
-  if (!open || !target) return null;
-  return (
-    <div className="fixed inset-0 z-50 grid place-items-end sm:place-items-center bg-black/50 p-0 sm:p-6" onClick={onClose}>
-      <div
-        className="w-full max-w-md rounded-t-3xl sm:rounded-2xl bg-background p-5 shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="mb-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="grid h-9 w-9 place-items-center rounded-full bg-brand/10 text-brand">
-              <Navigation className="h-4 w-4" />
-            </div>
-            <div>
-              <div className="text-sm font-semibold">Iniciar navegação</div>
-              <div className="text-xs text-muted-foreground">Escolha seu app preferido</div>
-            </div>
-          </div>
-          <button onClick={onClose} className="rounded-full p-1.5 text-muted-foreground hover:bg-surface">
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-        <div className="grid gap-2">
-          {NAV_PROVIDERS.map((p) => (
-            <button
-              key={p.key}
-              onClick={() => {
-                openNavigation(p.key, target);
-                onClose();
-              }}
-              className="flex items-center justify-between rounded-xl border border-border bg-surface p-3 text-left transition hover:border-brand hover:bg-surface-2"
-            >
-              <div>
-                <div className="text-sm font-semibold">{p.label}</div>
-                <div className="text-xs text-muted-foreground">{p.hint}</div>
-              </div>
-              <Navigation className="h-4 w-4 text-brand" />
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
+import { Link } from '@tanstack/react-router';
+import { NAV_PROVIDERS, buildNavUrl, type NavTarget } from '@/lib/nav-launcher';
+import { Navigation, ExternalLink } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+export interface NavLauncherModalProps { open: boolean; target: NavTarget | null; onClose: () => void; onInternal?: () => void; origin?: { lat: number; lng: number }; }
+export function NavLauncherModal({ open, target, onClose, onInternal, origin }: NavLauncherModalProps) {
+  if (!target) return null;
+  return <Dialog open={open} onOpenChange={value => { if (!value) onClose(); }}><DialogContent className="max-w-md"><DialogHeader><DialogTitle>Escolher aplicativo de navegação</DialogTitle><DialogDescription>{target.label ?? 'Destino do frete'}</DialogDescription></DialogHeader>
+    <div className="grid gap-2">{NAV_PROVIDERS.map(provider => {
+      if (provider.key === 'mapbox') return onInternal ? <Button key={provider.key} onClick={() => { onInternal(); onClose(); }}><Navigation />Continuar no Mapbox</Button> : target.orderId ? <Button key={provider.key} asChild><Link to="/driver/navegacao/$id" params={{ id: target.orderId }} onClick={onClose}><Navigation />Continuar no Mapbox</Link></Button> : null;
+      return <Button key={provider.key} variant="outline" className="h-auto justify-between py-3" asChild><a href={buildNavUrl(provider.key, target, origin)} target="_blank" rel="noopener noreferrer"><span>{provider.label}<span className="block text-xs text-muted-foreground">{provider.hint}</span></span><ExternalLink className="h-4 w-4" /></a></Button>;
+    })}</div><p className="text-xs text-muted-foreground">Ao sair, o GPS da INFINITLOG pode pausar. O frete não será concluído. Se o aplicativo não abrir, utilize a opção web oferecida.</p>
+  </DialogContent></Dialog>;
 }

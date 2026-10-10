@@ -401,7 +401,7 @@ export function ActiveOrderPanel({
             params={{ id: order.id }}
             className="flex w-full items-center justify-center gap-3 rounded-2xl bg-brand py-6 text-lg font-black uppercase tracking-[0.2em] text-white shadow-2xl shadow-brand/20 active:scale-[0.98] transition-all"
           >
-            <Navigation className="h-6 w-6" /> Abrir Mapa e Rota
+            <Navigation className="h-6 w-6" /> Iniciar navegação
           </Link>
 
           {nextAction === "start_pickup" && (
