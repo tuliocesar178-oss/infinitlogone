@@ -55,7 +55,7 @@ export function useNavigation(order: NavigationOrder) {
     updateNetwork();
     const watch = navigator.geolocation.watchPosition(async value => {
       if (canceled) return;
-      fix.current = value; setGpsLost(false);
+      fix.current = value; setGpsLost(false); setError(null);
       const pos: Position = [value.coords.longitude, value.coords.latitude];
       setPosition(pos);
       const current = routeRef.current;
