@@ -24,3 +24,22 @@ export const getNavigationDirections = createServerFn({ method: 'POST' })
     if (parsed.code !== 'Ok' || !parsed.routes?.length) throw new Error(parsed.message ?? 'Nenhuma rota rodoviária disponível.');
     return { routes: parsed.routes, target };
   });
+
+export const syncNavigationPosition = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(input => z.object({ orderId: z.string().uuid(), position, accuracy: z.number().nonnegative(), heading: z.number().nullable(), speed: z.number().nullable(), etaMinutes: z.number().nonnegative().nullable(), distanceKm: z.number().nonnegative().nullable(), status: z.string() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { data: order, error } = await context.supabase.from('orders').select('id,status,driver_id').eq('id', data.orderId).eq('driver_id', context.userId).maybeSingle();
+    if (error) throw error;
+    if (!order || !navigationActive(order.status)) throw new Error('Rastreamento não autorizado.');
+    const now = new Date().toISOString();
+    const [lng, lat] = data.position;
+    const results = await Promise.all([
+      context.supabase.from('drivers').update({ current_lat: lat, current_lng: lng, current_accuracy: data.accuracy, current_heading: data.heading, current_speed: data.speed, last_seen_at: now }).eq('user_id', context.userId),
+      context.supabase.from('order_tracking_points').insert({ order_id: data.orderId, driver_id: context.userId, lat, lng, accuracy: data.accuracy, heading: data.heading, speed: data.speed }),
+      context.supabase.from('orders').update({ current_lat: lat, current_lng: lng, last_ping_at: now, ...(data.status === order.status ? { eta_minutes: data.etaMinutes, distance_to_destination_km: data.distanceKm } : {}) }).eq('id', data.orderId).eq('driver_id', context.userId).eq('status', order.status),
+    ]);
+    const failed = results.find(result => result.error);
+    if (failed?.error) throw failed.error;
+    return { savedAt: now };
+  });
