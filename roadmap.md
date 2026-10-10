@@ -1,5 +1,9 @@
 # Roadmap
 
+- [ ] Adaptar catálogo de pesados à referência com pisos ANTT calculados antes da seleção
+- [ ] Integrar configurações/carrocarias cadastradas e preservar seleção e auditoria do frete
+- [ ] Validar comparação, recálculo e seleção em computador e celular
+
 - [x] Corrigir e validar carregamento do chat no portal do motorista
 
 - [x] Criar rota protegida `/painel-operacao`
