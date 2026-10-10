@@ -1,6 +1,7 @@
 import nearestPointOnLine from '@turf/nearest-point-on-line';
 import { lineString, point } from '@turf/helpers';
 import distance from '@turf/distance';
+import { validPosition } from './map-route';
 export type Position = [number, number];
 export interface NavigationStep { distance: number; duration: number; geometry: { type: 'LineString'; coordinates: number[][] }; maneuver: { instruction: string; type: string; modifier?: string; location: number[] }; }
 export interface NavigationRoute { distance: number; duration: number; geometry: { type: 'LineString'; coordinates: number[][] }; legs: { steps: NavigationStep[] }[]; }
@@ -10,7 +11,8 @@ export function navigationTarget(order: NavigationOrder) {
   const isPickup = pickup.includes(order.status);
   const lat = isPickup ? order.origin_lat : order.destination_lat;
   const lng = isPickup ? order.origin_lng : order.destination_lng;
-  return { kind: isPickup ? 'Coleta' : 'Entrega', address: isPickup ? order.origin_address : order.destination_address, position: lat != null && lng != null ? [lng, lat] as Position : null };
+  const candidate = [lng, lat];
+  return { kind: isPickup ? 'Coleta' : 'Entrega', address: isPickup ? order.origin_address : order.destination_address, position: validPosition(candidate) ? candidate : null };
 }
 export function navigationActive(status: string) { return [...pickup,'loaded','picked_up','out_for_delivery','in_transit','near_destination','arriving_destination','at_destination','unloading'].includes(status); }
 export function routeProgress(route: NavigationRoute, position: Position) {

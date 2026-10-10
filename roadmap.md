@@ -1,5 +1,10 @@
 # Roadmap
 
+- [x] Corrigir geometria, desenho persistente e enquadramento da rota Mapbox
+- [x] Separar diagnóstico GPS/sincronização e mostrar horário somente após confirmação
+- [x] Validar linha rodoviária real e restauração de estilo; testar recálculo sem duplicação e troca de destino
+- [ ] Confirmar gravação GPS real e atualização na Torre/Cliente — bloqueado pela ausência de GPS físico e permissão de localização no navegador de testes
+
 - [x] Integrar navegação interna Mapbox com instruções, progresso, recálculo e ETA
 - [x] Oferecer escolha Google Maps/Waze sem alterar o estado do frete
 - [x] Validar acesso real do motorista, Directions e links; testar regras de etapas e progresso e permissão GPS negada

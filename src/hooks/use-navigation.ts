@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useServerFn } from '@tanstack/react-start';
 import { getNavigationDirections, syncNavigationPosition } from '@/lib/navigation/directions.functions';
 import { navigationActive, navigationTarget, routeProgress, type NavigationOrder, type NavigationRoute, type Position } from '@/lib/navigation/model';
+import { validPosition } from '@/lib/navigation/map-route';
 export function useNavigation(order: NavigationOrder) {
   const directions = useServerFn(getNavigationDirections);
   const sync = useServerFn(syncNavigationPosition);
@@ -16,6 +17,10 @@ export function useNavigation(order: NavigationOrder) {
   const [gpsLost, setGpsLost] = useState(false);
   const [voice, setVoice] = useState(false);
   const [voiceSupported, setVoiceSupported] = useState(false);
+  const [heading, setHeading] = useState<number | null>(null);
+  const [lastFixAt, setLastFixAt] = useState<number | null>(null);
+  const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
+  const [gpsError, setGpsError] = useState<string | null>(null);
   const fix = useRef<GeolocationPosition | null>(null);
   const lastFetch = useRef(0);
   const fetching = useRef(false);
@@ -40,10 +45,10 @@ export function useNavigation(order: NavigationOrder) {
       if (routeRef.current) traveledOffset.current += routeProgress(routeRef.current, pos).traveled;
       setRoutes(result.routes); setSelected(0); setError(null); offCount.current = 0;
     } catch (e) { if (revision === generation.current) setError(e instanceof Error ? e.message : 'Falha ao calcular rota.'); }
-    finally { fetching.current = false; setBusy(false); }
+    finally { fetching.current = false; if (revision === generation.current) setBusy(false); }
   }
   const recalculateRef = useRef(recalculate); recalculateRef.current = recalculate;
-  useEffect(() => { generation.current++; setRoutes([]); setSelected(0); traveledOffset.current = 0; lastFetch.current = 0; }, [targetKey]);
+  useEffect(() => { generation.current++; setRoutes([]); setSelected(0); setBusy(false); traveledOffset.current = 0; lastFetch.current = 0; }, [targetKey]);
   useEffect(() => {
     if (!('speechSynthesis' in window)) return;
     const refresh = () => setVoiceSupported(speechSynthesis.getVoices().some(v => v.lang.toLowerCase().startsWith('pt')));
@@ -52,29 +57,39 @@ export function useNavigation(order: NavigationOrder) {
   }, []);
   useEffect(() => {
     if (!started || !navigationActive(order.status)) return;
-    if (!navigator.geolocation) { setError('Localização não disponível neste dispositivo.'); return; }
+    if (!navigator.geolocation) { setGpsError('Localização não disponível neste dispositivo.'); return; }
     let canceled = false;
     let lastSync = 0;
     let syncing = false;
     const updateNetwork = () => { setOnline(navigator.onLine); if (navigator.onLine && Date.now() - lastFetch.current >= 15000) void recalculateRef.current(); };
     updateNetwork();
-    const watch = navigator.geolocation.watchPosition(async value => {
-      if (canceled) return;
-      fix.current = value; setGpsLost(false); setError(null);
+    const syncLatest = async () => {
+      const value = fix.current;
+      if (!value || canceled || !navigator.onLine || syncing || Date.now() - lastSync < 10000 || Date.now() - value.timestamp > 30000) return;
       const pos: Position = [value.coords.longitude, value.coords.latitude];
+      const current = routeRef.current;
+      const metrics = current ? routeProgress(current, pos) : null;
+      syncing = true; lastSync = Date.now();
+      try {
+        const result = await sync({ data: { orderId: order.id, status: order.status, position: pos, accuracy: value.coords.accuracy, heading: value.coords.heading, speed: value.coords.speed == null ? null : value.coords.speed * 3.6, etaMinutes: metrics ? metrics.seconds / 60 : null, distanceKm: metrics ? metrics.remaining / 1000 : null } });
+        if (!canceled) { setSyncError(null); setLastSyncedAt(result.savedAt); }
+      } catch (problem) { if (!canceled) setSyncError(problem instanceof Error ? problem.message : 'Falha ao sincronizar a posição. Tentando novamente.'); }
+      finally { syncing = false; }
+    };
+    const watch = navigator.geolocation.watchPosition(value => {
+      if (canceled) return;
+      const pos: Position = [value.coords.longitude, value.coords.latitude];
+      if (!validPosition(pos) || !Number.isFinite(value.coords.accuracy) || Date.now() - value.timestamp > 30000) { setGpsLost(true); setGpsError('GPS sem posição válida recente. Aguardando nova localização.'); return; }
+      fix.current = value; setGpsLost(false); setGpsError(null); setLastFixAt(value.timestamp);
+      setHeading(value.coords.heading != null && Number.isFinite(value.coords.heading) && value.coords.heading >= 0 && value.coords.heading < 360 && (value.coords.speed ?? 0) > 1 && value.coords.accuracy <= 50 ? value.coords.heading : null);
       setPosition(pos);
       const current = routeRef.current;
       const metrics = current ? routeProgress(current, pos) : null;
       offCount.current = metrics && metrics.offRoute > Math.max(60, value.coords.accuracy * 2) ? offCount.current + 1 : 0;
       if ((!current && Date.now() - lastFetch.current > 15000) || Date.now() - lastFetch.current > 120000 || (offCount.current >= 2 && Date.now() - lastFetch.current > 15000)) void recalculateRef.current();
-      if (navigator.onLine && !syncing && Date.now() - lastSync >= 10000) {
-        syncing = true; lastSync = Date.now();
-        try { await sync({ data: { orderId: order.id, status: order.status, position: pos, accuracy: value.coords.accuracy, heading: value.coords.heading, speed: value.coords.speed == null ? null : value.coords.speed * 3.6, etaMinutes: metrics ? metrics.seconds / 60 : null, distanceKm: metrics ? metrics.remaining / 1000 : null } }); if (!canceled) setSyncError(null); }
-        catch { if (!canceled) setSyncError('Posição ainda não sincronizada. Tentando novamente.'); }
-        finally { syncing = false; }
-      }
-    }, problem => { setGpsLost(true); setError(problem.code === 1 ? 'Permita a localização nas configurações do navegador para navegar.' : 'Sinal GPS indisponível. Aguardando nova posição.'); }, { enableHighAccuracy: true, maximumAge: 3000, timeout: 15000 });
-    const interval = window.setInterval(() => { if (fix.current && Date.now() - fix.current.timestamp > 30000) setGpsLost(true); }, 5000);
+      void syncLatest();
+    }, problem => { if (canceled) return; setGpsLost(true); setGpsError(problem.code === 1 ? 'Permita a localização nas configurações do navegador para navegar.' : 'Sinal GPS indisponível. Aguardando nova posição.'); }, { enableHighAccuracy: true, maximumAge: 3000, timeout: 15000 });
+    const interval = window.setInterval(() => { if (fix.current && Date.now() - fix.current.timestamp > 30000) setGpsLost(true); void syncLatest(); }, 5000);
     const resume = () => { if (!document.hidden) { updateNetwork(); setGpsLost(!fix.current || Date.now() - fix.current.timestamp > 30000); } };
     window.addEventListener('online', updateNetwork); window.addEventListener('offline', updateNetwork); document.addEventListener('visibilitychange', resume);
     return () => { canceled = true; navigator.geolocation.clearWatch(watch); window.clearInterval(interval); window.removeEventListener('online', updateNetwork); window.removeEventListener('offline', updateNetwork); document.removeEventListener('visibilitychange', resume); };
@@ -89,5 +104,5 @@ export function useNavigation(order: NavigationOrder) {
     speechSynthesis.cancel(); speechSynthesis.speak(speech);
     return () => speechSynthesis.cancel();
   }, [voice, started, online, gpsLost, voiceSupported, progress?.stepIndex, progress && progress.stepRemaining < 150, targetKey, selected]);
-  return { started, start: () => { setStarted(true); setError(null); }, stop: () => { setStarted(false); generation.current++; if ('speechSynthesis' in window) speechSynthesis.cancel(); }, position, routes, route, selected, select: setSelected, progress, traveled: traveledOffset.current + (progress?.traveled ?? 0), busy, error, syncError, online, gpsLost, voice, voiceSupported, toggleVoice: () => setVoice(v => !v), recalculate, target };
+  return { started, start: () => { setStarted(true); setError(null); setGpsError(null); }, stop: () => { setStarted(false); generation.current++; setBusy(false); if ('speechSynthesis' in window) speechSynthesis.cancel(); }, position, heading, lastFixAt, lastSyncedAt, gpsError, routes, route, selected, select: setSelected, progress, traveled: traveledOffset.current + (progress?.traveled ?? 0), busy, error, syncError, online, gpsLost, voice, voiceSupported, toggleVoice: () => setVoice(v => !v), recalculate, target };
 }
