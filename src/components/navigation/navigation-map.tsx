@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import type { NavigationRoute, Position } from '@/lib/navigation/model';
-import { drawNavigationRoute, ROUTE_SOURCE, validPosition } from '@/lib/navigation/map-route';
+import { drawNavigationRoute, ROUTE_SOURCE, ROUTE_LINE, ROUTE_CASING, validPosition } from '@/lib/navigation/map-route';
 export interface NavigationMapProps { route: NavigationRoute | null; position: Position | null; target: Position | null; heading: number | null; follow: boolean; centerRequest: number; }
 export default function NavigationMap(props: NavigationMapProps) {
   const container = useRef<HTMLDivElement>(null);
@@ -68,12 +68,15 @@ export default function NavigationMap(props: NavigationMapProps) {
     catch { setMapError('Não foi possível iniciar o mapa. Verifique o suporte gráfico do navegador.'); return; }
     mapRef.current = map;
     const redraw = () => { fitted.current = null; updateRef.current(true); };
+    // style.load can precede isStyleLoaded() becoming true. Retry at idle,
+    // but only when missing layers so setData never creates a render loop.
+    const restore = () => { if (latest.current.route && (!map.getLayer(ROUTE_LINE) || !map.getLayer(ROUTE_CASING))) redraw(); };
     const failure = (event: mapboxgl.ErrorEvent) => { setMapError(`Falha ao carregar o mapa: ${event.error.message}`); };
     const resize = () => { map.resize(); updateRef.current(true); };
-    map.on('load', redraw); map.on('style.load', redraw); map.on('error', failure);
+    map.on('load', redraw); map.on('style.load', redraw); map.on('idle', restore); map.on('error', failure);
     const observer = new ResizeObserver(resize); observer.observe(container.current);
     map.addControl(new mapboxgl.NavigationControl(), 'bottom-left');
-    return () => { observer.disconnect(); map.off('load', redraw); map.off('style.load', redraw); map.off('error', failure); driverRef.current?.remove(); targetRef.current?.remove(); driverRef.current = null; targetRef.current = null; map.remove(); mapRef.current = null; };
+    return () => { observer.disconnect(); map.off('load', redraw); map.off('style.load', redraw); map.off('idle', restore); map.off('error', failure); driverRef.current?.remove(); targetRef.current?.remove(); driverRef.current = null; targetRef.current = null; map.remove(); mapRef.current = null; };
   }, []);
   useEffect(() => { updateRef.current(); }, [props.position, props.target, props.heading, props.follow, props.centerRequest, props.route]);
   return <div className="absolute inset-0 [&_.mapboxgl-ctrl-bottom-left]:bottom-[320px]" aria-label="Mapa de navegação Mapbox"><span ref={colors} className="hidden text-brand bg-background" /><div ref={container} className="h-full w-full" />{mapError && <div role="alert" className="absolute inset-x-3 top-1/3 z-20 rounded-lg bg-background p-3 text-sm text-destructive">{mapError}</div>}</div>;
