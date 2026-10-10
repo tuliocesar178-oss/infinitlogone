@@ -17,7 +17,7 @@ function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-baseline justify-between gap-3 text-sm">
       <span className="text-muted-foreground">{label}</span>
-      <span className="font-semibold tabular-nums">{value}</span>
+      <span className="min-w-0 text-right font-semibold tabular-nums">{value}</span>
     </div>
   );
 }
@@ -40,16 +40,16 @@ export function AnttCard({ calc, loading, negotiated, tolls, extraCosts, margin,
   const tone = below
     ? "border-destructive/40 bg-destructive/5"
     : above
-      ? "border-emerald-500/40 bg-emerald-500/5"
+      ? "border-success/40 bg-success/5"
       : warn
-        ? "border-amber-500/40 bg-amber-500/5"
+        ? "border-warning/40 bg-warning/5"
         : "border-border bg-surface";
 
   return (
     <div className={cn("rounded-2xl border p-5", tone)}>
       <div className="mb-4 flex items-center gap-2">
         <WalletCards className="h-4 w-4 text-brand" />
-        <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand">Sugestão de valor ANTT</h3>
+        <h3 className="text-xs font-bold text-brand">Piso ANTT e sugestão INFINITLOG</h3>
       </div>
 
       {!calc.applicable ? (
@@ -58,7 +58,7 @@ export function AnttCard({ calc, loading, negotiated, tolls, extraCosts, margin,
           <span>{calc.not_applicable_reason}</span>
         </div>
       ) : calc.status !== "ok" ? (
-        <div className="flex gap-2 text-sm text-amber-600 dark:text-amber-400">
+        <div className="flex gap-2 text-sm text-muted-foreground">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
           <span>{calc.message}</span>
         </div>
@@ -88,7 +88,7 @@ export function AnttCard({ calc, loading, negotiated, tolls, extraCosts, margin,
             <Row label="Custos adicionais" value={brl(extraCosts)} />
             <Row label="Margem InfinitLog" value={brl(margin)} />
             <div className="flex items-baseline justify-between gap-3 border-t border-border pt-2 text-sm">
-              <span className="font-semibold">Valor sugerido</span>
+              <span className="font-semibold">Sugestão INFINITLOG</span>
               <span className="text-lg font-bold tabular-nums">{brl(suggested)}</span>
             </div>
             <Row label="Valor informado do frete" value={brl(negotiated)} />
@@ -106,7 +106,7 @@ export function AnttCard({ calc, loading, negotiated, tolls, extraCosts, margin,
           <div
             className={cn(
               "flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold",
-              below ? "bg-destructive/10 text-destructive" : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+              below ? "bg-destructive/10 text-destructive" : "bg-success/10 text-foreground",
             )}
           >
             {below ? <AlertTriangle className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
