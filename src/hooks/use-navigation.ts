@@ -61,7 +61,7 @@ export function useNavigation(order: NavigationOrder) {
       const current = routeRef.current;
       const metrics = current ? routeProgress(current, pos) : null;
       offCount.current = metrics && metrics.offRoute > Math.max(60, value.coords.accuracy * 2) ? offCount.current + 1 : 0;
-      if (!current || Date.now() - lastFetch.current > 120000 || (offCount.current >= 2 && Date.now() - lastFetch.current > 15000)) void recalculateRef.current();
+      if ((!current && Date.now() - lastFetch.current > 15000) || Date.now() - lastFetch.current > 120000 || (offCount.current >= 2 && Date.now() - lastFetch.current > 15000)) void recalculateRef.current();
       if (navigator.onLine && !syncing && Date.now() - lastSync >= 10000) {
         syncing = true; lastSync = Date.now();
         try { await sync({ data: { orderId: order.id, status: order.status, position: pos, accuracy: value.coords.accuracy, heading: value.coords.heading, speed: value.coords.speed == null ? null : value.coords.speed * 3.6, etaMinutes: metrics ? metrics.seconds / 60 : null, distanceKm: metrics ? metrics.remaining / 1000 : null } }); if (!canceled) setSyncError(null); }

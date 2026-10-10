@@ -9,9 +9,11 @@ import { RouteMiniMap } from "@/components/driver/route-mini-map";
 import { NavLauncherModal } from "@/components/driver/nav-launcher-modal";
 import { DriverQuickChat } from "@/components/driver/quick-chat";
 import type { NavTarget } from "@/lib/nav-launcher";
+import { navigationTarget, navigationActive } from "@/lib/navigation/model";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/driver/fretes")({
-  head: () => ({ meta: [{ title: "Minhas rotas — Motorista" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Minhas rotas — Motorista INFINITLOG" }, { name: "description", content: "Fretes atribuídos ao motorista e navegação para coleta e entrega." }, { property: "og:title", content: "Minhas rotas — INFINITLOG" }, { property: "og:description", content: "Fretes e navegação do motorista." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }] }),
   component: DriverFreights,
 });
 
@@ -52,7 +54,7 @@ function DriverFreights() {
 
   const items = useMemo(() => {
     const all = q.data ?? [];
-    if (filter === "active") return all.filter((o) => ACTIVE_STATUSES.includes(o.status));
+    if (filter === "active") return all.filter((o) => navigationActive(o.status));
     if (filter === "done") return all.filter((o) => ["delivered","finalized"].includes(o.status));
     return all;
   }, [q.data, filter]);
@@ -86,16 +88,10 @@ function DriverFreights() {
       ) : (
         <ul className="space-y-4">
           {items.map((o) => {
-            const isActive = ACTIVE_STATUSES.includes(o.status);
-            // Choose next nav target: if going to pickup, use origin; else destination
-            const goingToPickup = ["driver_assigned","en_route_pickup","in_transit_to_pickup"].includes(o.status);
-            const target = goingToPickup
-              ? o.origin_lat && o.origin_lng
-                ? { lat: o.origin_lat as number, lng: o.origin_lng as number, label: o.origin_address ?? undefined }
-                : null
-              : o.destination_lat && o.destination_lng
-              ? { lat: o.destination_lat as number, lng: o.destination_lng as number, label: o.destination_address ?? undefined }
-              : null;
+            const isActive = navigationActive(o.status);
+            const destination = navigationTarget({ ...o, driver_id: userId });
+            const goingToPickup = destination.kind === "Coleta";
+            const target: NavTarget = { lat: destination.position?.[1] ?? null, lng: destination.position?.[0] ?? null, label: destination.address, orderId: o.id };
 
             const origin = o.origin_lng && o.origin_lat ? ([o.origin_lng as number, o.origin_lat as number] as [number, number]) : null;
             const dest = o.destination_lng && o.destination_lat ? ([o.destination_lng as number, o.destination_lat as number] as [number, number]) : null;
@@ -142,13 +138,10 @@ function DriverFreights() {
 
                   <div className="flex gap-2">
                     {isActive && target ? (
-                      <button
-                        onClick={() => setNavTarget(target)}
-                        className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-brand px-4 py-2.5 text-sm font-semibold text-brand-foreground shadow-sm transition hover:opacity-95"
-                      >
-                        <Navigation className="h-4 w-4" />
-                        {goingToPickup ? "Navegar até coleta" : "Navegar até entrega"}
-                      </button>
+                      <div className="flex min-w-0 flex-1 flex-col gap-2">
+                        <Button asChild><Link to="/driver/navegacao/$id" params={{ id: o.id }}><Navigation className="h-4 w-4" />{goingToPickup ? "Iniciar navegação" : "Navegar para entrega"}</Link></Button>
+                        <Button variant="outline" onClick={() => setNavTarget(target)}>Escolher aplicativo de navegação</Button>
+                      </div>
                     ) : null}
                     {isActive ? (
                       <button

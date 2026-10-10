@@ -26,7 +26,6 @@ export default function NavigationMap({ route, position, target, follow, centerR
       if (source) source.setData(data);
       else {
         map.addSource('navigation-route', { type: 'geojson', data });
-        const color = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
         const resolved = document.createElement('span'); resolved.className = 'text-primary'; document.body.appendChild(resolved);
         const primary = getComputedStyle(resolved).color; resolved.remove();
         map.addLayer({ id: 'navigation-route', type: 'line', source: 'navigation-route', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': primary, 'line-width': 6 } });
