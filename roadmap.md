@@ -1,5 +1,9 @@
 # Roadmap
 
+- [ ] Endereços completos com número/sem número, pesquisa e confirmação manual
+- [ ] Persistir precisão e invalidar rotas ao criar/editar endereços
+- [ ] Testar validação, geocodificação real e leitura dos endereços salvos
+
 - [x] Corrigir geometria, desenho persistente e enquadramento da rota Mapbox
 - [x] Separar diagnóstico GPS/sincronização e mostrar horário somente após confirmação
 - [x] Validar linha rodoviária real e restauração de estilo; testar recálculo sem duplicação e troca de destino
