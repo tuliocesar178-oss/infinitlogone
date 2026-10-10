@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 export const Route = createFileRoute('/_authenticated/driver/navegacao/$id')({
   head: () => ({ meta: [{ title: 'Navegação GPS do frete — INFINITLOG' }, { name: 'description', content: 'Navegação Mapbox para coleta e entrega, posição atual, instruções e escolha opcional de aplicativo.' }, { property: 'og:title', content: 'Navegação GPS — INFINITLOG' }, { property: 'og:description', content: 'Acompanhe sua rota de coleta e entrega dentro da INFINITLOG.' }, { property: 'og:type', content: 'website' }, { name: 'twitter:card', content: 'summary' }, { name: 'robots', content: 'noindex' }] }),
   component: DriverNavigationPage,
-  errorComponent: ({ error }) => <div role="alert" className="p-6">Não foi possível abrir a navegação: {error.message}<Button asChild variant="link"><Link to="/driver">Voltar ao frete</Link></Button></div>,
+  errorComponent: ({ error }) => <div role="alert" className="p-6">Não foi possível abrir a navegação: {error instanceof Error ? error.message : 'Tente novamente.'}<Button asChild variant="link"><Link to="/driver">Voltar ao frete</Link></Button></div>,
 });
 function DriverNavigationPage() {
   const { id } = Route.useParams();

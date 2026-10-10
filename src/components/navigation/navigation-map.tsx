@@ -14,7 +14,7 @@ export default function NavigationMap({ route, position, target, follow, centerR
     const map = new mapboxgl.Map({ container: container.current, accessToken: token, style: 'mapbox://styles/mapbox/streets-v12', center: target ?? position ?? [0,0], zoom: 14 });
     mapRef.current = map;
     map.addControl(new mapboxgl.NavigationControl(), 'bottom-left');
-    return () => { driverRef.current?.remove(); targetRef.current?.remove(); map.remove(); mapRef.current = null; };
+    return () => { driverRef.current?.remove(); targetRef.current?.remove(); driverRef.current = null; targetRef.current = null; map.remove(); mapRef.current = null; };
   }, []);
   useEffect(() => {
     const map = mapRef.current;
@@ -37,10 +37,10 @@ export default function NavigationMap({ route, position, target, follow, centerR
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
-    if (target) { if (!targetRef.current) { const el = document.createElement('div'); el.className = 'h-5 w-5 rounded-full border-4 border-background bg-destructive shadow-lg'; targetRef.current = new mapboxgl.Marker({ element: el }).addTo(map); } targetRef.current.setLngLat(target); }
-    if (position) { if (!driverRef.current) { const el = document.createElement('div'); el.className = 'h-6 w-6 rounded-full border-4 border-background bg-primary shadow-lg'; driverRef.current = new mapboxgl.Marker({ element: el }).addTo(map); } driverRef.current.setLngLat(position); }
+    if (target) { if (!targetRef.current) { const el = document.createElement('div'); el.className = 'h-5 w-5 rounded-full border-4 border-background bg-destructive shadow-lg'; targetRef.current = new mapboxgl.Marker({ element: el }).setLngLat(target).addTo(map); } else targetRef.current.setLngLat(target); }
+    if (position) { if (!driverRef.current) { const el = document.createElement('div'); el.className = 'h-6 w-6 rounded-full border-4 border-background bg-primary shadow-lg'; driverRef.current = new mapboxgl.Marker({ element: el }).setLngLat(position).addTo(map); } else driverRef.current.setLngLat(position); }
     if (follow && position) map.easeTo({ center: position, zoom: 16, duration: 500, padding: { top: 170, bottom: 310, left: 40, right: 40 } });
     else if (route) { const bounds = new mapboxgl.LngLatBounds(); route.geometry.coordinates.forEach(coord => bounds.extend([coord[0], coord[1]])); map.fitBounds(bounds, { padding: { top: 180, bottom: 330, left: 55, right: 55 }, maxZoom: 16 }); }
   }, [position, target, follow, centerRequest, route]);
-  return <div ref={container} className="absolute inset-0" aria-label="Mapa de navegação Mapbox" />;
+  return <div className="absolute inset-0 [&_.mapboxgl-ctrl-bottom-left]:bottom-[320px]" aria-label="Mapa de navegação Mapbox"><div ref={container} className="h-full w-full" /></div>;
 }

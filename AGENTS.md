@@ -15,4 +15,5 @@
 - Store public home appearance in the existing app_settings key through narrow public-read and admin-write RPCs; query previews never change saved settings, keeping operational configuration private.
 - Dynamically load the public illustrative map after hydration with no operational data; public visuals must not imply active shipments.
 - Compare freight vehicle configurations using registered axle/capacity/bodywork data and the existing ANTT engine; type names without metadata stay unpriced to prevent false official floors. Persist the chosen configuration and calculation snapshot in existing order fields/events.
+- Use authenticated driver-owned Mapbox Directions server functions and Turf road projection for web navigation; sync existing telemetry fields without changing freight status, and treat browser background GPS as best-effort rather than native navigation.
 
