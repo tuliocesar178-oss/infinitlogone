@@ -1,8 +1,9 @@
 # Roadmap
 
-- [ ] Integrar navegação interna Mapbox com instruções, progresso, recálculo e ETA
-- [ ] Oferecer escolha Google Maps/Waze sem alterar o estado do frete
-- [ ] Validar autorização, etapas, GPS e retomada; registrar limites do PWA e testes físicos pendentes
+- [x] Integrar navegação interna Mapbox com instruções, progresso, recálculo e ETA
+- [x] Oferecer escolha Google Maps/Waze sem alterar o estado do frete
+- [x] Validar acesso real do motorista, Directions e links; testar regras de etapas e progresso e permissão GPS negada
+- [ ] Validar deslocamento real, voz, troca de apps, sincronização na Torre/Cliente e tela bloqueada — depende de Android/iPhone físico e GPS real
 
 - [x] Adaptar catálogo de pesados à referência com pisos ANTT calculados antes da seleção
 - [x] Integrar configurações/carrocerias cadastradas e preservar seleção e auditoria do frete

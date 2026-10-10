@@ -42,5 +42,5 @@ export default function NavigationMap({ route, position, target, follow, centerR
     if (follow && position) map.easeTo({ center: position, zoom: 16, duration: 500, padding: { top: 170, bottom: 310, left: 40, right: 40 } });
     else if (route) { const bounds = new mapboxgl.LngLatBounds(); route.geometry.coordinates.forEach(coord => bounds.extend([coord[0], coord[1]])); map.fitBounds(bounds, { padding: { top: 180, bottom: 330, left: 55, right: 55 }, maxZoom: 16 }); }
   }, [position, target, follow, centerRequest, route]);
-  return <div className="absolute inset-0" aria-label="Mapa de navegação Mapbox"><div ref={container} className="h-full w-full" /></div>;
+  return <div className="absolute inset-0 [&_.mapboxgl-ctrl-bottom-left]:bottom-[320px]" aria-label="Mapa de navegação Mapbox"><div ref={container} className="h-full w-full" /></div>;
 }
