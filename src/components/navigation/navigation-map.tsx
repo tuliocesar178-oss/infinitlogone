@@ -13,6 +13,16 @@ export default function NavigationMap(props: NavigationMapProps) {
   const targetRef = useRef<mapboxgl.Marker | null>(null);
   const [mapError, setMapError] = useState<string | null>(null);
   const colors = useRef<HTMLSpanElement>(null);
+  function mapColor(cssColor: string) {
+    // Mapbox's color parser does not support the design system's OKLCH values.
+    // Let the browser resolve them to sRGB instead of passing unsupported CSS.
+    const canvas = document.createElement('canvas'); canvas.width = 1; canvas.height = 1;
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('Conversão de cor indisponível.');
+    context.fillStyle = cssColor; context.fillRect(0, 0, 1, 1);
+    const [r, g, b] = context.getImageData(0, 0, 1, 1).data;
+    return `rgb(${r}, ${g}, ${b})`;
+  }
   function padding() {
     const height = container.current?.clientHeight ?? 800;
     const topPanel = document.querySelector('[data-navigation-top]')?.getBoundingClientRect();
@@ -24,7 +34,7 @@ export default function NavigationMap(props: NavigationMapProps) {
     if (!map?.isStyleLoaded()) return;
     const { route, position, target, heading, follow } = latest.current;
     if (route && colors.current) {
-      try { drawNavigationRoute(map, route, { line: getComputedStyle(colors.current).color, casing: getComputedStyle(colors.current).backgroundColor }); }
+      try { drawNavigationRoute(map, route, { line: mapColor(getComputedStyle(colors.current).color), casing: mapColor(getComputedStyle(colors.current).backgroundColor) }); setMapError(null); }
       catch { setMapError('A geometria da rota é inválida. Recalcule para tentar novamente.'); return; }
     } else {
       const source = map.getSource(ROUTE_SOURCE) as mapboxgl.GeoJSONSource | undefined;
