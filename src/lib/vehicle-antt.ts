@@ -19,7 +19,7 @@ export interface FreightVehicleConfiguration {
 }
 
 const INITIAL_HEAVY_TYPES = ["Carreta", "Carreta LS", "Vanderleia", "Carreta de 4 eixos", "Bitrem", "Bitrenzão", "Rodotrem"];
-const LIGHT_TYPES = new Set(["fiorino", "van", "vuc", "3/4"]);
+const LIGHT_TYPES = new Set(["fiorino", "van", "vuc", "3/4", "caminhão 3/4", "moto", "utilitário"]);
 const normalize = (value: string) => value.trim().toLocaleLowerCase("pt-BR");
 
 /** Names never supply axle counts: only registered or explicitly entered data do. */

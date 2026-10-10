@@ -1056,7 +1056,7 @@ function NewOrderWizard() {
             {routeInfo && (
               <div className="mt-6 mb-6 p-6 rounded-2xl bg-brand/5 border border-brand/10">
                 <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand mb-4">Resumo da Rota</div>
-                <div className="grid gap-6 sm:grid-cols-4">
+                <div className="grid min-w-0 grid-cols-1 gap-6 sm:grid-cols-4">
                   <div>
                     <div className="text-[10px] font-semibold text-muted-foreground uppercase">Distância</div>
                     <div className="text-xl font-bold">{routeInfo.distance_km} km</div>
@@ -1065,7 +1065,7 @@ function NewOrderWizard() {
                     <div className="text-[10px] font-semibold text-muted-foreground uppercase">Tempo</div>
                     <div className="text-xl font-bold">{Math.floor(routeInfo.duration_minutes / 60)}h {routeInfo.duration_minutes % 60}m</div>
                   </div>
-                  <div className="sm:col-span-2">
+                  <div className="min-w-0 sm:col-span-2">
                     <div className="text-[10px] font-semibold text-muted-foreground uppercase">Trajeto</div>
                     <div className="text-sm font-medium mt-1 truncate">
                       {f.origin_city} ({f.origin_state}) → {f.destination_city} ({f.destination_state})
