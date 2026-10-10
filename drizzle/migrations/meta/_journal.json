@@ -57,6 +57,13 @@
       "when": 1791648580140,
       "tag": "0007_freight_address_precision",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1791648828593,
+      "tag": "0008_invalidate_all_changed_address_route_metrics",
+      "breakpoints": true
     }
   ]
 }
