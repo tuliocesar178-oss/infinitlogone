@@ -892,7 +892,6 @@ function NewOrderWizard() {
             <div className="sm:col-span-2"><AddressFields label="Endereço de coleta" value={addressValue("origin")} onChange={a=>updateAddress("origin",a)} /></div>
             <T label="Data da coleta" type="date" value={f.pickup_date} onChange={(v) => set("pickup_date", v)} />
             <T label="Hora" type="time" value={f.pickup_time} onChange={(v) => set("pickup_time", v)} />
-            <T label="Referência" value={f.pickup_reference} onChange={(v) => set("pickup_reference", v)} />
             <T label="Doca" value={f.pickup_dock} onChange={(v) => set("pickup_dock", v)} />
             <T label="Portaria" value={f.pickup_gate} onChange={(v) => set("pickup_gate", v)} />
             <T label="Instruções" value={f.pickup_instructions} onChange={(v) => set("pickup_instructions", v)} full />
@@ -907,7 +906,6 @@ function NewOrderWizard() {
             <div className="sm:col-span-2"><AddressFields label="Endereço de entrega" value={addressValue("destination")} onChange={a=>updateAddress("destination",a)} /></div>
             <T label="Data prevista" type="date" value={f.delivery_date} onChange={(v) => set("delivery_date", v)} />
             <T label="Hora prevista" type="time" value={f.delivery_time} onChange={(v) => set("delivery_time", v)} />
-            <T label="Referência" value={f.delivery_reference} onChange={(v) => set("delivery_reference", v)} />
             <T label="Doca" value={f.delivery_dock} onChange={(v) => set("delivery_dock", v)} />
             <T label="Portaria" value={f.delivery_gate} onChange={(v) => set("delivery_gate", v)} />
           </Grid>
