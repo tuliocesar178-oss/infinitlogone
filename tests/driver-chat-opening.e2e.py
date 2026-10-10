@@ -36,6 +36,8 @@ async def main():
         await page.goto('http://localhost:8080/driver/chat?roomId=5a726669-92be-4b0f-895a-61da33ec8282')
         await page.get_by_placeholder('Digite uma mensagem...').wait_for(timeout=45000)
         await page.get_by_role('heading', name='tulio cesar', exact=True).wait_for()
+        await page.get_by_text('Verificação de unificação do chat — histórico preservado.', exact=True).wait_for()
+        await page.get_by_text('Carregando mensagens...', exact=True).wait_for(state='hidden')
         await page.screenshot(path=str(screenshots / 'merged-chat-mobile.png'))
         assert await page.evaluate('document.documentElement.scrollWidth <= innerWidth')
         assert not errors, errors
