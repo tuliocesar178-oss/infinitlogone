@@ -17,4 +17,5 @@
 - Compare freight vehicle configurations using registered axle/capacity/bodywork data and the existing ANTT engine; type names without metadata stay unpriced to prevent false official floors. Persist the chosen configuration and calculation snapshot in existing order fields/events.
 - Use authenticated driver-owned Mapbox Directions server functions and Turf road projection for web navigation; sync existing telemetry fields without changing freight status, and treat browser background GPS as best-effort rather than native navigation.
 - Keep navigation source and casing/line layer identities stable, restoring each independently on style.load and fitting new routes after style readiness; this prevents missing or duplicate road geometry.
+- Convert semantic CSS colors to browser-resolved sRGB before passing them to Mapbox paint properties, and restore missing layers at idle when style.load precedes readiness; Mapbox does not parse OKLCH tokens.
 
