@@ -44,14 +44,19 @@ export function useNavigation(order: NavigationOrder) {
   }
   const recalculateRef = useRef(recalculate); recalculateRef.current = recalculate;
   useEffect(() => { generation.current++; setRoutes([]); setSelected(0); traveledOffset.current = 0; lastFetch.current = 0; }, [targetKey]);
-  useEffect(() => { setVoiceSupported('speechSynthesis' in window); }, []);
+  useEffect(() => {
+    if (!('speechSynthesis' in window)) return;
+    const refresh = () => setVoiceSupported(speechSynthesis.getVoices().some(v => v.lang.toLowerCase().startsWith('pt')));
+    refresh(); speechSynthesis.addEventListener('voiceschanged', refresh);
+    return () => speechSynthesis.removeEventListener('voiceschanged', refresh);
+  }, []);
   useEffect(() => {
     if (!started || !navigationActive(order.status)) return;
     if (!navigator.geolocation) { setError('Localização não disponível neste dispositivo.'); return; }
     let canceled = false;
     let lastSync = 0;
     let syncing = false;
-    const updateNetwork = () => { setOnline(navigator.onLine); if (navigator.onLine) { lastFetch.current = 0; void recalculateRef.current(); } };
+    const updateNetwork = () => { setOnline(navigator.onLine); if (navigator.onLine && Date.now() - lastFetch.current >= 15000) void recalculateRef.current(); };
     updateNetwork();
     const watch = navigator.geolocation.watchPosition(async value => {
       if (canceled) return;
