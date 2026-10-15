@@ -27,6 +27,9 @@ import {
 import { useEffect, useState, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Logo } from "@/components/logo";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { NotificationSettings } from "@/components/notification-settings";
 
 type NavItem = {
   label: string;
@@ -278,13 +281,7 @@ export function AppShell({
               </button>
             </div>
             <div className="flex items-center gap-2">
-              <button
-                className="relative grid h-10 w-10 place-items-center rounded-full text-muted-foreground hover:bg-accent"
-                aria-label="Notificações"
-              >
-                <Bell className="h-5 w-5" />
-                <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-brand" />
-              </button>
+              <NotificationSettingsDialog />
               <div className="flex items-center gap-3 rounded-full py-1 pl-1 pr-3 hover:bg-accent">
                 <span className="grid h-9 w-9 place-items-center rounded-full bg-brand text-[13px] font-semibold text-brand-foreground">
                   {initials || "?"}
@@ -319,4 +316,12 @@ export function AppShell({
       </div>
     </div>
   );
+}
+
+function NotificationSettingsDialog() {
+  const [open, setOpen] = useState(false);
+  return <>
+    <Button variant="ghost" size="icon" aria-label="Notificações no celular" onClick={() => setOpen(true)}><Bell className="h-5 w-5" /></Button>
+    <Dialog open={open} onOpenChange={setOpen}><DialogContent className="max-h-[90dvh] overflow-y-auto"><DialogTitle>Preferências do dispositivo</DialogTitle><NotificationSettings /></DialogContent></Dialog>
+  </>;
 }

@@ -1227,6 +1227,9 @@ export type Database = {
           created_at: string
           data: Json | null
           id: string
+          push_error: string | null
+          push_processed_at: string | null
+          push_status: string
           read_at: string | null
           title: string
           type: string
@@ -1237,6 +1240,9 @@ export type Database = {
           created_at?: string
           data?: Json | null
           id?: string
+          push_error?: string | null
+          push_processed_at?: string | null
+          push_status?: string
           read_at?: string | null
           title: string
           type: string
@@ -1247,6 +1253,9 @@ export type Database = {
           created_at?: string
           data?: Json | null
           id?: string
+          push_error?: string | null
+          push_processed_at?: string | null
+          push_status?: string
           read_at?: string | null
           title?: string
           type?: string
@@ -1935,6 +1944,50 @@ export type Database = {
         }
         Relationships: []
       }
+      push_deliveries: {
+        Row: {
+          attempts: number
+          created_at: string
+          deleted_at: string | null
+          id: string
+          notification_id: string
+          provider_status: number | null
+          status: string
+          subscription_id: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          notification_id: string
+          provider_status?: number | null
+          status?: string
+          subscription_id: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          notification_id?: string
+          provider_status?: number | null
+          status?: string
+          subscription_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_deliveries_notification_id_fkey"
+            columns: ["notification_id"]
+            isOneToOne: false
+            referencedRelation: "notifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       push_subscriptions: {
         Row: {
           auth: string
@@ -1943,6 +1996,7 @@ export type Database = {
           id: string
           last_used_at: string | null
           p256dh: string
+          preferences: Json
           updated_at: string
           user_agent: string | null
           user_id: string
@@ -1954,6 +2008,7 @@ export type Database = {
           id?: string
           last_used_at?: string | null
           p256dh: string
+          preferences?: Json
           updated_at?: string
           user_agent?: string | null
           user_id: string
@@ -1965,9 +2020,40 @@ export type Database = {
           id?: string
           last_used_at?: string | null
           p256dh?: string
+          preferences?: Json
           updated_at?: string
           user_agent?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      push_transport_config: {
+        Row: {
+          bearer: string
+          created_at: string
+          deleted_at: string | null
+          endpoint: string
+          id: string
+          key: string
+          updated_at: string
+        }
+        Insert: {
+          bearer: string
+          created_at?: string
+          deleted_at?: string | null
+          endpoint: string
+          id?: string
+          key: string
+          updated_at?: string
+        }
+        Update: {
+          bearer?: string
+          created_at?: string
+          deleted_at?: string | null
+          endpoint?: string
+          id?: string
+          key?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -2540,6 +2626,10 @@ export type Database = {
       can_access_unified_chat: {
         Args: { _room: string; _user: string }
         Returns: boolean
+      }
+      claim_push_delivery: {
+        Args: { _notification: string; _subscription: string }
+        Returns: string
       }
       decline_freight_offer: {
         Args: { _offer_id: string; _reason?: string }

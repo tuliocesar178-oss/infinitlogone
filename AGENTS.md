@@ -19,4 +19,6 @@
 - Keep navigation source and casing/line layer identities stable, restoring each independently on style.load and fitting new routes after style readiness; this prevents missing or duplicate road geometry.
 - Convert semantic CSS colors to browser-resolved sRGB before passing them to Mapbox paint properties, and restore missing layers at idle when style.load precedes readiness; Mapbox does not parse OKLCH tokens.
 - Share structured freight address validation between creation and editing, persist it beside existing coordinates, and invalidate changed-route snapshots in a database trigger; all consumers retain the same endpoint fields.
+- Deliver mobile push from persisted notification events through an authenticated event-driven server route, rechecking current recipient access and per-device preferences; per-event/device claims prevent duplicate transport, and browser clients cannot insert notification events or modify delivery metadata.
+- Keep the dedicated push messaging worker separate from app-shell cache registration; explicit notification activation can register the messaging-only worker without adding offline caches.
 

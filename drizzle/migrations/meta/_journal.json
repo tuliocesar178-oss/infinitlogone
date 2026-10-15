@@ -64,6 +64,20 @@
       "when": 1791648828593,
       "tag": "0008_invalidate_all_changed_address_route_metrics",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1792091683943,
+      "tag": "0009_operational_web_push_delivery",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1792091887522,
+      "tag": "0010_secure_notification_event_sources",
+      "breakpoints": true
     }
   ]
 }

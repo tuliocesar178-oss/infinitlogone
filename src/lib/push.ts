@@ -1,5 +1,8 @@
+import { defaultPushPreferences, type PushPreferences } from "@/lib/push-model";
 import {
   getVapidPublicKey,
+  getDevicePushSettings,
+  saveDevicePushSettings,
   removePushSubscription,
   savePushSubscription,
   sendTestPush,
@@ -41,20 +44,18 @@ export function pushSupported(): boolean {
 }
 
 /** Estado atual: permissão do navegador e se há inscrição ativa. */
-export async function pushStatus(): Promise<{
-  supported: boolean;
-  permission: NotificationPermission | "unsupported";
-  subscribed: boolean;
-}> {
+export async function pushStatus() {
   if (!pushSupported()) {
-    return { supported: false, permission: "unsupported", subscribed: false };
+    return { supported: false, permission: "unsupported", subscribed: false, preferences: defaultPushPreferences };
   }
   const registration = await navigator.serviceWorker.getRegistration();
   const subscription = await registration?.pushManager.getSubscription();
+  const settings = subscription ? await getDevicePushSettings({ data: { endpoint: subscription.endpoint } }) : null;
   return {
     supported: true,
     permission: Notification.permission,
-    subscribed: !!subscription,
+    subscribed: !!subscription && settings?.registered === true,
+    preferences: settings?.preferences ?? defaultPushPreferences,
   };
 }
 
@@ -73,6 +74,8 @@ export async function enablePush(): Promise<
     };
   }
 
+  if (window.top !== window.self) return { ok: false, reason: "Abra o aplicativo em uma aba própria para ativar notificações." };
+  if (!navigator.onLine) return { ok: false, reason: "Conecte-se à internet para registrar este dispositivo." };
   const permission =
     Notification.permission === "granted"
       ? "granted"
@@ -81,7 +84,12 @@ export async function enablePush(): Promise<
     return { ok: false, reason: "Permissão de notificação negada no dispositivo." };
   }
 
-  const registration = await navigator.serviceWorker.ready;
+  let registration = await navigator.serviceWorker.getRegistration();
+  if (!registration?.active) {
+    registration = await navigator.serviceWorker.register("/push-sw.js", { scope: "/" });
+    await Promise.race([navigator.serviceWorker.ready, new Promise<never>((_, reject) => globalThis.setTimeout(() => reject(new Error("O dispositivo não concluiu a ativação. Tente novamente.")), 10000))]);
+  }
+
   const { publicKey } = await getVapidPublicKey();
   if (!publicKey) return { ok: false, reason: "Servidor sem chave de notificação configurada." };
 
@@ -117,5 +125,14 @@ export async function disablePush(): Promise<void> {
 
 /** Dispara uma notificação de teste para o próprio usuário. */
 export async function testPush() {
-  return sendTestPush({ data: undefined });
+  const registration = await navigator.serviceWorker.getRegistration();
+  const subscription = await registration?.pushManager.getSubscription();
+  if (!subscription) throw new Error("Ative as notificações neste dispositivo primeiro.");
+  return sendTestPush({ data: { endpoint: subscription.endpoint } });
+}
+export async function updatePushPreferences(preferences: PushPreferences) {
+  const registration = await navigator.serviceWorker.getRegistration();
+  const subscription = await registration?.pushManager.getSubscription();
+  if (!subscription) throw new Error("Dispositivo não registrado.");
+  return saveDevicePushSettings({ data: { endpoint: subscription.endpoint, preferences } });
 }

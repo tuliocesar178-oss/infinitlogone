@@ -1,5 +1,13 @@
 # Roadmap
 
+- [x] Notificações no celular: diagnosticar e reutilizar inscrições, PWA e eventos existentes
+- [x] Permissão explícita, preferências por evento e teste restrito ao dispositivo autenticado
+- [x] Implementar envio por eventos, acesso atual dos destinatários, proteção de dados e prevenção de duplicidade
+- [ ] Publicar endpoint e validar eventos automáticos — aguarda solicitação de publicação; transporte aponta ao site publicado
+- [ ] Validar inscrição real, envio, abertura e despacho/aceite — navegador de testes retorna permissão negada mesmo com concessão; depende de navegador/celular compatível
+- [ ] Validar recebimento físico Android/iPhone, bateria e sem conexão — depende de celulares reais
+- [ ] Aviso de prazo sem aceite e retentativas de transporte — dependem de mecanismo de execução adiada; nenhum agendamento permanente foi criado
+
 - [x] Endereços completos com número/sem número, pesquisa e confirmação manual
 - [x] Persistir precisão e invalidar rotas ao criar/editar endereços
 - [x] Testar validação e geocodificação real em desktop/mobile: números 100 e 1000 retornam pontos distintos; 13 testes passam
