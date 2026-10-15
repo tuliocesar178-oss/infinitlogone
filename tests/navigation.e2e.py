@@ -24,10 +24,11 @@ async def main():
   # Verify real Directions with stored pickup as origin; no GPS or telemetry fabricated/saved.
   result=await page.evaluate('''async orderId => {
    const {supabase}=await import('/src/integrations/supabase/client.ts');
-   const {data:order,error}=await supabase.from('orders').select('origin_lng,origin_lat').eq('id',orderId).single();
+   const {data:order,error}=await supabase.from('orders').select('origin_lng,origin_lat,destination_lng,destination_lat').eq('id',orderId).single();
    if(error || order?.origin_lng == null || order?.origin_lat == null) throw new Error('Coordenadas de coleta indisponíveis para o teste');
    const {getNavigationDirections}=await import('/src/lib/navigation/directions.functions.ts');
-   const data=await getNavigationDirections({data:{orderId,position:[order.origin_lng,order.origin_lat]}});
+   const data=await getNavigationDirections({data:{orderId,position:[order.destination_lng,order.destination_lat]}});
+   if (!(data.routes[0].distance > 0)) throw new Error('O cálculo não retornou trajeto rodoviário entre os endereços reais');
    return {count:data.routes.length,distance:data.routes[0].distance,steps:data.routes[0].legs[0].steps.map(s=>s.maneuver.instruction),target:data.target.kind};
   }''',order_id)
   print('real directions',json.dumps(result,ensure_ascii=False))

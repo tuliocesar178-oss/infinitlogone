@@ -55,7 +55,7 @@ export function NavigationView({ order }: NavigationViewProps) {
       <div className="grid grid-cols-2 gap-2">
         {nav.started ? <Button onClick={nav.stop}><Square />Encerrar</Button> : <Button disabled={!canStart} onClick={nav.start}><Navigation />Iniciar navegação</Button>}
         <Button variant="outline" disabled={!nav.started || !nav.position || nav.busy || !nav.online} onClick={() => void nav.recalculate()}><RotateCcw />Recalcular</Button>
-        <Button variant="outline" disabled={!target && !nav.target.address} onClick={() => setExternalOpen(true)}><ExternalLink />Abrir em outro aplicativo</Button>
+        <Button variant="outline" className="h-auto min-h-9 whitespace-normal" disabled={!target && !nav.target.address} onClick={() => setExternalOpen(true)}><ExternalLink /><span>Abrir em outro aplicativo</span></Button>
         <Button variant="outline" disabled={!nav.position} onClick={() => { setFollow(true); setCenterRequest(value => value + 1); }}><LocateFixed />Centralizar</Button>
       </div>
     </section>
