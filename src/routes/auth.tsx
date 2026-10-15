@@ -62,8 +62,8 @@ function AuthPage() {
           <ArrowLeft className="h-4 w-4" /> Voltar ao site
         </Link>
         <div>
-          <div className="grid h-20 w-20 place-items-center rounded-3xl bg-primary-foreground/10 backdrop-blur">
-            <img src={logoUrl} alt="InfinitLog" className="h-14 w-14 object-contain" />
+          <div className="max-w-[280px] overflow-hidden rounded-xl">
+            <img src={logoUrl} alt="INFINITLOG VAPT VUPT" className="h-auto w-full object-contain" />
           </div>
           <h1 className="mt-8 text-4xl font-semibold tracking-tight">
             Operação sob controle. Sempre.

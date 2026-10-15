@@ -139,14 +139,11 @@ export function DriverShell({
     <div className="min-h-screen bg-surface-2 text-foreground">
       <header className="sticky top-0 z-30 border-b border-border/60 bg-background/95 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-2xl items-center justify-between gap-3 px-4">
-          <Link to="/driver" className="flex items-center gap-2">
-            <Logo size={28} withWordmark={false} />
-            <div className="leading-tight">
-              <div className="text-sm font-semibold tracking-tight">InfinitLog</div>
-              <div className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
-                <span className={`h-1.5 w-1.5 rounded-full ${availabilityDot[(me?.availability as any) ?? "offline"]}`} />
-                {availabilityLabel[(me?.availability as any) ?? "offline"]}
-              </div>
+          <Link to="/driver" className="flex min-w-0 items-center gap-2">
+            <Logo size={92} withWordmark />
+            <div className="flex shrink-0 items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+              <span className={`h-1.5 w-1.5 rounded-full ${availabilityDot[(me?.availability as any) ?? "offline"]}`} />
+              {availabilityLabel[(me?.availability as any) ?? "offline"]}
             </div>
           </Link>
           <div className="flex items-center gap-1">

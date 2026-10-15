@@ -52,6 +52,7 @@
   --color-surface-2: var(--surface-2);
   --color-brand: var(--brand);
   --color-brand-foreground: var(--brand-foreground);
+  --color-cyan: var(--cyan);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-accent: var(--sidebar-accent);
@@ -72,34 +73,33 @@
    * · Fundos claros com leve tom frio     → background / surface
    */
 
-  --background: oklch(0.995 0.003 250);
-  --foreground: oklch(0.18 0.06 265);
+  --background: #F4F7FB;
+  --foreground: #17243B;
 
-  --surface: oklch(1 0 0);
-  --surface-2: oklch(0.968 0.012 250);
+  --surface: #FFFFFF;
+  --surface-2: #F4F7FB;
 
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.18 0.06 265);
+  --card: #FFFFFF;
+  --card-foreground: #17243B;
 
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.18 0.06 265);
+  --popover: #FFFFFF;
+  --popover-foreground: #17243B;
 
-  /* Azul-marinho InfinitLog (wordmark) */
-  --primary: oklch(0.24 0.12 266);
-  --primary-foreground: oklch(0.995 0 0);
+  --primary: #061638;
+  --primary-foreground: #FFFFFF;
 
-  --secondary: oklch(0.955 0.018 250);
-  --secondary-foreground: oklch(0.24 0.12 266);
+  --secondary: #EAF0F8;
+  --secondary-foreground: #08265C;
 
-  --muted: oklch(0.96 0.012 250);
-  --muted-foreground: oklch(0.5 0.04 258);
+  --muted: #EEF2F7;
+  --muted-foreground: #64748B;
 
-  --accent: oklch(0.94 0.03 250);
-  --accent-foreground: oklch(0.24 0.12 266);
+  --accent: #E8F2FF;
+  --accent-foreground: #08265C;
 
-  /* Azul elétrico das setas — CTAs de destaque e realces */
-  --brand: oklch(0.62 0.19 253);
-  --brand-foreground: oklch(0.995 0 0);
+  --brand: #087BFF;
+  --brand-foreground: #FFFFFF;
+  --cyan: #00C8F2;
 
   --success: oklch(0.68 0.17 152);
   --success-foreground: oklch(0.99 0 0);
@@ -108,12 +108,11 @@
   --destructive: oklch(0.6 0.22 27);
   --destructive-foreground: oklch(0.99 0 0);
 
-  --border: oklch(0.9 0.015 250);
-  --input: oklch(0.9 0.015 250);
-  --ring: oklch(0.62 0.19 253);
+  --border: #DFE6F0;
+  --input: #DFE6F0;
+  --ring: #087BFF;
 
-  /* Sidebar — dark navy inspired no wordmark InfinitLog */
-  --sidebar: oklch(0.16 0.04 265);
+  --sidebar: #061638;
   --sidebar-foreground: oklch(0.98 0.005 250);
   --sidebar-accent: oklch(0.62 0.19 253);
   --sidebar-accent-foreground: oklch(0.99 0 0);
@@ -145,14 +144,15 @@
   --accent: oklch(0.28 0.04 265);
   --accent-foreground: oklch(0.97 0.005 250);
 
-  --brand: oklch(0.72 0.17 253);
-  --brand-foreground: oklch(0.12 0.02 265);
+  --brand: #3B91FF;
+  --brand-foreground: #061638;
+  --cyan: #00C8F2;
 
-  --border: oklch(1 0 0 / 0.08);
-  --input: oklch(1 0 0 / 0.1);
-  --ring: oklch(0.72 0.17 253);
+  --border: rgb(255 255 255 / 0.12);
+  --input: rgb(255 255 255 / 0.16);
+  --ring: #3B91FF;
 
-  --sidebar: oklch(0.11 0.03 265);
+  --sidebar: #04112B;
   --sidebar-foreground: oklch(0.97 0.005 250);
   --sidebar-accent: oklch(0.72 0.17 253);
   --sidebar-accent-foreground: oklch(0.12 0.02 265);

@@ -18,9 +18,8 @@ export function BoardHeader(props: BoardHeaderProps) {
   return (
     <header className="flex flex-col gap-4 border-b border-border bg-surface px-4 py-4 lg:flex-row lg:items-center lg:justify-between lg:px-6">
       <div className="flex items-center gap-4">
-        <Logo size={38} withWordmark={false} />
+        <Logo size={150} withWordmark />
         <div>
-          <p className="text-xs font-semibold uppercase text-brand">InfinitLog</p>
           <h1 className="text-xl font-bold lg:text-2xl">Painel de Operação</h1>
         </div>
       </div>

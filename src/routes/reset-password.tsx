@@ -77,7 +77,7 @@ function ResetPasswordPage() {
   return (
     <div className="grid min-h-screen place-items-center bg-surface-2/40 p-6">
       <div className="card-soft w-full max-w-sm p-8">
-        <Logo size={40} className="mx-auto" />
+        <Logo size={190} className="mx-auto" />
 
         {!ready ? (
           <div className="mt-10 grid place-items-center">

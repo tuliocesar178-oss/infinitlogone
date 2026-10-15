@@ -69,7 +69,7 @@ function LandingPage() {
       <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
           <Link to="/" aria-label="InfinitLog — início">
-            <Logo size={34} />
+            <Logo size={100} />
           </Link>
           <nav className="hidden items-center gap-8 text-sm text-muted-foreground sm:flex">
             <a href="#servicos" className="hover:text-foreground">Serviços</a>
@@ -197,7 +197,7 @@ function LandingPage() {
       <footer className="border-t border-border/60 bg-surface">
         <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-4 px-6 py-12 text-sm text-muted-foreground sm:flex-row sm:items-center">
           <div className="flex items-center gap-2">
-            <Logo size={24} withWordmark={true} />
+            <Logo size={120} withWordmark />
             <span className="ml-4 border-l border-border pl-4">© {new Date().getFullYear()} InfinitLog</span>
           </div>
           <div className="flex gap-8">

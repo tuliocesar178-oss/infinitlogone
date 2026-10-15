@@ -186,17 +186,9 @@ export function AppShell({
           collapsed ? "w-[76px]" : "w-64"
         } ${mobileOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0`}
       >
-        <div className="flex h-16 items-center gap-3 border-b border-sidebar-border/60 px-5">
-          <Link to="/" aria-label="InfinitLog" className="flex items-center gap-3">
-            <Logo size={30} withWordmark={false} />
-            {!collapsed && (
-              <div className="leading-tight">
-                <div className="text-[15px] font-semibold tracking-tight">InfinitLog</div>
-                <div className="text-[10px] font-medium uppercase tracking-[0.18em] text-sidebar-foreground/60">
-                  Transportes
-                </div>
-              </div>
-            )}
+        <div className={`flex items-center justify-center border-b border-sidebar-border/60 px-3 ${collapsed ? "h-16" : "h-24"}`}>
+          <Link to="/" aria-label="INFINITLOG VAPT VUPT" className="flex w-full justify-center">
+            <Logo size={collapsed ? 60 : 180} withWordmark />
           </Link>
         </div>
 
