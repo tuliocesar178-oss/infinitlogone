@@ -1,5 +1,7 @@
 # Roadmap
 
+- [x] Corrigir tela desconectada do serviço de navegação; validar acesso autenticado, cálculo rodoviário real, mapa e orientação de GPS negado; deslocamento e sincronização física continuam pendentes abaixo
+
 - [x] Notificações no celular: diagnosticar e reutilizar inscrições, PWA e eventos existentes
 - [x] Permissão explícita, preferências por evento e teste restrito ao dispositivo autenticado
 - [x] Implementar envio por eventos, acesso atual dos destinatários, proteção de dados e prevenção de duplicidade
