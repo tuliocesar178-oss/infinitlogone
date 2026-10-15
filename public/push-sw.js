@@ -2,10 +2,12 @@
 /**
  * Handlers de Web Push da InfinitLog.
  *
- * Este arquivo é importado pelo service worker gerado (Workbox) através da
- * opção `importScripts`, portanto roda no mesmo escopo do SW do app — não é
- * um worker separado e não interfere no cache offline.
+ * Pode ser registrado como worker de mensagens sem cache ou importado pelo
+ * worker existente do aplicativo publicado. Não armazena páginas offline.
  */
+
+self.addEventListener("install", () => self.skipWaiting());
+self.addEventListener("activate", (event) => event.waitUntil(self.clients.claim()));
 
 self.addEventListener("push", (event) => {
   /** @type {{title?: string, body?: string, url?: string, tag?: string, requireInteraction?: boolean}} */
@@ -22,7 +24,7 @@ self.addEventListener("push", (event) => {
     icon: "/pwa-192x192.png",
     badge: "/pwa-192x192.png",
     tag: payload.tag || "infinitlog",
-    renotify: true,
+    renotify: payload.requireInteraction === true,
     requireInteraction: payload.requireInteraction === true,
     vibrate: [220, 90, 220],
     data: { url: payload.url || "/app" },
@@ -33,7 +35,9 @@ self.addEventListener("push", (event) => {
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const target = (event.notification.data && event.notification.data.url) || "/app";
+  const requested = (event.notification.data && event.notification.data.url) || "/app";
+  const parsed = new URL(requested, self.location.origin);
+  const target = parsed.origin === self.location.origin ? parsed.href : new URL("/app", self.location.origin).href;
 
   event.waitUntil(
     (async () => {

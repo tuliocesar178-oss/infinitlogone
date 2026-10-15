@@ -1,4 +1,5 @@
 import { buildPushPayload } from "@block65/webcrypto-web-push";
+import { trustedPushEndpoint } from "@/lib/push-model";
 
 /** Conteúdo entregue ao dispositivo do usuário. */
 export type PushContent = {
@@ -40,6 +41,7 @@ function vapid() {
 export async function pushToUsers(
   userIds: string[],
   content: PushContent,
+  delivery?: { notificationId: string; deviceIds: string[] },
 ): Promise<{ sent: number; failed: number }> {
   const targets = Array.from(new Set(userIds.filter(Boolean)));
   if (targets.length === 0) return { sent: 0, failed: 0 };
@@ -52,7 +54,7 @@ export async function pushToUsers(
     .in("user_id", targets);
   if (error) throw new Error(error.message);
 
-  const rows = (data ?? []) as Row[];
+  const rows = ((data ?? []) as Row[]).filter((row) => trustedPushEndpoint(row.endpoint) && (!delivery || delivery.deviceIds.includes(row.id)));
   if (rows.length === 0) return { sent: 0, failed: 0 };
 
   const keys = vapid();
@@ -67,7 +69,14 @@ export async function pushToUsers(
 
   await Promise.all(
     rows.map(async (row) => {
+      let deliveryId: string | null = null;
       try {
+        if (delivery) {
+          const claim = await supabaseAdmin.rpc("claim_push_delivery", { _notification: delivery.notificationId, _subscription: row.id });
+          if (claim.error) throw new Error("Falha ao reservar envio.");
+          if (!claim.data) return;
+          deliveryId = claim.data;
+        }
         const payload = await buildPushPayload(
           message,
           {
@@ -81,14 +90,17 @@ export async function pushToUsers(
         const res = await fetch(row.endpoint, payload as unknown as RequestInit);
         if (res.ok) {
           sent += 1;
+          if (deliveryId) await supabaseAdmin.from("push_deliveries").update({ status: "accepted", provider_status: res.status, updated_at: new Date().toISOString() }).eq("id", deliveryId);
           return;
         }
         failed += 1;
         if (res.status === 404 || res.status === 410) expired.push(row.id);
-        else console.error(`[Push] ${res.status} em ${row.endpoint}: ${await res.text()}`);
-      } catch (err) {
+        if (deliveryId) await supabaseAdmin.from("push_deliveries").update({ status: [404,410].includes(res.status) ? "expired" : "failed", provider_status: res.status, updated_at: new Date().toISOString() }).eq("id", deliveryId);
+        console.error(`[Push] serviço recusou envio: HTTP ${res.status}`);
+      } catch {
         failed += 1;
-        console.error("[Push] falha ao enviar", err);
+        if (deliveryId) await supabaseAdmin.from("push_deliveries").update({ status: "failed", updated_at: new Date().toISOString() }).eq("id", deliveryId);
+        console.error("[Push] falha no transporte da notificação");
       }
     }),
   );

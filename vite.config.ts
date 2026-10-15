@@ -31,6 +31,7 @@ export default defineConfig({
         start_url: "/app",
         scope: "/",
         display: "standalone",
+        prefer_related_applications: false,
         display_override: ["standalone", "fullscreen", "minimal-ui"],
         orientation: "portrait-primary",
         background_color: "#0d1b4a",

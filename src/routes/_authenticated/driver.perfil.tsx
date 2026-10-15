@@ -10,7 +10,7 @@ import { NotificationSettings } from "@/components/notification-settings";
 import { DRIVER_COLUMNS } from "@/lib/driver-columns";
 
 export const Route = createFileRoute("/_authenticated/driver/perfil")({
-  head: () => ({ meta: [{ title: "Perfil — Motorista" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Perfil e notificações do motorista — InfinitLog" }, { name: "description", content: "Perfil do motorista e preferências de notificações no celular." }, { property: "og:title", content: "Perfil do motorista — InfinitLog" }, { property: "og:description", content: "Preferências e notificações do dispositivo do motorista." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }] }),
   component: DriverProfile,
 });
 

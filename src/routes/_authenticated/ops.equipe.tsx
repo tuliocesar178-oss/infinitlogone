@@ -18,7 +18,7 @@ import {
 
 export const Route = createFileRoute("/_authenticated/ops/equipe")({
   head: () => ({
-    meta: [{ title: "Equipe — InfinitLog" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "Equipe e notificações operacionais — InfinitLog" }, { name: "description", content: "Gestão da equipe e preferências de avisos operacionais no celular." }, { property: "og:title", content: "Equipe operacional — InfinitLog" }, { property: "og:description", content: "Gestão da equipe e notificações do dispositivo." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }],
   }),
   component: TeamList,
 });

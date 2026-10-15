@@ -21,7 +21,7 @@ export const dispatchOrderToEligibleDrivers = createServerFn({ method: "POST" })
     if (!isStaff) throw new Error("Apenas a equipe de operação pode despachar rotas.");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const db = supabaseAdmin as any;
+    const db = supabaseAdmin;
 
     const { data: order, error: orderError } = await db
       .from("orders")
@@ -42,7 +42,7 @@ export const dispatchOrderToEligibleDrivers = createServerFn({ method: "POST" })
       .select("driver_id, status")
       .eq("order_id", order.id);
     if (existingError) throw new Error(existingError.message);
-    if (existingOffers?.some((offer: any) => offer.status === "accepted")) {
+    if (existingOffers?.some((offer) => offer.status === "accepted")) {
       throw new Error("Esta rota já foi aceita por um motorista.");
     }
 
@@ -63,7 +63,7 @@ export const dispatchOrderToEligibleDrivers = createServerFn({ method: "POST" })
       order.required_axles != null;
 
     if (needsVehicle) {
-      const vehicleIds = [...new Set(eligible.map((driver: any) => driver.current_vehicle_id).filter(Boolean))];
+      const vehicleIds = [...new Set(eligible.map((driver) => driver.current_vehicle_id).filter((id): id is string => !!id))];
       const { data: vehicles, error: vehiclesError } = vehicleIds.length
         ? await db
             .from("vehicles")
@@ -75,7 +75,7 @@ export const dispatchOrderToEligibleDrivers = createServerFn({ method: "POST" })
 
       const matchingDrivers = new Set(
         (vehicles ?? [])
-          .filter((vehicle: any) => {
+          .filter((vehicle) => {
             if (order.vehicle_id && vehicle.id !== order.vehicle_id) return false;
 
             const type = normalize(order.required_vehicle_type);
@@ -97,23 +97,23 @@ export const dispatchOrderToEligibleDrivers = createServerFn({ method: "POST" })
             }
             return true;
           })
-          .map((vehicle: any) => vehicle.owner_driver_id)
+          .map((vehicle) => vehicle.owner_driver_id)
           .filter(Boolean),
       );
 
-      eligible = eligible.filter((driver: any) => matchingDrivers.has(driver.user_id));
+      eligible = eligible.filter((driver) => matchingDrivers.has(driver.user_id));
     }
 
     if (!eligible.length) return { count: 0, driverIds: [] as string[] };
 
-    const driverIds = eligible.map((driver: any) => driver.user_id as string);
+    const driverIds = eligible.map((driver) => driver.user_id as string);
     const expiresAt = new Date(Date.now() + data.minutes * 60_000).toISOString();
     const rows = driverIds.map((driver_id) => ({
       order_id: order.id,
       driver_id,
       offered_price: data.price,
       expires_at: expiresAt,
-      status: "pending",
+      status: "pending" as const,
     }));
 
     const { error: offersError } = await db
@@ -137,16 +137,6 @@ export const dispatchOrderToEligibleDrivers = createServerFn({ method: "POST" })
       payload: { drivers: driverIds.length, price: data.price, expires_in_min: data.minutes },
     });
     if (eventError) throw new Error(eventError.message);
-
-    await db.from("notifications").insert(
-      driverIds.map((user_id) => ({
-        user_id,
-        type: "new_offer",
-        title: "Nova rota disponível",
-        body: `A rota ${order.code} está disponível para aceite.`,
-        data: { order_id: order.id },
-      })),
-    );
 
     return { count: driverIds.length, driverIds };
   });

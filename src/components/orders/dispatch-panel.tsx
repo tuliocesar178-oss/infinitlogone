@@ -4,7 +4,6 @@ import { Send } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { dispatchOrderToEligibleDrivers } from "@/lib/dispatch.functions";
-import { notifyDriversNewOffer } from "@/lib/push.functions";
 
 export function DispatchPanel({ order, onSent }: { order: any; onSent: () => void }) {
   const dispatch = useServerFn(dispatchOrderToEligibleDrivers);
@@ -22,20 +21,6 @@ export function DispatchPanel({ order, onSent }: { order: any; onSent: () => voi
       if (result.count === 0) {
         toast.warning("Nenhum motorista aprovado e elegível para esta rota.");
         return;
-      }
-
-      try {
-        await notifyDriversNewOffer({
-          data: {
-            driverIds: result.driverIds,
-            orderCode: order.code,
-            origin: order.origin_city ?? order.origin_address ?? "Origem",
-            destination: order.destination_city ?? order.destination_address ?? "Destino",
-            price,
-          },
-        });
-      } catch (pushError) {
-        console.warn("[Push] falha ao notificar motoristas", pushError);
       }
 
       toast.success(`Rota despachada para ${result.count} motorista(s) elegível(is).`);
