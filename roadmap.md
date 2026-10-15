@@ -1,5 +1,7 @@
 # Roadmap
 
+- [ ] Diagnosticar e corrigir a navegação que não está funcionando; validar acesso, cálculo e mapa com conta autorizada
+
 - [x] Notificações no celular: diagnosticar e reutilizar inscrições, PWA e eventos existentes
 - [x] Permissão explícita, preferências por evento e teste restrito ao dispositivo autenticado
 - [x] Implementar envio por eventos, acesso atual dos destinatários, proteção de dados e prevenção de duplicidade
