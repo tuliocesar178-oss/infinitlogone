@@ -282,14 +282,6 @@ export function AppShell({
             </div>
             <div className="flex items-center gap-2">
               <NotificationSettingsDialog />
-              <button
-                className="relative grid h-10 w-10 place-items-center rounded-full text-muted-foreground hover:bg-accent"
-                aria-label="Notificações"
-                hidden
-              >
-                <Bell className="h-5 w-5" />
-                <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-brand" />
-              </button>
               <div className="flex items-center gap-3 rounded-full py-1 pl-1 pr-3 hover:bg-accent">
                 <span className="grid h-9 w-9 place-items-center rounded-full bg-brand text-[13px] font-semibold text-brand-foreground">
                   {initials || "?"}
