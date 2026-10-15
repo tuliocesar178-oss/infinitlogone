@@ -42,12 +42,13 @@ function DriverFreights() {
     enabled: !!userId,
     queryKey: ["driver-freights", userId],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("orders")
         .select("id, code, tracking_code, status, origin_address, origin_city, destination_address, destination_city, origin_lat, origin_lng, destination_lat, destination_lng, current_lat, current_lng, price, distance_km, cargo_description, updated_at")
         .eq("driver_id", userId)
         .order("updated_at", { ascending: false })
         .limit(100);
+      if (error) throw error;
       return data ?? [];
     },
   });
@@ -80,7 +81,7 @@ function DriverFreights() {
         ))}
       </div>
 
-      {items.length === 0 ? (
+      {!userId || q.isPending ? <div role="status" className="p-6 text-sm text-muted-foreground">Carregando fretes…</div> : q.error ? <div role="alert" className="space-y-2 p-6 text-sm text-destructive"><p>Não foi possível carregar os fretes: {q.error.message}</p><Button variant="outline" onClick={() => void q.refetch()}>Tentar novamente</Button></div> : items.length === 0 ? (
         <div className="card-soft grid place-items-center p-12 text-center">
           <Truck className="h-10 w-10 text-brand" />
           <p className="mt-3 text-sm text-muted-foreground">Nenhum frete encontrado.</p>
