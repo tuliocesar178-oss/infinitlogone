@@ -64,21 +64,25 @@ function DriverOfferDetailsPage() {
       if (!user) return;
       
       if (action === "accept") {
-        const { error } = await supabase.from("freight_offers").update({ 
-          status: "accepted", 
-          driver_id: user.id,
-          accepted_at: new Date().toISOString() 
-        }).eq("id", id);
-        
+        const { data, error } = await supabase.rpc("accept_freight_offer", {
+          _offer_id: id,
+          _lat: driverPos?.[1],
+          _lng: driverPos?.[0],
+        });
         if (error) throw error;
 
-        await supabase.from("orders").update({ 
-          driver_id: user.id, 
-          status: "driver_assigned",
-          updated_at: new Date().toISOString()
-        }).eq("id", order.id);
+        const result = data as { ok?: boolean; reason?: string };
+        if (!result?.ok) {
+          if (result?.reason === "already_assigned") {
+            throw new Error("Esta rota já foi aceita por outro motorista.");
+          }
+          if (result?.reason === "offer_expired") {
+            throw new Error("Esta oferta expirou.");
+          }
+          throw new Error("Esta rota não está mais disponível.");
+        }
 
-        toast.success("Frete aceito com sucesso!");
+        toast.success("Rota aceita com sucesso!");
         navigate({ to: "/driver" });
       } else {
         await supabase.from("freight_offers").update({ status: "declined" }).eq("id", id);

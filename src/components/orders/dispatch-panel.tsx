@@ -1,129 +1,33 @@
-import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { Send, Star, MapPin, Truck } from "lucide-react";
+import { useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { Send } from "lucide-react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { dispatchOrderToEligibleDrivers } from "@/lib/dispatch.functions";
 import { notifyDriversNewOffer } from "@/lib/push.functions";
 
-function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number) {
-  const R = 6371;
-  const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLng = ((lng2 - lng1) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
-  return 2 * R * Math.asin(Math.sqrt(a));
-}
-
 export function DispatchPanel({ order, onSent }: { order: any; onSent: () => void }) {
-  const [selected, setSelected] = useState<Set<string>>(new Set());
-  // Valor pago ao motorista — nunca o valor negociado com o cliente.
+  const dispatch = useServerFn(dispatchOrderToEligibleDrivers);
   const [price, setPrice] = useState<number>(order.driver_amount ?? order.price ?? 0);
   const [minutes, setMinutes] = useState(15);
   const [sending, setSending] = useState(false);
 
-  const driversQ = useQuery({
-    queryKey: ["dispatch-drivers", order.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("drivers")
-        .select("user_id,current_lat,current_lng,rating,status,availability,city,phone,last_seen_at")
-        .in("availability", ["disponivel", "em_frete"] as any);
-      if (error) throw error;
-      
-      const { data: previousOffers } = await supabase
-        .from("freight_offers")
-        .select("driver_id, status")
-        .eq("order_id", order.id);
-
-      const list = data ?? [];
-      const ids = list.map((d: any) => d.user_id);
-      let profilesMap: Record<string, { full_name: string | null }> = {};
-      if (ids.length > 0) {
-        const { data: profs } = await supabase
-          .from("profiles")
-          .select("id, full_name")
-          .in("id", ids);
-        profilesMap = Object.fromEntries((profs ?? []).map((p: any) => [p.id, { full_name: p.full_name }]));
-      }
-      return list.map((d: any) => ({ 
-        ...d, 
-        profiles: profilesMap[d.user_id] ?? null,
-        previousStatus: previousOffers?.find(o => o.driver_id === d.user_id)?.status
-      }));
-    },
-  });
-
-  const ranked = useMemo(() => {
-    const list = (driversQ.data ?? []).map((d: any) => {
-      const distance =
-        order.origin_lat != null && order.origin_lng != null && d.current_lat != null && d.current_lng != null
-          ? haversineKm(order.origin_lat, order.origin_lng, d.current_lat, d.current_lng)
-          : null;
-      const rating = Number(d.rating ?? 0);
-      // Score: closer + higher rating = better. Lower score = better.
-      const score = (distance ?? 999) - rating * 3;
-      return { ...d, distance, score };
-    });
-    return list.sort((a, b) => a.score - b.score);
-  }, [driversQ.data, order.origin_lat, order.origin_lng]);
-
-  const best = ranked[0]?.user_id;
-
-  function toggle(id: string) {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }
-
   async function send() {
-    if (selected.size === 0) {
-      toast.warning("Selecione ao menos um motorista.");
-      return;
-    }
     setSending(true);
     try {
-      const expiresAt = new Date(Date.now() + minutes * 60 * 1000).toISOString();
-      const rows = Array.from(selected).map((driver_id) => ({
-        order_id: order.id,
-        driver_id,
-        offered_price: price,
-        expires_at: expiresAt,
-      }));
-      // Upsert para permitir reenvio de ofertas (substituindo a antiga se existir)
-      const { error } = await supabase
-        .from("freight_offers")
-        .upsert(
-          rows.map(r => ({ ...r, status: 'pending' })), 
-          { onConflict: 'order_id,driver_id' }
-        );
-      if (error) throw error;
-      const { data: u } = await supabase.auth.getUser();
-      // Atualiza apenas o valor do motorista; o valor do cliente permanece intacto.
-      await supabase
-        .from("orders")
-        .update({ status: "awaiting_driver", driver_amount: price })
-        .eq("id", order.id);
-      
-      // Ensure chat room exists for the operation
-      await supabase.from("chat_rooms" as any).upsert({ order_id: order.id } as any, { onConflict: 'order_id' });
-
-      await supabase.from("order_events").insert({
-        order_id: order.id,
-        event_type: "offers_sent",
-        from_status: order.status,
-        to_status: "awaiting_driver",
-        actor_id: u.user?.id ?? null,
-        payload: { drivers: rows.length, price, expires_in_min: minutes },
+      const result = await dispatch({
+        data: { order_id: order.id, price, minutes },
       });
-      // Push imediato para os motoristas — não bloqueia o fluxo se falhar.
+
+      if (result.count === 0) {
+        toast.warning("Nenhum motorista aprovado e elegível para esta rota.");
+        return;
+      }
+
       try {
         await notifyDriversNewOffer({
           data: {
-            driverIds: rows.map((r) => r.driver_id),
+            driverIds: result.driverIds,
             orderCode: order.code,
             origin: order.origin_city ?? order.origin_address ?? "Origem",
             destination: order.destination_city ?? order.destination_address ?? "Destino",
@@ -133,11 +37,11 @@ export function DispatchPanel({ order, onSent }: { order: any; onSent: () => voi
       } catch (pushError) {
         console.warn("[Push] falha ao notificar motoristas", pushError);
       }
-      toast.success(`Oferta enviada para ${rows.length} motorista(s).`);
-      setSelected(new Set());
+
+      toast.success(`Rota despachada para ${result.count} motorista(s) elegível(is).`);
       onSent();
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Erro ao enviar ofertas");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro ao despachar rota");
     } finally {
       setSending(false);
     }
@@ -149,11 +53,13 @@ export function DispatchPanel({ order, onSent }: { order: any; onSent: () => voi
 
   return (
     <section className="card-soft p-6">
-      <header className="mb-4 flex items-center justify-between">
+      <header className="mb-4">
         <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
-          Despacho inteligente
+          Despacho automático
         </h2>
-        <span className="text-xs text-muted-foreground">{ranked.length} disponíveis</span>
+        <p className="mt-2 text-sm text-muted-foreground">
+          A oferta será enviada simultaneamente a todos os motoristas aprovados e elegíveis.
+        </p>
       </header>
 
       <div className="mb-4 grid grid-cols-2 gap-3">
@@ -161,83 +67,29 @@ export function DispatchPanel({ order, onSent }: { order: any; onSent: () => voi
           Valor ao motorista (R$)
           <input
             type="number"
+            min="0"
             value={price}
-            onChange={(e) => setPrice(Number(e.target.value))}
+            onChange={(event) => setPrice(Number(event.target.value))}
             className="mt-1 h-10 w-full rounded-xl border border-border bg-surface px-3 text-sm text-foreground outline-none"
           />
         </label>
         <label className="text-xs text-muted-foreground">
-          Expira em (min)
+          Prazo para aceite (min)
           <input
             type="number"
+            min="1"
+            max="1440"
             value={minutes}
-            onChange={(e) => setMinutes(Number(e.target.value))}
+            onChange={(event) => setMinutes(Number(event.target.value))}
             className="mt-1 h-10 w-full rounded-xl border border-border bg-surface px-3 text-sm text-foreground outline-none"
           />
         </label>
       </div>
 
-      <ul className="max-h-96 space-y-2 overflow-auto">
-        {driversQ.isLoading && <li className="text-sm text-muted-foreground">Carregando…</li>}
-        {ranked.map((d: any) => {
-          const isBest = d.user_id === best;
-          const isSel = selected.has(d.user_id);
-          return (
-            <li
-              key={d.user_id}
-              onClick={() => toggle(d.user_id)}
-              className={`flex cursor-pointer items-center justify-between gap-3 rounded-xl border p-3 transition ${
-                isSel ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
-              }`}
-            >
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="truncate text-sm font-medium">
-                    {d.profiles?.full_name ?? "Motorista"}
-                  </span>
-                  {isBest && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-600">
-                      <Star className="h-3 w-3 fill-current" /> Melhor opção
-                    </span>
-                  )}
-                  {d.previousStatus === 'declined' && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-red-500/10 px-2 py-0.5 text-[10px] font-semibold text-red-600">
-                      Recusou anteriormente
-                    </span>
-                  )}
-                </div>
-                <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
-                  <span className="inline-flex items-center gap-1">
-                    <MapPin className="h-3 w-3" />
-                    {d.distance != null ? `${d.distance.toFixed(1)} km` : d.city ?? "—"}
-                  </span>
-                  <span className="inline-flex items-center gap-1">
-                    <Truck className="h-3 w-3" /> ★ {Number(d.rating ?? 0).toFixed(1)}
-                  </span>
-                </div>
-              </div>
-              <input
-                type="checkbox"
-                checked={isSel}
-                onChange={() => toggle(d.user_id)}
-                className="h-4 w-4"
-              />
-            </li>
-          );
-        })}
-        {!driversQ.isLoading && ranked.length === 0 && (
-          <li className="text-sm text-muted-foreground">Nenhum motorista disponível.</li>
-        )}
-      </ul>
-
-      <button
-        onClick={send}
-        disabled={sending || selected.size === 0}
-        className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60"
-      >
+      <Button onClick={send} disabled={sending} className="w-full">
         <Send className="h-4 w-4" />
-        {sending ? "Enviando…" : `Enviar oferta (${selected.size})`}
-      </button>
+        {sending ? "Despachando…" : "Despachar rota"}
+      </Button>
     </section>
   );
 }

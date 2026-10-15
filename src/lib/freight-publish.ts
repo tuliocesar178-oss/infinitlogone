@@ -27,8 +27,8 @@ export async function sendOffersToEligibleDrivers(
     .from("drivers")
     .select("user_id, availability, approval_status, financial_status, current_vehicle_id")
     .eq("approval_status", "active")
-    .in("availability", ["disponivel", "offline"])
-    .neq("financial_status", "bloqueado");
+    .eq("financial_status", "ativo")
+    .in("availability", ["disponivel", "offline"]);
 
   if (error || !drivers?.length) return 0;
 
@@ -56,8 +56,7 @@ export async function sendOffersToEligibleDrivers(
           .map((v) => v.owner_driver_id as string)
           .filter(Boolean),
       );
-      // Só filtra se houver ao menos um veículo compatível cadastrado
-      if (compatible.size > 0) eligible = eligible.filter((id) => compatible.has(id));
+      eligible = eligible.filter((id) => compatible.has(id));
     }
   }
 
@@ -72,7 +71,9 @@ export async function sendOffersToEligibleDrivers(
     expires_at: expiresAt,
   }));
 
-  const { error: offerError } = await supabase.from("freight_offers").insert(rows);
+  const { error: offerError } = await supabase
+    .from("freight_offers")
+    .upsert(rows, { onConflict: "order_id,driver_id" });
   if (offerError) {
     console.error("Erro ao enviar ofertas:", offerError);
     return 0;

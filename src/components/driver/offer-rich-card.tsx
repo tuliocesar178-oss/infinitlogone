@@ -156,30 +156,26 @@ export function OfferRichCard({
       if (!userData.user) throw new Error("Usuário não autenticado");
 
       if (action === "accept") {
-        // Primeiro, verificamos se o motorista tem perfil ativo
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("id")
-          .eq("id", userData.user.id)
-          .single();
+        const { data, error } = await supabase.rpc("accept_freight_offer", {
+          _offer_id: offer.id,
+          _lat: driverPos?.[1],
+          _lng: driverPos?.[0],
+        });
+        if (error) throw error;
 
-        if (!profile) throw new Error("Perfil do motorista não encontrado");
+        const result = data as { ok?: boolean; reason?: string };
+        if (!result?.ok) {
+          if (result?.reason === "already_assigned") {
+            throw new Error("Esta rota já foi aceita por outro motorista.");
+          }
+          if (result?.reason === "offer_expired") {
+            throw new Error("Esta oferta expirou.");
+          }
+          throw new Error("Esta rota não está mais disponível.");
+        }
 
-        // 1. Atualizar a oferta. O gatilho (trigger) no banco de dados
-        // cuidará de atualizar a tabela 'orders' automaticamente.
-        const { error: offerError } = await supabase
-          .from("freight_offers")
-          .update({
-            status: "accepted",
-            accepted_at: new Date().toISOString(),
-            driver_id: userData.user.id
-          })
-          .eq("id", offer.id);
-        
-        if (offerError) throw offerError;
-
-        toast.success("Frete aceito! Vá para Minhas Rotas.");
-        navigate({ to: "/driver/fretes" }); // Redireciona direto para rotas
+        toast.success("Rota aceita! Vá para Minhas Rotas.");
+        navigate({ to: "/driver/fretes" });
       } else {
         const { error } = await supabase
           .from("freight_offers")

@@ -263,7 +263,6 @@ function OrderDetail() {
                   />
                 )}
                 {order.driver_id && <Button asChild variant="outline"><Link to="/ops/chat" search={{ driverId: order.driver_id, orderId: id }}>Conversar com motorista</Link></Button>}
-                <OfferPanel order={order} onChanged={() => { orderQ.refetch(); eventsQ.refetch(); }} />
 
               </div>
             </div>
