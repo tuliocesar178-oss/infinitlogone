@@ -40,8 +40,8 @@ export const NAV_GROUPS: Record<string, { label: string; items: NavItem[] }[]> =
     {
       label: "Operacional",
       items: [
-        { label: "📺 Painel de Operação", to: "/painel-operacao", icon: Tv, match: (p) => p.startsWith("/painel-operacao") },
-        { label: "🗼 Torre de Controle", to: "/ops/central", icon: LayoutGrid, match: (p) => p.startsWith("/ops/central") },
+        { label: "Painel de Operação", to: "/painel-operacao", icon: Tv, match: (p) => p.startsWith("/painel-operacao") },
+        { label: "Torre de Controle", to: "/ops/central", icon: LayoutGrid, match: (p) => p.startsWith("/ops/central") },
         { label: "Dashboard", to: "/ops", icon: BarChart3, match: (p) => p === "/ops" },
         { label: "Fretes", to: "/ops/pedidos", icon: Package, match: (p) => p.startsWith("/ops/pedidos") },
         { label: "Obras", to: "/ops/obras", icon: Target, match: (p) => p.startsWith("/ops/obras") },
@@ -69,8 +69,8 @@ export const NAV_GROUPS: Record<string, { label: string; items: NavItem[] }[]> =
     {
       label: "Operacional",
       items: [
-        { label: "📺 Painel de Operação", to: "/painel-operacao", icon: Tv, match: (p) => p.startsWith("/painel-operacao") },
-        { label: "🗼 Torre de Controle", to: "/ops/central", icon: LayoutGrid, match: (p) => p.startsWith("/ops/central") },
+        { label: "Painel de Operação", to: "/painel-operacao", icon: Tv, match: (p) => p.startsWith("/painel-operacao") },
+        { label: "Torre de Controle", to: "/ops/central", icon: LayoutGrid, match: (p) => p.startsWith("/ops/central") },
         { label: "Dashboard", to: "/ops", icon: BarChart3, match: (p) => p === "/ops" },
         { label: "Fretes", to: "/ops/pedidos", icon: Package, match: (p) => p.startsWith("/ops/pedidos") },
         { label: "Obras", to: "/ops/obras", icon: Target, match: (p) => p.startsWith("/ops/obras") },
@@ -85,9 +85,9 @@ export const NAV_GROUPS: Record<string, { label: string; items: NavItem[] }[]> =
     {
       label: "Financeiro",
       items: [
-        { label: "🗼 Torre de Controle", to: "/ops/central", icon: LayoutGrid, match: (p) => p.startsWith("/ops/central") },
-        { label: "💰 Financeiro", to: "/ops/financeiro", icon: Wallet, match: (p) => p.startsWith("/ops/financeiro") },
-        { label: "🧾 Faturamento", to: "/ops/faturamento", icon: DollarSign, match: (p) => p.startsWith("/ops/faturamento") },
+        { label: "Torre de Controle", to: "/ops/central", icon: LayoutGrid, match: (p) => p.startsWith("/ops/central") },
+        { label: "Financeiro", to: "/ops/financeiro", icon: Wallet, match: (p) => p.startsWith("/ops/financeiro") },
+        { label: "Faturamento", to: "/ops/faturamento", icon: DollarSign, match: (p) => p.startsWith("/ops/faturamento") },
         { label: "Fretes", to: "/ops/pedidos", icon: Package, match: (p) => p.startsWith("/ops/pedidos") },
         { label: "Motoristas", to: "/ops/motoristas", icon: Truck, match: (p) => p.startsWith("/ops/motoristas") },
         { label: "Chat da Operação", to: "/ops/chat", icon: MessageSquare, match: (p) => p.startsWith("/ops/chat") },
@@ -98,12 +98,12 @@ export const NAV_GROUPS: Record<string, { label: string; items: NavItem[] }[]> =
     {
       label: "Portal do Cliente",
       items: [
-        { label: "📍 Rastreamento", to: "/client", icon: MapPin, match: (p) => p === "/client" || p === "/client/" },
-        { label: "🚚 Histórico de Fretes", to: "/client/fretes", icon: Package, match: (p) => p.startsWith("/client/fretes") },
-        { label: "📄 Documentos", to: "/client/documentos", icon: FileText, match: (p) => p.startsWith("/client/documentos") },
-        { label: "📊 Relatórios", to: "/relatorios", icon: BarChart3, match: (p) => p === "/relatorios" },
-        { label: "💳 Financeiro", to: "/client/financeiro", icon: DollarSign, match: (p) => p === "/client/financeiro" },
-        { label: "👤 Perfil", to: "/client/perfil", icon: UserRound, match: (p) => p === "/client/perfil" },
+        { label: "Rastreamento", to: "/client", icon: MapPin, match: (p) => p === "/client" || p === "/client/" },
+        { label: "Histórico de Fretes", to: "/client/fretes", icon: Package, match: (p) => p.startsWith("/client/fretes") },
+        { label: "Documentos", to: "/client/documentos", icon: FileText, match: (p) => p.startsWith("/client/documentos") },
+        { label: "Relatórios", to: "/relatorios", icon: BarChart3, match: (p) => p === "/relatorios" },
+        { label: "Financeiro", to: "/client/financeiro", icon: DollarSign, match: (p) => p === "/client/financeiro" },
+        { label: "Perfil", to: "/client/perfil", icon: UserRound, match: (p) => p === "/client/perfil" },
       ],
     },
   ],

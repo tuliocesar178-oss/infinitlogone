@@ -21,7 +21,7 @@ import { DRIVER_COLUMNS } from "@/lib/driver-columns";
 export const Route = createFileRoute("/_authenticated/ops/central")({
   head: () => ({
     meta: [
-      { title: "🗼 Torre de Controle — InfinitLog" },
+      { title: "Torre de Controle — InfinitLog" },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -168,7 +168,7 @@ function TorreDeControle() {
 
   return (
     <AppShell 
-      title="🗼 Torre de Controle" 
+      title="Torre de Controle" 
       subtitle="Monitoramento operacional 360° em tempo real"
       actions={
         <div className="flex items-center gap-3">
