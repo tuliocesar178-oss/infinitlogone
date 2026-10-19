@@ -11,7 +11,7 @@ import {
   Truck,
   Users,
 } from "lucide-react";
-import premiumHero from "@/assets/logistics-highway.jpg";
+import heroLogo from "@/assets/uploads/9620.png";
 const PublicLogisticsMap = lazy(() => import("@/components/public-logistics-map"));
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
@@ -71,19 +71,17 @@ export function PremiumHome() {
       </header>
 
       <main>
-        <section className="relative overflow-hidden bg-surface-2">
-          <img src={premiumHero} alt="Caminhão em rodovia brasileira" width={1536} height={864} className="absolute inset-0 h-full w-full object-cover object-right" />
-          <div className="absolute inset-0 bg-gradient-to-r from-background via-background/90 to-background/10" />
+        <section className="relative overflow-hidden bg-primary">
           <div className="relative mx-auto grid min-h-[530px] max-w-7xl items-center gap-5 px-5 py-8 lg:grid-cols-[1fr_1fr] lg:py-12">
             <div className="relative z-10 max-w-xl">
               <span className="inline-flex items-center gap-2 rounded-full border border-brand/20 bg-background px-4 py-2 text-xs font-semibold uppercase tracking-normal text-brand">
                 <ShieldCheck className="h-4 w-4" /> Tecnologia & logística
               </span>
-              <h1 className="mt-7 text-4xl font-semibold leading-tight text-primary sm:text-6xl">
+              <h1 className="mt-7 text-4xl font-semibold leading-tight text-primary-foreground sm:text-6xl">
                 Sua carga em{" "}
                 <span className="text-brand">boas mãos.</span>
               </h1>
-              <p className="mt-7 max-w-lg text-lg leading-relaxed text-muted-foreground">
+              <p className="mt-7 max-w-lg text-lg leading-relaxed text-primary-foreground/75">
                 Rastreamento, gestão e total visibilidade para você e sua operação.
               </p>
 
@@ -115,7 +113,16 @@ export function PremiumHome() {
             </div>
 
             <div className="relative h-[180px] sm:h-[240px] lg:h-[390px]">
-              <div className="absolute left-0 top-0 h-[175px] w-full overflow-hidden rounded-xl border border-border bg-background shadow-elevated sm:h-[230px] sm:w-[75%] lg:h-[280px]">
+              <img
+                src={heroLogo}
+                alt="Logo oficial INFINITLOG VAPT VUPT"
+                width={1672}
+                height={940}
+                className="absolute inset-0 h-full w-full object-contain mix-blend-screen"
+                decoding="async"
+                fetchPriority="high"
+              />
+              <div className="absolute left-0 top-0 h-[130px] w-[48%] overflow-hidden rounded-xl border border-border bg-background shadow-elevated sm:h-[150px] lg:h-[180px] lg:w-1/2">
                 <Suspense fallback={<div className="h-full bg-accent" />}><PublicLogisticsMap /></Suspense>
               </div>
               <div className="absolute right-0 top-5 hidden max-w-[190px] rounded-xl border bg-background/95 p-4 shadow-elevated sm:block">
