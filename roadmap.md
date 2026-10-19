@@ -53,3 +53,9 @@
 - [x] Adicionar Mapa Logístico Premium com pré-visualização sem alterar o design ativo
 - [x] Persistir escolha administrativa e permitir restaurar o design anterior
 - [x] Validar rastreio público, aparência e preservação dos portais internos
+
+## Navegação profissional (plano 19/10)
+- [x] Fase 1: câmera seguindo o veículo, botão da etapa na navegação (chegada à coleta/fotos, checklist, iniciar viagem, preparar entrega, comprovantes), detalhes expansíveis
+- [ ] Fase 2: documentos por categoria (NF, CT-e, MDF-e, canhoto), exigências por frete, exceções autorizadas
+- [ ] Fase 3: fotos sem internet com envio posterior
+- [ ] Teste em celular real (GPS, câmera, tela bloqueada)
