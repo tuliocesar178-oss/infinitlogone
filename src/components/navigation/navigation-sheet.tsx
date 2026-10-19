@@ -45,6 +45,7 @@ export function NavigationSheet({ storageKey, minimized, compact, expanded }: Na
       className="flex w-full touch-none justify-center pb-2 pt-3"
       aria-label={state === 'expanded' ? 'Recolher painel' : 'Expandir painel'}
       onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={() => { start.current = null; setDragY(0); }}
+      onClick={event => { if (event.detail === 0) choose(state === "expanded" ? "compact" : state === "compact" ? "minimized" : "expanded"); }}
       onKeyDown={event => { if (event.key === 'ArrowUp') choose(ORDER[Math.min(2, ORDER.indexOf(state) + 1)]); if (event.key === 'ArrowDown') choose(ORDER[Math.max(0, ORDER.indexOf(state) - 1)]); }}
     >
       <span className="h-1.5 w-12 rounded-full bg-muted-foreground/50" />
