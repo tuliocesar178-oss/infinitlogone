@@ -26,7 +26,7 @@ export const getNavigationDirections = createServerFn({ method: 'POST' })
 
 export const syncNavigationPosition = createServerFn({ method: 'POST' })
   .middleware([requireSupabaseAuth])
-  .inputValidator(input => z.object({ orderId: z.string().uuid(), position, accuracy: z.number().nonnegative(), heading: z.number().nullable(), speed: z.number().nullable(), etaMinutes: z.number().nonnegative().nullable(), distanceKm: z.number().nonnegative().nullable(), status: z.string() }).parse(input))
+  .inputValidator(input => z.object({ orderId: z.string().uuid(), position, accuracy: z.number().nonnegative(), heading: z.number().nullable(), speed: z.number().nullable(), etaMinutes: z.number().finite().nonnegative().nullable().transform(value => value === null ? null : Math.ceil(value)), distanceKm: z.number().nonnegative().nullable(), status: z.string() }).parse(input))
   .handler(async ({ data, context }) => {
     const { data: order, error } = await context.supabase.from('orders').select('id,status,driver_id').eq('id', data.orderId).eq('driver_id', context.userId).maybeSingle();
     if (error) throw error;
