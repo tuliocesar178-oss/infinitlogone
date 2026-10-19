@@ -14,7 +14,7 @@ function DriverNavigationPage() {
     const { data: auth, error: authError } = await supabase.auth.getUser();
     if (authError) throw authError;
     if (!auth.user) throw new Error('Sessão expirada.');
-    const { data, error } = await supabase.from('orders').select('id,status,driver_id,origin_lat,origin_lng,origin_address,destination_lat,destination_lng,destination_address').eq('id', id).eq('driver_id', auth.user.id).maybeSingle();
+    const { data, error } = await supabase.from('orders').select('id,code,status,driver_id,client_name,contact_name,contact_phone,pickup_contact_name,delivery_contact_name,origin_lat,origin_lng,origin_address,destination_lat,destination_lng,destination_address').eq('id', id).eq('driver_id', auth.user.id).maybeSingle();
     if (error) throw error;
     return data;
   }, refetchInterval: 5000 });

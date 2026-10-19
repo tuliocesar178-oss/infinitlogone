@@ -481,7 +481,7 @@ function ActionBtn({
   );
 }
 
-function PickupEvidenceForm({ orderId, userId, position, onDone, onCancel }: { orderId: string; userId: string; position: [number, number] | null; onDone: () => void; onCancel: () => void }) {
+export function PickupEvidenceForm({ orderId, userId, position, onDone, onCancel }: { orderId: string; userId: string; position: [number, number] | null; onDone: () => void; onCancel: () => void }) {
   const [files, setFiles] = useState<File[]>([]);
   const [invoiceFile, setInvoiceFile] = useState<File | null>(null);
   const [volumes, setVolumes] = useState("");
@@ -552,7 +552,7 @@ function PickupEvidenceForm({ orderId, userId, position, onDone, onCancel }: { o
   );
 }
 
-function DeliveryEvidenceForm({ orderId, userId, position, onDone, onCancel }: { orderId: string; userId: string; position: [number, number] | null; onDone: () => void; onCancel: () => void }) {
+export function DeliveryEvidenceForm({ orderId, userId, position, onDone, onCancel }: { orderId: string; userId: string; position: [number, number] | null; onDone: () => void; onCancel: () => void }) {
   const [signedInvoice, setSignedInvoice] = useState<File | null>(null);
   const [deliveryPhotos, setDeliveryPhotos] = useState<File[]>([]);
   const [receiverName, setReceiverName] = useState("");
