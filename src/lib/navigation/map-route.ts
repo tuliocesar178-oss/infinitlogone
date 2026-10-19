@@ -25,6 +25,7 @@ export function drawNavigationRoute(
   route: NavigationRoute,
   colors: { line: string; casing: string; completed?: string },
   position?: [number, number] | null,
+  maxOffRouteMeters = 60,
 ): boolean {
   if (!map.isStyleLoaded()) return false;
   const geometry = geometrySchema.parse(route.geometry);
@@ -33,6 +34,9 @@ export function drawNavigationRoute(
 
   if (position && validPosition(position)) {
     const snapped = nearestPointOnLine(lineString(geometry.coordinates), point(position));
+    // GPS noise far from the road keeps the last drawing instead of flickering;
+    // a real deviation is handled by recalculation in the navigation hook.
+    if (Number(snapped.properties.dist) * 1000 > maxOffRouteMeters && map.getSource(ROUTE_SOURCE) && map.getLayer(ROUTE_LINE)) return true;
     const segmentIndex = Number(snapped.properties.index);
     if (Number.isInteger(segmentIndex) && segmentIndex >= 0) {
       const snappedCoordinate = snapped.geometry.coordinates as [number, number];

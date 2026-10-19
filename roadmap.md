@@ -59,3 +59,7 @@
 - [ ] Fase 2: documentos por categoria (NF, CT-e, MDF-e, canhoto), exigências por frete, exceções autorizadas
 - [ ] Fase 3: fotos sem internet com envio posterior
 - [ ] Teste em celular real (GPS, câmera, tela bloqueada)
+
+- [x] Navegação: painel retrátil, caminhão no mapa, zoom com pausa do acompanhamento, instrução com rua
+- [x] Corrigir erro de gravação do tempo estimado (número inteiro)
+- [ ] Validar caminhão, rota encurtando e gravação da posição em celular real (depende de GPS físico)
