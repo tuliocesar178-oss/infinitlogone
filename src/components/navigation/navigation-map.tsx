@@ -135,6 +135,9 @@ export default function NavigationMap(props: NavigationMapProps) {
     map.on('dragstart', manual); map.on('zoomstart', manual); map.on('rotatestart', manual); map.on('pitchstart', manual);
     const observer = new ResizeObserver(resize); observer.observe(container.current);
     map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'top-right');
+    // Mapbox CSS is unlayered and beats utilities; place zoom below the instruction card.
+    const zoomCorner = container.current.querySelector<HTMLElement>('.mapboxgl-ctrl-top-right');
+    if (zoomCorner) zoomCorner.style.top = '38%';
     return () => {
       observer.disconnect();
       if (animation.current) cancelAnimationFrame(animation.current);
@@ -145,5 +148,5 @@ export default function NavigationMap(props: NavigationMapProps) {
     };
   }, []);
   useEffect(() => { updateRef.current(); }, [props.position, props.target, props.heading, props.follow, props.centerRequest, props.overviewRequest, props.route]);
-  return <div className="absolute inset-0 [&_.mapboxgl-ctrl-top-right]:top-[38%]!" aria-label="Mapa de navegação Mapbox"><span ref={colors} className="hidden text-brand bg-background" /><span ref={completedColor} className="hidden text-muted-foreground" /><div ref={container} className="h-full w-full" />{mapError && <div role="alert" className="absolute inset-x-3 top-1/3 z-20 rounded-lg bg-background/95 p-3 text-sm text-destructive">{mapError}</div>}</div>;
+  return <div className="absolute inset-0" aria-label="Mapa de navegação Mapbox"><span ref={colors} className="hidden text-brand bg-background" /><span ref={completedColor} className="hidden text-muted-foreground" /><div ref={container} className="h-full w-full" />{mapError && <div role="alert" className="absolute inset-x-3 top-1/3 z-20 rounded-lg bg-background/95 p-3 text-sm text-destructive">{mapError}</div>}</div>;
 }
