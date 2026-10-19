@@ -45,6 +45,8 @@ export function NavigationView({ order }: NavigationViewProps) {
       {nav.error && <p role="alert" className="break-words text-sm text-destructive">{nav.error}</p>}
       {nav.syncError && <p role="alert" className="break-words text-sm text-destructive">{nav.syncError}</p>}
       {nav.busy && <p role="status" className="text-sm text-muted-foreground">Calculando rota rodoviária…</p>}
+      {progress && progress.remaining <= 300 && <p role="status" className="rounded-md border border-brand/20 bg-brand/5 px-3 py-2 text-sm font-medium text-brand">Você está chegando à {nav.target.kind.toLowerCase()}.</p>}
+      {nav.routes.length > 1 && <div className="space-y-2"><p className="text-xs font-medium text-muted-foreground">Rotas alternativas</p><div className="flex flex-wrap gap-2">{nav.routes.map((route, index) => <Button key={`${index}-${route.distance}`} size="sm" variant={nav.selected === index ? 'default' : 'outline'} aria-pressed={nav.selected === index} onClick={() => nav.select(index)}>Opção {index + 1} · {meters(route.distance)} · {Math.max(1, Math.round(route.duration / 60))} min</Button>)}</div></div>}
       <dl className="grid grid-cols-3 gap-2 text-sm">
         <div><dt className="text-xs text-muted-foreground">Distância restante</dt><dd className="font-semibold">{progress ? meters(progress.remaining) : '—'}</dd></div>
         <div><dt className="text-xs text-muted-foreground">Tempo estimado</dt><dd className="font-semibold">{progress ? `${Math.max(1, Math.round(progress.seconds / 60))} min` : '—'}</dd></div>
