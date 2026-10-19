@@ -1,4 +1,6 @@
-import { lazy, Suspense, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { StageAction } from './stage-action';
 import { ClientOnly, Link } from '@tanstack/react-router';
 import { ArrowLeft, ArrowUp, ExternalLink, LocateFixed, Navigation, RotateCcw, Square, Volume2, VolumeX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -19,6 +21,8 @@ export function NavigationView({ order }: NavigationViewProps) {
   const [externalOpen, setExternalOpen] = useState(false);
   const [follow, setFollow] = useState(true);
   const [centerRequest, setCenterRequest] = useState(0);
+  const [userId, setUserId] = useState<string | null>(null);
+  useEffect(() => { void supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null)); }, []);
   const active = navigationActive(order.status);
   const target = nav.target.position;
   const canStart = active && target !== null;
@@ -45,7 +49,7 @@ export function NavigationView({ order }: NavigationViewProps) {
       {nav.error && <p role="alert" className="break-words text-sm text-destructive">{nav.error}</p>}
       {nav.syncError && <p role="alert" className="break-words text-sm text-destructive">{nav.syncError}</p>}
       {nav.busy && <p role="status" className="text-sm text-muted-foreground">Calculando rota rodoviária…</p>}
-      {progress && progress.remaining <= 300 && <p role="status" className="rounded-md border border-brand/20 bg-brand/5 px-3 py-2 text-sm font-medium text-brand">Você está chegando à {nav.target.kind.toLowerCase()}.</p>}
+      <StageAction order={order} userId={userId} remaining={progress?.remaining ?? null} position={nav.position} />
       {nav.routes.length > 1 && <div className="space-y-2"><p className="text-xs font-medium text-muted-foreground">Rotas alternativas</p><div className="flex flex-wrap gap-2">{nav.routes.map((route, index) => <Button key={`${index}-${route.distance}`} size="sm" variant={nav.selected === index ? 'default' : 'outline'} aria-pressed={nav.selected === index} onClick={() => nav.select(index)}>Opção {index + 1} · {meters(route.distance)} · {Math.max(1, Math.round(route.duration / 60))} min</Button>)}</div></div>}
       <dl className="grid grid-cols-3 gap-2 text-sm">
         <div><dt className="text-xs text-muted-foreground">Distância restante</dt><dd className="font-semibold">{progress ? meters(progress.remaining) : '—'}</dd></div>

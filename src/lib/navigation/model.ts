@@ -5,7 +5,7 @@ import { validPosition } from './map-route';
 export type Position = [number, number];
 export interface NavigationStep { distance: number; duration: number; geometry: { type: 'LineString'; coordinates: number[][] }; maneuver: { instruction: string; type: string; modifier?: string; location: number[] }; }
 export interface NavigationRoute { distance: number; duration: number; geometry: { type: 'LineString'; coordinates: number[][] }; legs: { steps: NavigationStep[] }[]; }
-export interface NavigationOrder { id: string; status: string; driver_id: string | null; origin_lat: number | null; origin_lng: number | null; origin_address: string; destination_lat: number | null; destination_lng: number | null; destination_address: string; }
+export interface NavigationOrder { id: string; status: string; driver_id: string | null; origin_lat: number | null; origin_lng: number | null; origin_address: string; destination_lat: number | null; destination_lng: number | null; destination_address: string; code?: string | null; client_name?: string | null; contact_name?: string | null; contact_phone?: string | null; pickup_contact_name?: string | null; delivery_contact_name?: string | null; }
 const pickup = ['driver_assigned','en_route_pickup','in_transit_to_pickup','near_pickup','arriving_pickup','at_pickup','loading'];
 export function navigationTarget(order: NavigationOrder) {
   const isPickup = pickup.includes(order.status);
