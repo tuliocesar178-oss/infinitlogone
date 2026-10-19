@@ -3,7 +3,7 @@ import { lineString, point } from '@turf/helpers';
 import distance from '@turf/distance';
 import { validPosition } from './map-route';
 export type Position = [number, number];
-export interface NavigationStep { distance: number; duration: number; geometry: { type: 'LineString'; coordinates: number[][] }; maneuver: { instruction: string; type: string; modifier?: string; location: number[] }; }
+export interface NavigationStep { distance: number; duration: number; name?: string; geometry: { type: 'LineString'; coordinates: number[][] }; maneuver: { instruction: string; type: string; modifier?: string; location: number[] }; }
 export interface NavigationRoute { distance: number; duration: number; geometry: { type: 'LineString'; coordinates: number[][] }; legs: { steps: NavigationStep[] }[]; }
 export interface NavigationOrder { id: string; status: string; driver_id: string | null; origin_lat: number | null; origin_lng: number | null; origin_address: string; destination_lat: number | null; destination_lng: number | null; destination_address: string; code?: string | null; client_name?: string | null; contact_name?: string | null; contact_phone?: string | null; pickup_contact_name?: string | null; delivery_contact_name?: string | null; }
 const pickup = ['driver_assigned','en_route_pickup','in_transit_to_pickup','near_pickup','arriving_pickup','at_pickup','loading'];
@@ -28,5 +28,5 @@ export function routeProgress(route: NavigationRoute, position: Position) {
   const remaining = Math.max(0, route.distance - traveled);
   const stepRemaining = Math.max(0, accumulated - traveled);
   const seconds = steps.slice(index + 1).reduce((sum, step) => sum + step.duration, 0) + (current && current.distance > 0 ? current.duration * stepRemaining / current.distance : 0);
-  return { traveled, remaining, percent: route.distance > 0 ? traveled / route.distance * 100 : 0, seconds, stepRemaining, instruction: next?.maneuver.instruction ?? current?.maneuver.instruction ?? 'Siga a rota', stepIndex: index, offRoute: snapped.properties.dist * 1000, arrival: distance(point(position), point(route.geometry.coordinates.at(-1) ?? position)) * 1000 <= 100 };
+  return { traveled, remaining, percent: route.distance > 0 ? traveled / route.distance * 100 : 0, seconds, stepRemaining, instruction: next?.maneuver.instruction ?? current?.maneuver.instruction ?? 'Siga a rota', street: next?.name || current?.name || '', modifier: next?.maneuver.modifier ?? next?.maneuver.type ?? null, stepIndex: index, offRoute: snapped.properties.dist * 1000, arrival: distance(point(position), point(route.geometry.coordinates.at(-1) ?? position)) * 1000 <= 100 };
 }

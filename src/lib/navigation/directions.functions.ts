@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
 import { navigationActive, navigationTarget } from './model';
 import { positionSchema as position, geometrySchema as geometry } from './map-route';
-const route = z.object({ distance: z.number().nonnegative(), duration: z.number().nonnegative(), geometry, legs: z.array(z.object({ steps: z.array(z.object({ distance: z.number(), duration: z.number(), geometry, maneuver: z.object({ instruction: z.string(), type: z.string(), modifier: z.string().optional(), location: z.array(z.number()) }) })) })) });
+const route = z.object({ distance: z.number().nonnegative(), duration: z.number().nonnegative(), geometry, legs: z.array(z.object({ steps: z.array(z.object({ distance: z.number(), duration: z.number(), geometry, name: z.string().optional(), maneuver: z.object({ instruction: z.string(), type: z.string(), modifier: z.string().optional(), location: z.array(z.number()) }) })) })) });
 export const getNavigationDirections = createServerFn({ method: 'POST' })
   .middleware([requireSupabaseAuth])
   .inputValidator(input => z.object({ orderId: z.string().uuid(), position }).parse(input))
