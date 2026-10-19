@@ -129,7 +129,7 @@ export default function NavigationMap(props: NavigationMapProps) {
     const restore = () => { if (latest.current.route && (!map.getLayer(ROUTE_LINE) || !map.getLayer(ROUTE_CASING) || !map.getLayer(ROUTE_COMPLETED_LINE))) redraw(); };
     const failure = (event: mapboxgl.ErrorEvent) => { setMapError(`Falha ao carregar o mapa: ${event.error.message}`); };
     // Only gestures carry originalEvent; programmatic camera moves do not.
-    const manual = (event: { originalEvent?: unknown }) => { if (event.originalEvent) latest.current.onUserMove?.(); };
+    const manual = (event: object) => { if ('originalEvent' in event && event.originalEvent) latest.current.onUserMove?.(); };
     const resize = () => map.resize();
     map.on('load', redraw); map.on('style.load', redraw); map.on('idle', restore); map.on('error', failure);
     map.on('dragstart', manual); map.on('zoomstart', manual); map.on('rotatestart', manual); map.on('pitchstart', manual);
