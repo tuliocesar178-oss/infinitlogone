@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import {
   ArrowRight,
@@ -12,7 +12,6 @@ import {
   Users,
 } from "lucide-react";
 import heroLogo from "@/assets/uploads/9620.png";
-const PublicLogisticsMap = lazy(() => import("@/components/public-logistics-map"));
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -112,25 +111,18 @@ export function PremiumHome() {
               </form>
             </div>
 
-            <div className="relative h-[180px] sm:h-[240px] lg:h-[390px]">
+            {/* Official logo blended into the hero: radial mask fades the image's own navy background edges. */}
+            <div className="relative aspect-[1672/940] w-full lg:scale-110">
+              <div aria-hidden className="absolute inset-[10%] rounded-full bg-brand/10 blur-3xl" />
               <img
                 src={heroLogo}
                 alt="Logo oficial INFINITLOG VAPT VUPT"
                 width={1672}
                 height={940}
-                className="absolute inset-0 h-full w-full object-contain mix-blend-screen"
+                className="relative h-full w-full object-contain [mask-image:radial-gradient(ellipse_60%_55%_at_center,black_55%,transparent_100%)]"
                 decoding="async"
                 fetchPriority="high"
               />
-              <div className="absolute left-0 top-0 h-[130px] w-[48%] overflow-hidden rounded-xl border border-border bg-background shadow-elevated sm:h-[150px] lg:h-[180px] lg:w-1/2">
-                <Suspense fallback={<div className="h-full bg-accent" />}><PublicLogisticsMap /></Suspense>
-              </div>
-              <div className="absolute right-0 top-5 hidden max-w-[190px] rounded-xl border bg-background/95 p-4 shadow-elevated sm:block">
-                <ShieldCheck className="mb-2 h-6 w-6 text-brand" />
-                <p className="font-semibold text-primary">Visibilidade de ponta a ponta</p>
-                <p className="mt-2 text-xs text-muted-foreground">Consulte seu código para ver o status real da carga.</p>
-                <Button asChild size="sm" variant="outline" className="mt-3"><Link to="/rastreio">Consultar carga</Link></Button>
-              </div>
             </div>
           </div>
         </section>
