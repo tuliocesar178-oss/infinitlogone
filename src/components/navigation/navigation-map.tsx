@@ -63,7 +63,7 @@ export default function NavigationMap(props: NavigationMapProps) {
       if (position) bounds.extend(position);
       map.fitBounds(bounds, { padding: padding(), maxZoom: 16, duration: 500 }); fitted.current = route;
     } else if (follow && position) {
-      map.easeTo({ center: position, zoom: 16, bearing: heading ?? map.getBearing(), duration: 500, padding: padding() });
+      map.easeTo({ center: position, zoom: 17, pitch: 55, bearing: heading ?? map.getBearing(), duration: 900, easing: t => t, padding: { ...padding(), top: (container.current?.clientHeight ?? 800) * .45 } });
     } else if (!route && target) map.easeTo({ center: target, zoom: 14, duration: 500 });
   }
   const updateRef = useRef(updateMap); updateRef.current = updateMap;
