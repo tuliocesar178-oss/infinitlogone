@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import {
   ArrowRight,
@@ -12,7 +12,6 @@ import {
   Users,
 } from "lucide-react";
 import heroLogo from "@/assets/uploads/9620.png";
-const PublicLogisticsMap = lazy(() => import("@/components/public-logistics-map"));
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
