@@ -145,5 +145,5 @@ export default function NavigationMap(props: NavigationMapProps) {
     };
   }, []);
   useEffect(() => { updateRef.current(); }, [props.position, props.target, props.heading, props.follow, props.centerRequest, props.overviewRequest, props.route]);
-  return <div className="absolute inset-0 [&_.mapboxgl-ctrl-top-right]:top-[38%]" aria-label="Mapa de navegação Mapbox"><span ref={colors} className="hidden text-brand bg-background" /><span ref={completedColor} className="hidden text-muted-foreground" /><div ref={container} className="h-full w-full" />{mapError && <div role="alert" className="absolute inset-x-3 top-1/3 z-20 rounded-lg bg-background/95 p-3 text-sm text-destructive">{mapError}</div>}</div>;
+  return <div className="absolute inset-0 [&_.mapboxgl-ctrl-top-right]:top-[38%]!" aria-label="Mapa de navegação Mapbox"><span ref={colors} className="hidden text-brand bg-background" /><span ref={completedColor} className="hidden text-muted-foreground" /><div ref={container} className="h-full w-full" />{mapError && <div role="alert" className="absolute inset-x-3 top-1/3 z-20 rounded-lg bg-background/95 p-3 text-sm text-destructive">{mapError}</div>}</div>;
 }
