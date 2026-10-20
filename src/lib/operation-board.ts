@@ -1,9 +1,12 @@
 import type { Database } from "@/integrations/supabase/types";
 
 export type BoardOrder = Database["public"]["Tables"]["orders"]["Row"] & {
-  driver: { full_name: string | null; phone: string | null } | null;
-  vehicle: { id: string; plate: string; model: string | null; brand: string | null; current_lat: number | null; current_lng: number | null; status: string } | null;
+  driver: { full_name: string | null; phone: string | null; photo_url?: string | null } | null;
+  vehicle: { id: string; plate: string; model: string | null; brand: string | null; current_lat: number | null; current_lng: number | null; status: string; vehicle_type?: string | null } | null;
   incident: { id: string; type: string; description: string | null; severity: string | null; created_at: string } | null;
+  work?: { name: string } | null;
+  responsible?: string | null;
+  actual_delivery_at?: string | null;
 };
 
 export type BoardFilter = "live" | "all" | "awaiting" | "pickup" | "transit" | "near" | "delivered" | "late" | "incident";
@@ -31,24 +34,22 @@ export function expectedDelivery(order: BoardOrder): Date | null {
     const parsed = new Date(order.delivery_window_end);
     if (!Number.isNaN(parsed.getTime())) return parsed;
   }
-  if (order.scheduled_at && order.estimated_minutes) {
-    const start = new Date(order.scheduled_at);
-    if (!Number.isNaN(start.getTime())) return new Date(start.getTime() + order.estimated_minutes * 60_000);
-  }
   return null;
 }
 
 export function etaDate(order: BoardOrder): Date | null {
-  if (order.eta_minutes == null || order.eta_minutes < 0) return null;
-  return new Date(Date.now() + order.eta_minutes * 60_000);
+  if (order.eta_minutes == null || order.eta_minutes < 0 || !order.last_ping_at) return null;
+  const ping = new Date(order.last_ping_at).getTime();
+  if (!Number.isFinite(ping) || Date.now() - ping > 180_000 || ping > Date.now() + 30_000) return null;
+  return new Date(ping + order.eta_minutes * 60_000);
 }
 
 export function isLate(order: BoardOrder) {
   if (DELIVERED_STATUSES.includes(order.status) || order.status === "cancelled") return false;
   const expected = expectedDelivery(order);
-  const eta = etaDate(order);
   if (!expected) return false;
-  return (eta ?? new Date()).getTime() > expected.getTime();
+  const ping = order.last_ping_at ? new Date(order.last_ping_at).getTime() : NaN;
+  return Number.isFinite(ping) && Date.now() - ping <= 180_000 && ping <= Date.now() + 30_000 && Date.now() > expected.getTime();
 }
 
 export function progress(order: BoardOrder) {
@@ -76,7 +77,7 @@ export function matchesFilter(order: BoardOrder, filter: BoardFilter) {
   if (filter === "pickup") return PICKUP_STATUSES.includes(order.status);
   if (filter === "transit") return TRANSIT_STATUSES.includes(order.status);
   if (filter === "near") return NEAR_STATUSES.includes(order.status);
-  if (filter === "delivered") return DELIVERED_STATUSES.includes(order.status) && isToday(order.completed_at ?? order.updated_at);
+  if (filter === "delivered") return DELIVERED_STATUSES.includes(order.status) && isToday(order.actual_delivery_at ?? order.completed_at);
   if (filter === "late") return isLate(order);
   return Boolean(order.incident || order.status === "incident");
 }

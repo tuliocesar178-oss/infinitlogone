@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ArrowUpRight, Clock, MapPin, Package, Route, Truck, X } from "lucide-react";
 import { STATUS_BADGE_CLASS } from "@/lib/order-status";
 import { formatBRL, progressPercent, statusLabel, timeAgo } from "@/lib/ops-central";
+import { Button } from "@/components/ui/button";
 
 export function OrderDrawer({ orderId, onClose }: { orderId: string | null; onClose: () => void }) {
   useEffect(() => {
@@ -38,7 +39,7 @@ export function OrderDrawer({ orderId, onClose }: { orderId: string | null; onCl
           : Promise.resolve({ data: null }),
         supabase
           .from("order_events")
-          .select("event_type, to_status, created_at")
+          .select("id, event_type, to_status, created_at, payload")
           .eq("order_id", data.id)
           .order("created_at", { ascending: false })
           .limit(10),
@@ -59,7 +60,7 @@ export function OrderDrawer({ orderId, onClose }: { orderId: string | null; onCl
 
   return (
     <div className="fixed inset-0 z-50 flex" onClick={onClose}>
-      <div className="flex-1 bg-black/40 backdrop-blur-sm" />
+      <div className="flex-1 bg-foreground/40 backdrop-blur-sm" />
       <aside
         className="flex h-full w-full max-w-md flex-col bg-background shadow-2xl"
         onClick={(e) => e.stopPropagation()}
@@ -76,12 +77,12 @@ export function OrderDrawer({ orderId, onClose }: { orderId: string | null; onCl
             </div>
             <div className="mt-0.5 truncate text-xs text-muted-foreground">{o?.client_name ?? "—"}</div>
           </div>
-          <button onClick={onClose} className="grid h-9 w-9 place-items-center rounded-lg hover:bg-accent">
+          <Button variant="ghost" size="icon" aria-label="Fechar ficha do frete" onClick={onClose}>
             <X className="h-4 w-4" />
-          </button>
+          </Button>
         </header>
 
-        {q.isLoading || !o ? (
+        {q.isError ? <p role="alert" className="p-5 text-destructive">Não foi possível carregar o histórico.</p> : q.isLoading || !o ? (
           <div className="grid flex-1 place-items-center text-xs text-muted-foreground">Carregando…</div>
         ) : (
           <div className="flex-1 space-y-4 overflow-y-auto p-5">
@@ -91,7 +92,7 @@ export function OrderDrawer({ orderId, onClose }: { orderId: string | null; onCl
               </div>
               <div className="space-y-1 text-sm">
                 <div className="flex items-start gap-2">
-                  <MapPin className="mt-0.5 h-4 w-4 text-emerald-600" />
+                  <MapPin className="mt-0.5 h-4 w-4 text-success" />
                   <div>
                     <div className="font-medium">{o.origin_city ?? "—"}</div>
                     <div className="text-xs text-muted-foreground">{o.origin_address}</div>
@@ -123,7 +124,7 @@ export function OrderDrawer({ orderId, onClose }: { orderId: string | null; onCl
             </section>
 
             <section className="grid grid-cols-2 gap-2">
-              <Stat icon={<Clock className="h-3.5 w-3.5" />} label="ETA" value={o.eta_minutes != null ? `${o.eta_minutes} min` : timeAgo(o.last_ping_at)} />
+              <Stat icon={<Clock className="h-3.5 w-3.5" />} label="ETA" value={o.eta_minutes != null && o.last_ping_at && Date.now()-Date.parse(o.last_ping_at)<=180000 ? `${o.eta_minutes} min` : "Sem previsão confiável"} />
               <Stat icon={<Package className="h-3.5 w-3.5" />} label="Valor" value={formatBRL(o.price)} />
               <Stat icon={<Truck className="h-3.5 w-3.5" />} label="Motorista" value={q.data?.driver?.full_name ?? "—"} />
               <Stat icon={<Truck className="h-3.5 w-3.5" />} label="Veículo" value={q.data?.vehicle?.plate ?? "—"} />
@@ -135,8 +136,8 @@ export function OrderDrawer({ orderId, onClose }: { orderId: string | null; onCl
               </div>
               {q.data?.events?.length ? (
                 <ol className="space-y-2 text-sm">
-                  {q.data.events.map((e, i) => (
-                    <li key={i} className="flex items-baseline justify-between gap-2">
+                  {q.data.events.map((e) => (
+                    <li key={e.id} className="flex items-baseline justify-between gap-2">
                       <span className="truncate">{statusLabel(e.to_status) !== "—" ? statusLabel(e.to_status) : e.event_type}</span>
                       <span className="font-mono text-[11px] text-muted-foreground">{timeAgo(e.created_at)}</span>
                     </li>
