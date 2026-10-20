@@ -4,6 +4,8 @@ import type { Feature, Geometry } from "geojson";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { TRACK_KIND, type TrackKind } from "@/lib/tracking-center";
 import { Layers, Maximize2, Crosshair, Route as RouteIcon, Satellite, TrafficCone } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 const RAW_TOKEN = import.meta.env.VITE_LOVABLE_CONNECTOR_MAPBOX_PUBLIC_TOKEN as string | undefined;
 const TOKEN = RAW_TOKEN?.trim().replace(/^['"]|['"]$/g, "");
@@ -66,6 +68,7 @@ export function TrackingMap({
   focusToken,
   fitToken,
   className,
+  routes = [],
 }: {
   units: MapUnit[];
   pins?: MapPin[];
@@ -76,6 +79,7 @@ export function TrackingMap({
   focusToken?: number;
   fitToken?: number;
   className?: string;
+  routes?: { id: string; geometry: GeoJSON.LineString; critical?: boolean }[];
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
@@ -88,6 +92,10 @@ export function TrackingMap({
   const [traffic, setTraffic] = useState(false);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapError, setMapError] = useState<string | null>(null);
+  const latestLines = useRef({ planned, traveled, routes, selectedId });
+  latestLines.current = { planned, traveled, routes, selectedId };
+  const selectRef = useRef(onSelect);
+  selectRef.current = onSelect;
 
   useEffect(() => {
     if (!containerRef.current || !TOKEN || mapRef.current) return;
@@ -226,13 +234,33 @@ export function TrackingMap({
   }
 
   function drawLines() {
+    const { planned, traveled, routes, selectedId } = latestLines.current;
     const plannedCoords =
       planned && planned.type === "LineString" ? (planned.coordinates as [number, number][]) : null;
     setLine("planned-route", plannedCoords, "#2563eb", 5);
     setLine("traveled-route", traveled ?? null, "#22c55e", 5);
+    const map = mapRef.current;
+    if (!map || !map.isStyleLoaded()) return;
+    const data: GeoJSON.FeatureCollection<GeoJSON.LineString> = { type: "FeatureCollection", features: routes.map(r => ({type:"Feature", geometry:r.geometry, properties:{id:r.id, selected:r.id===selectedId, muted:Boolean(selectedId && r.id!==selectedId),critical:Boolean(r.critical)}})) };
+    const src=map.getSource("board-routes") as mapboxgl.GeoJSONSource | undefined;
+    if(src) src.setData(data); else map.addSource("board-routes",{type:"geojson",data});
+    const resolveColor=(token:string)=>{const el=document.createElement("span"); el.style.color=`var(${token})`; containerRef.current?.appendChild(el); const color=getComputedStyle(el).color; const canvas=document.createElement("canvas"); const ctx=canvas.getContext("2d"); if(!ctx){el.remove();return color;} ctx.fillStyle=color;ctx.fillRect(0,0,1,1); const pixel=ctx.getImageData(0,0,1,1).data;el.remove();return `rgb(${pixel[0]}, ${pixel[1]}, ${pixel[2]})`;};
+    if(!map.getLayer("board-routes-line")) {
+      map.addLayer({id:"board-routes-line",type:"line",source:"board-routes",layout:{"line-cap":"round","line-join":"round"},paint:{"line-color":["case",["get","critical"],resolveColor("--destructive"),resolveColor("--brand")],"line-width":["case",["get","selected"],8,4],"line-opacity":["case",["get","muted"],0.25,0.95]}});
+      map.on("click","board-routes-line",e=>{const id=e.features?.[0]?.properties?.id; if(typeof id==="string") selectRef.current?.(id);});
+    }
+    const coordinates=routes.filter(r=>!selectedId || r.id===selectedId).flatMap(r=>r.geometry.coordinates);
+    if(coordinates.length && map.getSource("board-routes") && map.getLayer("board-routes-line")) {
+      const signature=routes.map(r=>r.id).join(",")+selectedId;
+      if(containerRef.current?.dataset.routeFit!==signature) {
+        if(containerRef.current) containerRef.current.dataset.routeFit=signature;
+        const bounds=new mapboxgl.LngLatBounds();for(const p of coordinates) bounds.extend([p[0],p[1]]);
+        map.fitBounds(bounds,{padding:75,maxZoom:13,duration:600});
+      }
+    }
   }
 
-  useEffect(drawLines, [planned, traveled]);
+  useEffect(drawLines, [planned, traveled, routes, selectedId, mapLoaded]);
 
   // markers — created once, then animated to new positions
   useEffect(() => {
@@ -265,7 +293,7 @@ export function TrackingMap({
         el.append(bubble, media, badge);
         el.addEventListener("click", (e) => {
           e.stopPropagation();
-          onSelect?.(u.id);
+          selectRef.current?.(u.id);
         });
 
         const marker = new mapboxgl.Marker({ element: el, anchor: "bottom" })
@@ -304,7 +332,7 @@ export function TrackingMap({
       }
 
       const isSel = selectedId === u.id;
-      entry.bubble.textContent = `🚚 ${u.title}`;
+      entry.bubble.textContent = u.title;
       entry.badge.textContent = u.statusLabel ?? TRACK_KIND[u.kind].label;
       entry.badge.style.background = color;
       entry.el.title = `${u.title}${u.subtitle ? ` — ${u.subtitle}` : ""}`;
@@ -318,9 +346,9 @@ export function TrackingMap({
       const avatar = u.avatarUrl ?? "";
       if (entry.media.dataset.avatar !== avatar) {
         entry.media.dataset.avatar = avatar;
-        entry.media.innerHTML = avatar
-          ? `<img src="${avatar}" alt="" style="width:100%;height:100%;object-fit:cover" />`
-          : `<span>🚚</span>`;
+        entry.media.replaceChildren();
+        if(avatar) { const img=document.createElement("img");img.src=avatar;img.alt="";img.style.cssText="width:100%;height:100%;object-fit:cover";entry.media.appendChild(img); }
+        else { const icon=document.createElementNS("http://www.w3.org/2000/svg","svg");icon.setAttribute("viewBox","0 0 24 24");icon.setAttribute("width","24");icon.setAttribute("height","24");const path=document.createElementNS("http://www.w3.org/2000/svg","path");path.setAttribute("d","M1 3h13v12H1z M14 7h4l4 5v3h-8 M5 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4 M18 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4");path.setAttribute("fill","none");path.setAttribute("stroke","currentColor");path.setAttribute("stroke-width","2");icon.appendChild(path);entry.media.appendChild(icon); }
       }
     }
 
@@ -432,25 +460,28 @@ export function TrackingMap({
 
 function MapBtn({ active, onClick, icon, label }: { active?: boolean; onClick: () => void; icon: React.ReactNode; label: string }) {
   return (
-    <button
+    <Button
+      variant="ghost"
       type="button"
       onClick={onClick}
-      className={`flex items-center gap-1.5 px-3 py-2 text-[11px] font-bold ${active ? "bg-brand text-brand-foreground" : "hover:bg-accent"}`}
+      className={cn("flex items-center gap-1.5 rounded-none px-3 py-2 text-[11px] font-bold",active ? "bg-brand text-brand-foreground" : "hover:bg-accent")}
     >
       {icon} {label}
-    </button>
+    </Button>
   );
 }
 
 function IconBtn({ title, onClick, children }: { title: string; onClick: () => void; children: React.ReactNode }) {
   return (
-    <button
+    <Button
+      variant="outline"
+      size="icon"
       type="button"
       title={title}
       onClick={onClick}
       className="grid h-9 w-9 place-items-center rounded-xl border border-border bg-background/95 shadow-lg backdrop-blur hover:bg-accent"
     >
       {children}
-    </button>
+    </Button>
   );
 }
