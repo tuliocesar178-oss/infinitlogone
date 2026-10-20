@@ -64,7 +64,7 @@ function OperationBoard(){
  const routes=active.flatMap(o=>{const g=routeGeometry(o.route_geometry);return g?[{id:o.id,geometry:g,critical:deadline(o,now,data.settings).state==="late"||Boolean(o.incident)}]:[];});
  const units:MapUnit[]=active.flatMap(o=>o.current_lat!=null&&o.current_lng!=null&&Number.isFinite(o.current_lat)&&Number.isFinite(o.current_lng)?[{id:o.id,lat:o.current_lat,lng:o.current_lng,kind:!gpsFresh(o,now,data.settings)?"offline":o.incident?"incident":"in_transit",title:`${o.vehicle?.plate ?? o.code} · ${o.driver?.full_name ?? "Sem motorista"}`,avatarUrl:o.driver?.photo_url,statusLabel:gpsFresh(o,now,data.settings)?"GPS atualizado":`Posição antiga · ${o.last_ping_at?new Date(o.last_ping_at).toLocaleTimeString("pt-BR"):"horário desconhecido"}`}]:[]);
  const selectedOrder=data.orders.find(o=>o.id===selected);
- const critical=data.incidents.filter(i=>!i.resolved_at&&i.severity==="high");
+ const critical=data.incidents.filter(i=>!i.resolved_at&&i.priority==="critical");
  const missing=base.filter(o=>!DELIVERED_STATUSES.includes(o.status)&&o.status!=="cancelled"&&deliveryPlannedAt(o)==null).length;
  const periodLabel=`${new Date(bounds[0]).toLocaleDateString("pt-BR",{timeZone:"America/Sao_Paulo"})} — ${new Date(bounds[1]-1).toLocaleDateString("pt-BR",{timeZone:"America/Sao_Paulo"})}`;
  const select=(id:string)=>{setSelected(id);setDrawer(false);change({panel:"routes"});};

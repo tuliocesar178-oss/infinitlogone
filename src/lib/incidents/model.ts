@@ -4,6 +4,8 @@ export const PRIORITIES = { informative: 'Informativa', attention: 'Atenção', 
 export const STATUSES = { open: 'Aberta', received: 'Recebida pela operação', analysis: 'Em análise', awaiting_driver: 'Aguardando resposta do motorista', handling: 'Em tratativa', resolved: 'Resolvida', closed: 'Encerrada' } as const;
 export const STAGES: Record<string, string> = { pickup_travel: 'Deslocamento para coleta', loading: 'Carregamento', transit: 'Em trânsito', unloading: 'Descarga', completion: 'Finalização' };
 export const ACTIONS: Record<string, string> = { created: 'Enviada', acknowledge: 'Recebimento confirmado', message: 'Resposta', guidance: 'Orientação', request_info: 'Informações solicitadas', status: 'Estado atualizado', priority: 'Prioridade atualizada', assign: 'Responsável atualizado', resolve: 'Resolvida', close: 'Encerrada' };
+export const LEGACY_INCIDENT_LABELS: Record<string, string> = { route_deviation: 'Desvio de rota', prolonged_stop: 'Parada prolongada', gps_lost: 'Sem rastreamento', delivery_late: 'Entrega em atraso', deadline_near: 'Prazo próximo', route_blocked: 'Rota bloqueada', delivery_refused: 'Entrega recusada' };
+export function isCriticalIncident(incident: { priority: string; resolved_at: string | null }): boolean { return incident.priority === 'critical' && incident.resolved_at === null; }
 export const prioritySchema = z.enum(['informative', 'attention', 'high', 'critical']);
 export const categorySchema = z.object({ value: z.string().regex(/^[a-z][a-z_]{1,49}$/), label: z.string().trim().min(1).max(120), priority: prioritySchema, requires_description: z.boolean() });
 export type IncidentCategory = z.infer<typeof categorySchema>;

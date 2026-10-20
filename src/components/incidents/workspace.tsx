@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { getIncidentWorkspace } from '@/lib/incidents/functions';
-import { PRIORITIES, STATUSES, priorityRank } from '@/lib/incidents/model';
+import { LEGACY_INCIDENT_LABELS, PRIORITIES, STATUSES, priorityRank } from '@/lib/incidents/model';
 import { IncidentReportForm } from './report-form';
 import { IncidentDetail } from './detail';
 import { IncidentCategories } from './categories';
@@ -29,9 +29,10 @@ export function IncidentWorkspace({ driver = false, orderId, reportOnly = false,
   if (q.error) return <div className="space-y-3 p-4"><p role="alert" className="text-destructive">{q.error.message}</p><Button variant="outline" onClick={() => void q.refetch()}>Tentar novamente</Button></div>;
   if (!q.data) return null;
   const w = q.data;
+  const displayedCategories = [...w.categories, ...Object.entries(LEGACY_INCIDENT_LABELS).filter(([value]) => !w.categories.some(c => c.value === value)).map(([value, label]) => ({ value, label }))];
   const visible = w.incidents.filter(i => {
     const order = w.orders.find(o => o.id === i.order_id);
-    const haystack = [order?.code, order?.client_name, w.works.find(work => work.id === order?.work_id)?.name, w.profiles.find(p => p.id === i.reported_by)?.full_name, w.categories.find(c => c.value === i.type)?.label, i.description].join(' ').toLocaleLowerCase('pt-BR');
+    const haystack = [order?.code, order?.client_name, w.works.find(work => work.id === order?.work_id)?.name, w.profiles.find(p => p.id === i.reported_by)?.full_name, displayedCategories.find(c => c.value === i.type)?.label, i.description].join(' ').toLocaleLowerCase('pt-BR');
     return (!orderId || i.order_id === orderId) && (!search || haystack.includes(search.toLocaleLowerCase('pt-BR'))) && (!category || i.type === category) && (!priority || i.priority === priority) && (!status || i.workflow_status === status) && (!from || Date.parse(i.created_at) >= new Date(`${from}T00:00:00`).getTime()) && (!to || Date.parse(i.created_at) < new Date(`${to}T23:59:59.999`).getTime());
   }).sort((a, b) => Number(Boolean(a.resolved_at)) - Number(Boolean(b.resolved_at)) || priorityRank(b.priority) - priorityRank(a.priority) || Date.parse(a.created_at) - Date.parse(b.created_at));
   if (reportOnly) return <IncidentReportForm workspace={w} orderId={orderId} onSent={() => onClose?.()} />;
