@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "@/components/logo";
 import { applyTheme, readTheme } from "@/lib/driver-prefs";
+import { Button } from '@/components/ui/button';
 import {
   Bell,
   CircleDollarSign,
@@ -13,6 +14,7 @@ import {
   UserRound,
   Wallet,
   MessageSquare,
+  AlertTriangle,
 } from "lucide-react";
 
 type Tab = { to: string; label: string; icon: React.ComponentType<{ className?: string }>; exact?: boolean };
@@ -147,6 +149,7 @@ export function DriverShell({
             </div>
           </Link>
           <div className="flex items-center gap-1">
+            <Button asChild size="icon" variant="ghost"><Link to="/driver/ocorrencias" aria-label="Ocorrências da viagem" title="Ocorrências da viagem"><AlertTriangle className="h-5 w-5" /></Link></Button>
             <button
               className="relative grid h-10 w-10 place-items-center rounded-full text-muted-foreground hover:bg-accent"
               aria-label="Notificações"

@@ -13,7 +13,7 @@ export function IncidentDetail({ id, workspace: w }: IncidentDetailProps) {
   const [message, setMessage] = useState(''), [internal, setInternal] = useState(false);
   const q = useQuery({ queryKey: ['incident-detail', id], queryFn: () => read({ data: { id } }), refetchInterval: 10000 });
   const m = useMutation({ mutationFn: (data: Omit<Parameters<typeof act>[0]['data'], 'id'>) => act({ data: { id, ...data } }), onSuccess: () => { setMessage(''); void qc.invalidateQueries({ queryKey: ['incident-detail', id] }); void qc.invalidateQueries({ queryKey: ['incident-workspace'] }); void qc.invalidateQueries({ queryKey: ['operation-board'] }); } });
-  if (q.isPending) return <p role="status">Chargement…</p>;
+  if (q.isPending) return <p role="status">Carregando histórico…</p>;
   if (q.error) return <p role="alert" className="text-destructive">{q.error.message}</p>;
   if (!q.data) return null;
   const i = q.data.incident, order = w.orders.find(o => o.id === i.order_id);

@@ -13,6 +13,7 @@ export async function deliverNotification(notificationId: string) {
   const finance = roleNames.some((role) => ["admin", "financeiro"].includes(role));
   const admin = roleNames.includes("admin");
   const driver = roleNames.includes("driver");
+  const incidentManager = roleNames.some(role => ['admin', 'logistics', 'supervisor', 'operacional'].includes(role));
   const data = notice.data && typeof notice.data === "object" && !Array.isArray(notice.data) ? notice.data : {};
   const orderId = typeof data.order_id === "string" ? data.order_id : null;
   const roomId = typeof data.room_id === "string" ? data.room_id : null;
@@ -20,6 +21,12 @@ export async function deliverNotification(notificationId: string) {
   let authorized = false;
   let url = driver ? "/driver" : staff ? "/ops/central" : finance ? "/ops/financeiro" : "/client";
   if (notice.type === "push_test") authorized = true;
+  else if (category === 'incidents' && typeof data.incident_id === 'string') {
+    const incident = await db.from('incidents').select('reported_by').eq('id', data.incident_id).maybeSingle();
+    if (incident.error) throw new Error('Falha ao conferir ocorrência.');
+    authorized = Boolean(incident.data && (incidentManager || (driver && incident.data.reported_by === notice.user_id)));
+    url = driver ? '/driver/ocorrencias' : '/ops/ocorrencias';
+  }
   else if (category === "chat" && roomId) {
     const { data: access, error: accessError } = await db.rpc("can_access_unified_chat", { _room: roomId, _user: notice.user_id });
     if (accessError) throw new Error("Falha ao verificar conversa.");
