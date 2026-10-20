@@ -2879,6 +2879,18 @@ export type Database = {
         }
         Returns: undefined
       }
+      manage_driver_incident: {
+        Args: {
+          _action: string
+          _assigned_to?: string
+          _id: string
+          _internal?: boolean
+          _message?: string
+          _priority?: string
+          _status?: string
+        }
+        Returns: undefined
+      }
       manage_operation_board_incident: {
         Args: {
           _action: string
