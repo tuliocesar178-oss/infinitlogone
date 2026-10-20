@@ -45,14 +45,14 @@ export const getOperationBoard = createServerFn({ method: "GET" }).middleware([r
   const orders: BoardOrder[]=rawOrders.map(o=>({ ...o, driver:o.driver_id ? {full_name:profileMap.get(o.driver_id)?.full_name ?? null,phone:profileMap.get(o.driver_id)?.phone ?? null,photo_url:profileMap.get(o.driver_id)?.avatar_url ?? null}:null, responsible:o.created_by ? profileMap.get(o.created_by)?.full_name ?? null:null, incident:incidents.find(i=>i.order_id===o.id && !i.resolved_at) ?? null, actual_delivery_at:o.completed_at ?? completion.get(o.id) ?? null }));
   const activeIds=orders.filter(o=>!["delivered","finalized","cancelled"].includes(o.status)).map(o=>o.id);
   const samples=new Map<string,TelemetryPoint[]>();
-  const since=new Date(Date.now()-3*60*60_000).toISOString();
+  const since=new Date(Date.now()-Math.max(settings.stopMinutes+settings.gpsMinutes+5,settings.confirmationMinutes+5)*60_000).toISOString();
   for(let i=0;i<activeIds.length;i+=100) for(let offset=0;;offset+=1000) {
     const r=await db.from("order_tracking_points").select("order_id,lat,lng,speed,accuracy,created_at").in("order_id",activeIds.slice(i,i+100)).gte("created_at",since).order("created_at").order("id").range(offset,offset+999);
     if(r.error) throw r.error;
     for(const s of r.data ?? []) { const group=samples.get(s.order_id) ?? []; group.push(s); samples.set(s.order_id,group); }
     if((r.data?.length ?? 0)<1000) break;
   }
-  const detected=orders.flatMap(o=>detectAlerts(o,samples.get(o.id) ?? [],Date.now(),settings));
+  const detected=orders.flatMap(o=>detectAlerts(o,samples.get(o.id) ?? [],Date.now(),settings)).filter(a=>!incidents.some(i=>i.order_id===a.order_id && (i.alert_key===a.alert_key || (i.type===a.type && !i.resolved_at) || (i.type===a.type && i.resolved_at && Date.parse(a.metadata.started_at)<=Date.parse(i.resolved_at)))));
   const staffIds=new Set((rolesRes.data ?? []).map(r=>r.user_id));
   return {orders,incidents,detected,settings,staff:profiles.filter(p=>staffIds.has(p.id)).map(p=>({id:p.id,name:p.full_name ?? "Equipe"})),isAdmin:(rolesRes.data ?? []).some(r=>r.user_id===context.userId && r.role==="admin"),updatedAt:new Date().toISOString()};
 });

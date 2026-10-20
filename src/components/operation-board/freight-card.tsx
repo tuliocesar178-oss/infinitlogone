@@ -2,20 +2,16 @@ import { Link } from "@tanstack/react-router";
 import { AlertTriangle, Clock3, MapPin, MessageSquare, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { STATUS_LABEL } from "@/lib/order-status";
-import { INCIDENT_LABEL, etaDate, expectedDelivery, isLate, progress, type BoardOrder } from "@/lib/operation-board";
+import { INCIDENT_LABEL, progress, type BoardOrder } from "@/lib/operation-board";
 import { cn } from "@/lib/utils";
 import { deadline, DEADLINE_LABELS, type MonitoringSettings } from "@/lib/operation-board-monitor";
 
 interface FreightCardProps { order: BoardOrder; onSelect?: (id:string)=>void; now?:number; settings?:MonitoringSettings; }
 
-function fmt(value: Date | null) {
-  return value?.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) ?? "—";
-}
-
 export function FreightCard({ order, onSelect, now=Date.now(), settings }: FreightCardProps) {
   const timing=deadline(order,now,settings);
   const pct = progress(order);
-  const late = isLate(order);
+  const late = timing.state === "late";
   const incident = order.incident;
   const total = order.initial_distance_km ?? order.distance_km;
   const remaining = order.distance_to_destination_km;
@@ -27,9 +23,9 @@ export function FreightCard({ order, onSelect, now=Date.now(), settings }: Freig
         <div>
           <p className="font-mono text-sm font-bold text-brand">#{order.code}</p>
           <h2 className="mt-1 text-lg font-bold">{order.client_name || "Cliente não informado"}</h2>
-          {(order as BoardOrder & { work?: { name?: string | null } | null }).work?.name && (
+          {order.work?.name && (
             <p className="mt-1 text-xs font-semibold text-brand">
-              Obra: {(order as BoardOrder & { work?: { name?: string | null } | null }).work?.name}
+              Obra: {order.work.name}
             </p>
           )}
         </div>
@@ -38,7 +34,7 @@ export function FreightCard({ order, onSelect, now=Date.now(), settings }: Freig
         </span>
       </div>
       <div className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
-        <div className="flex items-center gap-2"><Truck className="h-4 w-4 text-brand" /><span><b>{order.driver?.full_name || "Sem motorista"}</b><br /><span className="text-muted-foreground">{[order.vehicle?.brand, order.vehicle?.model, order.vehicle?.plate].filter(Boolean).join(" · ") || "Veículo não definido"}</span></span></div>
+        <div className="flex items-center gap-2">{order.driver?.photo_url ? <img src={order.driver.photo_url} alt={order.driver.full_name ?? "Motorista"} className="h-10 w-10 rounded-md object-cover"/>:<Truck className="h-4 w-4 text-brand" />}<span><b>{order.driver?.full_name || "Sem motorista"}</b><br /><span className="text-muted-foreground">{[order.vehicle?.brand, order.vehicle?.model, order.vehicle?.plate,order.vehicle?.vehicle_type].filter(Boolean).join(" · ") || "Veículo não definido"}</span></span></div>
         <div className="flex items-center gap-2"><MapPin className="h-4 w-4 text-brand" /><span>{order.origin_city || "Origem"}/{order.origin_state || "—"} → {order.destination_city || "Destino"}/{order.destination_state || "—"}</span></div>
       </div>
       {(total != null || remaining != null || pct != null) && <div className="mt-4">
