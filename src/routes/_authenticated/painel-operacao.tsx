@@ -1,151 +1,83 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, CheckCircle2, Clock3, MapPinned, Package, Radar, Truck, UserRoundSearch } from "lucide-react";
+import { createFileRoute, redirect, ClientOnly } from "@tanstack/react-router";
+import { queryOptions, useSuspenseQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { lazy, Suspense, useEffect, useState } from "react";
+import { AlertTriangle, BarChart3, CalendarDays, MapPinned, RotateCcw } from "lucide-react";
+import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { getUserRolesCached } from "@/lib/roles";
-import { FleetMap, type FleetVehicle } from "@/components/fleet-map";
 import { BoardHeader } from "@/components/operation-board/board-header";
 import { FreightCard } from "@/components/operation-board/freight-card";
+import { BoardKpis } from "@/components/operation-board/board-kpis";
+import { BoardAlerts } from "@/components/operation-board/board-alerts";
+import { BoardPerformance } from "@/components/operation-board/board-performance";
+import { BoardSettings } from "@/components/operation-board/board-settings";
+import { OrderDrawer } from "@/components/ops/order-drawer";
 import { Button } from "@/components/ui/button";
-import {
-  ACTIVE_STATUSES, DELIVERED_STATUSES, NEAR_STATUSES, PICKUP_STATUSES, TRANSIT_STATUSES,
-  isLate, isToday, matchesFilter, priority, type BoardFilter, type BoardOrder, type BoardView,
-} from "@/lib/operation-board";
-
-const ALLOWED_ROLES = ["admin", "logistics", "supervisor", "operacional"];
-const VIEWS: BoardView[] = ["live", "incident", "late", "map", "delivered"];
-const FILTERS: { value: BoardFilter; label: string }[] = [
-  { value: "live", label: "Operação ao vivo" }, { value: "all", label: "Todos" },
-  { value: "awaiting", label: "Aguardando motorista" }, { value: "pickup", label: "Em coleta" },
-  { value: "transit", label: "Em viagem" }, { value: "near", label: "Próximos do destino" },
-  { value: "delivered", label: "Entregues hoje" }, { value: "late", label: "Atrasados" },
-  { value: "incident", label: "Com ocorrência" },
-];
-
-export const Route = createFileRoute("/_authenticated/painel-operacao")({
-  beforeLoad: async ({ context }) => {
-    const user = (context as { user?: { id: string } }).user;
-    if (!user) throw redirect({ to: "/auth" });
-    const roles = await getUserRolesCached(user.id);
-    if (!roles.some((role) => ALLOWED_ROLES.includes(role))) throw redirect({ to: "/" });
-  },
-  head: () => ({ meta: [
-    { title: "Painel de Operação — InfinitLog" },
-    { name: "description", content: "Mural operacional em tempo real dos fretes da InfinitLog." },
-    { property: "og:title", content: "Painel de Operação — InfinitLog" },
-    { property: "og:description", content: "Acompanhamento visual da operação logística em tempo real." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-    { name: "robots", content: "noindex" },
-  ] }),
-  component: OperationBoard,
+import { ACTIVE_STATUSES, DELIVERED_STATUSES, priority } from "@/lib/operation-board";
+import { BOARD_ROLES, ROTATION_SECONDS, deadline, gpsFresh, periodBounds, deliveryPlannedAt, scopedOrders, timestamp, within, routeGeometry } from "@/lib/operation-board-monitor";
+import { getOperationBoard, syncBoardAlerts } from "@/lib/operation-board.functions";
+import { cn } from "@/lib/utils";
+import type { MapUnit } from "@/components/ops/tracking-map";
+const TrackingMap=lazy(()=>import("@/components/ops/tracking-map").then(m=>({default:m.TrackingMap})));
+const VIEWS=[{key:"routes",label:"Rotas e entregas",icon:MapPinned},{key:"alerts",label:"Ocorrências",icon:AlertTriangle},{key:"schedule",label:"Programação",icon:CalendarDays},{key:"performance",label:"Desempenho",icon:BarChart3}] as const;
+const searchSchema=z.object({panel:z.enum(["routes","alerts","schedule","performance"]).catch("routes"),period:z.enum(["today","tomorrow","week","custom"]).catch("today"),from:z.string().catch(""),to:z.string().catch(""),kpi:z.string().catch("total"),q:z.string().catch(""),client:z.string().catch(""),work:z.string().catch(""),driver:z.string().catch(""),status:z.string().catch(""),category:z.string().catch(""),day:z.string().catch(""),delay:z.string().catch("")});
+const boardQuery=queryOptions({queryKey:["operation-board"],queryFn:()=>getOperationBoard(),staleTime:10_000,refetchInterval:30_000,retry:2});
+export const Route=createFileRoute("/_authenticated/painel-operacao")({
+ validateSearch:(search)=>searchSchema.parse(search),
+ beforeLoad:async({context})=>{const user=(context as {user?:{id:string}}).user;if(!user)throw redirect({to:"/auth"});const roles=await getUserRolesCached(user.id);if(!roles.some(r=>BOARD_ROLES.includes(r)))throw redirect({to:"/"});},
+ loader:({context})=>context.queryClient.ensureQueryData(boardQuery),
+ head:()=>({meta:[{title:"Painéis Operacionais — INFINITLOG VAPT VUPT"},{name:"description",content:"Central operacional de rotas, entregas, prazos e ocorrências em tempo real."},{property:"og:title",content:"Painéis Operacionais — INFINITLOG VAPT VUPT"},{property:"og:description",content:"Rotas reais, programação de entregas e indicadores da operação."},{property:"og:type",content:"website"},{name:"twitter:card",content:"summary"},{name:"robots",content:"noindex"}]}),
+ component:OperationBoard,
+ pendingComponent:()=> <div className="grid min-h-screen place-items-center bg-background text-foreground">Carregando painéis operacionais…</div>,
+ errorComponent:({error})=><div role="alert" className="p-8 text-destructive">Não foi possível carregar os painéis. {error.message}<Button variant="outline" onClick={()=>window.location.reload()}>Tentar novamente</Button></div>,
+ notFoundComponent:()=> <p className="p-8">Painel indisponível.</p>,
 });
-
-function OperationBoard() {
-  const qc = useQueryClient();
-  const [now, setNow] = useState(new Date());
-  const [lastUpdated, setLastUpdated] = useState(new Date());
-  const [fullscreen, setFullscreen] = useState(false);
-  const [rotation, setRotation] = useState(false);
-  const [interval, setIntervalSeconds] = useState(30);
-  const [view, setView] = useState<BoardView>("live");
-  const [filter, setFilter] = useState<BoardFilter>("live");
-  const [search, setSearch] = useState("");
-  const [date, setDate] = useState("");
-
-  const query = useQuery({
-    queryKey: ["operation-board"],
-    refetchInterval: 20_000,
-    queryFn: async () => {
-      const { data: orders, error } = await supabase.from("orders").select("*, vehicle:vehicles(id, plate, model, brand, current_lat, current_lng, status)").is("deleted_at", null).order("updated_at", { ascending: false });
-      if (error) throw error;
-      const driverIds = Array.from(new Set((orders ?? []).map((order) => order.driver_id).filter((id): id is string => Boolean(id))));
-      const orderIds = (orders ?? []).map((order) => order.id);
-      const [{ data: profiles }, { data: incidents }] = await Promise.all([
-        driverIds.length ? supabase.from("profiles").select("id, full_name, phone").in("id", driverIds) : Promise.resolve({ data: [], error: null }),
-        orderIds.length ? supabase.from("incidents").select("id, order_id, type, description, severity, created_at").in("order_id", orderIds).is("resolved_at", null).order("created_at", { ascending: false }) : Promise.resolve({ data: [], error: null }),
-      ]);
-      const profileMap = new Map((profiles ?? []).map((profile) => [profile.id, profile]));
-      const incidentMap = new Map<string, NonNullable<typeof incidents>[number]>();
-      for (const incident of incidents ?? []) if (!incidentMap.has(incident.order_id)) incidentMap.set(incident.order_id, incident);
-      setLastUpdated(new Date());
-      return (orders ?? []).map((order) => ({ ...order, driver: order.driver_id ? profileMap.get(order.driver_id) ?? null : null, vehicle: order.vehicle ?? null, incident: incidentMap.get(order.id) ?? null })) as BoardOrder[];
-    },
-  });
-
-  useEffect(() => {
-    const timer = window.setInterval(() => setNow(new Date()), 1_000);
-    const channel = supabase.channel("operation-board-live")
-      .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => qc.invalidateQueries({ queryKey: ["operation-board"] }))
-      .on("postgres_changes", { event: "*", schema: "public", table: "vehicles" }, () => qc.invalidateQueries({ queryKey: ["operation-board"] }))
-      .on("postgres_changes", { event: "*", schema: "public", table: "incidents" }, () => qc.invalidateQueries({ queryKey: ["operation-board"] }))
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "driver_locations" }, () => qc.invalidateQueries({ queryKey: ["operation-board"] }))
-      .subscribe();
-    const onFullscreen = () => setFullscreen(Boolean(document.fullscreenElement));
-    document.addEventListener("fullscreenchange", onFullscreen);
-    return () => { window.clearInterval(timer); document.removeEventListener("fullscreenchange", onFullscreen); supabase.removeChannel(channel); };
-  }, [qc]);
-
-  useEffect(() => {
-    if (!rotation) return;
-    const timer = window.setInterval(() => setView((current) => VIEWS[(VIEWS.indexOf(current) + 1) % VIEWS.length]), interval * 1_000);
-    return () => window.clearInterval(timer);
-  }, [rotation, interval]);
-
-  const orders = query.data ?? [];
-  const deliveredToday = orders.filter((order) => DELIVERED_STATUSES.includes(order.status) && isToday(order.completed_at ?? order.updated_at));
-  const visible = useMemo(() => {
-    const q = search.toLocaleLowerCase("pt-BR").trim();
-    return orders.filter((order) => {
-      const effectiveFilter: BoardFilter = view === "incident" ? "incident" : view === "late" ? "late" : view === "delivered" ? "delivered" : filter;
-      if (!matchesFilter(order, effectiveFilter)) return false;
-      if (date && new Date(order.created_at).toLocaleDateString("en-CA") !== date) return false;
-      if (!q) return true;
-      return `${order.code} ${order.client_name ?? ""} ${order.driver?.full_name ?? ""} ${order.vehicle?.plate ?? ""} ${order.origin_city ?? ""} ${order.destination_city ?? ""} ${order.origin_state ?? ""} ${order.destination_state ?? ""}`.toLocaleLowerCase("pt-BR").includes(q);
-    }).sort((a, b) => priority(a) - priority(b) || new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
-  }, [orders, filter, view, search, date]);
-
-  const fleet: FleetVehicle[] = visible.filter((order) => Number.isFinite(order.current_lat ?? order.vehicle?.current_lat) && Number.isFinite(order.current_lng ?? order.vehicle?.current_lng)).map((order) => ({
-    id: order.vehicle?.id ?? order.id, plate: order.vehicle?.plate ?? "Sem placa", model: [order.vehicle?.brand, order.vehicle?.model].filter(Boolean).join(" ") || null,
-    status: order.vehicle?.status ?? order.status, lat: order.current_lat ?? order.vehicle?.current_lat ?? 0, lng: order.current_lng ?? order.vehicle?.current_lng ?? 0,
-    driverName: order.driver?.full_name, order: { id: order.id, tracking_code: order.tracking_code, client_name: order.client_name, origin_city: order.origin_city, destination_city: order.destination_city, status: order.status, eta_minutes: order.eta_minutes, distance_km: order.distance_to_destination_km, initial_distance_km: order.initial_distance_km, last_ping_at: order.last_ping_at },
-  }));
-
-  const stats = [
-    { label: "Fretes hoje", value: orders.filter((o) => isToday(o.created_at)).length, icon: Package },
-    { label: "Em operação", value: orders.filter((o) => ACTIVE_STATUSES.includes(o.status)).length, icon: Radar },
-    { label: "Aguardando motorista", value: orders.filter((o) => o.status === "awaiting_driver").length, icon: UserRoundSearch },
-    { label: "Em coleta", value: orders.filter((o) => PICKUP_STATUSES.includes(o.status)).length, icon: Package },
-    { label: "Em viagem", value: orders.filter((o) => TRANSIT_STATUSES.includes(o.status)).length, icon: Truck },
-    { label: "Próximos do destino", value: orders.filter((o) => NEAR_STATUSES.includes(o.status)).length, icon: MapPinned },
-    { label: "Entregues", value: deliveredToday.length, icon: CheckCircle2 },
-    { label: "Ocorrências", value: orders.filter((o) => o.incident || o.status === "incident").length, icon: AlertTriangle },
-  ];
-
-  async function toggleFullscreen() {
-    if (document.fullscreenElement) await document.exitFullscreen(); else await document.documentElement.requestFullscreen();
-  }
-
-  return <div className="min-h-screen bg-background text-foreground">
-    <BoardHeader now={now} updatedSeconds={Math.max(0, Math.floor((now.getTime() - lastUpdated.getTime()) / 1000))} fullscreen={fullscreen} rotation={rotation} interval={interval} onFullscreen={toggleFullscreen} onRotation={setRotation} onInterval={setIntervalSeconds} />
-    <main className="space-y-5 p-4 lg:p-6">
-      <section className="grid grid-cols-2 gap-2 md:grid-cols-4 xl:grid-cols-8" aria-label="Indicadores operacionais">
-        {stats.map((stat) => <div key={stat.label} className="border border-border bg-card p-3"><div className="flex items-center gap-2 text-xs font-semibold uppercase text-muted-foreground"><stat.icon className="h-4 w-4 text-brand" />{stat.label}</div><p className="mt-2 text-3xl font-bold tabular-nums">{stat.value}</p></div>)}
-      </section>
-      <section className="flex flex-wrap gap-2 border-y border-border py-3">
-        <select aria-label="Filtrar situação" value={filter} onChange={(event) => { setFilter(event.target.value as BoardFilter); setView("live"); }} className="h-10 rounded-md border border-input bg-background px-3 text-sm">{FILTERS.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select>
-        <input aria-label="Buscar frete" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Cliente, motorista, cidade, placa..." className="h-10 min-w-64 flex-1 rounded-md border border-input bg-background px-3 text-sm" />
-        <input aria-label="Filtrar por data" type="date" value={date} onChange={(event) => setDate(event.target.value)} className="h-10 rounded-md border border-input bg-background px-3 text-sm" />
-        {VIEWS.map((item) => <Button key={item} variant={view === item ? "default" : "outline"} size="sm" onClick={() => setView(item)}>{item === "live" ? "Ao vivo" : item === "incident" ? "Ocorrências" : item === "late" ? "Atrasados" : item === "map" ? "Mapa" : "Entregues"}</Button>)}
-      </section>
-      {query.isError && <div className="border border-destructive bg-destructive/10 p-5 text-destructive">Não foi possível atualizar o painel. A próxima tentativa será automática.</div>}
-      {view === "map" ? <section><FleetMap vehicles={fleet} className="h-[calc(100vh-280px)] min-h-[420px] overflow-hidden border border-border" />{fleet.length === 0 && <p className="mt-3 text-center text-muted-foreground">Nenhum veículo com posição real disponível.</p>}</section> :
-        <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-          {visible.map((order) => <FreightCard key={order.id} order={order} />)}
-          {!query.isLoading && visible.length === 0 && <div className="col-span-full grid min-h-64 place-items-center border border-dashed border-border text-center"><div><Truck className="mx-auto h-10 w-10 text-muted-foreground" /><p className="mt-3 text-lg font-semibold">Não existem fretes nesta visualização.</p>{view === "incident" && <p className="mt-1 text-success">Nenhuma ocorrência ativa.</p>}</div></div>}
-        </section>}
-      <section className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4"><div><p className="text-xs font-semibold uppercase text-muted-foreground">Entregas concluídas hoje</p><p className="text-2xl font-bold">{deliveredToday.length}</p></div>{deliveredToday[0] && <p className="text-sm text-muted-foreground">Última entrega: <b className="text-foreground">#{deliveredToday[0].code}</b> · {deliveredToday[0].driver?.full_name || "Motorista não informado"} · {deliveredToday[0].client_name || "Cliente não informado"} · {new Date(deliveredToday[0].completed_at ?? deliveredToday[0].updated_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</p>}</section>
-    </main>
-  </div>;
+function OperationBoard(){
+ const query=useSuspenseQuery(boardQuery),data=query.data,qc=useQueryClient(),s=Route.useSearch(),navigate=Route.useNavigate();
+ const {user}=Route.useRouteContext();
+ const [now,setNow]=useState(Date.now()),[fullscreen,setFullscreen]=useState(false),[rotation,setRotation]=useState(false),[interval,setIntervalSeconds]=useState(ROTATION_SECONDS),[connected,setConnected]=useState(false),[selected,setSelected]=useState<string|null>(null),[drawer,setDrawer]=useState(false),[fullscreenError,setFullscreenError]=useState("");
+ const sync=useServerFn(syncBoardAlerts),syncMutation=useMutation({mutationFn:()=>sync(),onSuccess:()=>qc.invalidateQueries({queryKey:["operation-board"]})});
+ const change=(patch:Partial<z.infer<typeof searchSchema>>)=>void navigate({search:prev=>({...prev,...patch}),replace:true});
+ useEffect(()=>{const timer=window.setInterval(()=>setNow(Date.now()),1000);const onFull=()=>setFullscreen(Boolean(document.fullscreenElement));document.addEventListener("fullscreenchange",onFull);return()=>{clearInterval(timer);document.removeEventListener("fullscreenchange",onFull);};},[]);
+ useEffect(()=>{let pending:number|undefined;let disposed=false;const invalidate=()=>{if(pending)return;pending=window.setTimeout(()=>{pending=undefined;if(!disposed)void qc.invalidateQueries({queryKey:["operation-board"]});},1500);};let channel=supabase.channel(`operation-board-${user.id}`);for(const table of ["orders","vehicles","incidents","order_events","order_tracking_points","app_settings"])channel=channel.on("postgres_changes",{event:"*",schema:"public",table},invalidate);channel.subscribe(status=>setConnected(status==="SUBSCRIBED"));const online=()=>{setConnected(false);invalidate();};const offline=()=>setConnected(false);window.addEventListener("online",online);window.addEventListener("offline",offline);return()=>{disposed=true;if(pending)clearTimeout(pending);window.removeEventListener("online",online);window.removeEventListener("offline",offline);void supabase.removeChannel(channel);};},[qc,user.id]);
+ useEffect(()=>{if(!rotation)return;const t=window.setInterval(()=>{const i=VIEWS.findIndex(v=>v.key===s.panel);change({panel:VIEWS[(i+1)%VIEWS.length].key});},interval*1000);return()=>clearInterval(t);},[rotation,interval,s.panel]);
+ useEffect(()=>{const saved=localStorage.getItem(`board-preferences:${user.id}`);if(saved && !window.location.search){try{const stored=JSON.parse(saved);change(searchSchema.parse(stored));}catch{localStorage.removeItem(`board-preferences:${user.id}`);}}},[user.id]);
+ useEffect(()=>{localStorage.setItem(`board-preferences:${user.id}`,JSON.stringify(s));},[s,user.id]);
+ useEffect(()=>{const t=window.setTimeout(()=>{if(data.detected.some(a=>!data.incidents.some(i=>i.alert_key===a.alert_key || (!i.resolved_at && i.type===a.type && i.order_id===a.order_id))))syncMutation.mutate();},2000);return()=>clearTimeout(t);},[data.updatedAt]);
+ const bounds=periodBounds(s.period,now,s.from,s.to);
+ const base=data.orders.filter(o=>(!s.client || o.client_name===s.client)&&(!s.work || o.work?.name===s.work)&&(!s.driver || o.driver_id===s.driver)&&(!s.status || o.status===s.status)&&(!s.q || `${o.code} ${o.driver?.full_name ?? ""} ${o.client_name ?? ""} ${o.vehicle?.plate ?? ""} ${o.origin_city ?? ""} ${o.destination_city ?? ""} ${o.origin_state ?? ""} ${o.destination_state ?? ""}`.toLocaleLowerCase("pt-BR").includes(s.q.toLocaleLowerCase("pt-BR"))));
+ const periodOrders=scopedOrders(base,bounds),today=periodBounds("today",now);
+ const visible=(s.kpi==="today" || s.kpi==="next24" ? base.filter(o=>within(deliveryPlannedAt(o),s.kpi==="today"?today:[now,now+86_400_000])):s.kpi==="unplanned" ? base.filter(o=>deliveryPlannedAt(o)==null&&!DELIVERED_STATUSES.includes(o.status)&&o.status!=="cancelled"):periodOrders).filter(o=>{
+ if(s.kpi==="vehicles" && (!ACTIVE_STATUSES.includes(o.status)||!o.vehicle_id))return false;
+ if(s.kpi==="drivers" && (!ACTIVE_STATUSES.includes(o.status)||!o.driver_id))return false;
+ if(s.kpi==="done" && !DELIVERED_STATUSES.includes(o.status))return false;
+ if(s.kpi==="pending" && DELIVERED_STATUSES.includes(o.status))return false;
+ if(s.kpi==="late" && deadline(o,now,data.settings).state!=="late")return false;
+ if(s.day && ![deliveryPlannedAt(o),timestamp(o.actual_delivery_at)].some(t=>t!=null&&new Date(t).toLocaleDateString("en-CA",{timeZone:"America/Sao_Paulo"})===s.day))return false;
+ if(s.delay){const a=timestamp(o.actual_delivery_at),due=timestamp(o.delivery_window_end);if(a==null||due==null||a<=due)return false;const m=(a-due)/60000;if(s.delay!== (m<=30?"Até 30 min":m<=120?"31–120 min":"Mais de 2h"))return false;}
+ return true;
+ }).sort((a,b)=>s.panel==="schedule" ? (deliveryPlannedAt(a)??Infinity)-(deliveryPlannedAt(b)??Infinity):priority(a)-priority(b));
+ const shownIncidents=data.incidents.filter(i=>base.some(o=>o.id===i.order_id)&&(!s.category||i.type===s.category));
+ const active=visible.filter(o=>ACTIVE_STATUSES.includes(o.status));
+ const routes=active.flatMap(o=>{const g=routeGeometry(o.route_geometry);return g?[{id:o.id,geometry:g,critical:deadline(o,now,data.settings).state==="late"||Boolean(o.incident)}]:[];});
+ const units:MapUnit[]=active.flatMap(o=>o.current_lat!=null&&o.current_lng!=null&&Number.isFinite(o.current_lat)&&Number.isFinite(o.current_lng)?[{id:o.id,lat:o.current_lat,lng:o.current_lng,kind:!gpsFresh(o,now,data.settings)?"offline":o.incident?"incident":"in_transit",title:`${o.vehicle?.plate ?? o.code} · ${o.driver?.full_name ?? "Sem motorista"}`,avatarUrl:o.driver?.photo_url,statusLabel:gpsFresh(o,now,data.settings)?"GPS atualizado":`Posição antiga · ${o.last_ping_at?new Date(o.last_ping_at).toLocaleTimeString("pt-BR"):"horário desconhecido"}`}]:[]);
+ const selectedOrder=data.orders.find(o=>o.id===selected);
+ const critical=data.incidents.filter(i=>!i.resolved_at&&i.severity==="high");
+ const missing=base.filter(o=>!DELIVERED_STATUSES.includes(o.status)&&o.status!=="cancelled"&&deliveryPlannedAt(o)==null).length;
+ const periodLabel=`${new Date(bounds[0]).toLocaleDateString("pt-BR",{timeZone:"America/Sao_Paulo"})} — ${new Date(bounds[1]-1).toLocaleDateString("pt-BR",{timeZone:"America/Sao_Paulo"})}`;
+ const select=(id:string)=>{setSelected(id);setDrawer(false);change({panel:"routes"});};
+ async function toggleFullscreen(){try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();setFullscreenError("");}catch{setFullscreenError("O navegador não permitiu tela cheia.");}}
+ return <div className="dark min-h-screen bg-background text-foreground"><BoardHeader now={new Date(now)} updatedSeconds={Math.max(0,Math.floor((now-Date.parse(data.updatedAt))/1000))} updatedAt={data.updatedAt} connected={connected&&!query.isError} fullscreen={fullscreen} rotation={rotation} interval={interval} onFullscreen={()=>void toggleFullscreen()} onRotation={setRotation} onInterval={setIntervalSeconds} onPrevious={()=>{const i=VIEWS.findIndex(v=>v.key===s.panel);change({panel:VIEWS[(i+VIEWS.length-1)%VIEWS.length].key});}}/>
+ <main className="space-y-4 p-4 lg:p-6"><nav className="flex flex-wrap gap-2" aria-label="Painéis">{VIEWS.map(v=><Button key={v.key} variant={s.panel===v.key?"default":"outline"} onClick={()=>{setRotation(false);change({panel:v.key});}}><v.icon/>{v.label}</Button>)}<span className="ml-auto flex items-center text-sm text-muted-foreground">{periodLabel}</span>{data.isAdmin&&<BoardSettings settings={data.settings}/>}</nav>
+ {(query.isError || !connected || now-Date.parse(data.updatedAt)>90_000) && <div role="status" className="border-l-4 border-warning bg-warning/10 px-4 py-2 text-warning">Dados temporariamente desatualizados · Última atualização: {new Date(data.updatedAt).toLocaleTimeString("pt-BR",{timeZone:"America/Sao_Paulo"})}</div>}{fullscreenError&&<p role="alert" className="text-warning">{fullscreenError}</p>}{syncMutation.isError&&<p role="alert" className="text-warning">Falha ao registrar alertas automáticos. Nova tentativa na próxima atualização.</p>}
+ {critical.length>0&&<div className="flex flex-wrap items-center gap-3 border-l-4 border-destructive bg-destructive/10 px-4 py-2"><AlertTriangle className="text-destructive"/><b>{critical.length} ocorrência(s) crítica(s)</b><Button variant="ghost" size="sm" onClick={()=>change({panel:"alerts"})}>Consultar</Button></div>}
+ <BoardKpis orders={periodOrders} allOrders={base} now={now} settings={data.settings} selected={s.kpi} onSelect={k=>{setSelected(null);change({kpi:k,panel:"routes"});}}/>
+ <section className="flex flex-wrap gap-2 border-y border-border py-3" aria-label="Filtros"><select aria-label="Período" value={s.period} onChange={e=>change({period:e.target.value as typeof s.period})} className="h-10 rounded-md border border-input bg-background px-3">{[["today","Hoje"],["tomorrow","Amanhã"],["week","Próximos 7 dias"],["custom","Personalizado"]].map(([v,l])=><option key={v} value={v}>{l}</option>)}</select>{s.period==="custom"&&<><input aria-label="Data inicial" type="date" value={s.from} onChange={e=>change({from:e.target.value})} className="h-10 rounded-md border border-input bg-background px-2"/><input aria-label="Data final" type="date" value={s.to} min={s.from} onChange={e=>change({to:e.target.value})} className="h-10 rounded-md border border-input bg-background px-2"/></>}
+ <input aria-label="Buscar frete" placeholder="Frete, placa, cidade, estado..." value={s.q} onChange={e=>change({q:e.target.value})} className="h-10 min-w-0 flex-1 rounded-md border border-input bg-background px-3"/>{[{key:"client",label:"Cliente",options:[...new Set(data.orders.map(o=>o.client_name).filter((v):v is string=>Boolean(v)))].map(v=>({value:v,label:v}))},{key:"work",label:"Obra",options:[...new Set(data.orders.map(o=>o.work?.name).filter((v):v is string=>Boolean(v)))].map(v=>({value:v,label:v}))},{key:"driver",label:"Motorista",options:[...new Map(data.orders.filter(o=>o.driver_id).map(o=>[o.driver_id,{value:o.driver_id ?? "",label:o.driver?.full_name ?? "Motorista"}])).values()]},{key:"status",label:"Situação",options:[...new Set(data.orders.map(o=>o.status))].map(v=>({value:v,label:v}))}].map(f=><select key={f.key} aria-label={f.label} value={s[f.key as "client"|"work"|"driver"|"status"]} onChange={e=>change({[f.key]:e.target.value})} className="h-10 max-w-52 rounded-md border border-input bg-background px-2"><option value="">{f.label}: todos</option>{f.options.map(o=><option key={o.value} value={o.value}>{o.label}</option>)}</select>)}<Button variant="outline" onClick={()=>{setSelected(null);change(searchSchema.parse({panel:s.panel}));}}><RotateCcw/>Limpar filtros</Button></section>
+ {missing>0&&<Button variant="ghost" className="text-warning" onClick={()=>change({kpi:"unplanned",panel:"routes"})}>{missing} frete(s) sem data prevista de entrega</Button>}
+ {s.panel==="alerts" ? <BoardAlerts incidents={shownIncidents} orders={base} staff={data.staff} onSelect={select}/> : s.panel==="performance" ? <BoardPerformance orders={base} incidents={shownIncidents} bounds={bounds} period={periodLabel} onFilter={(key,value)=>change({[key]:value,panel:key==="category"?"alerts":"routes",kpi:"total"})}/> : <>
+ {s.panel==="routes"&&<div className="grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)]"><section><header className="mb-2 flex flex-wrap items-center justify-between gap-2"><h2 className="text-xl font-semibold">Rotas ativas · {routes.length} itinerário(s)</h2><Button variant="outline" size="sm" onClick={()=>{setSelected(null);change({kpi:"total"});}}>Voltar à visão geral</Button></header><ClientOnly fallback={<div className="h-[430px] bg-surface-2"/>}><Suspense fallback={<div className="h-[430px] bg-surface-2"/>}><TrackingMap units={units} routes={routes} selectedId={selected} onSelect={select} className="h-[430px] min-h-[360px] border border-border 2xl:h-[480px]"/></Suspense></ClientOnly><div className="mt-2 flex flex-wrap gap-4 text-sm text-muted-foreground"><span className="text-brand">● Rota ativa</span><span className="text-destructive">● Atraso / ocorrência</span><span>● GPS antigo identificado no marcador</span></div>{active.length>routes.length&&<p className="mt-2 text-warning">{active.length-routes.length} rota(s) sem geometria disponível.</p>}{active.length>units.length&&<p className="mt-1 text-warning">{active.length-units.length} frete(s) sem posição GPS conhecida.</p>}</section><section className="max-h-[560px] overflow-y-auto"><h2 className="mb-3 text-xl font-semibold">{selectedOrder ? `Rota #${selectedOrder.code}`:"Operação selecionada"}</h2>{selectedOrder ? <><FreightCard order={selectedOrder} now={now} settings={data.settings}/><p className="mt-3 text-sm text-muted-foreground">Responsável: {selectedOrder.responsible ?? "Não informado"}</p><p className="mt-2 text-sm">Coleta: {selectedOrder.origin_address}</p><p className="mt-2 text-sm">Entrega: {selectedOrder.destination_address}</p><p className="mt-2 text-sm">Itinerário: {selectedOrder.route_highways ?? "Vias não cadastradas"}</p><p className="mt-2 text-sm text-muted-foreground">Último GPS: {selectedOrder.last_ping_at ? new Date(selectedOrder.last_ping_at).toLocaleString("pt-BR"):"Não recebido"}</p><Button className="mt-3" onClick={()=>setDrawer(true)}>Histórico e detalhes</Button></>:<div className="space-y-2">{active.map(o=><Button variant="outline" key={o.id} onClick={()=>select(o.id)} className="h-auto w-full justify-start whitespace-normal rounded-md py-3 text-left"><span><b className="text-brand">#{o.code}</b> · {o.driver?.full_name ?? "Sem motorista"}<br/>{o.vehicle?.plate ?? "Sem veículo"} · {o.client_name ?? "Cliente não informado"}<br/>{o.work?.name ?? o.destination_city}</span></Button>)}{!active.length&&<p className="py-8 text-muted-foreground">Nenhuma rota ativa nesta seleção.</p>}</div>}</section></div>}
+ <section><h2 className="mb-3 text-xl font-semibold">{s.panel==="schedule"?"Programação de entregas":"Fretes da seleção"} · {visible.length}</h2>{s.panel==="schedule"&&<div className="mb-3 flex flex-wrap gap-2">{[["today","Hoje"],["tomorrow","Amanhã"],["week","Próximos 7 dias"]].map(([v,l])=><Button key={v} variant="outline" onClick={()=>change({period:v as typeof s.period,kpi:"pending"})}>{l}</Button>)}<Button variant="outline" onClick={()=>change({driver:"",status:"awaiting_driver"})}>Sem motorista</Button></div>}<div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">{visible.map(o=><FreightCard key={o.id} order={o} onSelect={select} now={now} settings={data.settings}/>)}{!visible.length&&<p className="col-span-full py-12 text-center text-xl text-muted-foreground">Nenhum frete nesta seleção.</p>}</div></section></>}
+ {drawer&&selected&&<OrderDrawer orderId={selected} onClose={()=>setDrawer(false)}/>}</main></div>;
 }
