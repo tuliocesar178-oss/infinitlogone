@@ -6,6 +6,7 @@ import { ArrowUpRight, Clock, MapPin, Package, Route, Truck, X } from "lucide-re
 import { STATUS_BADGE_CLASS } from "@/lib/order-status";
 import { formatBRL, progressPercent, statusLabel, timeAgo } from "@/lib/ops-central";
 import { Button } from "@/components/ui/button";
+import { IncidentWorkspace } from '@/components/incidents/workspace';
 
 export function OrderDrawer({ orderId, onClose }: { orderId: string | null; onClose: () => void }) {
   useEffect(() => {
@@ -129,6 +130,7 @@ export function OrderDrawer({ orderId, onClose }: { orderId: string | null; onCl
               <Stat icon={<Truck className="h-3.5 w-3.5" />} label="Motorista" value={q.data?.driver?.full_name ?? "—"} />
               <Stat icon={<Truck className="h-3.5 w-3.5" />} label="Veículo" value={q.data?.vehicle?.plate ?? "—"} />
             </section>
+            <IncidentWorkspace orderId={orderId} />
 
             <section className="rounded-xl border border-border/60 p-3">
               <div className="mb-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">

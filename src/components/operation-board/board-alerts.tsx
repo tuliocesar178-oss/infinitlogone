@@ -7,12 +7,13 @@ import { cn } from "@/lib/utils";
 import { manageBoardIncident } from "@/lib/operation-board.functions";
 import type { Database } from "@/integrations/supabase/types";
 import type { BoardOrder } from "@/lib/operation-board";
+import { Link } from '@tanstack/react-router';
 type Incident=Database["public"]["Tables"]["incidents"]["Row"];
 export const ALERT_LABELS: Record<string,string>={route_deviation:"Desvio de rota",prolonged_stop:"Parada prolongada",gps_lost:"Sem rastreamento",delivery_late:"Entrega em atraso",deadline_near:"Prazo próximo",traffic:"Trânsito",breakdown:"Problema mecânico",accident:"Acidente",other:"Outra ocorrência"};
 export function BoardAlerts({incidents,orders,staff,onSelect}:{incidents:Incident[];orders:BoardOrder[];staff:{id:string;name:string}[];onSelect:(id:string)=>void}) {
   const [showResolved,setShowResolved]=useState(false);
   const visible=incidents.filter(i=>showResolved || !i.resolved_at).sort((a,b)=>Number(Boolean(a.resolved_at))-Number(Boolean(b.resolved_at)) || Number(b.severity==="high")-Number(a.severity==="high") || Date.parse(a.created_at)-Date.parse(b.created_at));
-  return <section><header className="mb-4 flex items-center justify-between"><h2 className="text-2xl font-semibold">Ocorrências e alertas</h2><label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={showResolved} onChange={e=>setShowResolved(e.target.checked)}/>Incluir resolvidos</label></header><div className="grid gap-3 lg:grid-cols-2 2xl:grid-cols-3">{visible.map(i=><AlertRow key={i.id} incident={i} order={orders.find(o=>o.id===i.order_id)} staff={staff} onSelect={onSelect}/>)}{!visible.length && <p className="col-span-full py-20 text-center text-xl text-muted-foreground">Nenhuma ocorrência registrada nesta seleção.</p>}</div></section>;
+  return <section><header className="mb-4 flex flex-wrap items-center justify-between gap-3"><h2 className="text-2xl font-semibold">Ocorrências e alertas</h2><Button asChild variant="outline"><Link to="/ops/ocorrencias">Central de tratamento</Link></Button><label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={showResolved} onChange={e=>setShowResolved(e.target.checked)}/>Incluir resolvidos</label></header><div className="grid gap-3 lg:grid-cols-2 2xl:grid-cols-3">{visible.map(i=><AlertRow key={i.id} incident={i} order={orders.find(o=>o.id===i.order_id)} staff={staff} onSelect={onSelect}/>)}{!visible.length && <p className="col-span-full py-20 text-center text-xl text-muted-foreground">Nenhuma ocorrência registrada nesta seleção.</p>}</div></section>;
 }
 function AlertRow({incident:i,order:o,staff,onSelect}:{incident:Incident;order?:BoardOrder;staff:{id:string;name:string}[];onSelect:(id:string)=>void}) {
   const qc=useQueryClient(),act=useServerFn(manageBoardIncident);
