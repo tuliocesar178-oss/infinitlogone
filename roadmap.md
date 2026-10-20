@@ -1,5 +1,12 @@
 # Roadmap
 
+## Dashboard comparativo de KM por obra (20/10)
+- [x] KPIs (KM total, obras, fretes, média, obra maior, vs. período anterior) dentro do módulo de Relatórios existente
+- [x] Gráfico de barras por obra (KM/fretes/média, clique filtra) e evolução por dia/semana/mês com seleção de obras
+- [x] Comparação com período anterior equivalente, detalhamento expansível por obra e filtros de veículo/origem/destino
+- [x] Regra de KM: efetivo medido primeiro, planejado marcado como estimado, cancelados fora dos totais; 12 testes passam
+- [ ] Validar exportação Excel/PDF e impressão com volume real de fretes — depende de mais fretes concluídos com KM medido
+
 ## Central de ocorrências do motorista (20/10)
 - [x] Ampliar registros existentes com categorias, estados, prioridades, histórico e notificações autorizadas
 - [x] Integrar formulário mobile, anexos privados, localização opcional e rascunho offline com retentativa idempotente
