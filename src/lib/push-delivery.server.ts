@@ -49,22 +49,11 @@ export async function deliverNotification(notificationId: string) {
     if (order && !order.deleted_at) {
       authorized = staff || order.driver_id === notice.user_id || order.client_id === notice.user_id;
       if (notice.type === "new_offer") {
-        const { data: profile } = await db.from("drivers").select("approval_status,financial_status,availability,current_vehicle_id").eq("user_id", notice.user_id).maybeSingle();
+        // Ofertas vão a todos os motoristas: só confere se a oferta ainda está aberta.
         const { data: offer } = await db.from("freight_offers").select("status,expires_at").eq("order_id", orderId).eq("driver_id", notice.user_id).maybeSingle();
-        authorized = driver && profile?.approval_status === "active" && profile.financial_status === "ativo" &&
-          ["disponivel", "offline"].includes(profile.availability) && !order.driver_id &&
+        authorized = driver && !order.driver_id &&
           ["created", "preparing", "awaiting_driver", "negotiating"].includes(order.status) &&
           !!offer && ["pending", "negotiating"].includes(offer.status) && (!offer.expires_at || Date.parse(offer.expires_at) > Date.now());
-        if (authorized && (order.vehicle_id || order.required_vehicle_type || order.required_body_type || order.required_capacity_kg != null || order.required_axles != null)) {
-          const { data: vehicle } = await db.from("vehicles").select("id,active,owner_driver_id,vehicle_type,category,body_type,max_weight_kg,capacity_kg,axles").eq("id", profile?.current_vehicle_id ?? "00000000-0000-0000-0000-000000000000").maybeSingle();
-          const normalize = (value: string | null) => (value ?? "").trim().toLocaleLowerCase("pt-BR");
-          authorized = !!vehicle && vehicle.active && vehicle.owner_driver_id === notice.user_id &&
-            (!order.vehicle_id || order.vehicle_id === vehicle.id) &&
-            (!order.required_vehicle_type || normalize(`${vehicle.vehicle_type ?? ""} ${vehicle.category ?? ""}`).includes(normalize(order.required_vehicle_type))) &&
-            (!order.required_body_type || normalize(vehicle.body_type).includes(normalize(order.required_body_type))) &&
-            (order.required_capacity_kg == null || Number(vehicle.max_weight_kg ?? vehicle.capacity_kg ?? 0) >= Number(order.required_capacity_kg)) &&
-            (order.required_axles == null || vehicle.axles === order.required_axles);
-        }
         url = "/driver/ofertas";
       } else url = driver ? "/driver/fretes" : staff ? `/ops/pedidos/${orderId}` : "/client";
     }

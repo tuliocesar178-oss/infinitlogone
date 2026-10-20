@@ -19,11 +19,11 @@ export function DispatchPanel({ order, onSent }: { order: any; onSent: () => voi
       });
 
       if (result.count === 0) {
-        toast.warning("Nenhum motorista aprovado e elegível para esta rota.");
+        toast.warning("Nenhum motorista cadastrado para receber a oferta.");
         return;
       }
 
-      toast.success(`Rota despachada para ${result.count} motorista(s) elegível(is).`);
+      toast.success(`Rota despachada para ${result.count} motorista(s).`);
       onSent();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao despachar rota");
@@ -43,7 +43,7 @@ export function DispatchPanel({ order, onSent }: { order: any; onSent: () => voi
           Despacho automático
         </h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          A oferta será enviada simultaneamente a todos os motoristas aprovados e elegíveis.
+          A oferta será enviada simultaneamente a todos os motoristas cadastrados.
         </p>
       </header>
 
