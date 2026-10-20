@@ -22,4 +22,6 @@
 - Share structured freight address validation between creation and editing, persist it beside existing coordinates, and invalidate changed-route snapshots in a database trigger; all consumers retain the same endpoint fields.
 - Deliver mobile push from persisted notification events through an authenticated event-driven server route, rechecking current recipient access and per-device preferences; per-event/device claims prevent duplicate transport, and browser clients cannot insert notification events or modify delivery metadata.
 - Keep the dedicated push messaging worker separate from app-shell cache registration; explicit notification activation can register the messaging-only worker without adding offline caches.
+- Extend the existing operation board, TrackingMap and order drawer for TV panels; shared monitoring rules separate contractual deadlines, ping-anchored arrival estimates and actual completion sources, preventing divergent KPIs.
+- Persist operational alerts in incidents with stable episode keys and audit actions in order_events; derive detections from authorized historical telemetry on the server, never client-supplied positions.
 
