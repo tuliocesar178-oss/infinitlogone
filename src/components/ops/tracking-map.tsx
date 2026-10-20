@@ -134,6 +134,14 @@ export function TrackingMap({
       applyTraffic();
     });
     map.on("load", () => map.resize());
+    map.on("idle", () => {
+      if (!map.isStyleLoaded()) return;
+      if (!map.getLayer("board-routes-line") || !map.getLayer("planned-route") || !map.getLayer("traveled-route")) drawLines();
+    });
+    map.on("click", "board-routes-line", e => {
+      const id = e.features?.[0]?.properties?.id;
+      if (typeof id === "string") selectRef.current?.(id);
+    });
     mapRef.current = map;
 
     const ro = new ResizeObserver(() => map.resize());
@@ -205,10 +213,8 @@ export function TrackingMap({
     const src = map.getSource(id) as mapboxgl.GeoJSONSource | undefined;
     if (src) {
       src.setData(data);
-      return;
-    }
-    map.addSource(id, { type: "geojson", data });
-    map.addLayer({
+    } else map.addSource(id, { type: "geojson", data });
+    if (!map.getLayer(id)) map.addLayer({
       id,
       type: "line",
       source: id,
@@ -247,7 +253,6 @@ export function TrackingMap({
     const resolveColor=(token:string)=>{const el=document.createElement("span"); el.style.color=`var(${token})`; containerRef.current?.appendChild(el); const color=getComputedStyle(el).color; const canvas=document.createElement("canvas"); const ctx=canvas.getContext("2d"); if(!ctx){el.remove();return color;} ctx.fillStyle=color;ctx.fillRect(0,0,1,1); const pixel=ctx.getImageData(0,0,1,1).data;el.remove();return `rgb(${pixel[0]}, ${pixel[1]}, ${pixel[2]})`;};
     if(!map.getLayer("board-routes-line")) {
       map.addLayer({id:"board-routes-line",type:"line",source:"board-routes",layout:{"line-cap":"round","line-join":"round"},paint:{"line-color":["case",["get","critical"],resolveColor("--destructive"),resolveColor("--brand")],"line-width":["case",["get","selected"],8,4],"line-opacity":["case",["get","muted"],0.25,0.95]}});
-      map.on("click","board-routes-line",e=>{const id=e.features?.[0]?.properties?.id; if(typeof id==="string") selectRef.current?.(id);});
     }
     const coordinates=routes.filter(r=>!selectedId || r.id===selectedId).flatMap(r=>r.geometry.coordinates);
     if(coordinates.length && map.getSource("board-routes") && map.getLayer("board-routes-line")) {
@@ -413,7 +418,7 @@ export function TrackingMap({
 
   return (
     <div className={`relative ${className ?? ""}`}>
-      <div ref={containerRef} className="absolute inset-0 min-h-[320px] min-w-0 bg-surface-2" />
+      <div ref={containerRef} className="tracking-map-canvas absolute inset-0 min-h-[320px] min-w-0 bg-surface-2" />
 
       {!mapLoaded && !mapError && (
         <div className="pointer-events-none absolute inset-0 z-[1] grid place-items-center bg-surface-2 text-sm font-semibold text-muted-foreground">

@@ -4,6 +4,12 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Mapbox's unlayered relative positioning otherwise defeats Tailwind's inset fill. */
+.tracking-map-canvas.mapboxgl-map {
+  position: absolute;
+  inset: 0;
+}
+
 #lovable-badge {
   display: none !important;
 }

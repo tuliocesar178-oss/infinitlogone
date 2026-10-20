@@ -42,15 +42,28 @@ export function routeGeometry(raw?: string | null): GeoJSON.LineString | null {
   try { const result = geometrySchema.safeParse(JSON.parse(raw)); return result.success ? result.data : null; } catch { return null; }
 }
 export function saoDay(now: number) { return new Date(now).toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" }); }
-export function periodBounds(period: string, now: number, from = "", to = ""): [number, number] {
-  const start = Date.parse(`${saoDay(now)}T00:00:00-03:00`);
-  if (period === "tomorrow") return [start + 86_400_000, start + 2 * 86_400_000];
-  if (period === "week") return [start, start + 7 * 86_400_000];
-  if (period === "custom") {
-    const a = timestamp(`${from}T00:00:00-03:00`), b = timestamp(`${to}T00:00:00-03:00`);
-    if (a != null && b != null && b >= a) return [a, b + 86_400_000];
+function calendarBoundary(day: string, offset = 0): number {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return NaN;
+  const calendar = Date.parse(`${day}T00:00:00Z`) + offset * 86_400_000;
+  if (!Number.isFinite(calendar)) return NaN;
+  const target = new Date(calendar).toISOString().slice(0, 10);
+  // Find the first instant of this local date, including historic DST midnight jumps.
+  let low = calendar - 14 * 3_600_000, high = calendar + 14 * 3_600_000;
+  while (high - low > 1) {
+    const mid = Math.floor((low + high) / 2);
+    if (saoDay(mid) < target) low = mid; else high = mid;
   }
-  return [start, start + 86_400_000];
+  return high;
+}
+export function periodBounds(period: string, now: number, from = "", to = ""): [number, number] {
+  const day = saoDay(now), start = calendarBoundary(day);
+  if (period === "tomorrow") return [calendarBoundary(day, 1), calendarBoundary(day, 2)];
+  if (period === "week") return [start, calendarBoundary(day, 7)];
+  if (period === "custom") {
+    const a = calendarBoundary(from), b = calendarBoundary(to, 1);
+    if (Number.isFinite(a) && Number.isFinite(b) && b > a) return [a, b];
+  }
+  return [start, calendarBoundary(day, 1)];
 }
 export const deliveryPlannedAt = (order: BoardOrder) => timestamp(order.delivery_window_start) ?? timestamp(order.delivery_window_end);
 export function within(value: number | null, bounds: [number, number]) { return value != null && value >= bounds[0] && value < bounds[1]; }
