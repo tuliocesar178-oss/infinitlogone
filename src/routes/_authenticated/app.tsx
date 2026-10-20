@@ -1,7 +1,13 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { getUserRolesCached, homeForRole, primaryRole, type AppRole } from "@/lib/roles";
+import {
+  getUserRolesCached,
+  homeForRole,
+  primaryRole,
+  SessionExpiredError,
+  type AppRole,
+} from "@/lib/roles";
 
 export const Route = createFileRoute("/_authenticated/app")({
   head: () => ({ meta: [{ title: "InfinitLog" }, { name: "robots", content: "noindex" }] }),
@@ -29,8 +35,14 @@ function RoleRouter() {
             .eq("user_id", user.id)
             .maybeSingle(),
         ]);
-      } catch {
-        if (active) setProblem("error");
+      } catch (e) {
+        if (!active) return;
+        // Sessão recusada e não renovável: volta para o login.
+        if (e instanceof SessionExpiredError) {
+          navigate({ to: "/auth", replace: true });
+          return;
+        }
+        setProblem("error");
         return;
       }
 

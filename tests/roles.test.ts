@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test';
-import { areaGateTarget } from '../src/lib/roles';
+import { areaGateTarget, isAuthFailure } from '../src/lib/roles';
 
 // Regra que evita o ciclo infinito de redirecionamentos ("Too many redirects"):
 // papéis vazios nunca apontam para outra área protegida.
@@ -21,4 +21,12 @@ test('papel errado é mandado para a área dele', () => {
   expect(areaGateTarget(['driver'], 'ops')).toBe('/driver');
   expect(areaGateTarget(['driver'], 'client')).toBe('/ops/central');
   expect(areaGateTarget(['admin'], 'driver')).toBe('/ops/central');
+});
+
+// Sessão recusada pelo servidor (401) deve levar ao login, não a "sem papéis".
+test('401 ou token inválido é falha de sessão; erro de rede não é', () => {
+  expect(isAuthFailure(401, 'JWSError')).toBe(true);
+  expect(isAuthFailure(400, 'JWT expired')).toBe(true);
+  expect(isAuthFailure(0, 'Failed to fetch')).toBe(false);
+  expect(isAuthFailure(500, 'internal error')).toBe(false);
 });
