@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "@/components/logo";
 import { applyTheme, readTheme } from "@/lib/driver-prefs";
 import { Button } from '@/components/ui/button';
+import { clearUserDrafts } from '@/lib/incidents/drafts';
 import {
   Bell,
   CircleDollarSign,
@@ -81,11 +82,12 @@ export function DriverShell({
 
   useEffect(() => {
     if (!me?.id) return;
+    const driverId = me.id;
     async function loadCount() {
       const { count } = await supabase
         .from("freight_offers")
         .select("id", { count: "exact", head: true })
-        .eq("driver_id", me!.id)
+        .eq("driver_id", driverId)
         .eq("status", "pending");
       setPendingOffers(count ?? 0);
     }
@@ -104,6 +106,7 @@ export function DriverShell({
   }, [me?.id]);
 
   async function signOut() {
+    if (me?.id) await clearUserDrafts(me.id).catch(() => undefined);
     await qc.cancelQueries();
     qc.clear();
     await supabase.auth.signOut();

@@ -10,6 +10,7 @@ async function transaction<T>(mode: IDBTransactionMode, action: (store: IDBObjec
 }
 export const storeDraft = (draft: IncidentDraft) => transaction('readwrite', store => store.put(draft));
 export const removeDraft = (id: string) => transaction('readwrite', store => store.delete(id));
+export async function clearUserDrafts(userId: string): Promise<void> { const drafts = await readDrafts(userId); await Promise.all(drafts.map(d => removeDraft(d.id))); }
 export async function readDrafts(userId: string): Promise<IncidentDraft[]> { const items = await transaction<IncidentDraft[]>('readonly', store => store.getAll()); return items.filter(d => d.userId === userId); }
 /** Compression runs only after selecting a photo; PDFs/documents retain their original bytes. */
 export async function compressIncidentImage(file: File): Promise<File> {
