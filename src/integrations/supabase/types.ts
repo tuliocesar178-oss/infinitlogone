@@ -1034,9 +1034,15 @@ export type Database = {
       }
       incidents: {
         Row: {
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          alert_key: string | null
+          alert_metadata: Json
+          assigned_to: string | null
           created_at: string
           description: string | null
           id: string
+          operational_notes: string | null
           order_id: string
           reported_by: string | null
           resolved_at: string | null
@@ -1044,9 +1050,15 @@ export type Database = {
           type: string
         }
         Insert: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          alert_key?: string | null
+          alert_metadata?: Json
+          assigned_to?: string | null
           created_at?: string
           description?: string | null
           id?: string
+          operational_notes?: string | null
           order_id: string
           reported_by?: string | null
           resolved_at?: string | null
@@ -1054,9 +1066,15 @@ export type Database = {
           type: string
         }
         Update: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          alert_key?: string | null
+          alert_metadata?: Json
+          assigned_to?: string | null
           created_at?: string
           description?: string | null
           id?: string
+          operational_notes?: string | null
           order_id?: string
           reported_by?: string | null
           resolved_at?: string | null
@@ -1064,6 +1082,20 @@ export type Database = {
           type?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "incidents_acknowledged_by_fkey"
+            columns: ["acknowledged_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "incidents_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "incidents_order_id_fkey"
             columns: ["order_id"]
@@ -2627,6 +2659,7 @@ export type Database = {
         Args: { _room: string; _user: string }
         Returns: boolean
       }
+      can_manage_operation_board: { Args: { _user: string }; Returns: boolean }
       claim_push_delivery: {
         Args: { _notification: string; _subscription: string }
         Returns: string
@@ -2674,6 +2707,15 @@ export type Database = {
       }
       is_finance: { Args: { _user_id: string }; Returns: boolean }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
+      manage_operation_board_incident: {
+        Args: {
+          _action: string
+          _assigned_to?: string
+          _id: string
+          _notes?: string
+        }
+        Returns: undefined
+      }
       mark_unified_chat_read: { Args: { _room: string }; Returns: undefined }
       override_arrival: { Args: { _order_id: string }; Returns: undefined }
       respond_freight_counteroffer: {
@@ -2727,6 +2769,10 @@ export type Database = {
       submit_freight_counteroffer: {
         Args: { _amount: number; _note?: string; _offer_id: string }
         Returns: Json
+      }
+      sync_operation_board_alerts: {
+        Args: { _alerts: Json }
+        Returns: undefined
       }
       valid_unified_chat_context: {
         Args: { _order: string; _room: string; _user: string }
