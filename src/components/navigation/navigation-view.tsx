@@ -3,13 +3,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { StageAction } from './stage-action';
 import { NavigationSheet } from './navigation-sheet';
 import { ClientOnly, Link } from '@tanstack/react-router';
-import { ArrowLeft, ArrowUp, ArrowUpLeft, ArrowUpRight, CornerUpLeft, CornerUpRight, ExternalLink, LocateFixed, Maximize2, Navigation, RotateCcw, Square, Undo2, Volume2, VolumeX, type LucideIcon } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, ArrowUp, ArrowUpLeft, ArrowUpRight, CornerUpLeft, CornerUpRight, ExternalLink, LocateFixed, Maximize2, Navigation, RotateCcw, Square, Undo2, Volume2, VolumeX, type LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { NavLauncherModal } from '@/components/driver/nav-launcher-modal';
 import { useNavigation } from '@/hooks/use-navigation';
 import { STATUS_LABEL } from '@/lib/order-status';
 import { navigationActive, type NavigationOrder } from '@/lib/navigation/model';
+import { IncidentWorkspace } from '@/components/incidents/workspace';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 // Isolate the browser-only map import from SSR and use the same authenticated
 // navigation lifecycle for route calculation, progress and telemetry.
@@ -22,6 +24,7 @@ const MANEUVER_ICON: Record<string, LucideIcon> = { left: CornerUpLeft, 'sharp l
 export function NavigationView({ order }: NavigationViewProps) {
   const nav = useNavigation(order);
   const [externalOpen, setExternalOpen] = useState(false);
+  const [incidentOpen, setIncidentOpen] = useState(false);
   const [follow, setFollow] = useState(true);
   const [centerRequest, setCenterRequest] = useState(0);
   const [overviewRequest, setOverviewRequest] = useState(0);
@@ -64,6 +67,7 @@ export function NavigationView({ order }: NavigationViewProps) {
         <p className="truncate text-xs text-muted-foreground">{progress?.street || nav.target.address}</p>
       </div>
       <Button size="icon" variant="ghost" disabled={!nav.voiceSupported} onClick={nav.toggleVoice} aria-label={nav.voice ? 'Desativar instruções por voz' : 'Ativar instruções por voz'} title={nav.voiceSupported ? 'Instruções por voz' : 'Voz em português indisponível neste navegador'}>{nav.voice ? <Volume2 /> : <VolumeX />}</Button>
+      <Button size="icon" variant="outline" aria-label="Registrar ocorrência da viagem" title="Ocorrência da viagem" onClick={() => setIncidentOpen(true)}><AlertTriangle /></Button>
     </section>
     {nav.started && !follow && nav.position && <Button className="absolute left-1/2 top-[40%] z-10 -translate-x-1/2 shadow-lg" onClick={center}><LocateFixed />Voltar à navegação</Button>}
     <NavigationSheet
@@ -88,5 +92,6 @@ export function NavigationView({ order }: NavigationViewProps) {
       </div>}
     />
     <NavLauncherModal open={externalOpen} onClose={() => setExternalOpen(false)} onInternal={canStart ? nav.start : undefined} target={{ lat: target?.[1] ?? null, lng: target?.[0] ?? null, label: nav.target.address, orderId: order.id }} origin={nav.position ? { lat: nav.position[1], lng: nav.position[0] } : undefined} />
+    <Dialog open={incidentOpen} onOpenChange={setIncidentOpen}><DialogContent className="max-h-[90dvh] overflow-y-auto"><DialogTitle>Ocorrência da viagem</DialogTitle><DialogDescription>{order.code ?? 'Frete da navegação'}</DialogDescription><IncidentWorkspace driver reportOnly orderId={order.id} onClose={() => setIncidentOpen(false)} /></DialogContent></Dialog>
   </main>;
 }

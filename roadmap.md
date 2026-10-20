@@ -1,5 +1,13 @@
 # Roadmap
 
+## Central de ocorrências do motorista (20/10)
+- [x] Ampliar registros existentes com categorias, estados, prioridades, histórico e notificações autorizadas
+- [x] Integrar formulário mobile, anexos privados, localização opcional e rascunho offline com retentativa idempotente
+- [x] Disponibilizar acompanhamento e resposta na operação, navegação e painéis existentes
+- [x] Validar 32 testes de regras/notificações, leitura autenticada do histórico, categorias e rejeição de registro não autorizado
+- [ ] Validar envio, anexos e resposta ponta a ponta — depende de frete ativo atribuído autorizado para teste; nenhum disponível, sem alterar operações reais
+- [ ] Validar câmera, GPS e recebimento push em celular físico — depende de dispositivos reais e publicação do transporte existente
+
 ## Central de painéis KPI para TV (20/10)
 - [x] Expandir painel existente com rotas/entregas, ocorrências, programação e desempenho
 - [x] Definir KPIs sem duplicidade, períodos e prazos contratados separados da previsão GPS

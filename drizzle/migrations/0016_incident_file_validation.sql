@@ -1,0 +1,9 @@
+CREATE OR REPLACE FUNCTION public.link_incident_file(_incident uuid,_path text,_label text,_mime text,_size bigint) RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$ DECLARE obj storage.objects; BEGIN
+IF auth.uid() IS NULL OR NOT EXISTS(SELECT 1 FROM public.incidents WHERE id=_incident AND reported_by=auth.uid() AND closed_at IS NULL) OR split_part(_path,'/',1)<>_incident::text OR length(_label) NOT BETWEEN 1 AND 200 OR _size NOT BETWEEN 1 AND 20971520 OR _mime NOT IN ('image/jpeg','image/png','image/webp','image/heic','image/heif','application/pdf','application/xml','text/xml') THEN RAISE EXCEPTION 'Invalid attachment'; END IF;
+SELECT * INTO obj FROM storage.objects WHERE bucket_id='incident-files' AND name=_path AND owner_id=auth.uid()::text;
+IF NOT FOUND OR (obj.metadata->>'size')::bigint IS DISTINCT FROM _size OR obj.metadata->>'mimetype' IS DISTINCT FROM _mime THEN RAISE EXCEPTION 'Invalid object metadata'; END IF;
+IF EXISTS(SELECT 1 FROM public.incident_files WHERE file_path=_path) THEN RETURN; END IF;
+PERFORM 1 FROM public.incidents WHERE id=_incident FOR UPDATE;
+IF (SELECT count(*) FROM public.incident_files WHERE incident_id=_incident)>=10 THEN RAISE EXCEPTION 'Attachment limit reached'; END IF;
+INSERT INTO public.incident_files(incident_id,file_path,label,mime_type,size_bytes,uploaded_by) VALUES(_incident,_path,_label,_mime,_size,auth.uid()) ON CONFLICT(file_path) DO NOTHING; END; $$;
+REVOKE ALL ON FUNCTION public.link_incident_file(uuid,text,text,text,bigint) FROM PUBLIC,anon; GRANT EXECUTE ON FUNCTION public.link_incident_file(uuid,text,text,text,bigint) TO authenticated;

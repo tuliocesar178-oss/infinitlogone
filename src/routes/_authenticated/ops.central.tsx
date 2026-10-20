@@ -17,11 +17,17 @@ import { toast } from "sonner";
 import { OrderDrawer } from "@/components/ops/order-drawer";
 import { formatBRL } from "@/lib/ops-central";
 import { DRIVER_COLUMNS } from "@/lib/driver-columns";
+import { Button } from '@/components/ui/button';
 
 export const Route = createFileRoute("/_authenticated/ops/central")({
   head: () => ({
     meta: [
       { title: "Torre de Controle — InfinitLog" },
+      { name: 'description', content: 'Monitoramento de fretes e ocorrências da operação InfinitLog.' },
+      { property: 'og:title', content: 'Torre de Controle — InfinitLog' },
+      { property: 'og:description', content: 'Fretes, motoristas e ocorrências em acompanhamento operacional.' },
+      { property: 'og:type', content: 'website' },
+      { name: 'twitter:card', content: 'summary' },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -48,6 +54,7 @@ function TorreDeControle() {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [isTvMode, setIsTvMode] = useState(false);
+  const incidentsQ = useQuery({ queryKey: ['torre-incidents'], queryFn: async () => { const rows = []; for (let offset = 0; ; offset += 1000) { const r = await supabase.from('incidents').select('id,order_id,type,priority,affects_deadline,driver_eta').is('resolved_at', null).order('id').range(offset, offset + 999); if (r.error) throw r.error; rows.push(...(r.data ?? [])); if ((r.data?.length ?? 0) < 1000) break; } return rows; }, refetchInterval: 15000 });
 
   const ordersQ = useQuery({
     queryKey: ["torre-orders"],
@@ -116,6 +123,7 @@ function TorreDeControle() {
     const ch = supabase.channel("torre-realtime")
       .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => qc.invalidateQueries({ queryKey: ["torre-orders"] }))
       .on("postgres_changes", { event: "*", schema: "public", table: "drivers" }, () => qc.invalidateQueries({ queryKey: ["torre-drivers"] }))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'incidents' }, () => qc.invalidateQueries({ queryKey: ['torre-incidents'] }))
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, [qc]);
@@ -156,15 +164,15 @@ function TorreDeControle() {
     const today = new Date().toISOString().split("T")[0];
     const ordersToday = orders.filter(o => o.created_at.startsWith(today));
     const inTransit = orders.filter(o => ["en_route_pickup", "in_transit", "loaded"].includes(o.status));
-    const incidents = orders.filter(o => o.status === "incident");
+    const incidentFreights = new Set([...(incidentsQ.data ?? []).map(i => i.order_id), ...orders.filter(o => o.status === 'incident').map(o => o.id)]);
     
     return [
       { label: "Pedidos Hoje", value: ordersToday.length, icon: Package, tint: "bg-blue-500/10 text-blue-600" },
       { label: "Em Trânsito", value: inTransit.length, icon: Truck, tint: "bg-orange-500/10 text-orange-600" },
-      { label: "Ocorrências", value: incidents.length, icon: AlertTriangle, tint: "bg-red-500/10 text-red-600" },
+      { label: "Fretes com ocorrências", value: incidentFreights.size, icon: AlertTriangle, tint: "bg-destructive/10 text-destructive" },
       { label: "Motoristas Online", value: drivers.filter(d => d.status !== "offline").length, icon: Users, tint: "bg-emerald-500/10 text-emerald-600" },
     ];
-  }, [orders, drivers]);
+  }, [orders, drivers, incidentsQ.data]);
 
   return (
     <AppShell 
@@ -197,6 +205,8 @@ function TorreDeControle() {
       }
     >
       <div className="flex flex-col gap-6">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b pb-3"><p className="text-sm text-muted-foreground">Ocorrências abertas: {incidentsQ.data?.length ?? '—'}</p><Button asChild variant="outline"><Link to="/ops/ocorrencias"><AlertTriangle />Central de Ocorrências</Link></Button></div>
+        {incidentsQ.error && <p role="alert" className="text-destructive">Não foi possível atualizar as ocorrências.</p>}
         {/* KPI Bar */}
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
           {kpis.map((kpi, i) => (
@@ -251,6 +261,7 @@ function TorreDeControle() {
                                       <div className={`h-2 w-2 rounded-full ${order.priority === 'urgent' ? 'bg-red-500 animate-pulse' : 'bg-brand'}`} />
                                     </div>
                                     <div className="mt-2 text-sm font-semibold truncate">{order.client_name}</div>
+                                    {(incidentsQ.data ?? []).some(i => i.order_id === order.id) && <p className="mt-2 flex items-center gap-1 text-xs text-warning"><AlertTriangle className="h-3 w-3" />Ocorrência aberta{(incidentsQ.data ?? []).some(i => i.order_id === order.id && i.affects_deadline) && ' · impacto no prazo'}</p>}
                                     <div className="mt-1 flex items-center gap-1.5 text-[10px] text-muted-foreground uppercase tracking-tight truncate">
                                       <MapPin className="h-3 w-3" />
                                       {order.origin_city} → {order.destination_city}
