@@ -46,63 +46,14 @@ export const dispatchOrderToEligibleDrivers = createServerFn({ method: "POST" })
       throw new Error("Esta rota já foi aceita por um motorista.");
     }
 
+    // Regra do negócio: a oferta vai para TODOS os motoristas cadastrados,
+    // sem filtro de aprovação, financeiro, disponibilidade ou veículo.
     const { data: drivers, error: driversError } = await db
       .from("drivers")
-      .select("user_id, current_vehicle_id")
-      .eq("approval_status", "active")
-      .eq("financial_status", "ativo")
-      .in("availability", ["disponivel", "offline"]);
+      .select("user_id");
     if (driversError) throw new Error(driversError.message);
 
-    let eligible = drivers ?? [];
-    const needsVehicle =
-      !!order.vehicle_id ||
-      !!order.required_vehicle_type ||
-      !!order.required_body_type ||
-      order.required_capacity_kg != null ||
-      order.required_axles != null;
-
-    if (needsVehicle) {
-      const vehicleIds = [...new Set(eligible.map((driver) => driver.current_vehicle_id).filter((id): id is string => !!id))];
-      const { data: vehicles, error: vehiclesError } = vehicleIds.length
-        ? await db
-            .from("vehicles")
-            .select("id, owner_driver_id, vehicle_type, category, body_type, capacity_kg, max_weight_kg, axles, active")
-            .in("id", vehicleIds)
-            .eq("active", true)
-        : { data: [], error: null };
-      if (vehiclesError) throw new Error(vehiclesError.message);
-
-      const matchingDrivers = new Set(
-        (vehicles ?? [])
-          .filter((vehicle) => {
-            if (order.vehicle_id && vehicle.id !== order.vehicle_id) return false;
-
-            const type = normalize(order.required_vehicle_type);
-            if (
-              type &&
-              !normalize(`${vehicle.vehicle_type ?? ""} ${vehicle.category ?? ""}`).includes(type)
-            ) return false;
-
-            const body = normalize(order.required_body_type);
-            if (body && !normalize(vehicle.body_type).includes(body)) return false;
-
-            const capacity = Number(vehicle.max_weight_kg ?? vehicle.capacity_kg ?? 0);
-            if (order.required_capacity_kg != null && capacity < Number(order.required_capacity_kg)) {
-              return false;
-            }
-
-            if (order.required_axles != null && Number(vehicle.axles) !== Number(order.required_axles)) {
-              return false;
-            }
-            return true;
-          })
-          .map((vehicle) => vehicle.owner_driver_id)
-          .filter(Boolean),
-      );
-
-      eligible = eligible.filter((driver) => matchingDrivers.has(driver.user_id));
-    }
+    const eligible = (drivers ?? []).filter((driver) => !!driver.user_id);
 
     if (!eligible.length) return { count: 0, driverIds: [] as string[] };
 
