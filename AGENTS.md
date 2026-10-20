@@ -26,3 +26,4 @@
 - Persist operational alerts in incidents with stable episode keys and audit actions in order_events; derive detections from authorized historical telemetry on the server, never client-supplied positions.
 - Reuse incidents for driver workflows with authorized RPCs, private incident updates/files and event-only GPS; user-scoped IndexedDB drafts retain stable request/file IDs for retry without duplicating records. Keep incident history separate from individual chats, exclude incident queries from persistent query caches and private audit payloads from client reads, and prevent legacy board mutations from changing request-based incidents.
 
+- Role lookups treat a server-rejected session (401) as signed out: refresh once, then sign out locally and send to /auth; never treat a failed lookup as an empty role list, which caused cross-area redirect loops.
