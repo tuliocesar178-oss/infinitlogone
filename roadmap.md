@@ -1,12 +1,13 @@
 # Roadmap
 
 ## Central de painéis KPI para TV (20/10)
-- [ ] Expandir painel existente com rotas/entregas, ocorrências, programação e desempenho
-- [ ] Definir KPIs sem duplicidade, períodos e prazos contratados separados da previsão GPS
-- [ ] Integrar seleção de rotas reais, motorista, cliente, obra e histórico existente
-- [ ] Configurar critérios de desvio, parada e ausência de GPS com histórico e ações autorizadas
-- [ ] Adicionar apresentação com intervalo inicial de 20 segundos, pausa, filtros persistentes e conexão real
-- [ ] Validar acesso, cálculos, interações e apresentação em Full HD/4K
+- [x] Expandir painel existente com rotas/entregas, ocorrências, programação e desempenho
+- [x] Definir KPIs sem duplicidade, períodos e prazos contratados separados da previsão GPS
+- [x] Integrar seleção de rotas reais, motorista, cliente, obra e histórico existente
+- [x] Configurar critérios de desvio, parada e ausência de GPS com histórico e ações autorizadas
+- [x] Adicionar apresentação com intervalo inicial de 20 segundos, pausa, filtros persistentes e conexão real
+- [x] Validar acesso autenticado, 19 regras de cálculo, interações e apresentação em Full HD/4K sem erros de execução
+- [ ] Validar desvio/parada com deslocamento físico e tratamento completo de ocorrência — depende de telemetria real contínua e ocorrência autorizada para teste; não alterar operações reais durante validação
 
 - [x] Corrigir tela desconectada do serviço de navegação; validar acesso autenticado, cálculo rodoviário real, mapa e orientação de GPS negado; deslocamento e sincronização física continuam pendentes abaixo
 
