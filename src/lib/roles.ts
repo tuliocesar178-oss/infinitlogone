@@ -55,7 +55,7 @@ export async function fetchUserRoles(userId: string): Promise<AppRole[]> {
     .from("user_roles")
     .select("role")
     .eq("user_id", userId);
-  if (error) return [];
+  if (error) throw error;
   return (data ?? []).map((r) => r.role as AppRole);
 }
 
@@ -69,10 +69,28 @@ const rolesCache = new Map<string, Promise<AppRole[]>>();
 export function getUserRolesCached(userId: string): Promise<AppRole[]> {
   let p = rolesCache.get(userId);
   if (!p) {
-    p = fetchUserRoles(userId).catch(() => [] as AppRole[]);
+    p = fetchUserRoles(userId);
+    // Falhas não ficam em cache: uma nova tentativa refaz a consulta.
+    p.catch(() => rolesCache.delete(userId));
     rolesCache.set(userId, p);
   }
   return p;
+}
+
+/**
+ * Carrega os papéis para os gates de rota. Em caso de erro de rede/sessão,
+ * lança Error (a tela de erro com "Tentar novamente" aparece) em vez de
+ * redirecionar — redirecionar com papéis desconhecidos causava um ciclo
+ * infinito entre /driver, /ops/central e /client ("Too many redirects").
+ */
+export async function requireRoles(userId: string): Promise<AppRole[]> {
+  try {
+    return await getUserRolesCached(userId);
+  } catch {
+    throw new Error(
+      "Não foi possível carregar seu perfil de acesso. Verifique sua conexão e tente novamente.",
+    );
+  }
 }
 
 export function clearRolesCache() {
