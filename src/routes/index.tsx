@@ -44,10 +44,14 @@ function LandingPage() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       if (data.session && !preview) {
-        getUserRolesCached(data.session.user.id).then(roles => {
-          const target = homeForRole(primaryRole(roles));
-          navigate({ to: target, replace: true });
-        });
+        getUserRolesCached(data.session.user.id)
+          .then((roles) => {
+            // Sem papéis: fica na página inicial (evita ciclo de redirecionamentos).
+            if (roles.length === 0) return;
+            navigate({ to: homeForRole(primaryRole(roles)), replace: true });
+          })
+          // Sessão recusada ou sem conexão: a página inicial continua visível.
+          .catch(() => undefined);
       }
     });
   }, [navigate, preview]);
