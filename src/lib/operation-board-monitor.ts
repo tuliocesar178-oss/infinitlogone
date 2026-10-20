@@ -82,7 +82,7 @@ export function detectAlerts(order: BoardOrder, samples: TelemetryPoint[], now: 
   const sorted = [...samples].sort((a,b) => Date.parse(a.created_at)-Date.parse(b.created_at));
   const valid = (s: TelemetryPoint) => timestamp(s.created_at) != null && Date.parse(s.created_at) <= now + 30_000 && Number.isFinite(s.lat) && Math.abs(s.lat)<=90 && Number.isFinite(s.lng) && Math.abs(s.lng)<=180 && s.accuracy != null && s.accuracy >= 0 && s.accuracy <= settings.accuracyMeters;
   const tail: TelemetryPoint[] = [];
-  for (let i=sorted.length-1;i>=0;i--) { const s=sorted[i]; const newer=tail[0]; if (!valid(s) || (newer && Date.parse(newer.created_at)-Date.parse(s.created_at)>settings.gpsMinutes*60_000)) break; tail.unshift(s); }
+  for (let i=sorted.length-1;i>=0;i--) { const s=sorted[i]; const newer=tail[0]; if (!valid(s) || (newer && Date.parse(newer.created_at)-Date.parse(s.created_at)>Math.min(settings.gpsMinutes*60_000,90_000))) break; tail.unshift(s); }
   const latest=tail.at(-1);
   if (!latest || now-Date.parse(latest.created_at)>settings.gpsMinutes*60_000) return alerts;
   const operational=["at_pickup","loading","at_destination","unloading"].includes(order.status);

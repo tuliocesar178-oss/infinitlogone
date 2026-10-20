@@ -359,7 +359,7 @@ export function TrackingMap({
         markers.current.delete(id);
       }
     }
-  }, [units, selectedId, onSelect]);
+  }, [units, selectedId, onSelect, mapLoaded]);
 
   // static pins (origem/destino/paradas)
   useEffect(() => {
@@ -372,7 +372,7 @@ export function TrackingMap({
         .setPopup(new mapboxgl.Popup({ offset: 18 }).setText(p.label))
         .addTo(map),
     );
-  }, [pins]);
+  }, [pins, mapLoaded]);
 
   // focus selected
   useEffect(() => {
