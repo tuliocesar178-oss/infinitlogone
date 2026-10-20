@@ -82,3 +82,60 @@ export function isStandalone(): boolean {
     (window.navigator as unknown as { standalone?: boolean }).standalone === true
   );
 }
+
+/* ---------------- Instalação (Android / Chrome) ---------------- */
+
+/** Evento não padronizado do Chrome que permite abrir o diálogo nativo. */
+export interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
+}
+
+let deferredPrompt: BeforeInstallPromptEvent | null = null;
+let installed = false;
+const listeners = new Set<() => void>();
+const notify = () => listeners.forEach((fn) => fn());
+
+// Captura o mais cedo possível: o Chrome dispara o evento uma única vez por carga.
+if (typeof window !== "undefined") {
+  window.addEventListener("beforeinstallprompt", (event) => {
+    event.preventDefault();
+    deferredPrompt = event as BeforeInstallPromptEvent;
+    notify();
+  });
+  window.addEventListener("appinstalled", () => {
+    installed = true;
+    deferredPrompt = null;
+    notify();
+  });
+}
+
+export function subscribeInstall(fn: () => void): () => void {
+  listeners.add(fn);
+  return () => listeners.delete(fn);
+}
+
+export function canPromptInstall(): boolean {
+  return deferredPrompt !== null;
+}
+
+export function wasInstalled(): boolean {
+  return installed;
+}
+
+export function isAndroid(): boolean {
+  return typeof navigator !== "undefined" && /android/i.test(navigator.userAgent);
+}
+
+/** Abre o diálogo nativo. Retorna o resultado ou "unavailable". */
+export async function promptInstall(): Promise<"accepted" | "dismissed" | "unavailable"> {
+  const event = deferredPrompt;
+  if (!event) return "unavailable";
+  deferredPrompt = null; // o evento só pode ser usado uma vez
+  notify();
+  await event.prompt();
+  const { outcome } = await event.userChoice;
+  if (outcome === "accepted") installed = true;
+  notify();
+  return outcome;
+}
