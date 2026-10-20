@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useServerFn } from '@tanstack/react-start';
 import { getIncidentDetail, updateIncident, type IncidentWorkspaceData } from '@/lib/incidents/functions';
-import { ACTIONS, PRIORITIES, STATUSES, STAGES } from '@/lib/incidents/model';
+import { ACTIONS, LEGACY_INCIDENT_LABELS, PRIORITIES, STATUSES, STAGES } from '@/lib/incidents/model';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
@@ -18,7 +18,7 @@ export function IncidentDetail({ id, workspace: w }: IncidentDetailProps) {
   if (!q.data) return null;
   const i = q.data.incident, order = w.orders.find(o => o.id === i.order_id);
   return <div className="space-y-4 text-sm">
-    <p className="font-semibold">{w.categories.find(c => c.value === i.type)?.label ?? i.type}</p>
+    <p className="font-semibold">{w.categories.find(c => c.value === i.type)?.label ?? LEGACY_INCIDENT_LABELS[i.type] ?? i.type}</p>
     <div className="grid grid-cols-2 gap-2"><p>{order?.code ?? 'Frete'} · {order?.client_name ?? 'Cliente não informado'}</p><p>{STATUSES[i.workflow_status as keyof typeof STATUSES]} · {PRIORITIES[i.priority as keyof typeof PRIORITIES]}</p><p>Motorista: {w.profiles.find(p => p.id === i.reported_by)?.full_name ?? 'Não informado'}</p><p>Veículo: {w.vehicles.find(v => v.id === i.vehicle_id)?.plate ?? 'Não informado'}</p><p>Obra: {w.works.find(work => work.id === order?.work_id)?.name ?? 'Não informada'}</p><p>Etapa: {STAGES[i.trip_stage ?? ''] ?? 'Não informada'}</p></div>
     <p className="whitespace-pre-wrap">{i.description}</p><p className="text-muted-foreground">Registrada: {new Date(i.created_at).toLocaleString('pt-BR')}</p>
     {i.latitude !== null && i.longitude !== null && <p>Localização no registro: {i.latitude.toFixed(5)}, {i.longitude.toFixed(5)} · capturada {i.location_captured_at ? new Date(i.location_captured_at).toLocaleString('pt-BR') : 'sem horário'}</p>}
