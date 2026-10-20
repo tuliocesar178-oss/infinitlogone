@@ -15,6 +15,7 @@ import heroLogo from "@/assets/uploads/9620.png";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { InstallAppButton } from "@/components/install-app-button";
 
 export function PremiumHome() {
   const navigate = useNavigate();
@@ -53,6 +54,7 @@ export function PremiumHome() {
           </nav>
 
           <div className="flex items-center gap-2">
+            <InstallAppButton className="rounded-full px-3 text-xs sm:text-sm" />
             <Link
               to="/rastreio"
               className="hidden rounded-full border border-brand/40 px-5 py-2.5 text-sm font-semibold text-primary hover:bg-accent sm:inline-flex"
