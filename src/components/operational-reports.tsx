@@ -8,6 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { STATUS_LABEL } from "@/lib/order-status";
+import { CANCELLED_STATUS, previousPeriod } from "@/lib/km-report";
+import { KmComparative } from "@/components/reports/km-comparative";
 
 type ReportOrder = {
   id: string;
@@ -68,6 +70,8 @@ export function OperationalReports() {
   const [statusFilter, setStatusFilter] = useState("");
   const [driverFilter, setDriverFilter] = useState("");
   const [vehicleFilter, setVehicleFilter] = useState("");
+  const [originFilter, setOriginFilter] = useState("");
+  const [destinationFilter, setDestinationFilter] = useState("");
   const [from, setFrom] = useState(startOfMonth);
   const [to, setTo] = useState(() => new Date().toISOString().slice(0, 10));
 
@@ -98,6 +102,7 @@ export function OperationalReports() {
     queryFn: async () => {
       const isClient = accessQuery.data?.role === "client";
       const userId = accessQuery.data?.userId;
+      const previous = previousPeriod(from, to);
 
       let ordersQuery = supabase
         .from("orders")
@@ -105,7 +110,7 @@ export function OperationalReports() {
           "id, code, client_id, client_name, work_id, status, created_at, origin_city, origin_state, destination_city, destination_state, distance_km, recorded_distance_km, antt_distance_km, driver_id, vehicle_id",
         )
         .is("deleted_at", null)
-        .gte("created_at", `${from}T00:00:00`)
+        .gte("created_at", `${previous.from}T00:00:00`)
         .lte("created_at", `${to}T23:59:59`)
         .order("created_at", { ascending: false });
 
@@ -128,6 +133,9 @@ export function OperationalReports() {
       if (worksError) throw worksError;
 
       const rows = (orders ?? []) as ReportOrder[];
+      const cutoff = `${from}T00:00:00`;
+      const currentRows = rows.filter((row) => row.created_at >= cutoff);
+      const previousRows = rows.filter((row) => row.created_at < cutoff);
       const driverIds = [...new Set(rows.map((row) => row.driver_id).filter(Boolean))] as string[];
       const vehicleIds = [...new Set(rows.map((row) => row.vehicle_id).filter(Boolean))] as string[];
 
@@ -141,7 +149,8 @@ export function OperationalReports() {
       ]);
 
       return {
-        orders: rows,
+        orders: currentRows,
+        previousOrders: previousRows,
         works: ((works ?? []) as ReportWork[]),
         drivers: (drivers ?? []) as Driver[],
         vehicles: (vehicles ?? []) as Vehicle[],
@@ -170,17 +179,32 @@ export function OperationalReports() {
     [data?.vehicles],
   );
 
-  const filteredOrders = useMemo(() => {
-    return (data?.orders ?? []).filter((order) => {
-      if (!order.work_id) return false;
-      if (clientFilter && order.client_id !== clientFilter) return false;
-      if (workFilter && order.work_id !== workFilter) return false;
-      if (statusFilter && order.status !== statusFilter) return false;
-      if (driverFilter && order.driver_id !== driverFilter) return false;
-      if (vehicleFilter && order.vehicle_id !== vehicleFilter) return false;
-      return true;
-    });
-  }, [data?.orders, clientFilter, workFilter, statusFilter, driverFilter, vehicleFilter]);
+  const applyFilters = useMemo(
+    () => (orders: ReportOrder[]) =>
+      orders.filter((order) => {
+        if (!order.work_id) return false;
+        // Cancelados não entram nos totais, salvo filtro explícito pelo status.
+        if (!statusFilter && order.status === CANCELLED_STATUS) return false;
+        if (clientFilter && order.client_id !== clientFilter) return false;
+        if (workFilter && order.work_id !== workFilter) return false;
+        if (statusFilter && order.status !== statusFilter) return false;
+        if (driverFilter && order.driver_id !== driverFilter) return false;
+        if (vehicleFilter && order.vehicle_id !== vehicleFilter) return false;
+        if (originFilter && order.origin_city !== originFilter) return false;
+        if (destinationFilter && order.destination_city !== destinationFilter) return false;
+        return true;
+      }),
+    [clientFilter, workFilter, statusFilter, driverFilter, vehicleFilter, originFilter, destinationFilter],
+  );
+
+  const filteredOrders = useMemo(
+    () => applyFilters(data?.orders ?? []),
+    [applyFilters, data?.orders],
+  );
+  const filteredPrevious = useMemo(
+    () => applyFilters(data?.previousOrders ?? []),
+    [applyFilters, data?.previousOrders],
+  );
 
   const workRows = useMemo(() => {
     const grouped = new Map<string, ReportOrder[]>();
@@ -207,12 +231,21 @@ export function OperationalReports() {
       .map((order) => [order.client_id, order.client_name ?? "Cliente identificado"]),
   )];
 
+  const originCities = [...new Set(
+    (data?.orders ?? []).map((order) => order.origin_city).filter(Boolean),
+  )].sort() as string[];
+  const destinationCities = [...new Set(
+    (data?.orders ?? []).map((order) => order.destination_city).filter(Boolean),
+  )].sort() as string[];
+
   function clearFilters() {
     setClientFilter("");
     setWorkFilter("");
     setStatusFilter("");
     setDriverFilter("");
     setVehicleFilter("");
+    setOriginFilter("");
+    setDestinationFilter("");
     setFrom(startOfMonth());
     setTo(new Date().toISOString().slice(0, 10));
   }
@@ -346,6 +379,50 @@ export function OperationalReports() {
           </label>
 
           <label className="text-sm">
+            <span className="mb-1.5 block text-xs font-medium text-muted-foreground">Veículo</span>
+            <select
+              value={vehicleFilter}
+              onChange={(event) => setVehicleFilter(event.target.value)}
+              className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm"
+            >
+              <option value="">Todos</option>
+              {(data?.vehicles ?? []).map((vehicle) => (
+                <option key={vehicle.id} value={vehicle.id}>
+                  {vehicleMap.get(vehicle.id)}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="text-sm">
+            <span className="mb-1.5 block text-xs font-medium text-muted-foreground">Origem</span>
+            <select
+              value={originFilter}
+              onChange={(event) => setOriginFilter(event.target.value)}
+              className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm"
+            >
+              <option value="">Todas as cidades</option>
+              {originCities.map((city) => (
+                <option key={city} value={city}>{city}</option>
+              ))}
+            </select>
+          </label>
+
+          <label className="text-sm">
+            <span className="mb-1.5 block text-xs font-medium text-muted-foreground">Destino</span>
+            <select
+              value={destinationFilter}
+              onChange={(event) => setDestinationFilter(event.target.value)}
+              className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm"
+            >
+              <option value="">Todas as cidades</option>
+              {destinationCities.map((city) => (
+                <option key={city} value={city}>{city}</option>
+              ))}
+            </select>
+          </label>
+
+          <label className="text-sm">
             <span className="mb-1.5 block text-xs font-medium text-muted-foreground">De</span>
             <Input type="date" value={from} onChange={(event) => setFrom(event.target.value)} />
           </label>
@@ -394,6 +471,18 @@ export function OperationalReports() {
               value={String(filteredOrders.length - completed)}
             />
           </div>
+
+          <KmComparative
+            currentOrders={filteredOrders}
+            previousOrders={filteredPrevious}
+            works={data?.works ?? []}
+            driverMap={driverMap}
+            vehicleMap={vehicleMap}
+            workFilter={workFilter}
+            from={from}
+            to={to}
+            onSelectWork={setWorkFilter}
+          />
 
           <Card>
             <CardHeader>
