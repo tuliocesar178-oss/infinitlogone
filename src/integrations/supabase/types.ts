@@ -2823,10 +2823,12 @@ export type Database = {
         Args: { _notification: string; _subscription: string }
         Returns: string
       }
+      create_driver_incident: { Args: { _data: Json }; Returns: string }
       decline_freight_offer: {
         Args: { _offer_id: string; _reason?: string }
         Returns: Json
       }
+      default_incident_categories: { Args: never; Returns: Json }
       finalize_route: { Args: { _order_id: string }; Returns: undefined }
       generate_pf_code: { Args: never; Returns: string }
       generate_tracking_code: { Args: never; Returns: string }
@@ -2839,6 +2841,7 @@ export type Database = {
           room_id: string
         }[]
       }
+      get_incident_categories: { Args: never; Returns: Json }
       get_or_create_driver_room: {
         Args: { _driver_id: string }
         Returns: string
@@ -2866,6 +2869,16 @@ export type Database = {
       }
       is_finance: { Args: { _user_id: string }; Returns: boolean }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
+      link_incident_file: {
+        Args: {
+          _incident: string
+          _label: string
+          _mime: string
+          _path: string
+          _size: number
+        }
+        Returns: undefined
+      }
       manage_operation_board_incident: {
         Args: {
           _action: string
@@ -2892,6 +2905,10 @@ export type Database = {
           _driver_id: string
           _reason?: string
         }
+        Returns: undefined
+      }
+      save_incident_categories: {
+        Args: { _categories: Json }
         Returns: undefined
       }
       save_public_home_design: { Args: { _design: string }; Returns: Json }
