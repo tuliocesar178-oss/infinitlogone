@@ -30,7 +30,7 @@ export const Route=createFileRoute("/_authenticated/painel-operacao")({
  head:()=>({meta:[{title:"Painéis Operacionais — INFINITLOG VAPT VUPT"},{name:"description",content:"Central operacional de rotas, entregas, prazos e ocorrências em tempo real."},{property:"og:title",content:"Painéis Operacionais — INFINITLOG VAPT VUPT"},{property:"og:description",content:"Rotas reais, programação de entregas e indicadores da operação."},{property:"og:type",content:"website"},{name:"twitter:card",content:"summary"},{name:"robots",content:"noindex"}]}),
  component:OperationBoard,
  pendingComponent:()=> <div className="grid min-h-screen place-items-center bg-background text-foreground">Carregando painéis operacionais…</div>,
- errorComponent:({error})=><div role="alert" className="p-8 text-destructive">Não foi possível carregar os painéis. {error.message}<Button variant="outline" onClick={()=>window.location.reload()}>Tentar novamente</Button></div>,
+ errorComponent:()=> <div role="alert" className="p-8 text-destructive">Não foi possível carregar os painéis. <Button variant="outline" onClick={()=>window.location.reload()}>Tentar novamente</Button></div>,
  notFoundComponent:()=> <p className="p-8">Painel indisponível.</p>,
 });
 function OperationBoard(){

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { BOARD_ROLES, monitoringSchema, DEFAULT_MONITORING, detectAlerts, type TelemetryPoint } from "@/lib/operation-board-monitor";
 import type { BoardOrder } from "@/lib/operation-board";
+import type { Database } from "@/integrations/supabase/types";
 
 export const getOperationBoard = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
   const db = context.supabase;
@@ -23,7 +24,7 @@ export const getOperationBoard = createServerFn({ method: "GET" }).middleware([r
   const settings = parsed.success ? parsed.data : DEFAULT_MONITORING;
   const ids = rawOrders.map(o=>o.id);
   const profileIds = [...new Set([...rawOrders.flatMap(o=>[o.driver_id,o.created_by]).filter((v): v is string=>Boolean(v)),...(rolesRes.data ?? []).map(r=>r.user_id)])];
-  const profiles=[]; const deliveries=[]; const events=[]; const incidents=[];
+  const profiles=[]; const deliveries=[]; const events=[]; const incidents: Database["public"]["Tables"]["incidents"]["Row"][]=[];
   for(let i=0;i<profileIds.length;i+=100) {
     const r=await db.from("profiles").select("id,full_name,phone,avatar_url").in("id",profileIds.slice(i,i+100)); if(r.error) throw r.error; profiles.push(...(r.data ?? []));
   }
