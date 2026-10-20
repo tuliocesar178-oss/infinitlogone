@@ -48,6 +48,7 @@ import { Route as AuthenticatedOpsChatRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedOpsEquipeRouteImport } from './routes/_authenticated/ops.equipe'
 import { Route as AuthenticatedOpsFaturamentoRouteImport } from './routes/_authenticated/ops.faturamento'
 import { Route as AuthenticatedOpsFinanceiroRouteImport } from './routes/_authenticated/ops.financeiro'
+import { Route as AuthenticatedOpsOcorrenciasRouteImport } from './routes/_authenticated/ops.ocorrencias'
 import { Route as AuthenticatedOpsRastreamentoRouteImport } from './routes/_authenticated/ops.rastreamento'
 import { Route as AuthenticatedOpsVeiculosRouteImport } from './routes/_authenticated/ops.veiculos'
 import { Route as ApiPublicPushDeliveryRouteImport } from './routes/api/public/push-delivery'
@@ -276,6 +277,12 @@ const AuthenticatedOpsFinanceiroRoute =
     path: '/financeiro',
     getParentRoute: () => AuthenticatedOpsRoute,
   } as any)
+const AuthenticatedOpsOcorrenciasRoute =
+  AuthenticatedOpsOcorrenciasRouteImport.update({
+    id: '/ocorrencias',
+    path: '/ocorrencias',
+    getParentRoute: () => AuthenticatedOpsRoute,
+  } as any)
 const AuthenticatedOpsRastreamentoRoute =
   AuthenticatedOpsRastreamentoRouteImport.update({
     id: '/rastreamento',
@@ -414,6 +421,7 @@ export interface FileRoutesByFullPath {
   '/ops/equipe': typeof AuthenticatedOpsEquipeRoute
   '/ops/faturamento': typeof AuthenticatedOpsFaturamentoRoute
   '/ops/financeiro': typeof AuthenticatedOpsFinanceiroRoute
+  '/ops/ocorrencias': typeof AuthenticatedOpsOcorrenciasRoute
   '/ops/rastreamento': typeof AuthenticatedOpsRastreamentoRoute
   '/ops/veiculos': typeof AuthenticatedOpsVeiculosRouteWithChildren
   '/api/public/push-delivery': typeof ApiPublicPushDeliveryRoute
@@ -468,6 +476,7 @@ export interface FileRoutesByTo {
   '/ops/equipe': typeof AuthenticatedOpsEquipeRoute
   '/ops/faturamento': typeof AuthenticatedOpsFaturamentoRoute
   '/ops/financeiro': typeof AuthenticatedOpsFinanceiroRoute
+  '/ops/ocorrencias': typeof AuthenticatedOpsOcorrenciasRoute
   '/ops/rastreamento': typeof AuthenticatedOpsRastreamentoRoute
   '/ops/veiculos': typeof AuthenticatedOpsVeiculosRouteWithChildren
   '/api/public/push-delivery': typeof ApiPublicPushDeliveryRoute
@@ -527,6 +536,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/equipe': typeof AuthenticatedOpsEquipeRoute
   '/_authenticated/ops/faturamento': typeof AuthenticatedOpsFaturamentoRoute
   '/_authenticated/ops/financeiro': typeof AuthenticatedOpsFinanceiroRoute
+  '/_authenticated/ops/ocorrencias': typeof AuthenticatedOpsOcorrenciasRoute
   '/_authenticated/ops/rastreamento': typeof AuthenticatedOpsRastreamentoRoute
   '/_authenticated/ops/veiculos': typeof AuthenticatedOpsVeiculosRouteWithChildren
   '/api/public/push-delivery': typeof ApiPublicPushDeliveryRoute
@@ -586,6 +596,7 @@ export interface FileRouteTypes {
     | '/ops/equipe'
     | '/ops/faturamento'
     | '/ops/financeiro'
+    | '/ops/ocorrencias'
     | '/ops/rastreamento'
     | '/ops/veiculos'
     | '/api/public/push-delivery'
@@ -640,6 +651,7 @@ export interface FileRouteTypes {
     | '/ops/equipe'
     | '/ops/faturamento'
     | '/ops/financeiro'
+    | '/ops/ocorrencias'
     | '/ops/rastreamento'
     | '/ops/veiculos'
     | '/api/public/push-delivery'
@@ -698,6 +710,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/equipe'
     | '/_authenticated/ops/faturamento'
     | '/_authenticated/ops/financeiro'
+    | '/_authenticated/ops/ocorrencias'
     | '/_authenticated/ops/rastreamento'
     | '/_authenticated/ops/veiculos'
     | '/api/public/push-delivery'
@@ -1009,6 +1022,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsFinanceiroRouteImport
       parentRoute: typeof AuthenticatedOpsRoute
     }
+    '/_authenticated/ops/ocorrencias': {
+      id: '/_authenticated/ops/ocorrencias'
+      path: '/ocorrencias'
+      fullPath: '/ops/ocorrencias'
+      preLoaderRoute: typeof AuthenticatedOpsOcorrenciasRouteImport
+      parentRoute: typeof AuthenticatedOpsRoute
+    }
     '/_authenticated/ops/rastreamento': {
       id: '/_authenticated/ops/rastreamento'
       path: '/rastreamento'
@@ -1224,6 +1244,7 @@ interface AuthenticatedOpsRouteChildren {
   AuthenticatedOpsEquipeRoute: typeof AuthenticatedOpsEquipeRoute
   AuthenticatedOpsFaturamentoRoute: typeof AuthenticatedOpsFaturamentoRoute
   AuthenticatedOpsFinanceiroRoute: typeof AuthenticatedOpsFinanceiroRoute
+  AuthenticatedOpsOcorrenciasRoute: typeof AuthenticatedOpsOcorrenciasRoute
   AuthenticatedOpsRastreamentoRoute: typeof AuthenticatedOpsRastreamentoRoute
   AuthenticatedOpsVeiculosRoute: typeof AuthenticatedOpsVeiculosRouteWithChildren
   AuthenticatedOpsIndexRoute: typeof AuthenticatedOpsIndexRoute
@@ -1243,6 +1264,7 @@ const AuthenticatedOpsRouteChildren: AuthenticatedOpsRouteChildren = {
   AuthenticatedOpsEquipeRoute: AuthenticatedOpsEquipeRoute,
   AuthenticatedOpsFaturamentoRoute: AuthenticatedOpsFaturamentoRoute,
   AuthenticatedOpsFinanceiroRoute: AuthenticatedOpsFinanceiroRoute,
+  AuthenticatedOpsOcorrenciasRoute: AuthenticatedOpsOcorrenciasRoute,
   AuthenticatedOpsRastreamentoRoute: AuthenticatedOpsRastreamentoRoute,
   AuthenticatedOpsVeiculosRoute: AuthenticatedOpsVeiculosRouteWithChildren,
   AuthenticatedOpsIndexRoute: AuthenticatedOpsIndexRoute,
