@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Maximize2, Minimize2, Radio, RotateCw } from "lucide-react";
+import { Maximize2, Minimize2, Radio, Pause, Play, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/logo";
 
@@ -12,6 +12,9 @@ interface BoardHeaderProps {
   onFullscreen: () => void;
   onRotation: (enabled: boolean) => void;
   onInterval: (seconds: number) => void;
+  connected?: boolean;
+  updatedAt?: string;
+  onPrevious?: () => void;
 }
 
 export function BoardHeader(props: BoardHeaderProps) {
@@ -20,19 +23,17 @@ export function BoardHeader(props: BoardHeaderProps) {
       <div className="flex items-center gap-4">
         <Logo size={150} withWordmark />
         <div>
-          <h1 className="text-xl font-bold lg:text-2xl">Painel de Operação</h1>
+          <h1 className="text-xl font-bold lg:text-2xl">Painéis Operacionais</h1>
         </div>
       </div>
       <div className="flex flex-wrap items-center gap-3 text-sm">
-        <div className="flex items-center gap-2 font-semibold text-success"><Radio className="h-4 w-4" /> Sistema online</div>
-        <span className="text-muted-foreground">Atualizado há {props.updatedSeconds}s</span>
+        <div className="flex items-center gap-2 font-semibold text-muted-foreground"><Radio className="h-4 w-4" /> {props.connected ? "Conectado" : "Reconectando"}</div>
+        <span className="text-muted-foreground">{props.updatedAt ? `Atualizado há ${props.updatedSeconds}s` : "Aguardando atualização"}</span>
         <time className="font-mono text-base font-semibold tabular-nums">
-          {props.now.toLocaleDateString("pt-BR")} · {props.now.toLocaleTimeString("pt-BR")}
+          {props.now.toLocaleDateString("pt-BR",{timeZone:"America/Sao_Paulo"})} · {props.now.toLocaleTimeString("pt-BR",{timeZone:"America/Sao_Paulo"})}
         </time>
-        <label className="flex items-center gap-2 text-muted-foreground">
-          <RotateCw className="h-4 w-4" />
-          <input type="checkbox" checked={props.rotation} onChange={(event) => props.onRotation(event.target.checked)} /> Rotação
-        </label>
+        <Button variant="outline" size="icon" title="Painel anterior" aria-label="Painel anterior" onClick={props.onPrevious}><ChevronLeft/></Button>
+        <Button variant="outline" size="sm" aria-pressed={props.rotation} onClick={()=>props.onRotation(!props.rotation)}>{props.rotation ? <Pause/>:<Play/>}{props.rotation ? "Pausar":"Apresentar"}</Button>
         <select aria-label="Intervalo da rotação" value={props.interval} onChange={(event) => props.onInterval(Number(event.target.value))} className="h-9 rounded-md border border-input bg-background px-2">
           {[10, 20, 30, 60].map((seconds) => <option key={seconds} value={seconds}>{seconds}s</option>)}
         </select>

@@ -43,7 +43,7 @@ export const NAV_GROUPS: Record<string, { label: string; items: NavItem[] }[]> =
     {
       label: "Operacional",
       items: [
-        { label: "Painel de Operação", to: "/painel-operacao", icon: Tv, match: (p) => p.startsWith("/painel-operacao") },
+        { label: "Painéis Operacionais", to: "/painel-operacao", icon: Tv, match: (p) => p.startsWith("/painel-operacao") },
         { label: "Torre de Controle", to: "/ops/central", icon: LayoutGrid, match: (p) => p.startsWith("/ops/central") },
         { label: "Dashboard", to: "/ops", icon: BarChart3, match: (p) => p === "/ops" },
         { label: "Fretes", to: "/ops/pedidos", icon: Package, match: (p) => p.startsWith("/ops/pedidos") },
@@ -72,7 +72,7 @@ export const NAV_GROUPS: Record<string, { label: string; items: NavItem[] }[]> =
     {
       label: "Operacional",
       items: [
-        { label: "Painel de Operação", to: "/painel-operacao", icon: Tv, match: (p) => p.startsWith("/painel-operacao") },
+        { label: "Painéis Operacionais", to: "/painel-operacao", icon: Tv, match: (p) => p.startsWith("/painel-operacao") },
         { label: "Torre de Controle", to: "/ops/central", icon: LayoutGrid, match: (p) => p.startsWith("/ops/central") },
         { label: "Dashboard", to: "/ops", icon: BarChart3, match: (p) => p === "/ops" },
         { label: "Fretes", to: "/ops/pedidos", icon: Package, match: (p) => p.startsWith("/ops/pedidos") },
