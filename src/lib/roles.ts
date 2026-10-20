@@ -93,6 +93,31 @@ export async function requireRoles(userId: string): Promise<AppRole[]> {
   }
 }
 
+/**
+ * Destino do gate de cada área protegida. Retorna null quando o usuário pode
+ * entrar. Com papéis vazios (conta sem perfil), manda para "/app" — mandar
+ * para outra área protegida criava um ciclo infinito de redirecionamentos
+ * ("Too many redirects").
+ */
+export function areaGateTarget(
+  roles: AppRole[],
+  area: "driver" | "ops" | "client",
+): string | null {
+  if (area === "driver") {
+    if (roles.includes("driver")) return null;
+    if (roles.length === 0) return "/app";
+    return roles.includes("client") ? "/client" : "/ops/central";
+  }
+  if (area === "ops") {
+    if (roles.some(isStaffRole)) return null;
+    if (roles.length === 0) return "/app";
+    return roles.includes("driver") ? "/driver" : "/client";
+  }
+  if (roles.includes("client")) return null;
+  if (roles.length === 0) return "/app";
+  return "/ops/central";
+}
+
 export function clearRolesCache() {
   rolesCache.clear();
 }
