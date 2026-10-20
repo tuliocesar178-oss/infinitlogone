@@ -19,6 +19,7 @@ import { BOARD_ROLES, ROTATION_SECONDS, deadline, gpsFresh, periodBounds, delive
 import { getOperationBoard, syncBoardAlerts } from "@/lib/operation-board.functions";
 import { cn } from "@/lib/utils";
 import type { MapUnit } from "@/components/ops/tracking-map";
+import { STATUS_LABEL } from "@/lib/order-status";
 const TrackingMap=lazy(()=>import("@/components/ops/tracking-map").then(m=>({default:m.TrackingMap})));
 const VIEWS=[{key:"routes",label:"Rotas e entregas",icon:MapPinned},{key:"alerts",label:"Ocorrências",icon:AlertTriangle},{key:"schedule",label:"Programação",icon:CalendarDays},{key:"performance",label:"Desempenho",icon:BarChart3}] as const;
 const searchSchema=z.object({panel:z.enum(["routes","alerts","schedule","performance"]).catch("routes"),period:z.enum(["today","tomorrow","week","custom"]).catch("today"),from:z.string().catch(""),to:z.string().catch(""),kpi:z.string().catch("total"),q:z.string().catch(""),client:z.string().catch(""),work:z.string().catch(""),driver:z.string().catch(""),status:z.string().catch(""),category:z.string().catch(""),day:z.string().catch(""),delay:z.string().catch("")});

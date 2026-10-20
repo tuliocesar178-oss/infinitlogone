@@ -418,7 +418,7 @@ export function TrackingMap({
 
   return (
     <div className={`relative ${className ?? ""}`}>
-      <div ref={containerRef} className="absolute inset-0 min-h-[320px] min-w-0 bg-surface-2" />
+      <div ref={containerRef} className="tracking-map-canvas absolute inset-0 min-h-[320px] min-w-0 bg-surface-2" />
 
       {!mapLoaded && !mapError && (
         <div className="pointer-events-none absolute inset-0 z-[1] grid place-items-center bg-surface-2 text-sm font-semibold text-muted-foreground">
