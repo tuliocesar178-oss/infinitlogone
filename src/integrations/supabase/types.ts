@@ -1032,54 +1032,195 @@ export type Database = {
           },
         ]
       }
+      incident_files: {
+        Row: {
+          created_at: string
+          file_path: string
+          id: string
+          incident_id: string
+          label: string
+          mime_type: string
+          size_bytes: number
+          updated_at: string
+          uploaded_by: string
+        }
+        Insert: {
+          created_at?: string
+          file_path: string
+          id?: string
+          incident_id: string
+          label: string
+          mime_type: string
+          size_bytes: number
+          updated_at?: string
+          uploaded_by: string
+        }
+        Update: {
+          created_at?: string
+          file_path?: string
+          id?: string
+          incident_id?: string
+          label?: string
+          mime_type?: string
+          size_bytes?: number
+          updated_at?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "incident_files_incident_id_fkey"
+            columns: ["incident_id"]
+            isOneToOne: false
+            referencedRelation: "incidents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "incident_files_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      incident_updates: {
+        Row: {
+          action: string
+          actor_id: string
+          actor_name: string
+          created_at: string
+          id: string
+          incident_id: string
+          internal: boolean
+          message: string | null
+          metadata: Json
+          updated_at: string
+        }
+        Insert: {
+          action: string
+          actor_id: string
+          actor_name: string
+          created_at?: string
+          id?: string
+          incident_id: string
+          internal?: boolean
+          message?: string | null
+          metadata?: Json
+          updated_at?: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          actor_name?: string
+          created_at?: string
+          id?: string
+          incident_id?: string
+          internal?: boolean
+          message?: string | null
+          metadata?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "incident_updates_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "incident_updates_incident_id_fkey"
+            columns: ["incident_id"]
+            isOneToOne: false
+            referencedRelation: "incidents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       incidents: {
         Row: {
           acknowledged_at: string | null
           acknowledged_by: string | null
+          affects_deadline: boolean
           alert_key: string | null
           alert_metadata: Json
           assigned_to: string | null
+          closed_at: string | null
+          closed_by: string | null
           created_at: string
           description: string | null
+          driver_eta: string | null
           id: string
+          latitude: number | null
+          location_captured_at: string | null
+          longitude: number | null
           operational_notes: string | null
           order_id: string
+          priority: string
           reported_by: string | null
+          request_id: string | null
           resolved_at: string | null
           severity: string | null
+          trip_stage: string | null
           type: string
+          vehicle_id: string | null
+          workflow_status: string
         }
         Insert: {
           acknowledged_at?: string | null
           acknowledged_by?: string | null
+          affects_deadline?: boolean
           alert_key?: string | null
           alert_metadata?: Json
           assigned_to?: string | null
+          closed_at?: string | null
+          closed_by?: string | null
           created_at?: string
           description?: string | null
+          driver_eta?: string | null
           id?: string
+          latitude?: number | null
+          location_captured_at?: string | null
+          longitude?: number | null
           operational_notes?: string | null
           order_id: string
+          priority?: string
           reported_by?: string | null
+          request_id?: string | null
           resolved_at?: string | null
           severity?: string | null
+          trip_stage?: string | null
           type: string
+          vehicle_id?: string | null
+          workflow_status?: string
         }
         Update: {
           acknowledged_at?: string | null
           acknowledged_by?: string | null
+          affects_deadline?: boolean
           alert_key?: string | null
           alert_metadata?: Json
           assigned_to?: string | null
+          closed_at?: string | null
+          closed_by?: string | null
           created_at?: string
           description?: string | null
+          driver_eta?: string | null
           id?: string
+          latitude?: number | null
+          location_captured_at?: string | null
+          longitude?: number | null
           operational_notes?: string | null
           order_id?: string
+          priority?: string
           reported_by?: string | null
+          request_id?: string | null
           resolved_at?: string | null
           severity?: string | null
+          trip_stage?: string | null
           type?: string
+          vehicle_id?: string | null
+          workflow_status?: string
         }
         Relationships: [
           {
@@ -1097,10 +1238,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "incidents_closed_by_fkey"
+            columns: ["closed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "incidents_order_id_fkey"
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "incidents_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
             referencedColumns: ["id"]
           },
         ]
@@ -2645,6 +2800,10 @@ export type Database = {
       }
       can_access_direct_room: {
         Args: { _room_id: string; _user: string }
+        Returns: boolean
+      }
+      can_access_incident: {
+        Args: { _incident: string; _user: string }
         Returns: boolean
       }
       can_access_order_chat: {
