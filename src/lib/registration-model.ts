@@ -12,8 +12,6 @@ export function canReceiveOffer(status: string | null, deletedAt: string | null 
 const text = z.string().trim().max(200).default('');
 const phoneSchema=z.string().transform((value,ctx)=>{
   try{return normalizePhone(value);}catch{ctx.addIssue({code:z.ZodIssueCode.custom,message:'Informe telefone brasileiro com DDD.'});return z.NEVER;}
-}).superRefine((data,ctx)=>{
-  if(data.kind==='driver'&&!data.plate&&(data.vehicle_type||data.brand||data.model||data.year||data.capacity_kg||data.axles))ctx.addIssue({code:z.ZodIssueCode.custom,path:['plate'],message:'Informe a placa para salvar os dados do veículo.'});
 });
 export const registrationSchema = z.object({
   id: z.string().uuid().optional(), kind: z.enum(['driver', 'client']),
@@ -32,5 +30,7 @@ export const registrationSchema = z.object({
   vehicle_type: text, brand: text, model: text, plate: z.string().trim().max(12).default(''),
   year: z.coerce.number().int().min(0).max(2100).default(0),
   capacity_kg: z.coerce.number().min(0).max(1000000).default(0), axles: z.coerce.number().int().min(0).max(30).default(0),
+}).superRefine((data,ctx)=>{
+  if(data.kind==='driver'&&!data.plate&&(data.vehicle_type||data.brand||data.model||data.year||data.capacity_kg||data.axles))ctx.addIssue({code:z.ZodIssueCode.custom,path:['plate'],message:'Informe a placa para salvar os dados do veículo.'});
 });
 export type RegistrationInput = z.input<typeof registrationSchema>;
