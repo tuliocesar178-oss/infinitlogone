@@ -176,6 +176,13 @@
       "when": 1793180995243,
       "tag": "0024_test_mode_integrity_guards",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1793198738993,
+      "tag": "0025_fix_completeness_status_check",
+      "breakpoints": true
     }
   ]
 }
