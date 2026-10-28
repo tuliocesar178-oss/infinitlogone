@@ -1,5 +1,12 @@
 # Roadmap
 
+## Cadastro operacional por telefone, sem SMS (28/10)
+- [ ] Separar cadastro e conta preservando relacionamentos e registros existentes
+- [ ] Cadastro/consulta/edição de motorista e cliente, telefone normalizado e duplicidades
+- [ ] Ativação administrativa segura e acesso compatível com autenticação real, sem SMS
+- [ ] Restringir ofertas automáticas a aprovados e manter permissões no servidor
+- [ ] Validar integração, regras, isolamento e fluxos autenticados em telas pequenas e computador
+
 ## CEP e localização de coleta/entrega (28/10)
 - [x] Corrigir sobrescrita de CEP, preservar zeros e separar aviso postal da validação operacional
 - [x] Abrir mapas independentes ao selecionar endereço, manter dados manuais e confirmar pontos
