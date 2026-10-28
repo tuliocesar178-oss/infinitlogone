@@ -19,4 +19,11 @@ describe('cadastro operacional',()=>{
     for(const status of ['pending','correction','rejected',null])expect(canReceiveOffer(status)).toBe(false);
     expect(canReceiveOffer('active','2026-10-28')).toBe(false);
   });
+  it('dados de veículo sem placa não são silenciosamente descartados',()=>{
+    expect(registrationSchema.safeParse({kind:'driver',full_name:'Motorista',phone:'31999999999',brand:'Volvo'}).success).toBe(false);
+  });
+  it('contatos empresariais mantêm telefone normalizado',()=>{
+    const client=registrationSchema.parse({kind:'client',full_name:'Empresa',phone:'31999999999',contacts:[{name:'Contato',phone:'(31) 98888-8888'}]});
+    expect(client.contacts[0]?.phone).toBe('+5531988888888');
+  });
 });

@@ -9,7 +9,7 @@ import { reviewDriverSignup } from "@/lib/drivers.functions";
 import { useServerFn } from "@tanstack/react-start";
 
 export const Route = createFileRoute("/_authenticated/ops/motoristas/aprovacoes")({
-  head: () => ({ meta: [{ title: "Solicitações de cadastro — InfinitLog" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Solicitações de cadastro — InfinitLog" },{name:'description',content:'Análise administrativa dos cadastros de motorista INFINITLOG.'},{property:'og:title',content:'Solicitações de cadastro — InfinitLog'},{property:'og:description',content:'Aprovação e análise de motoristas.'},{property:'og:type',content:'website'},{name:'twitter:card',content:'summary'}, { name: "robots", content: "noindex" }] }),
   component: DriverApprovalsPage,
 });
 

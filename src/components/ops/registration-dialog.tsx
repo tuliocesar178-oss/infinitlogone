@@ -14,6 +14,7 @@ export function RegistrationDialog({open,onClose,kind,initial,onCreated}:Registr
   const [form,setForm]=useState<RegistrationInput>({kind,full_name:'',phone:'',email:'',...initial});
   const [saving,setSaving]=useState(false);
   const [uploadId]=useState(()=>initial?.id??crypto.randomUUID());
+  const [contactKeys,setContactKeys]=useState(()=>(initial?.contacts??[]).map(()=>crypto.randomUUID()));
   const [error,setError]=useState<string|null>(null);
   const save=useServerFn(saveOperationalRegistration);const qc=useQueryClient();
   const set=(key:keyof RegistrationInput,value:string)=>setForm(current=>({...current,[key]:value}));
@@ -49,8 +50,8 @@ export function RegistrationDialog({open,onClose,kind,initial,onCreated}:Registr
       {([{key:'address',label:'Endereço'},{key:'address_number',label:'Número'},{key:'neighborhood',label:'Bairro'},{key:'city',label:'Cidade'},{key:'state',label:'UF'},{key:'zip_code',label:'CEP'}] as const).map(f=><RegistrationField key={f.key} label={f.label} value={String(form[f.key]??'')} onChange={e=>set(f.key,e.target.value)}/>)}
       <label className="grid gap-1.5 text-sm sm:col-span-2">Observações internas<textarea className="min-h-20 rounded-md border border-input bg-background p-3" value={form.notes??''} onChange={e=>set('notes',e.target.value)}/></label>
       {kind==='client'&&<section className="space-y-3 sm:col-span-2"><h3 className="font-medium">Contatos adicionais</h3>
-        {(form.contacts??[]).map((contact,index)=><div key={`${index}-contact`} className="grid gap-2 sm:grid-cols-3"><RegistrationField label="Nome do contato" value={contact.name} onChange={e=>setForm(f=>({...f,contacts:(f.contacts??[]).map((c,i)=>i===index?{...c,name:e.target.value}:c)}))}/><RegistrationField label="Telefone do contato" type="tel" required value={contact.phone} onChange={e=>setForm(f=>({...f,contacts:(f.contacts??[]).map((c,i)=>i===index?{...c,phone:e.target.value}:c)}))}/><Button type="button" variant="outline" onClick={()=>setForm(f=>({...f,contacts:(f.contacts??[]).filter((_,i)=>i!==index)}))}>Remover contato</Button></div>)}
-        <Button type="button" variant="outline" onClick={()=>setForm(f=>({...f,contacts:[...(f.contacts??[]),{name:'',phone:'',email:''}]}))}>Adicionar contato</Button>
+        {(form.contacts??[]).map((contact,index)=><div key={contactKeys[index]} className="grid gap-2 sm:grid-cols-3"><RegistrationField label="Nome do contato" value={contact.name} onChange={e=>setForm(f=>({...f,contacts:(f.contacts??[]).map((c,i)=>i===index?{...c,name:e.target.value}:c)}))}/><RegistrationField label="Telefone do contato" type="tel" required value={contact.phone} onChange={e=>setForm(f=>({...f,contacts:(f.contacts??[]).map((c,i)=>i===index?{...c,phone:e.target.value}:c)}))}/><Button type="button" variant="outline" onClick={()=>{setForm(f=>({...f,contacts:(f.contacts??[]).filter((_,i)=>i!==index)}));setContactKeys(keys=>keys.filter((_,i)=>i!==index));}}>Remover contato</Button></div>)}
+        <Button type="button" variant="outline" onClick={()=>{setForm(f=>({...f,contacts:[...(f.contacts??[]),{name:'',phone:'',email:''}]}));setContactKeys(keys=>[...keys,crypto.randomUUID()]);}}>Adicionar contato</Button>
       </section>}
       <div className="flex justify-end gap-2 sm:col-span-2"><Button type="button" variant="outline" disabled={saving} onClick={onClose}>Cancelar</Button><Button type="submit" disabled={saving}>{saving?'Salvando…':'Salvar cadastro'}</Button></div>
     </form>

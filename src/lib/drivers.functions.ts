@@ -145,7 +145,7 @@ export const reviewDriverSignup = createServerFn({ method: "POST" })
       _actor: context.userId,
       _driver_id: data.driver_id,
       _decision: data.decision,
-      _reason: data.reason ?? null,
+      _reason: data.reason ?? undefined,
     });
     if (error) throw new Error(error.message);
     return { ok: true };

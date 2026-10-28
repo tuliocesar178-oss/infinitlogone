@@ -22,7 +22,7 @@ import {
 
 export const Route = createFileRoute("/_authenticated/ops/motoristas/$id")({
   head: () => ({
-    meta: [{ title: "Motorista — InfinitLog" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "Motorista — InfinitLog" },{name:'description',content:'Dados cadastrais, veículo e acesso do motorista INFINITLOG.'},{property:'og:title',content:'Motorista — InfinitLog'},{property:'og:description',content:'Dados e situação cadastral do motorista.'},{property:'og:type',content:'website'},{name:'twitter:card',content:'summary'}, { name: "robots", content: "noindex" }],
   }),
   component: DriverDetail,
 });
