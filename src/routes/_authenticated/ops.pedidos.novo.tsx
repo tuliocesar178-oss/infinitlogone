@@ -3,6 +3,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AppShell } from "@/components/app-shell";
 import { supabase } from "@/integrations/supabase/client";
+import { useTestMode, readTestMode } from "@/lib/test-mode";
 import { loadRegisteredClients } from "@/lib/registered-clients";
 import { toast } from "sonner";
 import { ArrowLeft, ArrowRight, Check, Upload, X, Copy, MessageCircle, Mail, MapPin, MessageSquare } from "lucide-react";
@@ -176,6 +177,7 @@ function num(v: string): number | null {
 
 function NewOrderWizard() {
   const navigate = useNavigate();
+  const mode = useTestMode();
   const [step, setStep] = useState(0);
   const [f, setF] = useState<Form>(EMPTY);
   const [files, setFiles] = useState<{ file: File; kind: string }[]>([]);
@@ -295,6 +297,7 @@ function NewOrderWizard() {
   const margin = revenue > 0 ? (profit / revenue) * 100 : 0;
 
   function canAdvance(): string | null {
+    if (mode.enabled) return null;
     if (step === 0 && !f.client_name.trim()) return "Informe o nome do cliente";
     if (step === 0 && works.length > 0 && !selectedWorkId) {
       return "Selecione a obra de destino";
@@ -410,20 +413,22 @@ function NewOrderWizard() {
   async function save(publish: boolean) {
     const err = canAdvance();
     if (err) return toast.error(err);
-    for(const type of ['origin','destination'] as const){const problem=addressError(addressValue(type));if(problem)return toast.error(`${type==='origin'?'Coleta':'Entrega'}: ${problem}`);}
-    if(publish && !routeInfo)return toast.error('Aguarde o cálculo da rota ou confira os pontos de coleta e entrega.');
+    const testMode = await readTestMode();
+    if (!testMode) for(const type of ['origin','destination'] as const){const problem=addressError(addressValue(type));if(problem)return toast.error(`${type==='origin'?'Coleta':'Entrega'}: ${problem}`);}
+    if(publish && !testMode && !routeInfo)return toast.error('Aguarde o cálculo da rota ou confira os pontos de coleta e entrega.');
     // Bloqueio legal: não é permitido publicar carga lotação abaixo do piso mínimo ANTT.
     if (publish && belowFloor && antt?.minimum_freight != null) {
       return toast.error(
         `Valor abaixo do piso mínimo ANTT (${brl(antt.minimum_freight)}). Ajuste o valor do motorista ou reclassifique a operação.`,
       );
     }
-    if (publish && !hasEffectiveConfiguration()) return toast.error("Escolha a configuração efetiva do veículo e informe os eixos.");
-    if (!isBodyCompatible(selectedVehicle, f.req_body_type)) return toast.error("Escolha uma carroceria compatível.");
-    if (selectedCalculation.isFetching) return toast.warning("Aguarde o cálculo ANTT terminar.");
+    if (publish && !testMode && !hasEffectiveConfiguration()) return toast.error("Escolha a configuração efetiva do veículo e informe os eixos.");
+    if (!testMode && !isBodyCompatible(selectedVehicle, f.req_body_type)) return toast.error("Escolha uma carroceria compatível.");
+    if (!testMode && selectedCalculation.isFetching) return toast.warning("Aguarde o cálculo ANTT terminar.");
     setSaving(true);
     try {
       const { data: u } = await supabase.auth.getUser();
+      const canOffer = publish && routeInfo !== null && (num(f.driver_price) ?? num(f.price) ?? 0) > 0;
       const payload = {
         client_id: selectedClientId || null,
         work_id: selectedWorkId || null,
@@ -443,7 +448,7 @@ function NewOrderWizard() {
         antt_effective_date: antt?.effective_from ?? null,
         antt_calculated_at: antt?.status === "ok" ? antt.calculation_date : null,
         antt_rate_table_id: antt?.rate_table_id ?? null,
-        suggested_value: suggestedValue > 0 ? suggestedValue : null,
+        suggested_value: antt?.minimum_freight != null && suggestedValue > 0 ? suggestedValue : null,
         margin_amount: marginAmount || null,
         client_name: f.client_name || null,
         contact_name: f.contact_name || null,
@@ -493,8 +498,8 @@ function NewOrderWizard() {
         delivery_franchise_minutes: f.delivery_franchise_minutes ? Number(f.delivery_franchise_minutes) : null,
         priority: f.priority,
         notes: [f.client_notes, f.cargo_notes].filter(Boolean).join("\n\n") || null,
-        status: (publish ? "awaiting_driver" : "planning") as any,
-        published_at: publish ? new Date().toISOString() : null,
+        status: (canOffer ? "awaiting_driver" : "planning") as never,
+        published_at: canOffer ? new Date().toISOString() : null,
         created_by: u.user?.id ?? null,
         distance_km: routeInfo?.distance_km ?? null,
         estimated_minutes: routeInfo?.duration_minutes ?? null,
@@ -599,7 +604,7 @@ function NewOrderWizard() {
         const up = await supabase.storage.from("order-files").upload(path, it.file, {
           upsert: false, contentType: it.file.type,
         });
-        if (up.error) continue;
+        if (up.error) { toast.warning(`Frete salvo; anexo pendente: ${it.file.name}`); continue; }
         await supabase.from("order_attachments").insert({
           order_id: order.id, kind: it.kind, label: it.file.name,
           file_path: path, mime_type: it.file.type, size_bytes: it.file.size,
@@ -609,13 +614,13 @@ function NewOrderWizard() {
 
       await supabase.from("order_events").insert({
         order_id: order.id, event_type: "order_created",
-        to_status: (publish ? "awaiting_driver" : "planning") as any, actor_id: u.user?.id ?? null,
+        to_status: (canOffer ? "awaiting_driver" : "planning") as never, actor_id: u.user?.id ?? null,
         payload: { vehicle_configuration: selectedVehicle ? { name: selectedVehicle.label, axles: anttAxles, capacity_kg: num(f.req_capacity_kg), body_type: f.req_body_type || null } : null,
           antt_calculation: antt, suggested_value: suggestedValue, negotiated_value: num(f.price) },
       });
 
       let offersSent = 0;
-      if (publish) {
+      if (canOffer) {
         offersSent = await sendOffersToEligibleDrivers(order.id, {
           price: num(f.driver_price) ?? num(f.price) ?? 0,
           minutes: f.offer_minutes ? Number(f.offer_minutes) : 15,
@@ -633,7 +638,7 @@ function NewOrderWizard() {
       const qr = await QRCode.toDataURL(trackingUrl(order.tracking_code), { margin: 1, width: 220 });
       setResult({ id: order.id, code: order.code, tracking_code: order.tracking_code, qr });
       toast.success(
-        publish
+        canOffer
           ? `Frete ${order.code} publicado — ${offersSent} motorista(s) notificado(s)`
           : `Rascunho do frete ${order.code} salvo`,
       );
@@ -656,7 +661,7 @@ function NewOrderWizard() {
             <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-emerald-100 text-emerald-600">
               <Check className="h-7 w-7" />
             </span>
-            <h2 className="mt-4 text-2xl font-semibold tracking-tight">Pronto para despachar</h2>
+            <h2 className="mt-4 text-2xl font-semibold tracking-tight">{routeInfo ? "Frete salvo" : "Frete salvo · Rota pendente"}</h2>
             <p className="mt-1 text-sm text-muted-foreground">Compartilhe o rastreio com o cliente ou envie oferta agora.</p>
 
             <div className="mt-6 flex flex-col items-center gap-3">
@@ -676,12 +681,12 @@ function NewOrderWizard() {
                   <div className="flex-1 space-y-4">
                     <div>
                       <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Coleta</div>
-                      <div className="font-semibold text-sm">{f.pickup_company || "Empresa"} · {f.origin_city}/{f.origin_state}</div>
+                      <div className="font-semibold text-sm">{f.pickup_company || "Empresa não informada"} · {f.origin_city}/{f.origin_state}</div>
                       <div className="text-xs text-muted-foreground">{f.pickup_date} às {f.pickup_time}</div>
                     </div>
                     <div>
                       <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Entrega</div>
-                      <div className="font-semibold text-sm">{f.delivery_company || "Empresa"} · {f.destination_city}/{f.destination_state}</div>
+                      <div className="font-semibold text-sm">{f.delivery_company || "Empresa não informada"} · {f.destination_city}/{f.destination_state}</div>
                       <div className="text-xs text-muted-foreground">{f.delivery_date} às {f.delivery_time}</div>
                     </div>
                   </div>
@@ -697,7 +702,7 @@ function NewOrderWizard() {
                   </div>
                   <div>
                     <div className="text-[9px] font-bold text-muted-foreground uppercase">Pedágios</div>
-                    <div className="text-sm font-bold">{brl(num(f.toll) || 0)}</div>
+                    <div className="text-sm font-bold">{num(f.toll) == null ? "Não informado" : brl(Number(num(f.toll)))}</div>
                   </div>
                 </div>
               </div>
@@ -748,6 +753,7 @@ function NewOrderWizard() {
         </Link>
       }
     >
+      {!routeInfo && <p className="mb-4 text-sm text-warning">Rota pendente · distância e duração não calculadas</p>}
       {/* Stepper */}
       <ol className="mb-6 flex flex-wrap items-center gap-2">
         {STEPS.map((label, i) => (
@@ -795,7 +801,7 @@ function NewOrderWizard() {
                 </select>
               </label>
             </div>
-            <T label="Nome do Cliente" required value={f.client_name} onChange={(v) => set("client_name", v)} />
+            <T label="Nome do Cliente" required={!mode.enabled} value={f.client_name} onChange={(v) => set("client_name", v)} />
 
             <div className="sm:col-span-2">
               <label className="block">
@@ -834,7 +840,7 @@ function NewOrderWizard() {
               </label>
             </div>
 
-            <T label="Empresa" value={f.company} onChange={(v) => set("company", v)} />
+            <T label="Empresa não informada" value={f.company} onChange={(v) => set("company", v)} />
             <T label="Contato" value={f.contact_name} onChange={(v) => set("contact_name", v)} />
             <T label="Telefone" value={f.contact_phone} onChange={(v) => set("contact_phone", v)} />
             <T label="E-mail" type="email" value={f.contact_email} onChange={(v) => set("contact_email", v)} />
@@ -946,7 +952,7 @@ function NewOrderWizard() {
               onBodySelect={(body) => set("req_body_type", body)} />
 
             <Grid>
-              <T label="Valor negociado com cliente (R$)" required type="number" value={f.price} onChange={(v) => set("price", v)} />
+              <T label="Valor negociado com cliente (R$)" required={!mode.enabled} type="number" value={f.price} onChange={(v) => set("price", v)} />
               <T label="Valor do motorista (R$)" type="number" value={f.driver_price} onChange={(v) => set("driver_price", v)} />
               <T label="Pedágio (R$)" type="number" value={f.toll} onChange={(v) => set("toll", v)} />
               <T label="Combustível (R$)" type="number" value={f.fuel} onChange={(v) => set("fuel", v)} />
@@ -987,9 +993,9 @@ function NewOrderWizard() {
               </div>
             )}
             <div className="mt-6 grid gap-3 sm:grid-cols-3">
-              <KPI label="Custo total" value={brl(totalCost)} />
-              <KPI label="Lucro previsto" value={brl(profit)} tone={profit >= 0 ? "positive" : "negative"} />
-              <KPI label="Margem" value={`${margin.toFixed(1)}%`} tone={margin >= 15 ? "positive" : margin >= 0 ? "neutral" : "negative"} />
+              <KPI label="Custo total informado" value={f.driver_price || f.toll || f.fuel || f.escort || f.license || f.other_costs ? brl(totalCost) : "Pendente"} />
+              <KPI label="Lucro previsto" value={f.price ? brl(profit) : "Pendente"} tone={profit >= 0 ? "positive" : "negative"} />
+              <KPI label="Margem" value={f.price ? `${margin.toFixed(1)}%` : "Pendente"} tone={margin >= 15 ? "positive" : margin >= 0 ? "neutral" : "negative"} />
             </div>
 
             <div className="mt-8">
@@ -1164,9 +1170,9 @@ function NewOrderWizard() {
               ]} />
               <ReviewBlock title="Valores" onEdit={() => setStep(5)} rows={[
                 ["Piso mínimo ANTT", antt?.minimum_freight != null ? brl(antt.minimum_freight) : "Não calculado"],
-                ["Pedágios", brl(tolls)],
+                ["Pedágios", f.toll ? brl(tolls) : "Não informado"],
                 ["Valor sugerido", suggestedValue > 0 ? brl(suggestedValue) : "Não calculado"],
-                ["Valor negociado", brl(num(f.price) ?? 0)],
+                ["Valor negociado", f.price ? brl(Number(num(f.price))) : "Pendente"],
                 ["Situação ANTT", antt?.applicable && antt.minimum_freight != null
                   ? (clientFreightValue >= antt.minimum_freight ? "Acima ou dentro do piso ANTT" : "Abaixo do piso ANTT")
                   : "Não aplicável"],
@@ -1195,7 +1201,7 @@ function NewOrderWizard() {
             <button onClick={() => void save(true)} disabled={saving || belowFloor}
               title={belowFloor ? "Valor abaixo do piso mínimo ANTT" : undefined}
               className="inline-flex items-center gap-2 rounded-full bg-brand px-6 py-2.5 text-sm font-semibold text-brand-foreground hover:opacity-90 disabled:opacity-60">
-              <Check className="h-4 w-4" /> {saving ? "Publicando…" : "Publicar frete"}
+              <Check className="h-4 w-4" /> {saving ? "Publicando…" : mode.enabled ? "Salvar e continuar" : "Publicar frete"}
             </button>
           </div>
         )}

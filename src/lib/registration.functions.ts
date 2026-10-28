@@ -1,13 +1,17 @@
 import { createServerFn } from '@tanstack/react-start';
 import { z } from 'zod';
 import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
-import { registrationSchema } from './registration-model';
+import { incompleteRegistrationSchema, makeRegistrationSchema } from './registration-model';
+import { testModeStateSchema } from './test-mode';
 
 export const saveOperationalRegistration = createServerFn({ method: 'POST' })
-  .middleware([requireSupabaseAuth]).inputValidator(registrationSchema)
-  .handler(async ({ data, context }) => {
+  .middleware([requireSupabaseAuth]).inputValidator(incompleteRegistrationSchema)
+  .handler(async ({ data: input, context }) => {
     const staff = await context.supabase.rpc('is_staff', { _user_id: context.userId });
     if (staff.error || !staff.data) throw new Error('Cadastro permitido somente à equipe operacional.');
+    const mode = await context.supabase.rpc('get_test_mode');
+    if (mode.error) throw new Error('Não foi possível conferir as exigências do cadastro.');
+    const data = makeRegistrationSchema(testModeStateSchema.parse(mode.data).enabled).parse(input);
     const admin=await context.supabase.rpc('has_role',{_user_id:context.userId,_role:'admin'});
     if(admin.error)throw admin.error;
     if(data.pix_key && !admin.data)throw new Error('Chave PIX exige permissão administrativa.');
@@ -38,7 +42,7 @@ export const saveOperationalRegistration = createServerFn({ method: 'POST' })
       if (!data.id) await db.from('operational_identities').delete().eq('id',id).is('auth_user_id',null);
       throw new Error(result.error.message);
     }
-    if (data.kind === 'driver' && data.plate) {
+    if (data.kind === 'driver' && (data.plate || data.vehicle_type || data.brand || data.model || data.year || data.capacity_kg || data.axles || data.vehicle_photo_url)) {
       const driver = await context.supabase.from('drivers').select('current_vehicle_id').eq('user_id',id).single();
       if (driver.error) throw driver.error;
       const vehicle = { plate: data.plate.toUpperCase().replace(/[^A-Z0-9]/g,''), vehicle_type: data.vehicle_type || null,

@@ -30,3 +30,6 @@
 - Role lookups treat a server-rejected session (401) as signed out: refresh once, then sign out locally and send to /auth; never treat a failed lookup as an empty role list, which caused cross-area redirect loops.
 - Keep drivers/clients keyed by stable operational identities, independent of Auth account creation; activate with the same UUID to preserve order/work ownership and existing RLS, never relocate historical records or synthesize email/phone verification.
 - Operational registration writes use staff-authenticated functions and database duplicate/approval guards; access provisioning remains admin-only so staff cannot assign privileges.
+- Temporary completeness mode lives in app_settings behind authenticated narrow reads and audited admin-only writes; database triggers and server handlers independently enforce its state, so browser changes cannot relax production validation.
+- Store works without a required client in staff-only operational_form_drafts until completion; preserve their stable draft IDs rather than inventing relationships or duplicating work records.
+- Empty vehicle plate means pending registration, with uniqueness enforced only for known plates; never generate a fictitious plate to persist incomplete vehicle details.

@@ -4,6 +4,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { brl, labelOf, PAYMENT_METHODS, PAYMENT_TERMS } from "@/lib/pf";
+import { useTestMode, readTestMode, evidenceError } from "@/lib/test-mode";
+import { TestModeNotice } from "@/components/ops/completeness-notice";
 import { STATUS_LABEL } from "@/lib/order-status";
 import { haversineKm } from "@/lib/geo";
 import {
@@ -247,7 +249,8 @@ export function ActiveOrderPanel({
   const distKm =
     live?.distanceToTargetKm ??
     (driverPos ? distanceToTargetKm({ lat: driverPos[1], lng: driverPos[0] }, target) : null);
-  const unlocked = isWithinActionRadius(order.status, distKm);
+  const mode = useTestMode();
+  const unlocked = mode.enabled || isWithinActionRadius(order.status, distKm);
 
   useEffect(() => {
     if (live) return;
@@ -483,14 +486,15 @@ function ActionBtn({
 
 export function PickupEvidenceForm({ orderId, userId, position, onDone, onCancel }: { orderId: string; userId: string; position: [number, number] | null; onDone: () => void; onCancel: () => void }) {
   const [files, setFiles] = useState<File[]>([]);
+  const mode = useTestMode();
   const [invoiceFile, setInvoiceFile] = useState<File | null>(null);
   const [volumes, setVolumes] = useState("");
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
 
   async function submit() {
-    if (files.length === 0) return toast.error("Envie ao menos uma foto da carga");
-    if (!invoiceFile) return toast.error("Envie a foto da nota fiscal");
+    const problem=evidenceError(await readTestMode(), "pickup", {cargoPhotos:files.length,invoice:!!invoiceFile});
+    if(problem)return toast.error(problem);
     setSaving(true);
     try {
       const uploads: { path: string; kind: string; name: string; type: string; size: number }[] = [];
@@ -500,10 +504,12 @@ export function PickupEvidenceForm({ orderId, userId, position, onDone, onCancel
         if (up.error) throw up.error;
         uploads.push({ path, kind: "foto_carga", name: f.name, type: f.type, size: f.size });
       }
+      if(invoiceFile) {
       const invPath = `${orderId}/pickup-nf-${Date.now()}-${invoiceFile.name.replace(/[^\w.\-]/g, "_")}`;
       const up = await supabase.storage.from("order-files").upload(invPath, invoiceFile, { contentType: invoiceFile.type });
       if (up.error) throw up.error;
       uploads.push({ path: invPath, kind: "foto_nf", name: invoiceFile.name, type: invoiceFile.type, size: invoiceFile.size });
+      }
 
       const rows = uploads.map((u) => ({
         order_id: orderId, kind: u.kind, label: u.name, file_path: u.path,
@@ -511,19 +517,22 @@ export function PickupEvidenceForm({ orderId, userId, position, onDone, onCancel
         event_status: "loaded", latitude: position?.[1] ?? null, longitude: position?.[0] ?? null,
         metadata: { source: "driver_pickup_checklist" },
       }));
+      if(rows.length) {
       const { error: attachmentError } = await supabase.from("order_attachments").insert(rows as never);
       if (attachmentError) throw attachmentError;
+      }
       const firstCargo = uploads.find((u) => u.kind === "foto_carga");
-      await supabase.from("deliveries").upsert({
+      const deliveryResult=await supabase.from("deliveries").upsert({
         order_id: orderId, pickup_photo_url: firstCargo?.path ?? null,
       } as never, { onConflict: "order_id" });
+      if(deliveryResult.error)throw deliveryResult.error;
       if (volumes || notes) {
         await supabase.from("orders").update({
           volumes: volumes ? Number(volumes) : null,
           notes: notes || null,
         }).eq("id", orderId);
       }
-      toast.success("Evidências de coleta enviadas");
+      toast.success(uploads.length ? "Evidências de coleta enviadas" : "Coleta registrada · documentos pendentes");
       onDone();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro no upload");
@@ -533,6 +542,8 @@ export function PickupEvidenceForm({ orderId, userId, position, onDone, onCancel
   return (
     <div className="space-y-4 border-t border-border p-6">
       <h3 className="text-sm font-semibold">Evidências da coleta</h3>
+      <TestModeNotice />
+      {mode.enabled && (!files.length || !invoiceFile) && <p className="text-sm text-warning">Foto da carga ou nota fiscal pendente</p>}
       <FileInput label="Fotos da carga (múltiplas)" multiple onChange={(fs) => setFiles(fs)} count={files.length} />
       <FileInput label="Foto da nota fiscal" onChange={(fs) => setInvoiceFile(fs[0] ?? null)} count={invoiceFile ? 1 : 0} />
       <input value={volumes} onChange={(e) => setVolumes(e.target.value)} type="number"
@@ -553,6 +564,7 @@ export function PickupEvidenceForm({ orderId, userId, position, onDone, onCancel
 }
 
 export function DeliveryEvidenceForm({ orderId, userId, position, onDone, onCancel }: { orderId: string; userId: string; position: [number, number] | null; onDone: () => void; onCancel: () => void }) {
+  const mode=useTestMode();
   const [signedInvoice, setSignedInvoice] = useState<File | null>(null);
   const [deliveryPhotos, setDeliveryPhotos] = useState<File[]>([]);
   const [receiverName, setReceiverName] = useState("");
@@ -578,8 +590,8 @@ export function DeliveryEvidenceForm({ orderId, userId, position, onDone, onCanc
   };
 
   async function submit() {
-    if (!receiverName.trim()) return toast.error("Informe o nome do recebedor");
-    if (!signedInvoice && deliveryPhotos.length === 0) return toast.error("Envie fotos ou canhoto assinado");
+    const problem=evidenceError(await readTestMode(), "delivery", {receiver:receiverName,deliveryPhotos:deliveryPhotos.length,signedInvoice:!!signedInvoice});
+    if(problem)return toast.error(problem);
     setSaving(true);
     try {
       const uploads: { path: string; kind: string; name: string; type: string; size: number }[] = [];
@@ -614,16 +626,17 @@ export function DeliveryEvidenceForm({ orderId, userId, position, onDone, onCanc
         })) as never);
         if (attachmentError) throw attachmentError;
       }
-      await supabase.from("deliveries").upsert({
+      const deliveryResult=await supabase.from("deliveries").upsert({
         order_id: orderId,
-        receiver_name: receiverName,
+        receiver_name: receiverName || null,
         receiver_document: receiverDoc || null,
         delivered_at: new Date().toISOString(),
         signature_url: signaturePath,
         delivery_photo_url: uploads.find((u) => u.kind === "foto_entrega")?.path ?? null,
         invoice_url: uploads.find((u) => u.kind === "canhoto")?.path ?? null,
       } as never, { onConflict: "order_id" });
-      toast.success("Comprovantes enviados");
+      if(deliveryResult.error)throw deliveryResult.error;
+      toast.success(uploads.length ? "Comprovantes enviados" : "Entrega registrada · comprovantes pendentes");
       onDone();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro");
@@ -633,6 +646,8 @@ export function DeliveryEvidenceForm({ orderId, userId, position, onDone, onCanc
   return (
     <div className="space-y-4 border-t border-border p-6">
       <h3 className="text-sm font-semibold">Comprovantes de entrega</h3>
+      <TestModeNotice />
+      {mode.enabled && !signedInvoice && !deliveryPhotos.length && <p className="text-sm text-warning">Comprovante não anexado</p>}
       <FileInput label="Canhoto / NF assinada" onChange={(fs) => setSignedInvoice(fs[0] ?? null)} count={signedInvoice ? 1 : 0} />
       <FileInput label="Fotos da entrega" multiple onChange={(fs) => setDeliveryPhotos(fs)} count={deliveryPhotos.length} />
       <input value={receiverName} onChange={(e) => setReceiverName(e.target.value)}

@@ -10,12 +10,13 @@ import { WorkKmReport } from "@/components/work-km-report";
 
 export const Route = createFileRoute("/_authenticated/ops/obras/")({
   head: () => ({
-    meta: [{ title: "Obras — InfinitLog" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "Obras — InfinitLog" }, { name: "description", content: "Obras e cadastros pendentes da INFINITLOG." }, { property: "og:title", content: "Obras — InfinitLog" }, { property: "og:description", content: "Projetos, clientes e pendências operacionais." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }],
   }),
   component: WorksList,
 });
 
 function WorksList() {
+  const drafts=useQuery({queryKey:['work-drafts'],queryFn:async()=>{const r=await supabase.from('operational_form_drafts').select('id,data').eq('kind','work').is('completed_record_id',null).is('deleted_at',null);if(r.error)throw r.error;return r.data;}});
   const [reportWork, setReportWork] = useState<Work | null>(null);
 
   const worksQuery = useQuery({
@@ -43,6 +44,7 @@ function WorksList() {
         </Button>
       }
     >
+      {!!drafts.data?.length && <div className="mb-5 border-y border-border py-4"><p className="text-warning">{drafts.data.length} obra(s) com cliente pendente</p><Button variant="outline" asChild className="mt-2"><Link to="/ops/obras/nova">Retomar obra pendente</Link></Button></div>}
       {worksQuery.isLoading ? (
         <div className="card-soft grid min-h-48 place-items-center text-sm text-muted-foreground">
           Carregando obras…
@@ -70,7 +72,7 @@ function WorksList() {
             <div key={work.id} className="card-soft p-5">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h2 className="font-semibold">{work.name}</h2>
+                  <h2 className="font-semibold">{work.name || "Nome pendente"}</h2>
                   {work.code && (
                     <p className="mt-1 text-xs text-muted-foreground">{work.code}</p>
                   )}

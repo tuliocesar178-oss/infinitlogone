@@ -8,11 +8,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { createIncident, type IncidentWorkspaceData } from '@/lib/incidents/functions';
+import { useTestMode } from '@/lib/test-mode';
 import { incidentStage, STAGES, validateIncidentExplanation } from '@/lib/incidents/model';
 import { compressIncidentImage, readDrafts, removeDraft, storeDraft, type IncidentDraft } from '@/lib/incidents/drafts';
 
 export interface IncidentReportFormProps { workspace: IncidentWorkspaceData; orderId?: string; onSent: () => void; }
 export function IncidentReportForm({ workspace: w, orderId: preferred, onSent }: IncidentReportFormProps) {
+  const mode=useTestMode();
   const orders = w.orders.filter(o => !['delivered', 'finalized', 'cancelled'].includes(o.status));
   const [orderId, setOrderId] = useState(preferred ?? orders[0]?.id ?? '');
   const [type, setType] = useState(w.categories[0]?.value ?? 'other');
@@ -47,7 +49,7 @@ export function IncidentReportForm({ workspace: w, orderId: preferred, onSent }:
   }
   async function submit(saveOnly = false, existing?: IncidentDraft) {
     if (lock.current) return;
-    if (!existing && (!order || !category || !validateIncidentExplanation(category, description))) { setError('Confira o frete e descreva o que aconteceu.'); return; }
+    if (!existing && (!order || !category || !validateIncidentExplanation(category, description, mode.enabled))) { setError('Confira o frete e descreva o que aconteceu.'); return; }
     if (!safe) { setError('Confirme que o veículo está parado em segurança.'); return; }
     lock.current = true; setBusy(true); setError('');
     try {
@@ -70,7 +72,7 @@ export function IncidentReportForm({ workspace: w, orderId: preferred, onSent }:
     <label className="block space-y-1 text-sm font-medium">Frete ativo<select aria-label="Frete ativo" className="h-12 w-full rounded-md border bg-background px-3" value={orderId} onChange={e => setOrderId(e.target.value)}>{!orders.length && <option value="">Nenhum frete ativo atribuído</option>}{orders.map(o => <option key={o.id} value={o.id}>{o.code} · {o.origin_city} → {o.destination_city}</option>)}</select></label>
     {order && <dl className="grid grid-cols-2 gap-2 text-xs text-muted-foreground"><div>Cliente: {order.client_name ?? 'Não informado'}</div><div>Obra: {w.works.find(work => work.id === order.work_id)?.name ?? 'Não informada'}</div><div>Etapa: {STAGES[incidentStage(order.status)]}</div><div>Veículo: {w.vehicles.find(v => v.id === order.vehicle_id)?.plate ?? 'Não informado'}</div></dl>}
     <label className="block space-y-1 text-sm font-medium">O que aconteceu?<select aria-label="Tipo de ocorrência" className="h-12 w-full rounded-md border bg-background px-3" value={type} onChange={e => setType(e.target.value)}>{w.categories.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}</select></label>
-    <label className="block space-y-1 text-sm font-medium">Descrição {category?.requires_description ? '(obrigatória)' : '(opcional)'}<Textarea aria-label="Descrição" value={description} maxLength={4000} onChange={e => setDescription(e.target.value)} placeholder="O que a operação precisa saber?" /></label>
+    <label className="block space-y-1 text-sm font-medium">Descrição {category?.requires_description && !mode.enabled ? '(obrigatória)' : '(opcional)'}<Textarea aria-label="Descrição" value={description} maxLength={4000} onChange={e => setDescription(e.target.value)} placeholder="O que a operação precisa saber?" /></label>
     <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={affects} onChange={e => setAffects(e.target.checked)} />Pode afetar o prazo da coleta ou entrega</label>
     <label className="block space-y-1 text-sm font-medium">Minha previsão de resolução (opcional)<Input aria-label="Minha previsão de resolução" type="datetime-local" value={eta} onChange={e => setEta(e.target.value)} /></label>
     <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={gps} onChange={e => setGps(e.target.checked)} />Autorizar localização neste registro (opcional)</label>
