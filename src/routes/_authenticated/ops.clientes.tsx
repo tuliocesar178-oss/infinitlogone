@@ -20,7 +20,7 @@ const options=queryOptions({queryKey:['registered-clients'],queryFn:async()=>{
 export const Route=createFileRoute('/_authenticated/ops/clientes')({
   head:()=>({meta:[{title:'Clientes — INFINITLOG VAPT VUPT'},{name:'description',content:'Cadastro operacional de clientes, contatos e acessos da INFINITLOG.'},{property:'og:title',content:'Clientes — INFINITLOG VAPT VUPT'},{property:'og:description',content:'Clientes e contatos operacionais.'},{property:'og:type',content:'website'},{name:'twitter:card',content:'summary'},{name:'robots',content:'noindex'}]}),
   loader:({context})=>context.queryClient.ensureQueryData(options),
-  errorComponent:({error,reset})=><AppShell title="Clientes"><p>{error.message}</p><Button onClick={reset}>Tentar novamente</Button></AppShell>,
+  errorComponent:({error,reset})=><AppShell title="Clientes"><p>{error instanceof Error?error.message:'Não foi possível consultar clientes.'}</p><Button onClick={reset}>Tentar novamente</Button></AppShell>,
   component:ClientsPage,
 });
 function ClientsPage(){

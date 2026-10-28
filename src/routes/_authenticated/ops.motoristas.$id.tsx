@@ -8,6 +8,10 @@ import { ArrowLeft, Upload, UserRound } from "lucide-react";
 import { DRIVER_COLUMNS } from "@/lib/driver-columns";
 import { getDriverFinancials } from "@/lib/secure-driver-financials.functions";
 import { useServerFn } from "@tanstack/react-start";
+import { registrationPermissions } from '@/lib/registration.functions';
+import { RegistrationAccess } from '@/components/ops/registration-access';
+import { RegistrationDialog } from '@/components/ops/registration-dialog';
+import { Button } from '@/components/ui/button';
 import {
   BANK_ACCOUNT_TYPES,
   FIN_STATUS,
@@ -32,6 +36,8 @@ function DriverDetail() {
   const [profileName, setProfileName] = useState("");
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [editOpen,setEditOpen]=useState(false);
+  const permissions=useQuery({queryKey:['registration-permissions'],queryFn:()=>registrationPermissions()});
 
   const loadFinancials = useServerFn(getDriverFinancials);
 
@@ -55,7 +61,7 @@ function DriverDetail() {
 
   useEffect(() => {
     if (q.data?.driver) setForm(q.data.driver);
-    if (q.data?.profile) setProfileName(q.data.profile.full_name ?? "");
+    if (q.data?.driver) setProfileName(q.data.profile?.full_name ?? q.data.driver.full_name ?? '');
   }, [q.data]);
 
   function set<K extends string>(k: K, v: any) {
@@ -88,6 +94,7 @@ function DriverDetail() {
     try {
       const payload = {
         user_id: id,
+        full_name: profileName,
         cpf: form.cpf,
         phone: form.phone,
         city: form.city,
@@ -149,6 +156,8 @@ function DriverDetail() {
         </Link>
       }
     >
+      <div className="mb-4 flex flex-wrap gap-2"><Button variant="outline" onClick={()=>setEditOpen(true)}>Editar cadastro completo</Button>{permissions.data?.isAdmin&&<RegistrationAccess id={id} kind="driver"/>}<span className="self-center text-xs text-muted-foreground">Telefone não verificado</span></div>
+      {editOpen&&<RegistrationDialog open onClose={()=>setEditOpen(false)} kind="driver" onCreated={()=>{qc.invalidateQueries({queryKey:['driver',id]});}} initial={{id,full_name:profileName,phone:form.phone??'',email:form.email??'',document:form.cpf??'',city:form.city??'',state:form.state??'',address:form.address??'',address_number:form.address_number??'',neighborhood:form.neighborhood??'',zip_code:form.zip??'',notes:form.notes??'',birth_date:form.birth_date??'',license_number:form.license_number??'',license_category:form.license_category??'',cnh_expires_at:form.cnh_expires_at??'',rntrc:form.rntrc??'',pix_key:form.pix_key??''}}/>}
       <div className="mb-6 flex items-center gap-4 rounded-2xl border border-border bg-surface p-4">
         {form.photo_url ? (
           <img src={form.photo_url} alt="" className="h-20 w-20 rounded-2xl object-cover" />
