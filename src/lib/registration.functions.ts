@@ -26,7 +26,7 @@ export const saveOperationalRegistration = createServerFn({ method: 'POST' })
       state: data.state || null, address: data.address || null, address_number: data.address_number || null,
       neighborhood: data.neighborhood || null, notes: data.notes || null };
     const result = data.kind === 'driver'
-      ? await context.supabase.from('drivers').upsert({ ...common, phone: data.phone, email: data.email || null,
+      ? await db.from('drivers').upsert({ ...common, phone: data.phone, email: data.email || null,
         cpf: data.document || null, zip: data.zip_code || null, birth_date: data.birth_date || null,
         license_number: data.license_number || null, license_category: data.license_category || null,
         cnh_expires_at: data.cnh_expires_at || null, rntrc: data.rntrc || null, ...(admin.data?{pix_key:data.pix_key||null}:{}) }, { onConflict: 'user_id' })
