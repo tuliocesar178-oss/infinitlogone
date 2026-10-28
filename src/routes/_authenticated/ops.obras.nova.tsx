@@ -1,3 +1,4 @@
+import { loadRegisteredClients } from "@/lib/registered-clients";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
@@ -92,45 +93,7 @@ function NewWork() {
   async function loadClients() {
     setLoadingClients(true);
     try {
-      const { data: registeredClients, error: clientsError } = await supabase
-        .from("clients")
-        .select("user_id, company_name, document");
-
-      if (clientsError) throw clientsError;
-
-      const clientIds = (registeredClients ?? []).map((client) => client.user_id);
-      if (clientIds.length === 0) {
-        setClients([]);
-        return;
-      }
-
-      const { data: profiles, error: profilesError } = await supabase
-        .from("profiles")
-        .select("id, full_name, city, state")
-        .in("id", clientIds);
-
-      if (profilesError) throw profilesError;
-
-      const profilesById = new Map((profiles ?? []).map((profile) => [profile.id, profile]));
-      const clientOptions = (registeredClients ?? [])
-        .map((client): Client => {
-          const profile = profilesById.get(client.user_id);
-          return {
-            id: client.user_id,
-            company_name: client.company_name,
-            full_name: profile?.full_name ?? null,
-            cnpj: client.document,
-            city: profile?.city ?? null,
-            state: profile?.state ?? null,
-          };
-        })
-        .filter((client) => Boolean(client.company_name || client.full_name))
-        .sort((a, b) =>
-          (a.company_name || a.full_name || "").localeCompare(
-            b.company_name || b.full_name || "",
-            "pt-BR",
-          ),
-        );
+      const clientOptions = (await loadRegisteredClients()).map(client => ({id:client.id,company_name:client.company_name,full_name:client.full_name,cnpj:client.cnpj,city:client.city,state:client.state}));
 
       setClients(clientOptions);
     } catch (error) {

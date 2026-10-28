@@ -3,6 +3,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AppShell } from "@/components/app-shell";
 import { supabase } from "@/integrations/supabase/client";
+import { loadRegisteredClients } from "@/lib/registered-clients";
 import { toast } from "sonner";
 import { ArrowLeft, ArrowRight, Check, Upload, X, Copy, MessageCircle, Mail, MapPin, MessageSquare } from "lucide-react";
 import QRCode from "qrcode";
@@ -260,48 +261,7 @@ function NewOrderWizard() {
   }, [selectedWorkId, works]);
 
   useEffect(() => {
-    async function loadClients() {
-      try {
-        // Fetch user IDs that have the 'client' role
-        const { data: roleData, error: roleError } = await supabase
-          .from("user_roles")
-          .select("user_id")
-          .eq("role", "client");
-
-        if (roleError) throw roleError;
-
-        // If no clients found by role, fall back to fetching all profiles
-        // This is important because the 'client' user role might not be set for all existing clients
-        if (!roleData || roleData.length === 0) {
-          console.warn("Nenhum usuário com papel 'client' encontrado. Buscando todos os perfis.");
-          const { data: profilesData, error: profilesError } = await supabase
-            .from("profiles")
-            .select("id, company_name, cnpj, full_name, phone, whatsapp, zip_code, address_number, neighborhood, city, state, email")
-            .limit(100);
-          
-          if (profilesError) throw profilesError;
-          if (profilesData) setClients(profilesData as any);
-          return;
-        }
-
-        const clientIds = roleData.map(r => r.user_id);
-
-        // Fetch profiles for those IDs
-        const { data: profilesData, error: profilesError } = await supabase
-          .from("profiles")
-          .select("id, company_name, cnpj, full_name, phone, whatsapp, zip_code, address_number, neighborhood, city, state, email")
-          .in("id", clientIds);
-        
-        if (profilesError) throw profilesError;
-        if (profilesData) setClients(profilesData as any);
-      } catch (err) {
-        console.error("Erro ao carregar clientes:", err);
-        // Last resort: fetch anything from profiles to not leave the list empty
-        const { data } = await supabase.from("profiles").select("id, company_name, full_name").limit(10);
-        if (data) setClients(data as any);
-      }
-    }
-    loadClients();
+    loadRegisteredClients().then(setClients).catch(() => toast.error("Não foi possível consultar clientes cadastrados."));
   }, []);
 
   function handleClientSelect(clientId: string) {
