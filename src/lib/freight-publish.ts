@@ -16,7 +16,7 @@ export type PublishOptions = {
 /**
  * Envia a oferta de um frete a todos os motoristas elegíveis.
  * Elegibilidade: cadastro aprovado (approval_status = 'active'),
- * financeiro liberado e disponibilidade compatível.
+ * sem filtros adicionais de financeiro, disponibilidade ou veículo.
  * Retorna a quantidade de ofertas criadas.
  */
 export async function sendOffersToEligibleDrivers(

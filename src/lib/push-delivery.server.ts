@@ -49,9 +49,11 @@ export async function deliverNotification(notificationId: string) {
     if (order && !order.deleted_at) {
       authorized = staff || order.driver_id === notice.user_id || order.client_id === notice.user_id;
       if (notice.type === "new_offer") {
-        // Ofertas vão a todos os motoristas: só confere se a oferta ainda está aberta.
+        // Recheck approval at delivery time; queued events may predate a block.
+        const registration=await db.from('drivers').select('approval_status,deleted_at').eq('user_id',notice.user_id).maybeSingle();
+        if(registration.error)throw new Error('Falha ao conferir aprovação.');
         const { data: offer } = await db.from("freight_offers").select("status,expires_at").eq("order_id", orderId).eq("driver_id", notice.user_id).maybeSingle();
-        authorized = driver && !order.driver_id &&
+        authorized = driver && registration.data?.approval_status==='active' && !registration.data.deleted_at && !order.driver_id &&
           ["created", "preparing", "awaiting_driver", "negotiating"].includes(order.status) &&
           !!offer && ["pending", "negotiating"].includes(offer.status) && (!offer.expires_at || Date.parse(offer.expires_at) > Date.now());
         url = "/driver/ofertas";
