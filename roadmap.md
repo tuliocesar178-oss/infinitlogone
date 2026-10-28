@@ -1,11 +1,14 @@
 # Roadmap
 
 ## Cadastro operacional por telefone, sem SMS (28/10)
-- [ ] Separar cadastro e conta preservando relacionamentos e registros existentes
-- [ ] Cadastro/consulta/edição de motorista e cliente, telefone normalizado e duplicidades
-- [ ] Ativação administrativa segura e acesso compatível com autenticação real, sem SMS
-- [ ] Restringir ofertas automáticas a aprovados e manter permissões no servidor
-- [ ] Validar integração, regras, isolamento e fluxos autenticados em telas pequenas e computador
+- [x] Separar cadastro e conta preservando UUIDs e relacionamentos em drivers/clients; identidade operacional não cria usuário Auth
+- [x] Cadastro/consulta/edição de motorista e cliente, telefone normalizado, contatos empresariais e rejeição de duplicidades
+- [x] Ativação administrativa implementada com e-mail real, senha, claim exclusivo e associação ao mesmo UUID; sem SMS nem confirmação fictícia de telefone
+- [x] Restringir ofertas automáticas a aprovados, validar aprovação na gravação/aceite e push; aprovações administrativas protegidas
+- [x] Validar 15 testes; criar motorista/cliente sem e-mail, reabrir edição de cliente, detectar duplicidade e selecionar cliente no novo frete; edição motorista confirmada na base e cadastro em tela pequena simulado
+- [ ] Validar ativação/login completo e associação a conta já existente — falta identidade real autorizada para teste; não criar contas fictícias com e-mail inventado
+- [ ] Acesso por telefone/senha sem confirmação — autenticação atual não oferece fluxo comprovado sem confirmação; cadastro funciona, acesso usa e-mail real
+- [ ] Validar isolamento completo em conta operacional/cliente, uploads e Android/iPhone físicos — faltam sessões específicas e dispositivos reais
 
 ## CEP e localização de coleta/entrega (28/10)
 - [x] Corrigir sobrescrita de CEP, preservar zeros e separar aviso postal da validação operacional
