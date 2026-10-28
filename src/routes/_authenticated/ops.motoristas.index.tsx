@@ -56,9 +56,9 @@ function DriversList() {
       const { data: drivers, error } = await supabase
         .from("drivers")
         .select(
-          "user_id, status, availability, financial_status, city, state, phone, cpf, photo_url, rating, last_seen_at, created_at, current_vehicle_id",
+          "user_id, full_name, approval_status, status, availability, financial_status, city, state, phone, cpf, photo_url, rating, last_seen_at, created_at, current_vehicle_id",
         )
-        .order("created_at", { ascending: false });
+        .is("deleted_at", null).order("created_at", { ascending: false });
       if (error) throw error;
       const ids = (drivers ?? []).map((d) => d.user_id);
       const vehIds = (drivers ?? []).map((d) => d.current_vehicle_id).filter(Boolean) as string[];
@@ -72,7 +72,7 @@ function DriversList() {
       ]);
       return (drivers ?? []).map((d) => ({
         ...d,
-        profiles: (profiles ?? []).find((p: any) => p.id === d.user_id) ?? null,
+        profiles: (profiles ?? []).find((p: any) => p.id === d.user_id) ?? { full_name: d.full_name },
         vehicles: (vehicles ?? []).find((v: any) => v.id === d.current_vehicle_id) ?? null,
       }));
     },
@@ -84,8 +84,8 @@ function DriversList() {
     let out = rows.filter((r) => {
       if (availabilityFilter !== "all" && r.availability !== availabilityFilter) return false;
       if (!s) return true;
-      const hay = `${r.profiles?.full_name ?? ""} ${r.city ?? ""} ${r.state ?? ""} ${r.phone ?? ""} ${r.cpf ?? ""}`.toLowerCase();
-      return hay.includes(s);
+      const hay = `${r.profiles?.full_name ?? ""} ${r.city ?? ""} ${r.state ?? ""} ${r.phone ?? ""} ${r.cpf ?? ""} ${r.vehicles?.plate ?? ""}`.toLowerCase();
+      return hay.includes(s) || Boolean(s.replace(/\D/g, "") && r.phone?.includes(s.replace(/\D/g, "")));
     });
     out = [...out].sort((a, b) => {
       if (sort === "name") return (a.profiles?.full_name ?? "").localeCompare(b.profiles?.full_name ?? "");
@@ -123,7 +123,7 @@ function DriversList() {
               setSearch(e.target.value);
               setPage(0);
             }}
-            placeholder="Buscar por nome, cidade, CPF, telefone…"
+            placeholder="Buscar por nome, telefone, CPF ou placa…"
             className="h-11 w-full rounded-full border border-border bg-surface pl-10 pr-4 text-sm outline-none focus:border-brand"
           />
         </div>
@@ -268,7 +268,7 @@ function DriversList() {
         </div>
       )}
 
-      <DriverInviteDialog open={inviteOpen} onClose={() => setInviteOpen(false)} />
+      {inviteOpen && <DriverInviteDialog open onClose={() => setInviteOpen(false)} />}
       {selected && (
         <DriverSidePanel
           driverId={selected}
@@ -337,8 +337,7 @@ function EmptyState({ onNew }: { onNew: () => void }) {
       </span>
       <h2 className="mt-6 text-xl font-semibold tracking-tight">Nenhum motorista</h2>
       <p className="mt-2 max-w-sm text-sm text-muted-foreground">
-        Convide o primeiro motorista para começar a operar. Ele receberá um e-mail com o link de
-        acesso.
+        Cadastre o primeiro motorista.
       </p>
       <button
         onClick={onNew}

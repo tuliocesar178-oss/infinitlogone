@@ -8,6 +8,7 @@
  */
 export const DRIVER_COLUMNS = [
   "user_id",
+  "full_name",
   "license_number",
   "license_category",
   "status",

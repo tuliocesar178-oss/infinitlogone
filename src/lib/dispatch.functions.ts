@@ -59,11 +59,10 @@ export const dispatchOrderToEligibleDrivers = createServerFn({ method: "POST" })
       throw new Error("Esta rota já foi aceita por um motorista.");
     }
 
-    // Regra do negócio: a oferta vai para TODOS os motoristas cadastrados,
-    // sem filtro de aprovação, financeiro, disponibilidade ou veículo.
+    // Only approved registrations; do not add unrelated financial/vehicle restrictions.
     const { data: drivers, error: driversError } = await db
       .from("drivers")
-      .select("user_id");
+      .select("user_id").eq('approval_status','active').is('deleted_at',null);
     if (driversError) throw new Error(driversError.message);
 
     const eligible = (drivers ?? []).filter((driver) => !!driver.user_id);

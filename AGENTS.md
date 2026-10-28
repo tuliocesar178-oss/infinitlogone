@@ -28,3 +28,5 @@
 - Reuse incidents for driver workflows with authorized RPCs, private incident updates/files and event-only GPS; user-scoped IndexedDB drafts retain stable request/file IDs for retry without duplicating records. Keep incident history separate from individual chats, exclude incident queries from persistent query caches and private audit payloads from client reads, and prevent legacy board mutations from changing request-based incidents.
 
 - Role lookups treat a server-rejected session (401) as signed out: refresh once, then sign out locally and send to /auth; never treat a failed lookup as an empty role list, which caused cross-area redirect loops.
+- Keep drivers/clients keyed by stable operational identities, independent of Auth account creation; activate with the same UUID to preserve order/work ownership and existing RLS, never relocate historical records or synthesize email/phone verification.
+- Operational registration writes use staff-authenticated functions and database duplicate/approval guards; access provisioning remains admin-only so staff cannot assign privileges.

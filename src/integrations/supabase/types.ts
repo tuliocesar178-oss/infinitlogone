@@ -288,30 +288,86 @@ export type Database = {
       }
       clients: {
         Row: {
+          address: string | null
+          address_number: string | null
+          city: string | null
           company_name: string | null
           contact_email: string | null
+          contact_name: string | null
           contact_phone: string | null
+          contacts: Json
           created_at: string
+          customer_type: string
+          deleted_at: string | null
           document: string | null
+          full_name: string | null
+          neighborhood: string | null
+          notes: string | null
+          phone_verified: boolean
+          registration_status: string
+          state: string | null
+          trade_name: string | null
+          updated_at: string
           user_id: string
+          zip_code: string | null
         }
         Insert: {
+          address?: string | null
+          address_number?: string | null
+          city?: string | null
           company_name?: string | null
           contact_email?: string | null
+          contact_name?: string | null
           contact_phone?: string | null
+          contacts?: Json
           created_at?: string
+          customer_type?: string
+          deleted_at?: string | null
           document?: string | null
+          full_name?: string | null
+          neighborhood?: string | null
+          notes?: string | null
+          phone_verified?: boolean
+          registration_status?: string
+          state?: string | null
+          trade_name?: string | null
+          updated_at?: string
           user_id: string
+          zip_code?: string | null
         }
         Update: {
+          address?: string | null
+          address_number?: string | null
+          city?: string | null
           company_name?: string | null
           contact_email?: string | null
+          contact_name?: string | null
           contact_phone?: string | null
+          contacts?: Json
           created_at?: string
+          customer_type?: string
+          deleted_at?: string | null
           document?: string | null
+          full_name?: string | null
+          neighborhood?: string | null
+          notes?: string | null
+          phone_verified?: boolean
+          registration_status?: string
+          state?: string | null
+          trade_name?: string | null
+          updated_at?: string
           user_id?: string
+          zip_code?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "clients_operational_identity_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "operational_identities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       deliveries: {
         Row: {
@@ -424,7 +480,15 @@ export type Database = {
           updated_at?: string
           uploaded_by?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "driver_documents_identity_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "operational_identities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       driver_locations: {
         Row: {
@@ -693,11 +757,13 @@ export type Database = {
           current_vehicle_id: string | null
           daily_rate: number | null
           default_price_per_km: number | null
+          deleted_at: string | null
           email: string | null
           favored_document: string | null
           favored_name: string | null
           financial_notes: string | null
           financial_status: Database["public"]["Enums"]["driver_financial_status"]
+          full_name: string | null
           gender: string | null
           hourly_wait_rate: number | null
           last_seen_at: string | null
@@ -709,6 +775,7 @@ export type Database = {
           owns_vehicle: boolean
           payment_term_days: number | null
           phone: string | null
+          phone_verified: boolean
           photo_url: string | null
           pix_key: string | null
           pix_key_type: Database["public"]["Enums"]["pix_key_type"] | null
@@ -724,6 +791,7 @@ export type Database = {
           state: string | null
           status: Database["public"]["Enums"]["driver_status"]
           submitted_at: string | null
+          updated_at: string
           user_id: string
           whatsapp: string | null
           zip: string | null
@@ -760,11 +828,13 @@ export type Database = {
           current_vehicle_id?: string | null
           daily_rate?: number | null
           default_price_per_km?: number | null
+          deleted_at?: string | null
           email?: string | null
           favored_document?: string | null
           favored_name?: string | null
           financial_notes?: string | null
           financial_status?: Database["public"]["Enums"]["driver_financial_status"]
+          full_name?: string | null
           gender?: string | null
           hourly_wait_rate?: number | null
           last_seen_at?: string | null
@@ -776,6 +846,7 @@ export type Database = {
           owns_vehicle?: boolean
           payment_term_days?: number | null
           phone?: string | null
+          phone_verified?: boolean
           photo_url?: string | null
           pix_key?: string | null
           pix_key_type?: Database["public"]["Enums"]["pix_key_type"] | null
@@ -791,6 +862,7 @@ export type Database = {
           state?: string | null
           status?: Database["public"]["Enums"]["driver_status"]
           submitted_at?: string | null
+          updated_at?: string
           user_id: string
           whatsapp?: string | null
           zip?: string | null
@@ -827,11 +899,13 @@ export type Database = {
           current_vehicle_id?: string | null
           daily_rate?: number | null
           default_price_per_km?: number | null
+          deleted_at?: string | null
           email?: string | null
           favored_document?: string | null
           favored_name?: string | null
           financial_notes?: string | null
           financial_status?: Database["public"]["Enums"]["driver_financial_status"]
+          full_name?: string | null
           gender?: string | null
           hourly_wait_rate?: number | null
           last_seen_at?: string | null
@@ -843,6 +917,7 @@ export type Database = {
           owns_vehicle?: boolean
           payment_term_days?: number | null
           phone?: string | null
+          phone_verified?: boolean
           photo_url?: string | null
           pix_key?: string | null
           pix_key_type?: Database["public"]["Enums"]["pix_key_type"] | null
@@ -858,6 +933,7 @@ export type Database = {
           state?: string | null
           status?: Database["public"]["Enums"]["driver_status"]
           submitted_at?: string | null
+          updated_at?: string
           user_id?: string
           whatsapp?: string | null
           zip?: string | null
@@ -868,6 +944,13 @@ export type Database = {
             columns: ["current_vehicle_id"]
             isOneToOne: false
             referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "drivers_operational_identity_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "operational_identities"
             referencedColumns: ["id"]
           },
         ]
@@ -1447,6 +1530,30 @@ export type Database = {
           title?: string
           type?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      operational_identities: {
+        Row: {
+          auth_user_id: string | null
+          created_at: string
+          deleted_at: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          auth_user_id?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          auth_user_id?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -2901,6 +3008,10 @@ export type Database = {
         Returns: undefined
       }
       mark_unified_chat_read: { Args: { _room: string }; Returns: undefined }
+      normalize_registration_phone: {
+        Args: { _phone: string }
+        Returns: string
+      }
       override_arrival: { Args: { _order_id: string }; Returns: undefined }
       respond_freight_counteroffer: {
         Args: { _decision: string; _negotiation_id: string }

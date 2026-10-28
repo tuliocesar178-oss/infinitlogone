@@ -127,6 +127,20 @@
       "when": 1792458417320,
       "tag": "0017_incident_legacy_workflow_boundary",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1793152310606,
+      "tag": "0018_operational_identity_registration",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1793152507536,
+      "tag": "0019_operational_registration_permissions",
+      "breakpoints": true
     }
   ]
 }
