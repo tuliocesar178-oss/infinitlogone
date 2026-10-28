@@ -413,7 +413,8 @@ function NewOrderWizard() {
   async function save(publish: boolean) {
     const err = canAdvance();
     if (err) return toast.error(err);
-    const testMode = await readTestMode();
+    let testMode = false;
+    try { testMode = await readTestMode(); } catch (error) { toast.error(error instanceof Error ? error.message : 'Não foi possível conferir as exigências.'); return; }
     if (!testMode) for(const type of ['origin','destination'] as const){const problem=addressError(addressValue(type));if(problem)return toast.error(`${type==='origin'?'Coleta':'Entrega'}: ${problem}`);}
     if(publish && !testMode && !routeInfo)return toast.error('Aguarde o cálculo da rota ou confira os pontos de coleta e entrega.');
     // Bloqueio legal: não é permitido publicar carga lotação abaixo do piso mínimo ANTT.

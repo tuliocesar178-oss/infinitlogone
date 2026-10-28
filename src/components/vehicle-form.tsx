@@ -60,7 +60,9 @@ export function VehicleForm({ initial, onSaved }: { initial?: Vehicle; onSaved?:
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!await readTestMode() && !form.plate?.trim()) {
+    let testMode=false;
+    try { testMode=await readTestMode(); } catch(error) { toast.error(error instanceof Error ? error.message : 'Não foi possível conferir as exigências.'); return; }
+    if (!testMode && !form.plate?.trim()) {
       toast.error("Placa é obrigatória");
       return;
     }

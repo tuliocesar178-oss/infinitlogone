@@ -1,10 +1,15 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
+import { requireRoles } from '@/lib/roles';
 import { AppShell } from "@/components/app-shell";
 import { TestModeControl } from '@/components/ops/test-mode-control';
 import { Activity, DollarSign, MapPin, Package, TruckIcon, Users } from "lucide-react";
 
 
 export const Route = createFileRoute("/_authenticated/admin")({
+  beforeLoad: async ({ context }) => {
+    const roles = await requireRoles(context.user.id);
+    if (!roles.includes('admin')) throw redirect({ to: '/app' });
+  },
   head: () => ({ meta: [{ title: "Administração — InfinitLog" }, { name: "description", content: "Administração e personalização da página inicial da InfinitLog." }, { property: "og:title", content: "Administração — InfinitLog" }, { property: "og:description", content: "Configurações administrativas da InfinitLog Transportes." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }] }),
   component: AdminDashboard,
 });
