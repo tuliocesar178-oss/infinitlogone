@@ -1,5 +1,12 @@
 # Roadmap
 
+## Modo de testes temporário (28/10)
+- [ ] Centralizar configuração administrativa, leitura autenticada e auditoria; preservar segurança e aprovação de motoristas
+- [ ] Flexibilizar ausência de campos/anexos na interface, funções de gravação e regras do banco em todos os módulos
+- [ ] Identificar pendências e rota não calculada sem fabricar métricas; permitir edição posterior
+- [ ] Restaurar exigências ao desligar sem apagar registros ou alterar históricos
+- [ ] Executar testes reais de cadastros, fretes, etapas, ocorrências, financeiro, relatórios e permissões; informar restrições restantes
+
 ## Cadastro operacional por telefone, sem SMS (28/10)
 - [x] Separar cadastro e conta preservando UUIDs e relacionamentos em drivers/clients; identidade operacional não cria usuário Auth
 - [x] Cadastro/consulta/edição de motorista e cliente, telefone normalizado, contatos empresariais e rejeição de duplicidades
