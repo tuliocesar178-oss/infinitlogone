@@ -27,6 +27,7 @@ export const activateRegistration = createServerFn({method:'POST'}).middleware([
       if(createdId!==data.id)throw new Error('Identificador inesperado; acesso não associado.');
       const linked=await db.rpc('complete_registration_activation',{_id:data.id,_claim:claim,_kind:data.kind});
       if(linked.error)throw new Error('Falha na associação do acesso.');
+      await db.from('activity_log').insert({actor_id:context.userId,action:'registration_access_activated',entity_type:data.kind,entity_id:data.id,metadata:{}});
     }catch(error){
       if(createdId){
         const removed=await db.auth.admin.deleteUser(createdId);
