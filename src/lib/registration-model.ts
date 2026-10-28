@@ -12,6 +12,8 @@ export function canReceiveOffer(status: string | null, deletedAt: string | null 
 const text = z.string().trim().max(200).default('');
 const phoneSchema=z.string().transform((value,ctx)=>{
   try{return normalizePhone(value);}catch{ctx.addIssue({code:z.ZodIssueCode.custom,message:'Informe telefone brasileiro com DDD.'});return z.NEVER;}
+}).superRefine((data,ctx)=>{
+  if(data.kind==='driver'&&!data.plate&&(data.vehicle_type||data.brand||data.model||data.year||data.capacity_kg||data.axles))ctx.addIssue({code:z.ZodIssueCode.custom,path:['plate'],message:'Informe a placa para salvar os dados do veículo.'});
 });
 export const registrationSchema = z.object({
   id: z.string().uuid().optional(), kind: z.enum(['driver', 'client']),
