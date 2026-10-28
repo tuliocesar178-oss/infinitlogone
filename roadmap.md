@@ -1,11 +1,13 @@
 # Roadmap
 
 ## Modo de testes temporário (28/10)
-- [ ] Centralizar configuração administrativa, leitura autenticada e auditoria; preservar segurança e aprovação de motoristas
-- [ ] Flexibilizar ausência de campos/anexos na interface, funções de gravação e regras do banco em todos os módulos
-- [ ] Identificar pendências e rota não calculada sem fabricar métricas; permitir edição posterior
-- [ ] Restaurar exigências ao desligar sem apagar registros ou alterar históricos
-- [ ] Executar testes reais de cadastros, fretes, etapas, ocorrências, financeiro, relatórios e permissões; informar restrições restantes
+- [x] Centralizar configuração administrativa, leitura autenticada e auditoria; preservar segurança e aprovação de motoristas
+- [x] Integrar cadastro operacional, veículos, obras/rascunhos, fretes, edição de endereços, coleta/entrega e descrição/respostas de ocorrências ao modo central
+- [x] Identificar pendências cadastrais e rota não calculada; preservar métricas ausentes e retomada de obras sem cliente
+- [x] Executar 44 testes/98 assertivas de regras; sessão real de motorista lê estado, não pode ativar nem acessar rascunhos da equipe e é redirecionada da Administração
+- [ ] Ativar e testar gravações completas, edição, coleta/entrega sem anexos, desativação e auditoria administrativa — bloqueado por falta de conta administrativa indicada/autorizada; solicitada, pergunta ignorada; modo permanece desligado
+- [ ] Conferir Torre, rastreamento, financeiro, relatórios e portal com registros incompletos reais; completar cobertura dos cadastros públicos — depende de ativação administrativa e sessões dos perfis; credenciais de acesso continuam obrigatórias
+- [ ] Validar PostgreSQL em todos os inserts/updates liberados e corrigir eventuais bloqueios; não declarar fluxos aprovados antes da execução com sessão administrativa
 
 ## Cadastro operacional por telefone, sem SMS (28/10)
 - [x] Separar cadastro e conta preservando UUIDs e relacionamentos em drivers/clients; identidade operacional não cria usuário Auth
