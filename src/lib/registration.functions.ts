@@ -51,7 +51,7 @@ export const saveOperationalRegistration = createServerFn({ method: 'POST' })
       const assigned=await context.supabase.from('drivers').update({current_vehicle_id:saved.data.id}).eq('user_id',id);
       if(assigned.error) throw new Error('Cadastro salvo; associação do veículo falhou.');
     }
-    const profile = await db.from('profiles').update({ full_name:data.full_name,phone:data.phone }).eq('id',id);
+    const profile = await db.from('profiles').update({ full_name:data.full_name,phone:data.phone,address:data.address||null,address_number:data.address_number||null,neighborhood:data.neighborhood||null,city:data.city||null,state:data.state||null,zip_code:data.zip_code||null }).eq('id',id);
     if(profile.error) throw new Error('Cadastro salvo; nome do acesso não atualizado.');
     return { user_id: id };
   });
