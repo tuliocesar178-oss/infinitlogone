@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { addressSchema, addressError } from './addresses/model';
 
 const schema = z.object({
   order_id: z.string().uuid(),
@@ -36,6 +37,18 @@ export const dispatchOrderToEligibleDrivers = createServerFn({ method: "POST" })
       throw new Error("Esta rota não pode ser despachada no status atual.");
     }
     if (order.driver_id) throw new Error("Esta rota já possui motorista.");
+
+    for (const endpoint of ['origin','destination'] as const) {
+      const address=addressSchema.safeParse(order[`${endpoint}_location_details`]);
+      const error=address.success?addressError(address.data):'Confirme o endereço e o ponto no mapa.';
+      if(error)throw new Error(`${endpoint==='origin'?'Coleta':'Entrega'}: ${error}`);
+    }
+    if(order.origin_lat==null||order.origin_lng==null||order.destination_lat==null||order.destination_lng==null)throw new Error('Confirme os pontos de coleta e entrega.');
+    const { calculateConfirmedRoute }=await import('./addresses/route.server');
+    const route=await calculateConfirmedRoute({fromLat:order.origin_lat,fromLng:order.origin_lng,toLat:order.destination_lat,toLng:order.destination_lng},process.env['MAPBOX_API_KEY'],process.env['LOVABLE_API_KEY']);
+    const routeSaved=await context.supabase.from('orders').update({route_geometry:JSON.stringify(route.geometry),distance_km:route.distance,estimated_minutes:route.duration}).eq('id',order.id).eq('origin_lat',order.origin_lat).eq('origin_lng',order.origin_lng).eq('destination_lat',order.destination_lat).eq('destination_lng',order.destination_lng).select('id').maybeSingle();
+    if(routeSaved.error)throw routeSaved.error;
+    if(!routeSaved.data)throw new Error('Os pontos foram alterados. Confira a rota antes de despachar.');
 
     const { data: existingOffers, error: existingError } = await db
       .from("freight_offers")

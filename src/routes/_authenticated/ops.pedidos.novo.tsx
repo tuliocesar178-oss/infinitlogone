@@ -26,8 +26,6 @@ import { VehicleCatalog } from "@/components/freight/vehicle-catalog";
 import { buildFreightConfigurations, calculateConfigurationFloors, isBodyCompatible, type FreightVehicleConfiguration } from "@/lib/vehicle-antt";
 import type { Work } from "@/lib/work";
 
-const MAPBOX_TOKEN = import.meta.env.VITE_LOVABLE_CONNECTOR_MAPBOX_PUBLIC_TOKEN;
-
 export const Route = createFileRoute("/_authenticated/ops/pedidos/novo")({
   head: () => ({ meta: [
     { title: "Novo frete — InfinitLog" },
@@ -199,6 +197,7 @@ function NewOrderWizard() {
     return {...d,street:f[`${type}_address`],number:f[`${type}_number`],city:f[`${type}_city`],state:f[`${type}_state`],zip:f[`${type}_zip`],neighborhood:f[`${type}_neighborhood`],reference:type==='origin'?f.pickup_reference:f.delivery_reference,lat:d.precision==='unconfirmed'?null:num(f[`${type}_lat`]),lng:d.precision==='unconfirmed'?null:num(f[`${type}_lng`])};
   }
   function updateAddress(type:'origin'|'destination', a:FreightAddress) {
+    setRouteInfo(null);
     setAddressDetails(s=>({...s,[type]:a}));
     setF(s=>({...s,[`${type}_address`]:a.street,[`${type}_number`]:a.number,[`${type}_city`]:a.city,[`${type}_state`]:a.state,[`${type}_zip`]:a.zip,[`${type}_neighborhood`]:a.neighborhood,[`${type}_lat`]:a.lat==null?'':String(a.lat),[`${type}_lng`]:a.lng==null?'':String(a.lng),[type==='origin'?'pickup_reference':'delivery_reference']:a.reference}));
   }
@@ -358,7 +357,7 @@ function NewOrderWizard() {
     let cancelled = false;
     setRouteInfo(null);
     async function calc() {
-      if (!f.origin_lat || !f.origin_lng || !f.destination_lat || !f.destination_lng || !MAPBOX_TOKEN) return;
+      if (addressError(addressValue('origin')) || addressError(addressValue('destination'))) return;
       try {
         const route = await fetchDrivingRoute({data:{fromLat:Number(f.origin_lat),fromLng:Number(f.origin_lng),toLat:Number(f.destination_lat),toLng:Number(f.destination_lng)}});
         if (!cancelled && route.geometry && route.distance != null && route.duration != null) setRouteInfo({distance_km:route.distance,duration_minutes:route.duration,geometry:JSON.stringify(route.geometry)});
@@ -368,7 +367,7 @@ function NewOrderWizard() {
     }
     void calc();
     return () => { cancelled = true; };
-  }, [f.origin_lat, f.origin_lng, f.destination_lat, f.destination_lng]);
+  }, [f.origin_lat, f.origin_lng, f.destination_lat, f.destination_lng, addressDetails.origin, addressDetails.destination]);
 
   // ---- Cálculo do piso mínimo ANTT (coeficientes vindos da tabela vigente) ----
   const [selectedVehicleKey, setSelectedVehicleKey] = useState<string | null>(null);
@@ -452,6 +451,7 @@ function NewOrderWizard() {
     const err = canAdvance();
     if (err) return toast.error(err);
     for(const type of ['origin','destination'] as const){const problem=addressError(addressValue(type));if(problem)return toast.error(`${type==='origin'?'Coleta':'Entrega'}: ${problem}`);}
+    if(publish && !routeInfo)return toast.error('Aguarde o cálculo da rota ou confira os pontos de coleta e entrega.');
     // Bloqueio legal: não é permitido publicar carga lotação abaixo do piso mínimo ANTT.
     if (publish && belowFloor && antt?.minimum_freight != null) {
       return toast.error(
@@ -467,7 +467,7 @@ function NewOrderWizard() {
       const payload = {
         client_id: selectedClientId || null,
         work_id: selectedWorkId || null,
-        recorded_distance_km: routeInfo?.distance_km ?? null,
+        recorded_distance_km: null,
         antt_applicable: antt?.applicable ?? null,
         antt_not_applicable_reason: antt?.not_applicable_reason ?? null,
         antt_cargo_class: f.antt_cargo_class || null,

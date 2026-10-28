@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { z } from 'zod';
 
 const GATEWAY = "https://connector-gateway.lovable.dev/mapbox";
 
@@ -90,25 +91,11 @@ export const refreshTrackingEta = createServerFn({ method: "POST" })
 export const fetchDrivingRoute = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
-    (d: { fromLat: number; fromLng: number; toLat: number; toLng: number }) => d,
+    (d: { fromLat: number; fromLng: number; toLat: number; toLng: number }) => z.object({ fromLat:z.number().min(-90).max(90),fromLng:z.number().min(-180).max(180),toLat:z.number().min(-90).max(90),toLng:z.number().min(-180).max(180) }).parse(d),
   )
   .handler(async ({ data }) => {
-    const coords = `${data.fromLng},${data.fromLat};${data.toLng},${data.toLat}`;
-    try {
-      const dir = await mapboxGet(
-        `/directions/v5/mapbox/driving-traffic/${coords}?overview=full&geometries=geojson`,
-      );
-      const r = dir?.routes?.[0];
-      if (!r) return { geometry: null, duration: null, distance: null };
-      return {
-        geometry: r.geometry,
-        duration: Math.round(r.duration / 60),
-        distance: Math.round((r.distance / 1000) * 10) / 10,
-      };
-    } catch (e) {
-      console.warn("[tracking] fetchDrivingRoute failed", e);
-      return { geometry: null, duration: null, distance: null };
-    }
+    const { calculateConfirmedRoute } = await import('./addresses/route.server');
+    return calculateConfirmedRoute(data, process.env['MAPBOX_API_KEY'], process.env['LOVABLE_API_KEY']);
   });
 
 /**
