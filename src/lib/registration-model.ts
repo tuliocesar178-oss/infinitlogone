@@ -27,8 +27,11 @@ export const registrationSchema = z.object({
   birth_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).or(z.literal('')).default(''),
   license_number: text, license_category: text, cnh_expires_at: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).or(z.literal('')).default(''),
   rntrc: text, pix_key: text,
+  photo_url:z.string().url().or(z.literal('')).default(''),vehicle_photo_url:z.string().url().or(z.literal('')).default(''),
   vehicle_type: text, brand: text, model: text, plate: z.string().trim().max(12).default(''),
   year: z.coerce.number().int().min(0).max(2100).default(0),
   capacity_kg: z.coerce.number().min(0).max(1000000).default(0), axles: z.coerce.number().int().min(0).max(30).default(0),
+}).superRefine((data,ctx)=>{
+  if(data.kind==='driver'&&!data.plate&&(data.vehicle_type||data.brand||data.model||data.year||data.capacity_kg||data.axles))ctx.addIssue({code:z.ZodIssueCode.custom,path:['plate'],message:'Informe a placa para salvar os dados do veículo.'});
 });
 export type RegistrationInput = z.input<typeof registrationSchema>;

@@ -1535,6 +1535,8 @@ export type Database = {
       }
       operational_identities: {
         Row: {
+          activation_claim: string | null
+          activation_started_at: string | null
           auth_user_id: string | null
           created_at: string
           deleted_at: string | null
@@ -1542,6 +1544,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          activation_claim?: string | null
+          activation_started_at?: string | null
           auth_user_id?: string | null
           created_at?: string
           deleted_at?: string | null
@@ -1549,6 +1553,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          activation_claim?: string | null
+          activation_started_at?: string | null
           auth_user_id?: string | null
           created_at?: string
           deleted_at?: string | null
@@ -2929,6 +2935,14 @@ export type Database = {
       claim_push_delivery: {
         Args: { _notification: string; _subscription: string }
         Returns: string
+      }
+      claim_registration_activation: {
+        Args: { _claim: string; _id: string }
+        Returns: boolean
+      }
+      complete_registration_activation: {
+        Args: { _claim: string; _id: string; _kind: string }
+        Returns: undefined
       }
       create_driver_incident: { Args: { _data: Json }; Returns: string }
       decline_freight_offer: {

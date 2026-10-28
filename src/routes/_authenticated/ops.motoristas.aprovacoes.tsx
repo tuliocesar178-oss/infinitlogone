@@ -71,7 +71,7 @@ function DriverApprovalsPage() {
       return rows.map((r) => ({
         ...r,
         display_photo_url: r.photo_url ?? documentPhotoMap.get(r.user_id) ?? null,
-        profiles: profileMap.get(r.user_id) ?? { full_name: null },
+        profiles: profileMap.get(r.user_id) ?? { full_name: r.full_name },
       })) as Row[];
 
     },
