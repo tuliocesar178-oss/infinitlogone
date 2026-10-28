@@ -480,7 +480,15 @@ export type Database = {
           updated_at?: string
           uploaded_by?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "driver_documents_identity_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "operational_identities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       driver_locations: {
         Row: {
