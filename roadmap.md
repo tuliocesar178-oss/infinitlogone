@@ -1,5 +1,11 @@
 # Roadmap
 
+## CEP e localização de coleta/entrega (28/10)
+- [ ] Corrigir sobrescrita de CEP, preservar zeros e separar aviso postal da validação operacional
+- [ ] Abrir mapas independentes ao selecionar endereço, manter dados manuais e confirmar pontos
+- [ ] Conferir persistência, recálculo de rota real e distinção entre distância planejada e percorrida
+- [ ] Testar regras e fluxo autenticado em computador e celular
+
 ## Dashboard comparativo de KM por obra (20/10)
 - [x] KPIs (KM total, obras, fretes, média, obra maior, vs. período anterior) dentro do módulo de Relatórios existente
 - [x] Gráfico de barras por obra (KM/fretes/média, clique filtra) e evolução por dia/semana/mês com seleção de obras
