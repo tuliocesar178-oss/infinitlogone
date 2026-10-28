@@ -10,7 +10,7 @@ export const searchFreightAddress = createServerFn({ method:'POST' }).middleware
   const key=process.env['MAPBOX_API_KEY']; const lovable=process.env['LOVABLE_API_KEY'];
   if(!key||!lovable) throw new Error('Conexão Mapbox indisponível.');
   // Permanent geocoding permits storing selected results in freight records.
-  const response=await fetch(`https://connector-gateway.lovable.dev/mapbox/search/geocode/v6/forward?q=${encodeURIComponent(data.query)}&country=br&language=pt&limit=5&types=address,street&permanent=true`,{headers:{Authorization:`Bearer ${lovable}`,'X-Connection-Api-Key':key}});
+  const response=await fetch(`https://connector-gateway.lovable.dev/mapbox/search/geocode/v6/forward?q=${encodeURIComponent(data.query)}&country=br&language=pt&limit=5&permanent=true`,{headers:{Authorization:`Bearer ${lovable}`,'X-Connection-Api-Key':key}});
   if(!response.ok){const body=await response.text();console.error(`Mapbox geocoding [${response.status}]: ${body}`);throw new Error(`Mapbox [${response.status}]: ${body}`);}
   const parsed=z.object({features:z.array(feature)}).parse(await response.json());
   return parsed.features.map((f):AddressSuggestion=>{
