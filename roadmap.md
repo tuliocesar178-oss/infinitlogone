@@ -1,10 +1,11 @@
 # Roadmap
 
 ## CEP e localização de coleta/entrega (28/10)
-- [ ] Corrigir sobrescrita de CEP, preservar zeros e separar aviso postal da validação operacional
-- [ ] Abrir mapas independentes ao selecionar endereço, manter dados manuais e confirmar pontos
-- [ ] Conferir persistência, recálculo de rota real e distinção entre distância planejada e percorrida
-- [ ] Testar regras e fluxo autenticado em computador e celular
+- [x] Corrigir sobrescrita de CEP, preservar zeros e separar aviso postal da validação operacional
+- [x] Abrir mapas independentes ao selecionar endereço, manter dados manuais e confirmar pontos
+- [x] Conferir persistência e recálculo real: rascunho de teste PED-AF742109 reaberto/editado; rota de 1 km para 0,5 km, KM percorrido nulo, nenhuma oferta enviada
+- [x] Validar 23 testes e fluxo autenticado em computador/celular simulado: CEP zero inicial, CEP inválido, mapas, confirmação, salvar e reabrir
+- [ ] Testar indisponibilidade de consulta e arraste físico no celular — clique/reposição verificados; dispositivo real indisponível
 
 ## Dashboard comparativo de KM por obra (20/10)
 - [x] KPIs (KM total, obras, fretes, média, obra maior, vs. período anterior) dentro do módulo de Relatórios existente

@@ -19,8 +19,8 @@ export function AddressFields({label,value,onChange}:AddressFieldsProps){
  const suggestions=useQuery({queryKey:['freight-address-search',debounced],queryFn:()=>search({data:{query:debounced}}),enabled:debounced.length>=3,staleTime:60000,retry:false});
  const update=(patch:Partial<FreightAddress>)=>{setError(null);onChange(changeAddress(value,patch));};
  async function verify(){
-  const snapshot=addressQuery(value);setChecking(true);setError(null);setShowMap(true);
-  try{const results=await search({data:{query:snapshot}});if(snapshot!==addressQuery(latest.current))return;const local=results.filter(s=>s.city.toLocaleLowerCase()===value.city.toLocaleLowerCase()&&s.state===value.state);const found=local.find(s=>s.exact&&s.number.toLowerCase()===value.number.toLowerCase())??local[0];
+  const start=latest.current;const snapshot=addressQuery(start);setChecking(true);setError(null);setShowMap(true);
+  try{const results=await search({data:{query:snapshot}});if(snapshot!==addressQuery(latest.current)||start.lat!==latest.current.lat||start.lng!==latest.current.lng||start.precision!==latest.current.precision)return;const local=results.filter(s=>s.city.toLocaleLowerCase()===start.city.toLocaleLowerCase()&&s.state===start.state);const found=local.find(s=>s.exact&&s.number.toLowerCase()===start.number.toLowerCase())??local[0];
    if(!found){setError('Endereço não encontrado. Confirme o ponto no mapa.');setShowMap(true);return;}
    // Validation locates the point without overwriting any manually entered postal fields.
    const next=chooseSuggestion(latest.current,found);onChange({...latest.current,lat:next.lat,lng:next.lng,precision:next.precision});if(next.precision!=='address'){setError('Mapbox não confirmou o número do imóvel. Posição aproximada: confirme o ponto no mapa.');}
