@@ -1,5 +1,7 @@
+import { useTestMode, readTestMode } from "@/lib/test-mode";
 import { loadRegisteredClients } from "@/lib/registered-clients";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
@@ -80,6 +82,8 @@ const EMPTY: Form = {
 
 function NewWork() {
   const navigate = useNavigate();
+  const mode=useTestMode();
+  const [draftId,setDraftId]=useState<string|null>(null);
   const [form, setForm] = useState<Form>(EMPTY);
   const [clients, setClients] = useState<Client[]>([]);
   const [loadingClients, setLoadingClients] = useState(true);
@@ -143,6 +147,7 @@ function NewWork() {
   );
 
   function validate() {
+    if(mode.enabled)return null;
     if (!form.name.trim()) return "Informe o nome da obra.";
     if (!form.clientId) return "Selecione o cliente responsável.";
     if (!form.address.trim()) return "Informe o endereço da obra.";
@@ -170,6 +175,14 @@ function NewWork() {
 
     setSaving(true);
     try {
+      const enabled=await readTestMode();
+      if(!enabled) { const problem=validate(); if(problem)throw new Error(problem); }
+      if (enabled && !form.clientId) {
+        const result=draftId ? await supabase.from("operational_form_drafts").update({data:form}).eq("id",draftId) : await supabase.from("operational_form_drafts").insert({kind:"work",data:form});
+        if(result.error)throw result.error;
+        toast.success("Obra salva · cliente e informações pendentes");
+        await navigate({to:"/ops/obras"});return;
+      }
       if (form.code.trim()) {
         const { data: duplicate, error: duplicateError } = await supabase
           .from("works")
@@ -185,7 +198,7 @@ function NewWork() {
         }
       }
 
-      const { error } = await supabase.from("works").insert({
+      const { data: saved, error } = await supabase.from("works").insert({
         client_id: form.clientId,
         name: form.name.trim(),
         code: form.code.trim() || null,
@@ -197,8 +210,8 @@ function NewWork() {
         city: form.city.trim(),
         state: form.state.trim().toUpperCase(),
         zip_code: form.zipCode.trim() || null,
-        latitude: Number(form.latitude),
-        longitude: Number(form.longitude),
+        latitude: form.latitude && locationConfirmed ? Number(form.latitude) : null,
+        longitude: form.longitude && locationConfirmed ? Number(form.longitude) : null,
         responsible_name: form.responsibleName.trim() || null,
         responsible_phone: form.responsiblePhone.trim() || null,
         responsible_whatsapp: form.responsibleWhatsapp.trim() || null,
@@ -208,9 +221,10 @@ function NewWork() {
         expected_end_date: form.expectedEndDate || null,
         allow_new_freights: form.allowNewFreights,
         notes: form.notes.trim() || null,
-      });
+      }).select("id").single();
 
       if (error) throw error;
+      if(draftId) { const completed=await supabase.from("operational_form_drafts").update({completed_record_id:saved.id}).eq("id",draftId);if(completed.error)throw completed.error; }
 
       toast.success("Obra cadastrada com sucesso!");
       await navigate({ to: "/ops/obras" });
@@ -243,9 +257,10 @@ function NewWork() {
       }
     >
       <div className="mx-auto max-w-5xl space-y-6 pb-24">
+        <WorkDraftSelector onSelect={(id,value)=>{setDraftId(id);setForm({...EMPTY,...value});setLocationConfirmed(false);}} />
         <Section icon={<Target />} title="Dados da obra">
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Nome da obra" required>
+            <Field label="Nome da obra" required={!mode.enabled}>
               <Input
                 value={form.name}
                 onChange={(event) => update("name", event.target.value)}
@@ -284,7 +299,7 @@ function NewWork() {
         </Section>
 
         <Section icon={<UserRound />} title="Cliente">
-          <Field label="Cliente responsável" required>
+          <Field label="Cliente responsável" required={!mode.enabled}>
             <select
               value={form.clientId}
               disabled={loadingClients}
@@ -321,7 +336,7 @@ function NewWork() {
             <div className="sm:col-span-2">
               <MapboxAutocomplete
                 label="Endereço"
-                required
+                required={!mode.enabled}
                 value={form.address}
                 onChange={(value) => update("address", value)}
                 onSelect={handleLocation}
@@ -352,13 +367,13 @@ function NewWork() {
                 onChange={(event) => update("neighborhood", event.target.value)}
               />
             </Field>
-            <Field label="Cidade" required>
+            <Field label="Cidade" required={!mode.enabled}>
               <Input
                 value={form.city}
                 onChange={(event) => update("city", event.target.value)}
               />
             </Field>
-            <Field label="Estado" required>
+            <Field label="Estado" required={!mode.enabled}>
               <Input
                 maxLength={2}
                 value={form.state}
@@ -553,4 +568,9 @@ function Summary({ label, value }: { label: string; value: string }) {
       <dd className="mt-1 font-medium">{value}</dd>
     </div>
   );
+}
+function WorkDraftSelector({onSelect}:{onSelect:(id:string,value:Partial<Form>)=>void}) {
+ const q=useQuery({queryKey:['work-drafts'],queryFn:async()=>{const r=await supabase.from('operational_form_drafts').select('id,data').eq('kind','work').is('completed_record_id',null).is('deleted_at',null).order('created_at',{ascending:false});if(r.error)throw r.error;return r.data;}});
+ if(!q.data?.length)return null;
+ return <label className="grid gap-2 text-sm">Retomar obra com dados pendentes<select aria-label="Retomar obra pendente" className="h-11 rounded-md border border-input bg-background px-3" defaultValue="" onChange={e=>{const d=q.data.find(v=>v.id===e.target.value);if(d&&d.data&&typeof d.data==='object'&&!Array.isArray(d.data))onSelect(d.id,d.data as Partial<Form>);}}><option value="">Selecionar rascunho</option>{q.data.map(d=><option key={d.id} value={d.id}>{typeof d.data==='object'&&d.data&&!Array.isArray(d.data)&&typeof d.data.name==='string'&&d.data.name ? d.data.name : 'Nome pendente'} · {d.id.slice(0,8)}</option>)}</select></label>;
 }
