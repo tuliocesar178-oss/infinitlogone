@@ -138,9 +138,10 @@ export const reviewDriverSignup = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: z.infer<typeof reviewSchema>) => reviewSchema.parse(d))
   .handler(async ({ data, context }) => {
-    await ensureStaff(context);
+    const admin=await context.supabase.rpc('has_role',{_user_id:context.userId,_role:'admin'});
+    if(admin.error||!admin.data)throw new Error('Somente administrador pode alterar aprovação.');
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await (supabaseAdmin as any).rpc("review_driver_signup_as", {
+    const { error } = await supabaseAdmin.rpc("review_driver_signup_as", {
       _actor: context.userId,
       _driver_id: data.driver_id,
       _decision: data.decision,

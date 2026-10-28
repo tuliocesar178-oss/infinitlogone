@@ -29,7 +29,7 @@ export const saveOperationalRegistration = createServerFn({ method: 'POST' })
       ? await db.from('drivers').upsert({ ...common, phone: data.phone, email: data.email || null,
         cpf: data.document || null, zip: data.zip_code || null, birth_date: data.birth_date || null,
         license_number: data.license_number || null, license_category: data.license_category || null,
-        cnh_expires_at: data.cnh_expires_at || null, rntrc: data.rntrc || null, ...(admin.data?{pix_key:data.pix_key||null}:{}) }, { onConflict: 'user_id' })
+        cnh_expires_at: data.cnh_expires_at || null, rntrc: data.rntrc || null,...(data.photo_url?{photo_url:data.photo_url}:{}), ...(admin.data&&data.pix_key?{pix_key:data.pix_key}:{}) }, { onConflict: 'user_id' })
       : await context.supabase.from('clients').upsert({ ...common, contact_phone: data.phone, contact_email: data.email || null,
         document: data.document || null, customer_type: data.customer_type, company_name: data.company_name || data.full_name,
         trade_name: data.trade_name || null, zip_code: data.zip_code || null,
@@ -43,7 +43,7 @@ export const saveOperationalRegistration = createServerFn({ method: 'POST' })
       if (driver.error) throw driver.error;
       const vehicle = { plate: data.plate.toUpperCase().replace(/[^A-Z0-9]/g,''), vehicle_type: data.vehicle_type || null,
         brand: data.brand || null, model: data.model || null, year: data.year || null,
-        capacity_kg: data.capacity_kg || null, axles: data.axles || null };
+        capacity_kg: data.capacity_kg || null, axles: data.axles || null,...(data.vehicle_photo_url?{photo_url:data.vehicle_photo_url}:{}) };
       const saved = driver.data.current_vehicle_id
         ? await context.supabase.from('vehicles').update(vehicle).eq('id',driver.data.current_vehicle_id).select('id').single()
         : await context.supabase.from('vehicles').insert(vehicle).select('id').single();
