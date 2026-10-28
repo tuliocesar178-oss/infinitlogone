@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { addressSchema, addressError } from './addresses/model';
+import {canReceiveOffer} from './registration-model';
 
 const schema = z.object({
   order_id: z.string().uuid(),
@@ -62,10 +63,10 @@ export const dispatchOrderToEligibleDrivers = createServerFn({ method: "POST" })
     // Only approved registrations; do not add unrelated financial/vehicle restrictions.
     const { data: drivers, error: driversError } = await db
       .from("drivers")
-      .select("user_id").eq('approval_status','active').is('deleted_at',null);
+      .select("user_id,approval_status,deleted_at").eq('approval_status','active').is('deleted_at',null);
     if (driversError) throw new Error(driversError.message);
 
-    const eligible = (drivers ?? []).filter((driver) => !!driver.user_id);
+    const eligible = (drivers ?? []).filter((driver) => !!driver.user_id&&canReceiveOffer(driver.approval_status,driver.deleted_at));
 
     if (!eligible.length) return { count: 0, driverIds: [] as string[] };
 
