@@ -141,6 +141,13 @@
       "when": 1793152507536,
       "tag": "0019_operational_registration_permissions",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1793178021810,
+      "tag": "0020_registration_access_and_financial_guards",
+      "breakpoints": true
     }
   ]
 }
