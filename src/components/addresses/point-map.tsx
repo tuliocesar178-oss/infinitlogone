@@ -11,6 +11,6 @@ export default function PointMap({lat,lng,onPoint}:PointMapProps){
   const resize=new ResizeObserver(()=>instance.resize());resize.observe(node.current);
   return()=>{resize.disconnect();marker.current?.remove();marker.current=null;instance.remove();map.current=null;};
  },[]);
- useEffect(()=>{if(!map.current||lat==null||lng==null)return;if(!marker.current){marker.current=new mapboxgl.Marker({draggable:true}).setLngLat([lng,lat]).addTo(map.current);marker.current.on('dragend',()=>{const p=marker.current?.getLngLat();if(p)callback.current(p.lat,p.lng);});}else marker.current.setLngLat([lng,lat]);map.current.easeTo({center:[lng,lat],zoom:17});},[lat,lng]);
+ useEffect(()=>{if(!map.current)return;if(lat==null||lng==null){marker.current?.remove();marker.current=null;return;}if(!marker.current){marker.current=new mapboxgl.Marker({draggable:true}).setLngLat([lng,lat]).addTo(map.current);marker.current.on('drag',()=>{const p=marker.current?.getLngLat();if(p)callback.current(p.lat,p.lng);});}else if(!marker.current.isDraggable()||marker.current.getLngLat().lng!==lng||marker.current.getLngLat().lat!==lat)marker.current.setLngLat([lng,lat]);if(!map.current.getBounds()?.contains([lng,lat]))map.current.easeTo({center:[lng,lat],zoom:17});},[lat,lng]);
  return <div ref={node} aria-label="Ponto do endereço no mapa" className="h-72 w-full overflow-hidden rounded-lg border border-border"/>;
 }
