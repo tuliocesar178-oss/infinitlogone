@@ -339,7 +339,7 @@ function OfferPanel({ order, onChanged }: { order: any; onChanged: () => void })
         Pronto para ofertar?
       </h2>
       <p className="mt-3 text-sm text-muted-foreground">
-        Revise os dados. Ao enviar, todos os motoristas disponíveis receberão a oferta simultaneamente.
+        Revise os dados. Ao enviar, somente os motoristas aprovados receberão a oferta simultaneamente.
       </p>
       <button
         onClick={sendOffers}

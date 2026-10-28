@@ -32,12 +32,12 @@ function DriverApprovalsPage() {
     queryFn: async () => {
       let query = supabase
         .from("drivers")
-        .select("user_id,phone,city,photo_url,license_number,rntrc,approval_status,submitted_at,rejection_reason,correction_notes,notes")
+        .select("user_id,full_name,phone,city,photo_url,license_number,rntrc,approval_status,submitted_at,rejection_reason,correction_notes,notes")
         .order("submitted_at", { ascending: false });
       if (filter !== "all") query = query.eq("approval_status", filter);
       const { data, error } = await query;
       if (error) throw error;
-      const rows = (data ?? []) as Array<Omit<Row, "profiles">>;
+      const rows = data ?? [];
       const ids = rows.map((r) => r.user_id);
       let profileMap = new Map<string, { full_name: string | null }>();
       let documentPhotoMap = new Map<string, string>();

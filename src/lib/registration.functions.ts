@@ -8,6 +8,9 @@ export const saveOperationalRegistration = createServerFn({ method: 'POST' })
   .handler(async ({ data, context }) => {
     const staff = await context.supabase.rpc('is_staff', { _user_id: context.userId });
     if (staff.error || !staff.data) throw new Error('Cadastro permitido somente à equipe operacional.');
+    const admin=await context.supabase.rpc('has_role',{_user_id:context.userId,_role:'admin'});
+    if(admin.error)throw admin.error;
+    if(data.pix_key && !admin.data)throw new Error('Chave PIX exige permissão administrativa.');
     const { supabaseAdmin: db } = await import('@/integrations/supabase/client.server');
     const id = data.id ?? crypto.randomUUID();
     const table = data.kind === 'driver' ? 'drivers' : 'clients';
@@ -26,7 +29,7 @@ export const saveOperationalRegistration = createServerFn({ method: 'POST' })
       ? await context.supabase.from('drivers').upsert({ ...common, phone: data.phone, email: data.email || null,
         cpf: data.document || null, zip: data.zip_code || null, birth_date: data.birth_date || null,
         license_number: data.license_number || null, license_category: data.license_category || null,
-        cnh_expires_at: data.cnh_expires_at || null, rntrc: data.rntrc || null, pix_key: data.pix_key || null }, { onConflict: 'user_id' })
+        cnh_expires_at: data.cnh_expires_at || null, rntrc: data.rntrc || null, ...(admin.data?{pix_key:data.pix_key||null}:{}) }, { onConflict: 'user_id' })
       : await context.supabase.from('clients').upsert({ ...common, contact_phone: data.phone, contact_email: data.email || null,
         document: data.document || null, customer_type: data.customer_type, company_name: data.company_name || data.full_name,
         trade_name: data.trade_name || null, zip_code: data.zip_code || null,

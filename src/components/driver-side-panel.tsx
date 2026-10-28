@@ -106,7 +106,7 @@ export function DriverSidePanel({
       }
       return {
         driver: d,
-        profile: p,
+        profile: p ?? { full_name: d?.full_name ?? null, phone: d?.phone ?? null, avatar_url: null },
         vehicle: vehicle ?? v,
         recent: recent ?? [],
         totalCount: totalCount ?? 0,
