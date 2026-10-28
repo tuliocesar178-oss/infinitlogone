@@ -17,5 +17,15 @@ export const updateFreightAddresses=createServerFn({method:'POST'}).middleware([
   };
   const {data:updated,error}=await context.supabase.from('orders').update(patch).eq('id',data.orderId).select('id,origin_address,destination_address,origin_lat,origin_lng,destination_lat,destination_lng').single();
   if(error)throw new Error(`Não foi possível salvar os endereços: ${error.message}`);
-  return updated;
+  // Address changes first invalidate the old snapshot in the existing trigger.
+  const { calculateConfirmedRoute } = await import('./route.server');
+  let routeError: string | null = null;
+  try {
+   if(a.lat==null||a.lng==null||b.lat==null||b.lng==null)throw new Error('Confirme ambos os pontos.');
+   const route=await calculateConfirmedRoute({fromLat:a.lat,fromLng:a.lng,toLat:b.lat,toLng:b.lng},process.env['MAPBOX_API_KEY'],process.env['LOVABLE_API_KEY']);
+   const saved=await context.supabase.from('orders').update({route_geometry:JSON.stringify(route.geometry),distance_km:route.distance,estimated_minutes:route.duration}).eq('id',data.orderId).eq('origin_lat',a.lat).eq('origin_lng',a.lng).eq('destination_lat',b.lat).eq('destination_lng',b.lng).select('id').maybeSingle();
+   if(saved.error)throw saved.error;
+   if(!saved.data)throw new Error('Os pontos foram alterados durante o cálculo. Abra o frete novamente.');
+  } catch(e) { routeError=e instanceof Error?e.message:'Falha ao recalcular a rota.'; }
+  return {...updated,routeError};
  });
