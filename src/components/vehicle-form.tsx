@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useTestMode, readTestMode } from "@/lib/test-mode";
+import { TestModeNotice } from "@/components/ops/completeness-notice";
 import { VEHICLE_STATUS } from "@/lib/vehicles";
 import { Upload, Save, Truck } from "lucide-react";
 import { toast } from "sonner";
@@ -9,6 +11,7 @@ type Vehicle = any;
 
 export function VehicleForm({ initial, onSaved }: { initial?: Vehicle; onSaved?: (id: string) => void | Promise<void> }) {
   const qc = useQueryClient();
+  const mode = useTestMode();
   const [form, setForm] = useState<Vehicle>(
     initial ?? {
       plate: "",
@@ -57,7 +60,7 @@ export function VehicleForm({ initial, onSaved }: { initial?: Vehicle; onSaved?:
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.plate?.trim()) {
+    if (!await readTestMode() && !form.plate?.trim()) {
       toast.error("Placa é obrigatória");
       return;
     }
@@ -104,6 +107,7 @@ export function VehicleForm({ initial, onSaved }: { initial?: Vehicle; onSaved?:
 
   return (
     <form onSubmit={onSubmit} className="space-y-6">
+      <TestModeNotice />
       {/* Foto + identificação */}
       <Section title="Identificação">
         <div className="grid gap-4 sm:grid-cols-[180px_1fr]">
@@ -123,7 +127,7 @@ export function VehicleForm({ initial, onSaved }: { initial?: Vehicle; onSaved?:
             </label>
           </div>
           <div className="grid gap-3 sm:grid-cols-3">
-            <Field label="Placa *" value={form.plate ?? ""} onChange={(v) => set("plate", v.toUpperCase())} />
+            <Field label={mode.enabled ? "Placa pendente" : "Placa *"} value={form.plate ?? ""} onChange={(v) => set("plate", v.toUpperCase())} />
             <Field label="Marca" value={form.brand ?? ""} onChange={(v) => set("brand", v)} />
             <Field label="Modelo" value={form.model ?? ""} onChange={(v) => set("model", v)} />
             <Field label="Ano" type="number" value={form.year ?? ""} onChange={(v) => set("year", v ? Number(v) : null)} />

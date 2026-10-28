@@ -14,6 +14,7 @@ import { OrderChat } from "@/components/orders/order-chat";
 import { Button } from "@/components/ui/button";
 import { workAddress, workStatusLabel, type Work } from "@/lib/work";
 import { z } from "zod";
+import { CompletenessNotice } from '@/components/ops/completeness-notice';
 import { EditAddresses } from '@/components/addresses/edit-addresses';
 
 export const Route = createFileRoute("/_authenticated/ops/pedidos/$id")({
@@ -157,6 +158,7 @@ function OrderDetail() {
       {orderQ.isLoading && <div className="card-soft h-64 animate-pulse bg-surface-2" />}
       {order && (
         <>
+          <CompletenessNotice pending={order.completeness_pending} />
           <div className="mb-6 inline-flex rounded-2xl bg-surface-2 p-1">
             {[
               { k: "op", l: "Operação" },
