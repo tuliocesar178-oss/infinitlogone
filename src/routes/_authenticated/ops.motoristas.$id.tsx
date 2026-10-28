@@ -12,6 +12,7 @@ import { registrationPermissions } from '@/lib/registration.functions';
 import { RegistrationAccess } from '@/components/ops/registration-access';
 import { RegistrationDialog } from '@/components/ops/registration-dialog';
 import { Button } from '@/components/ui/button';
+import { CompletenessNotice } from '@/components/ops/completeness-notice';
 import { reviewDriverSignup } from '@/lib/drivers.functions';
 import {
   BANK_ACCOUNT_TYPES,

@@ -9,6 +9,7 @@
 export const DRIVER_COLUMNS = [
   "user_id",
   "full_name",
+  "completeness_pending",
   "license_number",
   "license_category",
   "status",

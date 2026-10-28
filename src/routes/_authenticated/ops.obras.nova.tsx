@@ -146,8 +146,9 @@ function NewWork() {
     [form],
   );
 
-  function validate() {
-    if(mode.enabled)return null;
+  function validate(testMode = mode.enabled) {
+    if (form.startDate && form.expectedEndDate && form.expectedEndDate < form.startDate) return "A previsão de término não pode ser anterior ao início.";
+    if(testMode)return null;
     if (!form.name.trim()) return "Informe o nome da obra.";
     if (!form.clientId) return "Selecione o cliente responsável.";
     if (!form.address.trim()) return "Informe o endereço da obra.";
@@ -176,7 +177,7 @@ function NewWork() {
     setSaving(true);
     try {
       const enabled=await readTestMode();
-      if(!enabled) { const problem=validate(); if(problem)throw new Error(problem); }
+      const problem=validate(enabled); if(problem)throw new Error(problem);
       if (enabled && !form.clientId) {
         const result=draftId ? await supabase.from("operational_form_drafts").update({data:form}).eq("id",draftId) : await supabase.from("operational_form_drafts").insert({kind:"work",data:form});
         if(result.error)throw result.error;
