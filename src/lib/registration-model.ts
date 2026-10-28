@@ -10,20 +10,21 @@ export function canReceiveOffer(status: string | null, deletedAt: string | null 
   return status === 'active' && deletedAt === null;
 }
 const text = z.string().trim().max(200).default('');
-const phoneSchema=z.string().transform((value,ctx)=>{
+const phoneSchema=(mode: boolean)=>z.string().transform((value,ctx)=>{
+  if(mode && !value.trim())return '';
   try{return normalizePhone(value);}catch{ctx.addIssue({code:z.ZodIssueCode.custom,message:'Informe telefone brasileiro com DDD.'});return z.NEVER;}
 });
-export const registrationSchema = z.object({
+export const makeRegistrationSchema = (mode: boolean) => z.object({
   id: z.string().uuid().optional(), kind: z.enum(['driver', 'client']),
-  full_name: z.string().trim().min(2).max(120),
-  phone: phoneSchema,
+  full_name: mode ? z.string().trim().max(120) : z.string().trim().min(2).max(120),
+  phone: phoneSchema(mode),
   email: z.union([z.literal(''), z.string().trim().email()]).default(''),
   document: text, city: text, state: z.string().trim().max(2).default(''),
   address: text, address_number: text, neighborhood: text, zip_code: text,
   notes: z.string().trim().max(4000).default(''),
   customer_type: z.enum(['pf', 'pj']).default('pj'), company_name: text, trade_name: text,
   contact_name: text,
-  contacts: z.array(z.object({ name: text, phone: phoneSchema, email: z.union([z.literal(''),z.string().email()]).default('') })).max(30).default([]),
+  contacts: z.array(z.object({ name: text, phone: phoneSchema(mode), email: z.union([z.literal(''),z.string().email()]).default('') })).max(30).default([]),
   birth_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).or(z.literal('')).default(''),
   license_number: text, license_category: text, cnh_expires_at: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).or(z.literal('')).default(''),
   rntrc: text, pix_key: text,
@@ -32,6 +33,8 @@ export const registrationSchema = z.object({
   year: z.coerce.number().int().min(0).max(2100).default(0),
   capacity_kg: z.coerce.number().min(0).max(1000000).default(0), axles: z.coerce.number().int().min(0).max(30).default(0),
 }).superRefine((data,ctx)=>{
-  if(data.kind==='driver'&&!data.plate&&(data.vehicle_type||data.brand||data.model||data.year||data.capacity_kg||data.axles))ctx.addIssue({code:z.ZodIssueCode.custom,path:['plate'],message:'Informe a placa para salvar os dados do veículo.'});
+  if(!mode && data.kind==='driver'&&!data.plate&&(data.vehicle_type||data.brand||data.model||data.year||data.capacity_kg||data.axles))ctx.addIssue({code:z.ZodIssueCode.custom,path:['plate'],message:'Informe a placa para salvar os dados do veículo.'});
 });
+export const registrationSchema = makeRegistrationSchema(false);
+export const incompleteRegistrationSchema = makeRegistrationSchema(true);
 export type RegistrationInput = z.input<typeof registrationSchema>;

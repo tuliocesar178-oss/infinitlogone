@@ -53,7 +53,7 @@ export function enableOfflinePersistence(queryClient: QueryClient): () => void {
         const snapshot: Snapshot = {
           savedAt: Date.now(),
           state: dehydrate(queryClient, {
-            shouldDehydrateQuery: (query) => query.state.status === "success" && !['incident-workspace', 'incident-detail'].includes(String(query.queryKey[0])),
+            shouldDehydrateQuery: (query) => query.state.status === "success" && !['incident-workspace', 'incident-detail', 'temporary-test-mode', 'test-mode-admin'].includes(String(query.queryKey[0])),
           }),
         };
         window.localStorage.setItem(CACHE_KEY, JSON.stringify(snapshot));

@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
+import { TestModeControl } from '@/components/ops/test-mode-control';
 import { Activity, DollarSign, MapPin, Package, TruckIcon, Users } from "lucide-react";
 
 
@@ -11,6 +12,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
 function AdminDashboard() {
   return (
     <AppShell title="Painel do Administrador" subtitle="Visão completa da operação em tempo real.">
+      <TestModeControl />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Kpi icon={<Package />} label="Pedidos hoje" value="0" />
         <Kpi icon={<TruckIcon />} label="Motoristas online" value="0" />

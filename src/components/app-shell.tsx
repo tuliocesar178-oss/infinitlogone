@@ -30,6 +30,7 @@ import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { NotificationSettings } from "@/components/notification-settings";
+import { TestModeNotice } from '@/components/ops/completeness-notice';
 
 type NavItem = {
   label: string;
@@ -65,7 +66,7 @@ export const NAV_GROUPS: Record<string, { label: string; items: NavItem[] }[]> =
         { label: "Faturamento", to: "/ops/faturamento", icon: DollarSign, match: (p) => p.startsWith("/ops/faturamento") },
         { label: "Financeiro", to: "/ops/financeiro", icon: Wallet, match: (p) => p.startsWith("/ops/financeiro") },
         { label: "Configurações", to: "/ops/central", icon: Settings, match: (p) => p === "/ops/configuracoes" },
-        { label: "Personalização do Site", to: "/admin", icon: Settings, match: (p) => p === "/admin" },
+        { label: "Administração", to: "/admin", icon: Settings, match: (p) => p === "/admin" },
       ],
     },
   ],
@@ -303,6 +304,7 @@ export function AppShell({
         </header>
 
         <main className="px-4 py-8 sm:px-8 sm:py-10">
+          <TestModeNotice />
           <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 sm:flex sm:flex-wrap sm:items-center sm:justify-between">
             <div className="min-w-0">
               <h1 className="truncate text-2xl font-semibold tracking-tight sm:text-3xl">
