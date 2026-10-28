@@ -12,15 +12,16 @@ export interface RegistrationDialogProps {open:boolean;onClose:()=>void;kind:'dr
 export function RegistrationDialog({open,onClose,kind,initial,onCreated}:RegistrationDialogProps){
   const [form,setForm]=useState<RegistrationInput>({kind,full_name:'',phone:'',email:'',...initial});
   const [saving,setSaving]=useState(false);
+  const [error,setError]=useState<string|null>(null);
   const save=useServerFn(saveOperationalRegistration);const qc=useQueryClient();
   const set=(key:keyof RegistrationInput,value:string)=>setForm(current=>({...current,[key]:value}));
   async function submit(e:React.FormEvent){
-    e.preventDefault();setSaving(true);
+    e.preventDefault();setSaving(true);setError(null);
     try{
       const parsed=registrationSchema.parse(form);const result=await save({data:parsed});
       await Promise.all([qc.invalidateQueries({queryKey:['drivers-list']}),qc.invalidateQueries({queryKey:['registered-clients']})]);
       toast.success('Cadastro salvo. Telefone não verificado; nenhum SMS enviado.');onCreated?.(result.user_id);onClose();
-    }catch(error){toast.error(error instanceof Error?error.message:'Não foi possível salvar.');}finally{setSaving(false);}
+    }catch(error){const message=error instanceof Error?error.message:'Não foi possível salvar.';setError(message);toast.error(message);}finally{setSaving(false);}
   }
   const fields:Array<{key:keyof RegistrationInput;label:string;type?:string}>=kind==='driver' ? [
     {key:'birth_date',label:'Data de nascimento',type:'date'},{key:'license_number',label:'CNH'},
@@ -35,6 +36,7 @@ export function RegistrationDialog({open,onClose,kind,initial,onCreated}:Registr
     <DialogTitle>{initial?.id?'Editar':'Cadastrar'} {kind==='driver'?'motorista':'cliente'}</DialogTitle>
     <DialogDescription>Telefone não verificado · acesso cadastrado separadamente</DialogDescription>
     <form onSubmit={submit} className="grid gap-4 sm:grid-cols-2">
+      {error&&<p role="alert" className="text-sm text-destructive sm:col-span-2">{error}</p>}
       <RegistrationField label="Nome completo" required value={form.full_name} onChange={e=>set('full_name',e.target.value)}/>
       <RegistrationField label="Telefone celular" required type="tel" value={form.phone} onChange={e=>set('phone',e.target.value)}/>
       <RegistrationField label="E-mail (opcional)" type="email" value={form.email??''} onChange={e=>set('email',e.target.value)}/>
