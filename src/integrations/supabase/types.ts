@@ -292,6 +292,7 @@ export type Database = {
           address_number: string | null
           city: string | null
           company_name: string | null
+          completeness_pending: string[]
           contact_email: string | null
           contact_name: string | null
           contact_phone: string | null
@@ -316,6 +317,7 @@ export type Database = {
           address_number?: string | null
           city?: string | null
           company_name?: string | null
+          completeness_pending?: string[]
           contact_email?: string | null
           contact_name?: string | null
           contact_phone?: string | null
@@ -340,6 +342,7 @@ export type Database = {
           address_number?: string | null
           city?: string | null
           company_name?: string | null
+          completeness_pending?: string[]
           contact_email?: string | null
           contact_name?: string | null
           contact_phone?: string | null
@@ -745,6 +748,7 @@ export type Database = {
           civil_status: string | null
           cnh_expires_at: string | null
           cnh_issued_at: string | null
+          completeness_pending: string[]
           correction_notes: string | null
           cpf: string | null
           created_at: string
@@ -816,6 +820,7 @@ export type Database = {
           civil_status?: string | null
           cnh_expires_at?: string | null
           cnh_issued_at?: string | null
+          completeness_pending?: string[]
           correction_notes?: string | null
           cpf?: string | null
           created_at?: string
@@ -887,6 +892,7 @@ export type Database = {
           civil_status?: string | null
           cnh_expires_at?: string | null
           cnh_issued_at?: string | null
+          completeness_pending?: string[]
           correction_notes?: string | null
           cpf?: string | null
           created_at?: string
@@ -1533,6 +1539,39 @@ export type Database = {
         }
         Relationships: []
       }
+      operational_form_drafts: {
+        Row: {
+          completed_record_id: string | null
+          created_at: string
+          created_by: string
+          data: Json
+          deleted_at: string | null
+          id: string
+          kind: string
+          updated_at: string
+        }
+        Insert: {
+          completed_record_id?: string | null
+          created_at?: string
+          created_by?: string
+          data?: Json
+          deleted_at?: string | null
+          id?: string
+          kind: string
+          updated_at?: string
+        }
+        Update: {
+          completed_record_id?: string | null
+          created_at?: string
+          created_by?: string
+          data?: Json
+          deleted_at?: string | null
+          id?: string
+          kind?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       operational_identities: {
         Row: {
           activation_claim: string | null
@@ -1794,10 +1833,12 @@ export type Database = {
           client_name: string | null
           code: string
           completed_at: string | null
+          completeness_pending: string[]
           contact_name: string | null
           contact_phone: string | null
           created_at: string
           created_by: string | null
+          created_in_test_mode: boolean
           cte_number: string | null
           current_city: string | null
           current_lat: number | null
@@ -1924,10 +1965,12 @@ export type Database = {
           client_name?: string | null
           code?: string
           completed_at?: string | null
+          completeness_pending?: string[]
           contact_name?: string | null
           contact_phone?: string | null
           created_at?: string
           created_by?: string | null
+          created_in_test_mode?: boolean
           cte_number?: string | null
           current_city?: string | null
           current_lat?: number | null
@@ -2054,10 +2097,12 @@ export type Database = {
           client_name?: string | null
           code?: string
           completed_at?: string | null
+          completeness_pending?: string[]
           contact_name?: string | null
           contact_phone?: string | null
           created_at?: string
           created_by?: string | null
+          created_in_test_mode?: boolean
           cte_number?: string | null
           current_city?: string | null
           current_lat?: number | null
@@ -2490,6 +2535,27 @@ export type Database = {
           },
         ]
       }
+      test_mode_events: {
+        Row: {
+          actor_id: string
+          created_at: string
+          enabled: boolean
+          id: string
+        }
+        Insert: {
+          actor_id: string
+          created_at?: string
+          enabled: boolean
+          id?: string
+        }
+        Update: {
+          actor_id?: string
+          created_at?: string
+          enabled?: boolean
+          id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -2603,6 +2669,7 @@ export type Database = {
           category: string | null
           chassis: string | null
           color: string | null
+          completeness_pending: string[]
           created_at: string
           crlv_expires_at: string | null
           current_city: string | null
@@ -2625,6 +2692,7 @@ export type Database = {
           owner_driver_id: string | null
           photo_url: string | null
           plate: string
+          registration_plate: string | null
           renavam: string | null
           status: Database["public"]["Enums"]["vehicle_status"]
           updated_at: string
@@ -2645,6 +2713,7 @@ export type Database = {
           category?: string | null
           chassis?: string | null
           color?: string | null
+          completeness_pending?: string[]
           created_at?: string
           crlv_expires_at?: string | null
           current_city?: string | null
@@ -2667,6 +2736,7 @@ export type Database = {
           owner_driver_id?: string | null
           photo_url?: string | null
           plate: string
+          registration_plate?: string | null
           renavam?: string | null
           status?: Database["public"]["Enums"]["vehicle_status"]
           updated_at?: string
@@ -2687,6 +2757,7 @@ export type Database = {
           category?: string | null
           chassis?: string | null
           color?: string | null
+          completeness_pending?: string[]
           created_at?: string
           crlv_expires_at?: string | null
           current_city?: string | null
@@ -2709,6 +2780,7 @@ export type Database = {
           owner_driver_id?: string | null
           photo_url?: string | null
           plate?: string
+          registration_plate?: string | null
           renavam?: string | null
           status?: Database["public"]["Enums"]["vehicle_status"]
           updated_at?: string
@@ -2769,6 +2841,7 @@ export type Database = {
           client_id: string
           code: string | null
           complement: string | null
+          completeness_pending: string[]
           created_at: string
           description: string | null
           expected_end_date: string | null
@@ -2796,6 +2869,7 @@ export type Database = {
           client_id: string
           code?: string | null
           complement?: string | null
+          completeness_pending?: string[]
           created_at?: string
           description?: string | null
           expected_end_date?: string | null
@@ -2823,6 +2897,7 @@ export type Database = {
           client_id?: string
           code?: string | null
           complement?: string | null
+          completeness_pending?: string[]
           created_at?: string
           description?: string | null
           expected_end_date?: string | null
@@ -2974,6 +3049,7 @@ export type Database = {
       get_or_create_operation_room: { Args: never; Returns: string }
       get_or_create_staff_room: { Args: { _other_id: string }; Returns: string }
       get_public_home_design: { Args: never; Returns: Json }
+      get_test_mode: { Args: never; Returns: Json }
       get_tracking: { Args: { _code: string }; Returns: Json }
       get_unified_chat_directory: { Args: never; Returns: Json }
       get_unified_chat_messages: { Args: { _room: string }; Returns: Json }
@@ -3079,6 +3155,7 @@ export type Database = {
         }
         Returns: string
       }
+      set_test_mode: { Args: { _enabled: boolean }; Returns: Json }
       submit_freight_counteroffer: {
         Args: { _amount: number; _note?: string; _offer_id: string }
         Returns: Json
@@ -3087,6 +3164,7 @@ export type Database = {
         Args: { _alerts: Json }
         Returns: undefined
       }
+      test_mode_enabled: { Args: never; Returns: boolean }
       valid_unified_chat_context: {
         Args: { _order: string; _room: string; _user: string }
         Returns: boolean
