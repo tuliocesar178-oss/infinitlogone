@@ -45,6 +45,7 @@ import { Route as AuthenticatedDriverPerfilRouteImport } from './routes/_authent
 import { Route as AuthenticatedOpsIndexRouteImport } from './routes/_authenticated/ops.index'
 import { Route as AuthenticatedOpsCentralRouteImport } from './routes/_authenticated/ops.central'
 import { Route as AuthenticatedOpsChatRouteImport } from './routes/_authenticated/ops.chat'
+import { Route as AuthenticatedOpsClientesRouteImport } from './routes/_authenticated/ops.clientes'
 import { Route as AuthenticatedOpsEquipeRouteImport } from './routes/_authenticated/ops.equipe'
 import { Route as AuthenticatedOpsFaturamentoRouteImport } from './routes/_authenticated/ops.faturamento'
 import { Route as AuthenticatedOpsFinanceiroRouteImport } from './routes/_authenticated/ops.financeiro'
@@ -260,6 +261,12 @@ const AuthenticatedOpsChatRoute = AuthenticatedOpsChatRouteImport.update({
   path: '/chat',
   getParentRoute: () => AuthenticatedOpsRoute,
 } as any)
+const AuthenticatedOpsClientesRoute =
+  AuthenticatedOpsClientesRouteImport.update({
+    id: '/clientes',
+    path: '/clientes',
+    getParentRoute: () => AuthenticatedOpsRoute,
+  } as any)
 const AuthenticatedOpsEquipeRoute = AuthenticatedOpsEquipeRouteImport.update({
   id: '/equipe',
   path: '/equipe',
@@ -418,6 +425,7 @@ export interface FileRoutesByFullPath {
   '/driver/perfil': typeof AuthenticatedDriverPerfilRoute
   '/ops/central': typeof AuthenticatedOpsCentralRoute
   '/ops/chat': typeof AuthenticatedOpsChatRoute
+  '/ops/clientes': typeof AuthenticatedOpsClientesRoute
   '/ops/equipe': typeof AuthenticatedOpsEquipeRoute
   '/ops/faturamento': typeof AuthenticatedOpsFaturamentoRoute
   '/ops/financeiro': typeof AuthenticatedOpsFinanceiroRoute
@@ -473,6 +481,7 @@ export interface FileRoutesByTo {
   '/driver/perfil': typeof AuthenticatedDriverPerfilRoute
   '/ops/central': typeof AuthenticatedOpsCentralRoute
   '/ops/chat': typeof AuthenticatedOpsChatRoute
+  '/ops/clientes': typeof AuthenticatedOpsClientesRoute
   '/ops/equipe': typeof AuthenticatedOpsEquipeRoute
   '/ops/faturamento': typeof AuthenticatedOpsFaturamentoRoute
   '/ops/financeiro': typeof AuthenticatedOpsFinanceiroRoute
@@ -533,6 +542,7 @@ export interface FileRoutesById {
   '/_authenticated/driver/perfil': typeof AuthenticatedDriverPerfilRoute
   '/_authenticated/ops/central': typeof AuthenticatedOpsCentralRoute
   '/_authenticated/ops/chat': typeof AuthenticatedOpsChatRoute
+  '/_authenticated/ops/clientes': typeof AuthenticatedOpsClientesRoute
   '/_authenticated/ops/equipe': typeof AuthenticatedOpsEquipeRoute
   '/_authenticated/ops/faturamento': typeof AuthenticatedOpsFaturamentoRoute
   '/_authenticated/ops/financeiro': typeof AuthenticatedOpsFinanceiroRoute
@@ -593,6 +603,7 @@ export interface FileRouteTypes {
     | '/driver/perfil'
     | '/ops/central'
     | '/ops/chat'
+    | '/ops/clientes'
     | '/ops/equipe'
     | '/ops/faturamento'
     | '/ops/financeiro'
@@ -648,6 +659,7 @@ export interface FileRouteTypes {
     | '/driver/perfil'
     | '/ops/central'
     | '/ops/chat'
+    | '/ops/clientes'
     | '/ops/equipe'
     | '/ops/faturamento'
     | '/ops/financeiro'
@@ -707,6 +719,7 @@ export interface FileRouteTypes {
     | '/_authenticated/driver/perfil'
     | '/_authenticated/ops/central'
     | '/_authenticated/ops/chat'
+    | '/_authenticated/ops/clientes'
     | '/_authenticated/ops/equipe'
     | '/_authenticated/ops/faturamento'
     | '/_authenticated/ops/financeiro'
@@ -1001,6 +1014,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsChatRouteImport
       parentRoute: typeof AuthenticatedOpsRoute
     }
+    '/_authenticated/ops/clientes': {
+      id: '/_authenticated/ops/clientes'
+      path: '/clientes'
+      fullPath: '/ops/clientes'
+      preLoaderRoute: typeof AuthenticatedOpsClientesRouteImport
+      parentRoute: typeof AuthenticatedOpsRoute
+    }
     '/_authenticated/ops/equipe': {
       id: '/_authenticated/ops/equipe'
       path: '/equipe'
@@ -1241,6 +1261,7 @@ const AuthenticatedOpsVeiculosRouteWithChildren =
 interface AuthenticatedOpsRouteChildren {
   AuthenticatedOpsCentralRoute: typeof AuthenticatedOpsCentralRoute
   AuthenticatedOpsChatRoute: typeof AuthenticatedOpsChatRoute
+  AuthenticatedOpsClientesRoute: typeof AuthenticatedOpsClientesRoute
   AuthenticatedOpsEquipeRoute: typeof AuthenticatedOpsEquipeRoute
   AuthenticatedOpsFaturamentoRoute: typeof AuthenticatedOpsFaturamentoRoute
   AuthenticatedOpsFinanceiroRoute: typeof AuthenticatedOpsFinanceiroRoute
@@ -1261,6 +1282,7 @@ interface AuthenticatedOpsRouteChildren {
 const AuthenticatedOpsRouteChildren: AuthenticatedOpsRouteChildren = {
   AuthenticatedOpsCentralRoute: AuthenticatedOpsCentralRoute,
   AuthenticatedOpsChatRoute: AuthenticatedOpsChatRoute,
+  AuthenticatedOpsClientesRoute: AuthenticatedOpsClientesRoute,
   AuthenticatedOpsEquipeRoute: AuthenticatedOpsEquipeRoute,
   AuthenticatedOpsFaturamentoRoute: AuthenticatedOpsFaturamentoRoute,
   AuthenticatedOpsFinanceiroRoute: AuthenticatedOpsFinanceiroRoute,
