@@ -112,16 +112,7 @@ function AuthPage() {
                 />
               </Field>
               {mode === "signin" && (
-                <Field label="Senha">
-                  <input
-                    required
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="input"
-                    placeholder="Sua senha"
-                  />
-                </Field>
+                <PasswordField label="Senha" required autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Sua senha" />
               )}
 
               <button
