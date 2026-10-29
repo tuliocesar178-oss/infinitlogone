@@ -37,8 +37,9 @@ export const activateRegistration = createServerFn({method:'POST'}).middleware([
       // email_confirm only applies to the reserved phone domain or a staff-provided address; no SMS/e-mail is sent.
       const created=await db.auth.admin.createUser({id:data.id,email:login,password:data.password,email_confirm:true,user_metadata:{full_name:record.data.full_name,phone:record.data.phone,login_method:data.email?'email':'phone'}});
       if(created.error||!created.data.user){
-        const msg=created.error?.message??'';console.error('[access] createUser failed:',created.error?.status,msg);
-        throw new Error(/already|registered|exists/i.test(msg)?'Já existe uma conta com este telefone/e-mail. Nenhuma conta duplicada foi criada.':'Não foi possível criar o acesso. ('+msg+')');
+        const msg=created.error?.message??'';
+        if(/weak|guess|pwned/i.test(msg))throw new Error('Senha muito comum ou já vazada na internet. Escolha outra senha.');
+        throw new Error(/already|registered|exists/i.test(msg)?'Já existe uma conta com este telefone/e-mail. Nenhuma conta duplicada foi criada.':'Não foi possível criar o acesso.');
       }
       createdId=created.data.user.id;
       if(createdId!==data.id)throw new Error('Identificador inesperado; acesso não associado.');
@@ -65,8 +66,9 @@ export const selfRegisterDriver = createServerFn({method:'POST'})
     const {supabaseAdmin:db}=await import('@/integrations/supabase/client.server');
     const created=await db.auth.admin.createUser({email:login,password:data.password,email_confirm:true,user_metadata:{...data.metadata,phone:data.phone,driver_signup:true,login_method:data.email?'email':'phone'}});
     if(created.error||!created.data.user){
-      const msg=created.error?.message??'';console.error('[access] createUser failed:',created.error?.status,msg);
-      throw new Error(/already|registered|exists/i.test(msg)?'Já existe uma conta com este telefone/e-mail. Use "Entrar".':'Não foi possível criar o cadastro.');
+      const msg=created.error?.message??'';
+      if(/weak|guess|pwned/i.test(msg))throw new Error('Senha muito comum ou já vazada na internet. Escolha outra senha.');
+        throw new Error(/already|registered|exists/i.test(msg)?'Já existe uma conta com este telefone/e-mail. Use "Entrar".':'Não foi possível criar o cadastro.');
     }
     return {login};
   });
