@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
 import { logoUrl } from "@/components/logo";
+import { loginEmailFor } from "@/lib/access-credentials";
+import { PasswordField } from "@/components/ops/password-field";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -43,8 +45,10 @@ function AuthPage() {
         toast.success("Enviamos um link de recuperação para o seu e-mail.");
         return;
       }
-      const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
-      if (error) throw error;
+      let login: string;
+      try { login = loginEmailFor(email); } catch { throw new Error("Informe um e-mail ou telefone com DDD."); }
+      const { error } = await supabase.auth.signInWithPassword({ email: login, password });
+      if (error) throw new Error(/invalid/i.test(error.message) ? "Telefone/e-mail ou senha incorretos." : error.message);
       toast.success("Bem-vindo de volta!");
       navigate({ to: "/app", replace: true });
     } catch (err) {
@@ -96,14 +100,15 @@ function AuthPage() {
             </div>
           ) : (
             <form onSubmit={submit} className="mt-8 space-y-4">
-              <Field label="Email">
+              <Field label={mode === "forgot" ? "Email" : "E-mail ou telefone"}>
                 <input
                   required
-                  type="email"
+                  type={mode === "forgot" ? "email" : "text"}
+                  autoComplete="username"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="input"
-                  placeholder="voce@infinitlog.com"
+                  placeholder={mode === "forgot" ? "voce@infinitlog.com" : "voce@infinitlog.com ou (11) 99999-9999"}
                 />
               </Field>
               {mode === "signin" && (
