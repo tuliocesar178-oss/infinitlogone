@@ -38,7 +38,7 @@ export const activateRegistration = createServerFn({method:'POST'}).middleware([
       const created=await db.auth.admin.createUser({id:data.id,email:login,password:data.password,email_confirm:true,user_metadata:{full_name:record.data.full_name,phone:record.data.phone,login_method:data.email?'email':'phone'}});
       if(created.error||!created.data.user){
         const msg=created.error?.message??'';console.error('[access] createUser failed:',created.error?.status,msg);
-        throw new Error(/already|registered|exists/i.test(msg)?'Já existe uma conta com este telefone/e-mail. Nenhuma conta duplicada foi criada.':'Não foi possível criar o acesso.');
+        throw new Error(/already|registered|exists/i.test(msg)?'Já existe uma conta com este telefone/e-mail. Nenhuma conta duplicada foi criada.':'Não foi possível criar o acesso. ('+msg+')');
       }
       createdId=created.data.user.id;
       if(createdId!==data.id)throw new Error('Identificador inesperado; acesso não associado.');
