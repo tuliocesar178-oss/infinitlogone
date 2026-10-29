@@ -26,8 +26,16 @@ export const updateFreightAddresses=createServerFn({method:'POST'}).middleware([
   try {
    if(a.lat==null||a.lng==null||b.lat==null||b.lng==null)throw new Error('Confirme ambos os pontos.');
    const route=await calculateConfirmedRoute({fromLat:a.lat,fromLng:a.lng,toLat:b.lat,toLng:b.lng},process.env['MAPBOX_API_KEY'],process.env['LOVABLE_API_KEY']);
-   const saved=await context.supabase.from('orders').update({route_geometry:JSON.stringify(route.geometry),distance_km:route.distance,estimated_minutes:route.duration}).eq('id',data.orderId).eq('origin_lat',a.lat).eq('origin_lng',a.lng).eq('destination_lat',b.lat).eq('destination_lng',b.lng).select('id').maybeSingle();
-   if(saved.error)throw saved.error;
+   // Tolerance guard: coordinates read back from the API can lose float precision,
+   // so exact equality filters may miss the row. 1e-6° ≈ 0,1 m.
+   const COORD_EPS=1e-6;
+   const saved=await context.supabase.from('orders').update({route_geometry:JSON.stringify(route.geometry),distance_km:route.distance,estimated_minutes:route.duration}).eq('id',data.orderId)
+    .gte('origin_lat',a.lat-COORD_EPS).lte('origin_lat',a.lat+COORD_EPS)
+    .gte('origin_lng',a.lng-COORD_EPS).lte('origin_lng',a.lng+COORD_EPS)
+    .gte('destination_lat',b.lat-COORD_EPS).lte('destination_lat',b.lat+COORD_EPS)
+    .gte('destination_lng',b.lng-COORD_EPS).lte('destination_lng',b.lng+COORD_EPS)
+    .select('id').maybeSingle();
+    if(saved.error)throw saved.error;
    if(!saved.data)throw new Error('Os pontos foram alterados durante o cálculo. Abra o frete novamente.');
   } catch(e) { routeError=e instanceof Error?e.message:'Falha ao recalcular a rota.'; }
   return {...updated,routeError};
