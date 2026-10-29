@@ -38,6 +38,7 @@ export const activateRegistration = createServerFn({method:'POST'}).middleware([
       const created=await db.auth.admin.createUser({id:data.id,email:login,password:data.password,email_confirm:true,user_metadata:{full_name:record.data.full_name,phone:record.data.phone,login_method:data.email?'email':'phone'}});
       if(created.error||!created.data.user){
         const msg=created.error?.message??'';
+        if(/weak|guess|pwned/i.test(msg))throw new Error('Senha muito comum ou já vazada na internet. Escolha outra senha.');
         throw new Error(/already|registered|exists/i.test(msg)?'Já existe uma conta com este telefone/e-mail. Nenhuma conta duplicada foi criada.':'Não foi possível criar o acesso.');
       }
       createdId=created.data.user.id;
@@ -66,7 +67,8 @@ export const selfRegisterDriver = createServerFn({method:'POST'})
     const created=await db.auth.admin.createUser({email:login,password:data.password,email_confirm:true,user_metadata:{...data.metadata,phone:data.phone,driver_signup:true,login_method:data.email?'email':'phone'}});
     if(created.error||!created.data.user){
       const msg=created.error?.message??'';
-      throw new Error(/already|registered|exists/i.test(msg)?'Já existe uma conta com este telefone/e-mail. Use "Entrar".':'Não foi possível criar o cadastro.');
+      if(/weak|guess|pwned/i.test(msg))throw new Error('Senha muito comum ou já vazada na internet. Escolha outra senha.');
+        throw new Error(/already|registered|exists/i.test(msg)?'Já existe uma conta com este telefone/e-mail. Use "Entrar".':'Não foi possível criar o cadastro.');
     }
     return {login};
   });
