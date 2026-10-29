@@ -172,3 +172,36 @@ export const setDriverAvailability = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+/**
+ * Staff set a new password directly for a driver whose login has no real mailbox
+ * (phone-based reserved domain). Drivers only: staff/admin targets are refused so this
+ * can never be used to take over privileged accounts. Accounts with a real e-mail keep
+ * the e-mail recovery link flow.
+ */
+const setPasswordSchema = z.object({
+  user_id: z.string().uuid(),
+  password: z.string().min(8, "A senha precisa ter pelo menos 8 caracteres.").max(72),
+});
+export const setDriverPasswordDirect = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: z.infer<typeof setPasswordSchema>) => setPasswordSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    await ensureStaff(context);
+    const target = await context.supabase.rpc("is_staff", { _user_id: data.user_id });
+    if (target.error || target.data === true) throw new Error("Este acesso não pode ser alterado por aqui.");
+    const drv = await context.supabase.from("drivers").select("user_id").eq("user_id", data.user_id).maybeSingle();
+    if (drv.error || !drv.data) throw new Error("Motorista não encontrado.");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: u } = await supabaseAdmin.auth.admin.getUserById(data.user_id);
+    if (!u?.user) throw new Error("NO_ACCOUNT");
+    if (!(u.user.email ?? "").endsWith("@telefone.infinitlog.app"))
+      throw new Error("Este motorista entra com e-mail; use o link de redefinição.");
+    const { error } = await supabaseAdmin.auth.admin.updateUserById(data.user_id, { password: data.password });
+    if (error) {
+      if (/weak|guess|pwned/i.test(error.message)) throw new Error("Senha muito comum ou já vazada na internet. Escolha outra senha.");
+      throw new Error("Não foi possível alterar a senha.");
+    }
+    await supabaseAdmin.from("activity_log").insert({ actor_id: context.userId, action: "driver_password_set_by_staff", entity_type: "driver", entity_id: data.user_id, metadata: {} });
+    return { ok: true };
+  });
