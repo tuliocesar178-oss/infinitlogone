@@ -17,6 +17,8 @@ import {
   setDriverAvailability,
 } from "@/lib/drivers.functions";
 import { toast } from "sonner";
+import { useState } from "react";
+import { DriverPasswordDialog } from "@/components/ops/driver-password-dialog";
 import {
   Ban,
   Edit3,
@@ -45,6 +47,7 @@ export function DriverSidePanel({
 }) {
   const qc = useQueryClient();
   const resetPwd = useServerFn(resetDriverPassword);
+  const [pwdOpen, setPwdOpen] = useState(false);
   const resend = useServerFn(resendDriverInvite);
   const remove = useServerFn(deleteDriver);
   const setAvail = useServerFn(setDriverAvailability);
@@ -133,6 +136,8 @@ export function DriverSidePanel({
   }
 
   async function onReset() {
+    // Phone-login drivers have no mailbox: set the password right here.
+    if (!q.data?.d?.email) { setPwdOpen(true); return; }
     try {
       await resetPwd({ data: { user_id: driverId } });
       toast.success("Link de redefinição enviado por e-mail");
@@ -366,6 +371,7 @@ export function DriverSidePanel({
           </div>
         )}
       </aside>
+      <DriverPasswordDialog driverId={driverId} open={pwdOpen} onOpenChange={setPwdOpen} />
     </div>
   );
 }
