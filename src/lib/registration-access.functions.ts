@@ -18,7 +18,14 @@ export const activateRegistration = createServerFn({method:'POST'}).middleware([
     if(allowed.error||allowed.data!==true)throw new Error(data.kind==='driver'?'Somente a equipe operacional pode criar o acesso do motorista.':'Somente administrador pode ativar acesso de cliente.');
     const identity=await context.supabase.from('operational_identities').select('id,auth_user_id').eq('id',data.id).single();
     if(identity.error)throw new Error('Cadastro não encontrado.');
-    if(identity.data.auth_user_id)throw new Error('Este cadastro já possui conta de acesso; nenhuma outra conta foi criada.');
+    if(identity.data.auth_user_id){
+      // A link may be stale (Auth account removed). Only a missing account is repaired; a live one is never replaced.
+      const {supabaseAdmin:adm}=await import('@/integrations/supabase/client.server');
+      const live=await adm.auth.admin.getUserById(identity.data.auth_user_id);
+      if(live.data?.user)throw new Error('Este cadastro já possui conta de acesso; nenhuma outra conta foi criada.');
+      const reset=await adm.from('operational_identities').update({auth_user_id:null,activation_claim:null,activation_started_at:null}).eq('id',data.id).eq('auth_user_id',identity.data.auth_user_id);
+      if(reset.error)throw new Error('Não foi possível reparar o vínculo de acesso deste cadastro.');
+    }
     const record=data.kind==='driver'
       ? await context.supabase.from('drivers').select('full_name,phone').eq('user_id',data.id).single()
       : await context.supabase.from('clients').select('full_name,phone:contact_phone').eq('user_id',data.id).single();
