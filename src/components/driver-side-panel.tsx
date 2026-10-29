@@ -137,7 +137,7 @@ export function DriverSidePanel({
 
   async function onReset() {
     // Phone-login drivers have no mailbox: set the password right here.
-    if (!q.data?.d?.email) { setPwdOpen(true); return; }
+    if (!d?.email) { setPwdOpen(true); return; }
     try {
       await resetPwd({ data: { user_id: driverId } });
       toast.success("Link de redefinição enviado por e-mail");
