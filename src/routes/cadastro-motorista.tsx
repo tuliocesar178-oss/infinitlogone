@@ -4,6 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ArrowLeft, Upload, CheckCircle2 } from "lucide-react";
 import { Logo } from "@/components/logo";
+import { useServerFn } from "@tanstack/react-start";
+import { selfRegisterDriver } from "@/lib/registration-access.functions";
+import { passwordPairError } from "@/lib/access-credentials";
+import { PasswordField } from "@/components/ops/password-field";
 
 export const Route = createFileRoute("/cadastro-motorista")({
   head: () => ({
@@ -27,7 +31,7 @@ const DOC_KINDS = [
 type FormState = {
   full_name: string; cpf: string; rg: string; license_number: string;
   license_category: string; cnh_expires_at: string; rntrc: string;
-  phone: string; whatsapp: string; email: string; password: string;
+  phone: string; whatsapp: string; email: string; password: string; confirm: string;
   address: string; city: string; state: string; zip: string;
   bank_name: string; bank_agency: string; bank_account: string; pix_key: string;
   vehicle_type: string; vehicle_model: string; vehicle_plate: string; vehicle_capacity: string;
@@ -37,13 +41,14 @@ function DriverSignup() {
   const navigate = useNavigate();
   const [f, setF] = useState<FormState>({
     full_name: "", cpf: "", rg: "", license_number: "", license_category: "",
-    cnh_expires_at: "", rntrc: "", phone: "", whatsapp: "", email: "", password: "",
+    cnh_expires_at: "", rntrc: "", phone: "", whatsapp: "", email: "", password: "", confirm: "",
     address: "", city: "", state: "", zip: "",
     bank_name: "", bank_agency: "", bank_account: "", pix_key: "",
     vehicle_type: "", vehicle_model: "", vehicle_plate: "", vehicle_capacity: "",
   });
   const [files, setFiles] = useState<Record<string, File | null>>({});
   const [loading, setLoading] = useState(false);
+  const register = useServerFn(selfRegisterDriver);
 
   function on<K extends keyof FormState>(k: K, v: FormState[K]) {
     setF((prev) => ({ ...prev, [k]: v }));
@@ -51,6 +56,8 @@ function DriverSignup() {
 
   async function submit(e: FormEvent) {
     e.preventDefault();
+    const pwError = passwordPairError(f.password, f.confirm);
+    if (pwError) { toast.error(pwError); return; }
     const missing = DOC_KINDS.filter((d) => !files[d.key]);
     if (missing.length) {
       toast.warning(`Envie: ${missing.map((m) => m.label).join(", ")}`);
@@ -58,28 +65,19 @@ function DriverSignup() {
     }
     setLoading(true);
     try {
-      const { data: signUp, error: suErr } = await supabase.auth.signUp({
-        email: f.email,
-        password: f.password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/aguardando-aprovacao`,
-          data: {
-            driver_signup: true,
-            full_name: f.full_name, cpf: f.cpf, rg: f.rg,
-            license_number: f.license_number, license_category: f.license_category,
-            cnh_expires_at: f.cnh_expires_at || null, rntrc: f.rntrc,
-            phone: f.phone, whatsapp: f.whatsapp,
-            address: f.address, city: f.city, state: f.state, zip: f.zip,
-            pix_key: f.pix_key,
-          },
+      const { login } = await register({ data: {
+        phone: f.phone, email: f.email.trim(), password: f.password,
+        metadata: {
+          full_name: f.full_name, cpf: f.cpf, rg: f.rg,
+          license_number: f.license_number, license_category: f.license_category,
+          cnh_expires_at: f.cnh_expires_at || null, rntrc: f.rntrc,
+          whatsapp: f.whatsapp, address: f.address, city: f.city, state: f.state, zip: f.zip,
+          pix_key: f.pix_key,
         },
-      });
-      if (suErr) throw suErr;
-      const uid = signUp.user?.id;
-      if (!uid) throw new Error("Falha ao criar usuário");
-
-      // Sign in immediately (email confirm auto disabled per project config)
-      await supabase.auth.signInWithPassword({ email: f.email, password: f.password });
+      } });
+      const { data: signedIn, error: siErr } = await supabase.auth.signInWithPassword({ email: login, password: f.password });
+      if (siErr || !signedIn.user) throw new Error("Cadastro criado. Entre com telefone e senha na tela de login.");
+      const uid = signedIn.user.id;
 
       // Upload documents
       for (const d of DOC_KINDS) {
@@ -155,8 +153,9 @@ function DriverSignup() {
           </Section>
 
           <Section title="Acesso">
-            <F label="E-mail *"><I type="email" value={f.email} onChange={(v) => on("email", v)} required /></F>
-            <F label="Senha *"><I type="password" value={f.password} onChange={(v) => on("password", v)} required /></F>
+            <F label="E-mail (opcional)"><I type="email" value={f.email} onChange={(v) => on("email", v)} /></F>
+            <PasswordField label="Senha *" autoComplete="new-password" required value={f.password} onChange={(e) => on("password", e.target.value)} />
+            <PasswordField label="Confirmar senha *" autoComplete="new-password" required value={f.confirm} onChange={(e) => on("confirm", e.target.value)} />
           </Section>
 
           <Section title="Dados bancários / PIX">

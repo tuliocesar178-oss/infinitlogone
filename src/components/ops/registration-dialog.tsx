@@ -10,6 +10,9 @@ import { useTestMode } from '@/lib/test-mode';
 import { TestModeNotice } from './completeness-notice';
 import { saveOperationalRegistration } from '@/lib/registration.functions';
 import {RegistrationPhoto} from './registration-photo';
+import { PasswordField } from './password-field';
+import { activateRegistration } from '@/lib/registration-access.functions';
+import { passwordPairError } from '@/lib/access-credentials';
 
 export interface RegistrationDialogProps {open:boolean;onClose:()=>void;kind:'driver'|'client';initial?:Partial<RegistrationInput>;onCreated?:(id:string)=>void}
 export function RegistrationDialog({open,onClose,kind,initial,onCreated}:RegistrationDialogProps){
@@ -19,15 +22,22 @@ export function RegistrationDialog({open,onClose,kind,initial,onCreated}:Registr
   const [uploadId]=useState(()=>initial?.id??crypto.randomUUID());
   const [contactKeys,setContactKeys]=useState(()=>(initial?.contacts??[]).map(()=>crypto.randomUUID()));
   const [error,setError]=useState<string|null>(null);
-  const save=useServerFn(saveOperationalRegistration);const qc=useQueryClient();
+  const save=useServerFn(saveOperationalRegistration);const activate=useServerFn(activateRegistration);
+  const [password,setPassword]=useState('');const [confirm,setConfirm]=useState('');
+  const createsAccess=kind==='driver'&&!initial?.id;const qc=useQueryClient();
   const set=(key:keyof RegistrationInput,value:string)=>setForm(current=>({...current,[key]:value}));
   async function submit(e:React.FormEvent){
-    e.preventDefault();setSaving(true);setError(null);
+    e.preventDefault();setError(null);
+    if(createsAccess&&(password||confirm)){const problem=passwordPairError(password,confirm);if(problem){setError(problem);return;}}
+    setSaving(true);
     try{
       const parsed=makeRegistrationSchema(mode.enabled).parse(form);const result=await save({data:parsed});
       await Promise.all([qc.invalidateQueries({queryKey:['drivers-list']}),qc.invalidateQueries({queryKey:['registered-clients']})]);
-      toast.success('Cadastro salvo. Telefone não verificado; nenhum SMS enviado.');onCreated?.(result.user_id);onClose();
-    }catch(error){const message=error instanceof Error?error.message:'Não foi possível salvar.';setError(message);toast.error(message);}finally{setSaving(false);}
+      if(createsAccess&&password){
+        try{await activate({data:{id:result.user_id,kind:'driver',email:parsed.email??'',password}});toast.success(parsed.email?'Motorista cadastrado. Acesso: e-mail e senha.':'Motorista cadastrado. Acesso: telefone e senha.');}
+        catch(err){toast.error('Cadastro salvo, mas o acesso não foi criado: '+(err instanceof Error?err.message:'erro')+' Use "Criar acesso ao app" no perfil.');}
+      }else toast.success('Cadastro salvo. Telefone não verificado; nenhum SMS enviado.');onCreated?.(result.user_id);onClose();
+    }catch(error){const message=error instanceof Error?error.message:'Não foi possível salvar.';setError(message);toast.error(message);}finally{setPassword('');setConfirm('');setSaving(false);}
   }
   const fields:Array<{key:keyof RegistrationInput;label:string;type?:string}>=kind==='driver' ? [
     {key:'birth_date',label:'Data de nascimento',type:'date'},{key:'license_number',label:'CNH'},
@@ -50,6 +60,9 @@ export function RegistrationDialog({open,onClose,kind,initial,onCreated}:Registr
       <RegistrationField label={kind==='driver'?'CPF':'CPF / CNPJ'} value={form.document??''} onChange={e=>set('document',e.target.value)}/>
       {kind==='client'&&<label className="grid gap-1.5 text-sm">Tipo de cliente<select className="h-9 rounded-md border border-input bg-background px-3" value={form.customer_type??'pj'} onChange={e=>setForm(f=>({...f,customer_type:e.target.value==='pf'?'pf':'pj'}))}><option value="pf">Pessoa física</option><option value="pj">Pessoa jurídica</option></select></label>}
       {fields.map(f=><RegistrationField key={f.key} label={f.label} type={f.type??'text'} value={String(form[f.key]??'')} onChange={e=>set(f.key,e.target.value)}/>)}
+      {createsAccess&&<section className="grid gap-4 rounded-xl border border-border p-3 sm:col-span-2 sm:grid-cols-2"><p className="text-sm text-muted-foreground sm:col-span-2">Acesso ao app: o motorista entra com o telefone acima (ou e-mail, se informado) e esta senha. Sem SMS. Deixe em branco para criar o acesso depois.</p>
+        <PasswordField label="Senha de acesso" autoComplete="new-password" value={password} onChange={e=>setPassword(e.target.value)}/>
+        <PasswordField label="Confirmar senha" autoComplete="new-password" value={confirm} onChange={e=>setConfirm(e.target.value)}/></section>}
       {kind==='driver'&&<><RegistrationPhoto label="Foto do motorista" identityId={uploadId} onSaved={url=>set('photo_url',url)}/><RegistrationPhoto label="Foto do veículo" identityId={uploadId} onSaved={url=>set('vehicle_photo_url',url)}/></>}
       {([{key:'address',label:'Endereço'},{key:'address_number',label:'Número'},{key:'neighborhood',label:'Bairro'},{key:'city',label:'Cidade'},{key:'state',label:'UF'},{key:'zip_code',label:'CEP'}] as const).map(f=><RegistrationField key={f.key} label={f.label} value={String(form[f.key]??'')} onChange={e=>set(f.key,e.target.value)}/>)}
       <label className="grid gap-1.5 text-sm sm:col-span-2">Observações internas<textarea className="min-h-20 rounded-md border border-input bg-background p-3" value={form.notes??''} onChange={e=>set('notes',e.target.value)}/></label>
