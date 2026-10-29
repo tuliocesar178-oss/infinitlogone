@@ -33,3 +33,4 @@
 - Temporary completeness mode lives in app_settings behind authenticated narrow reads and audited admin-only writes; database triggers and server handlers independently enforce its state, so browser changes cannot relax production validation.
 - Store works without a required client in staff-only operational_form_drafts until completion; preserve their stable draft IDs rather than inventing relationships or duplicating work records.
 - Empty vehicle plate means pending registration, with uniqueness enforced only for known plates; never generate a fictitious plate to persist incomplete vehicle details.
+- Never compare float8 coordinates with exact equality in API filters; reads may return fewer digits than stored, so use a 1e-6° tolerance range (~0.1 m) for route concurrency guards.
