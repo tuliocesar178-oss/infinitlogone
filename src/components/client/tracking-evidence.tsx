@@ -57,6 +57,9 @@ const KIND_LABELS: Record<string, string> = {
   nota_fiscal: "Nota fiscal",
   cte: "CT-e",
   mdfe: "MDF-e",
+  chegada_coleta: "Chegada ao local de coleta",
+  chegada_entrega: "Chegada ao local de entrega",
+  carga_entrega: "Carga no local de entrega",
 };
 
 export function isEvidencePhoto(item: Pick<ClientEvidenceItem, "mime_type" | "kind">) {
@@ -183,6 +186,9 @@ function EvidenceViewer({ item, items, onSelect, onClose }: { item: ClientEviden
 
 function groupEvidence(items: ClientEvidenceItem[]) {
   const groups = [
+    { label: "Chegada ao local de coleta", kinds: ["chegada_coleta"] },
+    { label: "Chegada ao local de entrega", kinds: ["chegada_entrega"] },
+    { label: "Carga no local de entrega", kinds: ["carga_entrega"] },
     { label: "Fotos do carregamento", kinds: ["foto_carga"] },
     { label: "Fotos da entrega", kinds: ["foto_entrega"] },
     { label: "Canhoto assinado", kinds: ["canhoto", "assinatura", "comprovante_entrega"] },

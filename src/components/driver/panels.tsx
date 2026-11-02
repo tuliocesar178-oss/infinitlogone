@@ -21,6 +21,9 @@ import {
 } from "lucide-react";
 import { RouteMiniMap, ExpandableRouteMap } from "./route-mini-map";
 import { navTarget, distanceToTargetKm, isWithinActionRadius, fmtDistance } from "@/lib/geofence";
+import { EvidencePhotoPicker } from "@/components/driver/evidence-photo-picker";
+import type { DriverPhotoSelection } from "@/lib/driver-photo-categories";
+import { uploadDriverPhotos } from "@/lib/driver-photo-upload";
 
 
 export type Order = {
@@ -485,9 +488,10 @@ function ActionBtn({
 }
 
 export function PickupEvidenceForm({ orderId, userId, position, onDone, onCancel }: { orderId: string; userId: string; position: [number, number] | null; onDone: () => void; onCancel: () => void }) {
-  const [files, setFiles] = useState<File[]>([]);
+  const [photos, setPhotos] = useState<DriverPhotoSelection[]>([]);
   const mode = useTestMode();
-  const [invoiceFile, setInvoiceFile] = useState<File | null>(null);
+  const files = photos.filter(p => p.kind === "foto_carga");
+  const invoiceFile = photos.find(p => p.kind === "foto_nf");
   const [volumes, setVolumes] = useState("");
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
@@ -497,33 +501,12 @@ export function PickupEvidenceForm({ orderId, userId, position, onDone, onCancel
     if(problem)return toast.error(problem);
     setSaving(true);
     try {
-      const uploads: { path: string; kind: string; name: string; type: string; size: number }[] = [];
-      for (const f of files) {
-        const path = `${orderId}/pickup-cargo-${Date.now()}-${f.name.replace(/[^\w.\-]/g, "_")}`;
-        const up = await supabase.storage.from("order-files").upload(path, f, { contentType: f.type });
-        if (up.error) throw up.error;
-        uploads.push({ path, kind: "foto_carga", name: f.name, type: f.type, size: f.size });
-      }
-      if(invoiceFile) {
-      const invPath = `${orderId}/pickup-nf-${Date.now()}-${invoiceFile.name.replace(/[^\w.\-]/g, "_")}`;
-      const up = await supabase.storage.from("order-files").upload(invPath, invoiceFile, { contentType: invoiceFile.type });
-      if (up.error) throw up.error;
-      uploads.push({ path: invPath, kind: "foto_nf", name: invoiceFile.name, type: invoiceFile.type, size: invoiceFile.size });
-      }
-
-      const rows = uploads.map((u) => ({
-        order_id: orderId, kind: u.kind, label: u.name, file_path: u.path,
-        mime_type: u.type, size_bytes: u.size, uploaded_by: userId,
-        event_status: "loaded", latitude: position?.[1] ?? null, longitude: position?.[0] ?? null,
-        metadata: { source: "driver_pickup_checklist" },
-      }));
-      if(rows.length) {
-      const { error: attachmentError } = await supabase.from("order_attachments").insert(rows as never);
-      if (attachmentError) throw attachmentError;
-      }
+      const uploads = await uploadDriverPhotos(photos, orderId, userId, "pickup", position);
       const firstCargo = uploads.find((u) => u.kind === "foto_carga");
+      const previous = await supabase.from("deliveries").select("pickup_photo_url").eq("order_id", orderId).maybeSingle();
+      if (previous.error) throw previous.error;
       const deliveryResult=await supabase.from("deliveries").upsert({
-        order_id: orderId, pickup_photo_url: firstCargo?.path ?? null,
+        order_id: orderId, pickup_photo_url: firstCargo?.path ?? previous.data?.pickup_photo_url ?? null,
       } as never, { onConflict: "order_id" });
       if(deliveryResult.error)throw deliveryResult.error;
       if (volumes || notes) {
@@ -544,8 +527,7 @@ export function PickupEvidenceForm({ orderId, userId, position, onDone, onCancel
       <h3 className="text-sm font-semibold">Evidências da coleta</h3>
       <TestModeNotice />
       {mode.enabled && (!files.length || !invoiceFile) && <p className="text-sm text-warning">Foto da carga ou nota fiscal pendente</p>}
-      <FileInput label="Fotos da carga (múltiplas)" multiple onChange={(fs) => setFiles(fs)} count={files.length} />
-      <FileInput label="Foto da nota fiscal" onChange={(fs) => setInvoiceFile(fs[0] ?? null)} count={invoiceFile ? 1 : 0} />
+      <EvidencePhotoPicker stage="pickup" orderId={orderId} items={photos} onChange={setPhotos} disabled={saving} />
       <input value={volumes} onChange={(e) => setVolumes(e.target.value)} type="number"
         placeholder="Quantidade de volumes conferida"
         className="h-11 w-full rounded-xl border border-border bg-surface px-3 text-sm" />
@@ -565,8 +547,9 @@ export function PickupEvidenceForm({ orderId, userId, position, onDone, onCancel
 
 export function DeliveryEvidenceForm({ orderId, userId, position, onDone, onCancel }: { orderId: string; userId: string; position: [number, number] | null; onDone: () => void; onCancel: () => void }) {
   const mode=useTestMode();
-  const [signedInvoice, setSignedInvoice] = useState<File | null>(null);
-  const [deliveryPhotos, setDeliveryPhotos] = useState<File[]>([]);
+  const [photos, setPhotos] = useState<DriverPhotoSelection[]>([]);
+  const signedInvoice = photos.find(p => p.kind === "canhoto");
+  const deliveryPhotos = photos.filter(p => p.kind === "foto_entrega");
   const [receiverName, setReceiverName] = useState("");
   const [receiverDoc, setReceiverDoc] = useState("");
   const [signatureData, setSignatureData] = useState<string | null>(null);
@@ -594,19 +577,8 @@ export function DeliveryEvidenceForm({ orderId, userId, position, onDone, onCanc
     if(problem)return toast.error(problem);
     setSaving(true);
     try {
-      const uploads: { path: string; kind: string; name: string; type: string; size: number }[] = [];
-      if (signedInvoice) {
-        const p = `${orderId}/delivery-nf-${Date.now()}-${signedInvoice.name.replace(/[^\w.\-]/g, "_")}`;
-        const up = await supabase.storage.from("order-files").upload(p, signedInvoice, { contentType: signedInvoice.type });
-        if (up.error) throw up.error;
-        uploads.push({ path: p, kind: "canhoto", name: signedInvoice.name, type: signedInvoice.type, size: signedInvoice.size });
-      }
-      for (const f of deliveryPhotos) {
-        const p = `${orderId}/delivery-photo-${Date.now()}-${f.name.replace(/[^\w.\-]/g, "_")}`;
-        const up = await supabase.storage.from("order-files").upload(p, f, { contentType: f.type });
-        if (up.error) throw up.error;
-        uploads.push({ path: p, kind: "foto_entrega", name: f.name, type: f.type, size: f.size });
-      }
+      const uploads = await uploadDriverPhotos(photos, orderId, userId, "delivery", position);
+      const signatureUploads: typeof uploads = [];
       let signaturePath: string | null = null;
       if (signatureData) {
         const blob = await (await fetch(signatureData)).blob();
@@ -614,11 +586,11 @@ export function DeliveryEvidenceForm({ orderId, userId, position, onDone, onCanc
         const up = await supabase.storage.from("order-files").upload(p, blob, { contentType: "image/png" });
         if (!up.error) {
           signaturePath = p;
-          uploads.push({ path: p, kind: "assinatura", name: "signature.png", type: "image/png", size: blob.size });
+          signatureUploads.push({ path: p, kind: "assinatura", name: "signature.png", type: "image/png", size: blob.size });
         }
       }
-      if (uploads.length) {
-        const { error: attachmentError } = await supabase.from("order_attachments").insert(uploads.map((u) => ({
+      if (signatureUploads.length) {
+        const { error: attachmentError } = await supabase.from("order_attachments").insert(signatureUploads.map((u) => ({
           order_id: orderId, kind: u.kind, label: u.name, file_path: u.path,
           mime_type: u.type, size_bytes: u.size, uploaded_by: userId,
           event_status: "delivered", latitude: position?.[1] ?? null, longitude: position?.[0] ?? null,
@@ -626,14 +598,16 @@ export function DeliveryEvidenceForm({ orderId, userId, position, onDone, onCanc
         })) as never);
         if (attachmentError) throw attachmentError;
       }
+      const previous = await supabase.from("deliveries").select("receiver_name,receiver_document,signature_url,delivery_photo_url,invoice_url").eq("order_id", orderId).maybeSingle();
+      if (previous.error) throw previous.error;
       const deliveryResult=await supabase.from("deliveries").upsert({
         order_id: orderId,
-        receiver_name: receiverName || null,
-        receiver_document: receiverDoc || null,
+        receiver_name: receiverName || previous.data?.receiver_name || null,
+        receiver_document: receiverDoc || previous.data?.receiver_document || null,
         delivered_at: new Date().toISOString(),
-        signature_url: signaturePath,
-        delivery_photo_url: uploads.find((u) => u.kind === "foto_entrega")?.path ?? null,
-        invoice_url: uploads.find((u) => u.kind === "canhoto")?.path ?? null,
+        signature_url: signaturePath ?? previous.data?.signature_url ?? null,
+        delivery_photo_url: uploads.find((u) => u.kind === "foto_entrega")?.path ?? previous.data?.delivery_photo_url ?? null,
+        invoice_url: uploads.find((u) => u.kind === "canhoto")?.path ?? previous.data?.invoice_url ?? null,
       } as never, { onConflict: "order_id" });
       if(deliveryResult.error)throw deliveryResult.error;
       toast.success(uploads.length ? "Comprovantes enviados" : "Entrega registrada · comprovantes pendentes");
@@ -648,8 +622,7 @@ export function DeliveryEvidenceForm({ orderId, userId, position, onDone, onCanc
       <h3 className="text-sm font-semibold">Comprovantes de entrega</h3>
       <TestModeNotice />
       {mode.enabled && !signedInvoice && !deliveryPhotos.length && <p className="text-sm text-warning">Comprovante não anexado</p>}
-      <FileInput label="Canhoto / NF assinada" onChange={(fs) => setSignedInvoice(fs[0] ?? null)} count={signedInvoice ? 1 : 0} />
-      <FileInput label="Fotos da entrega" multiple onChange={(fs) => setDeliveryPhotos(fs)} count={deliveryPhotos.length} />
+      <EvidencePhotoPicker stage="delivery" orderId={orderId} items={photos} onChange={setPhotos} disabled={saving} />
       <input value={receiverName} onChange={(e) => setReceiverName(e.target.value)}
         placeholder="Nome do recebedor" className="h-11 w-full rounded-xl border border-border bg-surface px-3 text-sm" />
       <input value={receiverDoc} onChange={(e) => setReceiverDoc(e.target.value)}

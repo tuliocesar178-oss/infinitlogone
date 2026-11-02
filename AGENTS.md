@@ -36,3 +36,4 @@
 - Never compare float8 coordinates with exact equality in API filters; reads may return fewer digits than stored, so use a 1e-6° tolerance range (~0.1 m) for route concurrency guards.
 - Keep commercial order reads behind an authorized read-only view, base-table driver reads column-limited, and driver payment sources independent; database acceptance and margin triggers enforce value integrity without rewriting legacy amounts.
 - Operational route maps reuse the authorized operation-board query, shared realtime hook and TrackingMap workspace; paired coordinate/timestamp precedence and configurable deadline rules prevent divergent tracking signals.
+- Driver evidence categories map onto existing attachment kinds with category metadata and unique per-photo IDs; camera/gallery selections append files while preserving existing stage confirmation and private storage permissions.
