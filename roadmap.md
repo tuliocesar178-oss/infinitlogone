@@ -6,7 +6,7 @@
 - [x] Sessão de motorista confirmou oito opções, duas fotos simultâneas, orientação do canhoto e tela 390x844 sem rolagem horizontal; não confirmou entrega
 - [ ] Validar gravação real e leitura pelo cliente — depende de frete e imagens de teste autorizados; não anexar imagens artificiais à operação real
 - [ ] Validar câmera física e substituição de imagens já enviadas — câmera requer celular; motorista não tem permissão atual de alterar anexos enviados (pode substituir seleção antes de enviar)
-- [ ] Solicitar publicação após verificações
+- [ ] Publicar alterações das fotos — publicação recusada pelo usuário; aguardar nova autorização
 
 ## Integração do mapa operacional (02/11)
 - [x] Compartilhar consultas, atualizações e regras entre Rotas ativas e Rastreamento
