@@ -10,7 +10,12 @@ import {
 } from "@/lib/roles";
 
 export const Route = createFileRoute("/_authenticated/app")({
-  head: () => ({ meta: [{ title: "InfinitLog" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [
+      { name: "description", content: 'InfinitLog. Informações e acompanhamento na plataforma INFINITLOG VAPT VUPT.' },
+      { property: "og:title", content: 'InfinitLog' },
+      { property: "og:description", content: 'InfinitLog. Informações e acompanhamento na plataforma INFINITLOG VAPT VUPT.' },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "InfinitLog" }, { name: "robots", content: "noindex" }] }),
   component: RoleRouter,
 });
 

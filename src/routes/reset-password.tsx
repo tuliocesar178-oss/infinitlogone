@@ -9,6 +9,10 @@ export const Route = createFileRoute("/reset-password")({
   ssr: false,
   head: () => ({
     meta: [
+      { property: "og:title", content: 'Redefinir senha — InfinitLog' },
+      { property: "og:description", content: 'Redefinir senha — InfinitLog. Informações e acompanhamento na plataforma INFINITLOG VAPT VUPT.' },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Redefinir senha — InfinitLog" },
       { name: "description", content: "Defina uma nova senha de acesso à plataforma InfinitLog." },
       { name: "robots", content: "noindex" },

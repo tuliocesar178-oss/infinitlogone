@@ -1,3 +1,4 @@
+import { DRIVER_ORDER_COLUMNS } from "@/lib/order-projections";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -8,7 +9,12 @@ import { brl } from "@/lib/pf";
 import { useBackgroundTracking } from "@/hooks/use-background-tracking";
 
 export const Route = createFileRoute("/_authenticated/driver/")({
-  head: () => ({ meta: [{ title: "Início — Motorista" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [
+      { name: "description", content: 'Início — Motorista. Informações e acompanhamento na plataforma INFINITLOG VAPT VUPT.' },
+      { property: "og:title", content: 'Início — Motorista' },
+      { property: "og:description", content: 'Início — Motorista. Informações e acompanhamento na plataforma INFINITLOG VAPT VUPT.' },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Início — Motorista" }, { name: "robots", content: "noindex" }] }),
   component: DriverHome,
 });
 
@@ -50,7 +56,7 @@ function DriverHome() {
       const { data } = await supabase
         .from("orders")
         .select(`
-          *,
+          ${DRIVER_ORDER_COLUMNS},
           vehicle:vehicles(
             id,
             plate,
@@ -93,7 +99,7 @@ function DriverHome() {
       
       const ids = offers.map((o) => o.order_id);
       const [{ data: orders }, { data: programs }] = await Promise.all([
-        supabase.from("orders").select("*, distance_km, estimated_minutes").in("id", ids),
+        supabase.from("orders").select(DRIVER_ORDER_COLUMNS).in("id", ids),
         supabase.from("freight_programs").select("*").in("order_id", ids),
       ]);
       
@@ -113,11 +119,11 @@ function DriverHome() {
       const today = new Date(); today.setHours(0,0,0,0);
       const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
       const [{ data: doneMonth }, { count: activeCount }, { count: pendingOffers }] = await Promise.all([
-        supabase.from("orders").select("price, updated_at").eq("driver_id", userId).in("status", ["delivered","finalized"]).gte("updated_at", monthStart.toISOString()),
+        supabase.from("orders").select("driver_amount, updated_at").eq("driver_id", userId).in("status", ["delivered","finalized"]).gte("updated_at", monthStart.toISOString()),
         supabase.from("orders").select("id", { count: "exact", head: true }).eq("driver_id", userId).not("status", "in", "(delivered,finalized,cancelled)"),
         supabase.from("freight_offers").select("id", { count: "exact", head: true }).eq("driver_id", userId).eq("status","pending"),
       ]);
-      const totalMonth = (doneMonth ?? []).reduce((s, o) => s + (Number(o.price) || 0), 0);
+      const totalMonth = (doneMonth ?? []).reduce((s, o) => s + (Number(o.driver_amount) || 0), 0);
       const countMonth = (doneMonth ?? []).length;
       return { totalMonth, countMonth, activeCount: activeCount ?? 0, pendingOffers: pendingOffers ?? 0 };
     },

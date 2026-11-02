@@ -1,3 +1,4 @@
+import { COMMERCIAL_ORDERS } from "@/lib/order-projections";
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
 import { useQuery } from "@tanstack/react-query";
@@ -15,6 +16,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 export const Route = createFileRoute("/_authenticated/client/financeiro")({
+  head: () => ({ meta: [{ title: 'client · financeiro — INFINITLOG' }, { name: "description", content: 'client · financeiro — INFINITLOG. Informações e acompanhamento na plataforma INFINITLOG VAPT VUPT.' }, { property: "og:title", content: 'client · financeiro — INFINITLOG' }, { property: "og:description", content: 'client · financeiro — INFINITLOG. Informações e acompanhamento na plataforma INFINITLOG VAPT VUPT.' }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" } ] }),
   component: ClientFinanceiro,
 });
 
@@ -27,21 +29,21 @@ function ClientFinanceiro() {
 
       // Buscamos pedidos com valores financeiros reais
       const { data: orders } = await supabase
-        .from("orders")
+        .from(COMMERCIAL_ORDERS)
         .select("*")
         .eq("client_id", user.id)
-        .not("price", "is", null);
+        .not("client_amount", "is", null);
 
       if (!orders) return null;
 
-      const totalValue = orders.reduce((acc, o) => acc + (o.price || 0), 0);
-      const paidValue = orders.filter(o => o.status === 'delivered' || o.status === 'finalized').reduce((acc, o) => acc + (o.price || 0), 0);
-      const pendingValue = orders.filter(o => o.status !== 'delivered' && o.status !== 'finalized' && o.status !== 'cancelled').reduce((acc, o) => acc + (o.price || 0), 0);
+      const totalValue = orders.reduce((acc, o) => acc + (o.client_amount || 0), 0);
+      const paidValue = orders.filter(o => o.status === 'delivered' || o.status === 'finalized').reduce((acc, o) => acc + (o.client_amount || 0), 0);
+      const pendingValue = orders.filter(o => o.status !== 'delivered' && o.status !== 'finalized' && o.status !== 'cancelled').reduce((acc, o) => acc + (o.client_amount || 0), 0);
 
       const invoices = orders.map(o => ({
         id: o.id,
         doc: o.invoice_number || `PED-${o.code}`,
-        value: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(o.price || 0),
+        value: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(o.client_amount || 0),
         status: o.status === 'delivered' || o.status === 'finalized' ? 'pago' : 'pendente',
         date: o.created_at ? format(new Date(o.created_at), "dd/MM/yyyy") : "-",
         due: o.delivery_window_end ? format(new Date(o.delivery_window_end), "dd/MM/yyyy") : "-"

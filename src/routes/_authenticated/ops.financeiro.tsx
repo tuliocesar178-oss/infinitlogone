@@ -35,6 +35,11 @@ import {
 export const Route = createFileRoute("/_authenticated/ops/financeiro")({
   head: () => ({
     meta: [
+      { name: "description", content: 'Financeiro — Pagamentos de Motoristas | InfinitLog. Informações e acompanhamento na plataforma INFINITLOG VAPT VUPT.' },
+      { property: "og:title", content: 'Financeiro — Pagamentos de Motoristas | InfinitLog' },
+      { property: "og:description", content: 'Financeiro — Pagamentos de Motoristas | InfinitLog. Informações e acompanhamento na plataforma INFINITLOG VAPT VUPT.' },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Financeiro — Pagamentos de Motoristas | InfinitLog" },
       { name: "robots", content: "noindex" },
     ],

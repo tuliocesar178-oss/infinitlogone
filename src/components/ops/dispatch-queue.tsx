@@ -11,7 +11,7 @@ export type DispatchOrder = {
   destination_city?: string | null;
   cargo_weight_kg?: number | null;
   volumes?: number | null;
-  price?: number | null;
+  driver_amount?: number | null;
   priority?: string | null;
   pickup_window_start?: string | null;
   pickup_window_end?: string | null;
@@ -72,7 +72,7 @@ export function DispatchQueue({
                     </div>
                   </div>
                   <div className="text-right text-xs">
-                    <div className="font-semibold tabular-nums">{formatBRL(o.price)}</div>
+                    <div className="font-semibold tabular-nums">{o.driver_amount == null ? "Valor pendente" : formatBRL(o.driver_amount)}</div>
                     {o.cargo_weight_kg != null && (
                       <div className="text-[10px] text-muted-foreground">
                         {o.cargo_weight_kg} kg

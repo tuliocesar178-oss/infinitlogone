@@ -8,7 +8,12 @@ import { StatusCards } from "@/components/orders/status-cards";
 import { DASHBOARD_CARDS, STATUS_LABEL, type DashboardCardKey } from "@/lib/order-status";
 
 export const Route = createFileRoute("/_authenticated/ops/")({
-  head: () => ({ meta: [{ title: "Gestão de Fretes — InfinitLog" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [
+      { name: "description", content: 'Gestão de Fretes — InfinitLog. Informações e acompanhamento na plataforma INFINITLOG VAPT VUPT.' },
+      { property: "og:title", content: 'Gestão de Fretes — InfinitLog' },
+      { property: "og:description", content: 'Gestão de Fretes — InfinitLog. Informações e acompanhamento na plataforma INFINITLOG VAPT VUPT.' },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Gestão de Fretes — InfinitLog" }, { name: "robots", content: "noindex" }] }),
   component: FreightDashboard,
 });
 

@@ -1,5 +1,12 @@
 # Roadmap
 
+## Separação dos valores de frete (02/11)
+- [x] Corrigir criação, despacho, negociação, aceite e pagamentos com valores independentes
+- [x] Proteger consultas do motorista contra exposição comercial e sinalizar valores antigos pendentes
+- [x] Corrigir telas financeiras/relatórios; 112 testes passaram, consulta comercial negada e oferta real de 1800 conferida sem exposição de 3700
+- [ ] Validar criação, despacho, aceite e pagamento ponta a ponta — depende de sessão administrativa autorizada e frete de teste; não aceitar ofertas expiradas nem alterar operações reais
+- [ ] Publicar atualizações verificadas conforme solicitação anterior
+
 ## Modo de testes temporário (28/10)
 - [x] Centralizar configuração administrativa, leitura autenticada e auditoria; preservar segurança e aprovação de motoristas
 - [x] Integrar cadastro operacional, veículos, obras/rascunhos, fretes, edição de endereços, coleta/entrega e descrição/respostas de ocorrências ao modo central

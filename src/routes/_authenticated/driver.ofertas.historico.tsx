@@ -6,7 +6,12 @@ import { brl } from "@/lib/pf";
 import { ArrowLeft, Check, Clock, X, MessageCircle } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/driver/ofertas/historico")({
-  head: () => ({ meta: [{ title: "Histórico de ofertas — Motorista" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [
+      { name: "description", content: 'Histórico de ofertas — Motorista. Informações e acompanhamento na plataforma INFINITLOG VAPT VUPT.' },
+      { property: "og:title", content: 'Histórico de ofertas — Motorista' },
+      { property: "og:description", content: 'Histórico de ofertas — Motorista. Informações e acompanhamento na plataforma INFINITLOG VAPT VUPT.' },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Histórico de ofertas — Motorista" }, { name: "robots", content: "noindex" }] }),
   component: OffersHistory,
 });
 

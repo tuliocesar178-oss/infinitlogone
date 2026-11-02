@@ -16,7 +16,12 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute("/_authenticated/ops/pedidos/")({
   validateSearch: (s) => searchSchema.parse(s),
-  head: () => ({ meta: [{ title: "Fretes — InfinitLog" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [
+      { name: "description", content: 'Fretes — InfinitLog. Informações e acompanhamento na plataforma INFINITLOG VAPT VUPT.' },
+      { property: "og:title", content: 'Fretes — InfinitLog' },
+      { property: "og:description", content: 'Fretes — InfinitLog. Informações e acompanhamento na plataforma INFINITLOG VAPT VUPT.' },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Fretes — InfinitLog" }, { name: "robots", content: "noindex" }] }),
   component: OrdersList,
 });
 

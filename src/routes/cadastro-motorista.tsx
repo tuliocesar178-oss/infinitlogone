@@ -12,6 +12,10 @@ import { PasswordField } from "@/components/ops/password-field";
 export const Route = createFileRoute("/cadastro-motorista")({
   head: () => ({
     meta: [
+      { property: "og:title", content: 'Cadastre-se como Motorista — InfinitLog' },
+      { property: "og:description", content: 'Cadastre-se como Motorista — InfinitLog. Informações e acompanhamento na plataforma INFINITLOG VAPT VUPT.' },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Cadastre-se como Motorista — InfinitLog" },
       { name: "description", content: "Envie seu cadastro para dirigir com a InfinitLog Transportes." },
       { name: "robots", content: "noindex" },

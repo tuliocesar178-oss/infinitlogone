@@ -24,7 +24,12 @@ import {
 
 export const Route = createFileRoute("/_authenticated/ops/veiculos/lista")({
   head: () => ({
-    meta: [{ title: "Veículos — InfinitLog" }, { name: "robots", content: "noindex" }],
+    meta: [
+      { name: "description", content: 'Veículos — InfinitLog. Informações e acompanhamento na plataforma INFINITLOG VAPT VUPT.' },
+      { property: "og:title", content: 'Veículos — InfinitLog' },
+      { property: "og:description", content: 'Veículos — InfinitLog. Informações e acompanhamento na plataforma INFINITLOG VAPT VUPT.' },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Veículos — InfinitLog" }, { name: "robots", content: "noindex" }],
   }),
   component: VehiclesList,
 });

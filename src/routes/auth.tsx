@@ -10,6 +10,10 @@ import { PasswordField } from "@/components/ops/password-field";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
+      { property: "og:title", content: 'Entrar — InfinitLog' },
+      { property: "og:description", content: 'Entrar — InfinitLog. Informações e acompanhamento na plataforma INFINITLOG VAPT VUPT.' },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Entrar — InfinitLog" },
       { name: "description", content: "Área interna da InfinitLog Transportes." },
       { name: "robots", content: "noindex" },

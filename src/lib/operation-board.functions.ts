@@ -1,3 +1,4 @@
+import { COMMERCIAL_ORDERS } from "@/lib/order-projections";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -13,7 +14,7 @@ export const getOperationBoard = createServerFn({ method: "GET" }).middleware([r
   async function readOrders() {
     const result = [];
     for (let offset=0;;offset+=1000) {
-      const { data, error } = await db.from("orders").select("*, vehicle:vehicles(id,plate,model,brand,current_lat,current_lng,status,vehicle_type),work:works(name)").is("deleted_at",null).order("id").range(offset,offset+999);
+      const { data, error } = await db.from(COMMERCIAL_ORDERS).select("*, vehicle:vehicles(id,plate,model,brand,current_lat,current_lng,status,vehicle_type),work:works(name)").is("deleted_at",null).order("id").range(offset,offset+999);
       if(error) throw error; result.push(...(data ?? [])); if((data?.length ?? 0)<1000) break;
     }
     return result;

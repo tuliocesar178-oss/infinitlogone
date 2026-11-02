@@ -16,7 +16,8 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/ops/obras/nova")({
   head: () => ({
-    meta: [{ title: "Nova obra — InfinitLog" },{name:'description',content:'Cadastro de obra vinculada a cliente INFINITLOG.'},{property:'og:title',content:'Nova obra — InfinitLog'},{property:'og:description',content:'Obras e clientes da operação.'},{property:'og:type',content:'website'},{name:'twitter:card',content:'summary'}, { name: "robots", content: "noindex" }],
+    meta: [
+      { name: "description", content: 'Nova obra — InfinitLog. Informações e acompanhamento na plataforma INFINITLOG VAPT VUPT.' },{ title: "Nova obra — InfinitLog" },{name:'description',content:'Cadastro de obra vinculada a cliente INFINITLOG.'},{property:'og:title',content:'Nova obra — InfinitLog'},{property:'og:description',content:'Obras e clientes da operação.'},{property:'og:type',content:'website'},{name:'twitter:card',content:'summary'}, { name: "robots", content: "noindex" }],
   }),
   component: NewWork,
 });

@@ -1,3 +1,4 @@
+import { DRIVER_ORDER_COLUMNS } from "@/lib/order-projections";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -13,7 +14,12 @@ import {
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/driver/ofertas/$id")({
-  head: () => ({ meta: [{ title: "Nova Oferta — InfinitLog" }] }),
+  head: () => ({ meta: [
+      { name: "description", content: 'Nova Oferta — InfinitLog. Informações e acompanhamento na plataforma INFINITLOG VAPT VUPT.' },
+      { property: "og:title", content: 'Nova Oferta — InfinitLog' },
+      { property: "og:description", content: 'Nova Oferta — InfinitLog. Informações e acompanhamento na plataforma INFINITLOG VAPT VUPT.' },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Nova Oferta — InfinitLog" }] }),
   component: DriverOfferDetailsPage,
 });
 
@@ -37,7 +43,7 @@ function DriverOfferDetailsPage() {
     queryFn: async () => {
       const { data: offer } = await supabase.from("freight_offers").select("*").eq("id", id).maybeSingle();
       if (!offer) return null;
-      const { data: order } = await supabase.from("orders").select("*").eq("id", offer.order_id).maybeSingle();
+      const { data: order } = await supabase.from("orders").select(DRIVER_ORDER_COLUMNS).eq("id", offer.order_id).maybeSingle();
       return { offer, order };
     },
   });

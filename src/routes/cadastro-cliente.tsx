@@ -8,6 +8,10 @@ import { Logo } from "@/components/logo";
 export const Route = createFileRoute("/cadastro-cliente")({
   head: () => ({
     meta: [
+      { property: "og:title", content: 'Cadastro de Cliente — InfinitLog' },
+      { property: "og:description", content: 'Cadastro de Cliente — InfinitLog. Informações e acompanhamento na plataforma INFINITLOG VAPT VUPT.' },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Cadastro de Cliente — InfinitLog" },
       { name: "description", content: "Crie sua conta corporativa na InfinitLog Transportes." },
       { name: "robots", content: "noindex" },

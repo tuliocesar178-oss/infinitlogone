@@ -3,10 +3,11 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { addressSchema, addressError } from './addresses/model';
 import {canReceiveOffer} from './registration-model';
+import { requireDriverAmount } from './freight-values';
 
 const schema = z.object({
   order_id: z.string().uuid(),
-  price: z.number().nonnegative().max(10_000_000),
+  price: z.number().positive().max(10_000_000),
   minutes: z.number().int().min(1).max(1440),
 });
 
@@ -33,6 +34,7 @@ export const dispatchOrderToEligibleDrivers = createServerFn({ method: "POST" })
       .maybeSingle();
     if (orderError) throw new Error(orderError.message);
     if (!order) throw new Error("Rota não encontrada.");
+    const driverAmount = requireDriverAmount(data.price);
 
     if (!["planning", "created", "preparing", "awaiting_driver"].includes(order.status)) {
       throw new Error("Esta rota não pode ser despachada no status atual.");
@@ -80,12 +82,18 @@ export const dispatchOrderToEligibleDrivers = createServerFn({ method: "POST" })
 
     if (!eligible.length) return { count: 0, driverIds: [] as string[] };
 
+    // Persist the explicitly entered driver amount before offers are generated.
+    // The commercial fields are never part of this update.
+    const amountSaved = await db.from('orders').update({ driver_amount: driverAmount })
+      .eq('id', order.id).is('driver_id', null).in('status', ['planning', 'created', 'preparing', 'awaiting_driver']).select('id').maybeSingle();
+    if (amountSaved.error) throw amountSaved.error;
+    if (!amountSaved.data) throw new Error('Este frete foi alterado. Atualize antes de despachar.');
     const driverIds = eligible.map((driver) => driver.user_id as string);
     const expiresAt = new Date(Date.now() + data.minutes * 60_000).toISOString();
     const rows = driverIds.map((driver_id) => ({
       order_id: order.id,
       driver_id,
-      offered_price: data.price,
+      offered_price: driverAmount,
       expires_at: expiresAt,
       status: "pending" as const,
     }));
@@ -97,7 +105,7 @@ export const dispatchOrderToEligibleDrivers = createServerFn({ method: "POST" })
 
     const { error: statusError } = await db
       .from("orders")
-      .update({ status: "awaiting_driver", driver_amount: data.price })
+      .update({ status: "awaiting_driver" })
       .eq("id", order.id)
       .is("driver_id", null);
     if (statusError) throw new Error(statusError.message);

@@ -1,3 +1,4 @@
+import { COMMERCIAL_ORDER_EVENTS } from "@/lib/order-projections";
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
@@ -140,7 +141,7 @@ export const getClientOrderEvidence = createServerFn({ method: "POST" })
     const orderIds = orders.map((order) => order.id);
     const [eventsResult, attachmentsResult] = await Promise.all([
       context.supabase
-        .from("order_events")
+        .from(COMMERCIAL_ORDER_EVENTS)
         .select("id, order_id, event_type, from_status, to_status, payload, actor_id, created_at")
         .in("order_id", orderIds)
         .order("created_at", { ascending: true }),

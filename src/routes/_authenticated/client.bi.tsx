@@ -1,3 +1,4 @@
+import { COMMERCIAL_ORDERS } from "@/lib/order-projections";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,6 +23,7 @@ import { startOfMonth, subMonths, format, endOfMonth, isWithinInterval } from "d
 import { ptBR } from "date-fns/locale";
 
 export const Route = createFileRoute("/_authenticated/client/bi")({
+  head: () => ({ meta: [{ title: 'client · bi — INFINITLOG' }, { name: "description", content: 'client · bi — INFINITLOG. Informações e acompanhamento na plataforma INFINITLOG VAPT VUPT.' }, { property: "og:title", content: 'client · bi — INFINITLOG' }, { property: "og:description", content: 'client · bi — INFINITLOG. Informações e acompanhamento na plataforma INFINITLOG VAPT VUPT.' }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" } ] }),
   component: ClientBI,
 });
 
@@ -33,7 +35,7 @@ function ClientBI() {
       if (!user) return null;
 
       const { data: orders } = await supabase
-        .from("orders")
+        .from(COMMERCIAL_ORDERS)
         .select("*")
         .eq("client_id", user.id)
         .order("created_at", { ascending: true });

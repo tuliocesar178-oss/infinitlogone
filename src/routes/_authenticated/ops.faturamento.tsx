@@ -1,3 +1,4 @@
+import { COMMERCIAL_ORDERS } from "@/lib/order-projections";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -25,6 +26,11 @@ import { compactBRL, lastMonths, monthKey, sum } from "@/lib/finance";
 export const Route = createFileRoute("/_authenticated/ops/faturamento")({
   head: () => ({
     meta: [
+      { name: "description", content: 'Faturamento — Receita e Margem | InfinitLog. Informações e acompanhamento na plataforma INFINITLOG VAPT VUPT.' },
+      { property: "og:title", content: 'Faturamento — Receita e Margem | InfinitLog' },
+      { property: "og:description", content: 'Faturamento — Receita e Margem | InfinitLog. Informações e acompanhamento na plataforma INFINITLOG VAPT VUPT.' },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Faturamento — Receita e Margem | InfinitLog" },
       { name: "robots", content: "noindex" },
     ],
@@ -48,7 +54,7 @@ type BillingOrder = {
 
 async function fetchBilling(): Promise<BillingOrder[]> {
   const { data, error } = await supabase
-    .from("orders")
+    .from(COMMERCIAL_ORDERS)
     .select(
       "id, code, status, client_name, client_amount, driver_amount, margin_amount, invoice_number, invoice_value, completed_at, created_at",
     )
@@ -60,7 +66,7 @@ async function fetchBilling(): Promise<BillingOrder[]> {
 }
 
 function revenueOf(o: BillingOrder) {
-  return Number(o.invoice_value ?? o.client_amount ?? 0) || 0;
+  return Number(o.client_amount ?? 0) || 0;
 }
 function costOf(o: BillingOrder) {
   return Number(o.driver_amount ?? 0) || 0;

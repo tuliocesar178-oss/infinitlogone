@@ -1,3 +1,4 @@
+import { driverValueLabel } from "@/lib/freight-values";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -82,7 +83,7 @@ export function DriverSidePanel({
           .then(async (r) => r),
         supabase
           .from("orders")
-          .select("id, code, tracking_code, status, origin_city, destination_city, price, created_at")
+          .select("id, code, tracking_code, status, origin_city, destination_city, driver_amount, created_at")
           .eq("driver_id", driverId)
           .order("created_at", { ascending: false })
           .limit(5),
@@ -309,7 +310,7 @@ export function DriverSidePanel({
                 <div className="text-sm text-muted-foreground">Nenhum frete ainda.</div>
               ) : (
                 <ul className="space-y-2">
-                  {q.data!.recent.map((o: any) => (
+                  {q.data?.recent.map((o: any) => (
                     <li
                       key={o.id}
                       className="flex items-center justify-between rounded-xl border border-border bg-surface px-3 py-2 text-sm"
@@ -321,7 +322,7 @@ export function DriverSidePanel({
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="text-xs font-medium">{brl(o.price)}</div>
+                        <div className="text-xs font-medium">{driverValueLabel(o.driver_amount)}</div>
                         <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
                           {fmtDate(o.created_at)}
                         </div>

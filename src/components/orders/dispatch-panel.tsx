@@ -7,7 +7,7 @@ import { dispatchOrderToEligibleDrivers } from "@/lib/dispatch.functions";
 
 export function DispatchPanel({ order, onSent }: { order: any; onSent: () => void }) {
   const dispatch = useServerFn(dispatchOrderToEligibleDrivers);
-  const [price, setPrice] = useState<number>(order.driver_amount ?? order.price ?? 0);
+  const [price, setPrice] = useState<number>(order.driver_amount ?? 0);
   const [minutes, setMinutes] = useState(15);
   const [sending, setSending] = useState(false);
 

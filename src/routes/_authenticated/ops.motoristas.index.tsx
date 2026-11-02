@@ -18,7 +18,8 @@ import {
 
 export const Route = createFileRoute("/_authenticated/ops/motoristas/")({
   head: () => ({
-    meta: [{ title: "Motoristas — InfinitLog" }, {name:'description',content:'Cadastros, contatos e veículos dos motoristas INFINITLOG.'},{property:'og:title',content:'Motoristas — InfinitLog'},{property:'og:description',content:'Cadastro operacional de motoristas.'},{property:'og:type',content:'website'},{name:'twitter:card',content:'summary'}, { name: "robots", content: "noindex" }],
+    meta: [
+      { name: "description", content: 'Motoristas — InfinitLog. Informações e acompanhamento na plataforma INFINITLOG VAPT VUPT.' },{ title: "Motoristas — InfinitLog" }, {name:'description',content:'Cadastros, contatos e veículos dos motoristas INFINITLOG.'},{property:'og:title',content:'Motoristas — InfinitLog'},{property:'og:description',content:'Cadastro operacional de motoristas.'},{property:'og:type',content:'website'},{name:'twitter:card',content:'summary'}, { name: "robots", content: "noindex" }],
   }),
   component: DriversList,
 });

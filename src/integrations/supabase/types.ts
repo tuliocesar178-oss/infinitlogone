@@ -267,6 +267,13 @@ export type Database = {
             foreignKeyName: "chat_rooms_order_id_fkey"
             columns: ["order_id"]
             isOneToOne: true
+            referencedRelation: "commercial_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_rooms_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
             referencedRelation: "orders"
             referencedColumns: ["id"]
           },
@@ -411,6 +418,13 @@ export type Database = {
             foreignKeyName: "deliveries_order_id_fkey"
             columns: ["order_id"]
             isOneToOne: true
+            referencedRelation: "commercial_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deliveries_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
             referencedRelation: "orders"
             referencedColumns: ["id"]
           },
@@ -531,6 +545,13 @@ export type Database = {
           speed_kmh?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "driver_locations_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_orders"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "driver_locations_order_id_fkey"
             columns: ["order_id"]
@@ -684,6 +705,13 @@ export type Database = {
             foreignKeyName: "driver_payments_order_id_fkey"
             columns: ["order_id"]
             isOneToOne: true
+            referencedRelation: "commercial_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_payments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
             referencedRelation: "orders"
             referencedColumns: ["id"]
           },
@@ -718,6 +746,13 @@ export type Database = {
           score?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "driver_ratings_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_orders"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "driver_ratings_order_id_fkey"
             columns: ["order_id"]
@@ -1051,6 +1086,13 @@ export type Database = {
             foreignKeyName: "freight_offers_order_id_fkey"
             columns: ["order_id"]
             isOneToOne: false
+            referencedRelation: "commercial_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "freight_offers_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
             referencedRelation: "orders"
             referencedColumns: ["id"]
           },
@@ -1112,6 +1154,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "freight_programs_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "commercial_orders"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "freight_programs_order_id_fkey"
             columns: ["order_id"]
@@ -1337,6 +1386,13 @@ export type Database = {
             foreignKeyName: "incidents_order_id_fkey"
             columns: ["order_id"]
             isOneToOne: false
+            referencedRelation: "commercial_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "incidents_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
             referencedRelation: "orders"
             referencedColumns: ["id"]
           },
@@ -1390,6 +1446,13 @@ export type Database = {
           sender_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "messages_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_orders"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "messages_order_id_fkey"
             columns: ["order_id"]
@@ -1488,6 +1551,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "notification_outbox_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_orders"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "notification_outbox_order_id_fkey"
             columns: ["order_id"]
@@ -1656,7 +1726,21 @@ export type Database = {
             foreignKeyName: "order_attachments_event_id_fkey"
             columns: ["event_id"]
             isOneToOne: false
+            referencedRelation: "commercial_order_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_attachments_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
             referencedRelation: "order_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_attachments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_orders"
             referencedColumns: ["id"]
           },
           {
@@ -1704,6 +1788,13 @@ export type Database = {
             foreignKeyName: "order_events_order_id_fkey"
             columns: ["order_id"]
             isOneToOne: false
+            referencedRelation: "commercial_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
             referencedRelation: "orders"
             referencedColumns: ["id"]
           },
@@ -1741,6 +1832,13 @@ export type Database = {
           order_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "order_field_changes_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_orders"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "order_field_changes_order_id_fkey"
             columns: ["order_id"]
@@ -1788,6 +1886,13 @@ export type Database = {
           speed?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "order_tracking_points_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_orders"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "order_tracking_points_order_id_fkey"
             columns: ["order_id"]
@@ -2447,6 +2552,13 @@ export type Database = {
             foreignKeyName: "route_summaries_order_id_fkey"
             columns: ["order_id"]
             isOneToOne: true
+            referencedRelation: "commercial_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "route_summaries_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
             referencedRelation: "orders"
             referencedColumns: ["id"]
           },
@@ -2930,6 +3042,489 @@ export type Database = {
       }
     }
     Views: {
+      commercial_order_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string | null
+          event_type: string | null
+          from_status: Database["public"]["Enums"]["order_status"] | null
+          id: string | null
+          order_id: string | null
+          payload: Json | null
+          to_status: Database["public"]["Enums"]["order_status"] | null
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string | null
+          event_type?: string | null
+          from_status?: Database["public"]["Enums"]["order_status"] | null
+          id?: string | null
+          order_id?: string | null
+          payload?: Json | null
+          to_status?: Database["public"]["Enums"]["order_status"] | null
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string | null
+          event_type?: string | null
+          from_status?: Database["public"]["Enums"]["order_status"] | null
+          id?: string | null
+          order_id?: string | null
+          payload?: Json | null
+          to_status?: Database["public"]["Enums"]["order_status"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commercial_orders: {
+        Row: {
+          antt_applicable: boolean | null
+          antt_axles: number | null
+          antt_calculated_at: string | null
+          antt_cargo_class: string | null
+          antt_cc: number | null
+          antt_ccd: number | null
+          antt_contract_type: string | null
+          antt_distance_km: number | null
+          antt_effective_date: string | null
+          antt_high_performance: boolean | null
+          antt_minimum_value: number | null
+          antt_not_applicable_reason: string | null
+          antt_rate_table_id: string | null
+          antt_resolution: string | null
+          antt_table: string | null
+          approach_notified_at: string | null
+          arrival_detected_at: string | null
+          arrival_override_at: string | null
+          arrival_override_by: string | null
+          arrived_at: string | null
+          cargo_description: string | null
+          cargo_dimensions: string | null
+          cargo_package_type: string | null
+          cargo_product: string | null
+          cargo_type: string | null
+          cargo_value: number | null
+          cargo_value_declared: number | null
+          cargo_volume_m3: number | null
+          cargo_weight_kg: number | null
+          client_amount: number | null
+          client_id: string | null
+          client_name: string | null
+          code: string | null
+          completed_at: string | null
+          completeness_pending: string[] | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string | null
+          created_by: string | null
+          created_in_test_mode: boolean | null
+          cte_number: string | null
+          current_city: string | null
+          current_lat: number | null
+          current_lng: number | null
+          deleted_at: string | null
+          delivery_contact_name: string | null
+          delivery_dock: string | null
+          delivery_franchise_minutes: number | null
+          delivery_gate: string | null
+          delivery_instructions: string | null
+          delivery_phone: string | null
+          delivery_reference: string | null
+          delivery_whatsapp: string | null
+          delivery_window_end: string | null
+          delivery_window_start: string | null
+          destination_address: string | null
+          destination_city: string | null
+          destination_lat: number | null
+          destination_lng: number | null
+          destination_location_details: Json | null
+          destination_neighborhood: string | null
+          destination_number: string | null
+          destination_state: string | null
+          destination_zip: string | null
+          distance_km: number | null
+          distance_to_destination_km: number | null
+          driver_amount: number | null
+          driver_id: string | null
+          estimated_minutes: number | null
+          estimated_tolls: number | null
+          eta_minutes: number | null
+          fuel_cost: number | null
+          helpers_count: number | null
+          helpers_required: boolean | null
+          id: string | null
+          initial_distance_km: number | null
+          invoice_number: string | null
+          invoice_url: string | null
+          invoice_value: number | null
+          last_ping_at: string | null
+          margin_amount: number | null
+          mdfe_number: string | null
+          near_notified_at: string | null
+          notes: string | null
+          offer_expires_minutes: number | null
+          operation_type: string | null
+          origin_address: string | null
+          origin_city: string | null
+          origin_lat: number | null
+          origin_lng: number | null
+          origin_location_details: Json | null
+          origin_neighborhood: string | null
+          origin_number: string | null
+          origin_state: string | null
+          origin_zip: string | null
+          other_costs: number | null
+          pickup_contact_name: string | null
+          pickup_dock: string | null
+          pickup_franchise_minutes: number | null
+          pickup_gate: string | null
+          pickup_instructions: string | null
+          pickup_phone: string | null
+          pickup_phone_name: string | null
+          pickup_reference: string | null
+          pickup_whatsapp: string | null
+          pickup_window_end: string | null
+          pickup_window_start: string | null
+          price: number | null
+          priority: string | null
+          published_at: string | null
+          purchase_order: string | null
+          recorded_distance_km: number | null
+          required_axles: number | null
+          required_body_type: string | null
+          required_capacity_kg: number | null
+          required_vehicle_type: string | null
+          route_geometry: string | null
+          route_highways: string | null
+          scheduled_at: string | null
+          special_requirements: string | null
+          started_at: string | null
+          started_trip_at: string | null
+          status: Database["public"]["Enums"]["order_status"] | null
+          suggested_value: number | null
+          tracking_code: string | null
+          tracking_required: boolean | null
+          updated_at: string | null
+          vehicle_id: string | null
+          volumes: number | null
+          work_id: string | null
+        }
+        Insert: {
+          antt_applicable?: boolean | null
+          antt_axles?: number | null
+          antt_calculated_at?: string | null
+          antt_cargo_class?: string | null
+          antt_cc?: number | null
+          antt_ccd?: number | null
+          antt_contract_type?: string | null
+          antt_distance_km?: number | null
+          antt_effective_date?: string | null
+          antt_high_performance?: boolean | null
+          antt_minimum_value?: number | null
+          antt_not_applicable_reason?: string | null
+          antt_rate_table_id?: string | null
+          antt_resolution?: string | null
+          antt_table?: string | null
+          approach_notified_at?: string | null
+          arrival_detected_at?: string | null
+          arrival_override_at?: string | null
+          arrival_override_by?: string | null
+          arrived_at?: string | null
+          cargo_description?: string | null
+          cargo_dimensions?: string | null
+          cargo_package_type?: string | null
+          cargo_product?: string | null
+          cargo_type?: string | null
+          cargo_value?: number | null
+          cargo_value_declared?: number | null
+          cargo_volume_m3?: number | null
+          cargo_weight_kg?: number | null
+          client_amount?: number | null
+          client_id?: string | null
+          client_name?: string | null
+          code?: string | null
+          completed_at?: string | null
+          completeness_pending?: string[] | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          created_in_test_mode?: boolean | null
+          cte_number?: string | null
+          current_city?: string | null
+          current_lat?: number | null
+          current_lng?: number | null
+          deleted_at?: string | null
+          delivery_contact_name?: string | null
+          delivery_dock?: string | null
+          delivery_franchise_minutes?: number | null
+          delivery_gate?: string | null
+          delivery_instructions?: string | null
+          delivery_phone?: string | null
+          delivery_reference?: string | null
+          delivery_whatsapp?: string | null
+          delivery_window_end?: string | null
+          delivery_window_start?: string | null
+          destination_address?: string | null
+          destination_city?: string | null
+          destination_lat?: number | null
+          destination_lng?: number | null
+          destination_location_details?: Json | null
+          destination_neighborhood?: string | null
+          destination_number?: string | null
+          destination_state?: string | null
+          destination_zip?: string | null
+          distance_km?: number | null
+          distance_to_destination_km?: number | null
+          driver_amount?: number | null
+          driver_id?: string | null
+          estimated_minutes?: number | null
+          estimated_tolls?: number | null
+          eta_minutes?: number | null
+          fuel_cost?: number | null
+          helpers_count?: number | null
+          helpers_required?: boolean | null
+          id?: string | null
+          initial_distance_km?: number | null
+          invoice_number?: string | null
+          invoice_url?: string | null
+          invoice_value?: number | null
+          last_ping_at?: string | null
+          margin_amount?: number | null
+          mdfe_number?: string | null
+          near_notified_at?: string | null
+          notes?: string | null
+          offer_expires_minutes?: number | null
+          operation_type?: string | null
+          origin_address?: string | null
+          origin_city?: string | null
+          origin_lat?: number | null
+          origin_lng?: number | null
+          origin_location_details?: Json | null
+          origin_neighborhood?: string | null
+          origin_number?: string | null
+          origin_state?: string | null
+          origin_zip?: string | null
+          other_costs?: number | null
+          pickup_contact_name?: string | null
+          pickup_dock?: string | null
+          pickup_franchise_minutes?: number | null
+          pickup_gate?: string | null
+          pickup_instructions?: string | null
+          pickup_phone?: string | null
+          pickup_phone_name?: string | null
+          pickup_reference?: string | null
+          pickup_whatsapp?: string | null
+          pickup_window_end?: string | null
+          pickup_window_start?: string | null
+          price?: number | null
+          priority?: string | null
+          published_at?: string | null
+          purchase_order?: string | null
+          recorded_distance_km?: number | null
+          required_axles?: number | null
+          required_body_type?: string | null
+          required_capacity_kg?: number | null
+          required_vehicle_type?: string | null
+          route_geometry?: string | null
+          route_highways?: string | null
+          scheduled_at?: string | null
+          special_requirements?: string | null
+          started_at?: string | null
+          started_trip_at?: string | null
+          status?: Database["public"]["Enums"]["order_status"] | null
+          suggested_value?: number | null
+          tracking_code?: string | null
+          tracking_required?: boolean | null
+          updated_at?: string | null
+          vehicle_id?: string | null
+          volumes?: number | null
+          work_id?: string | null
+        }
+        Update: {
+          antt_applicable?: boolean | null
+          antt_axles?: number | null
+          antt_calculated_at?: string | null
+          antt_cargo_class?: string | null
+          antt_cc?: number | null
+          antt_ccd?: number | null
+          antt_contract_type?: string | null
+          antt_distance_km?: number | null
+          antt_effective_date?: string | null
+          antt_high_performance?: boolean | null
+          antt_minimum_value?: number | null
+          antt_not_applicable_reason?: string | null
+          antt_rate_table_id?: string | null
+          antt_resolution?: string | null
+          antt_table?: string | null
+          approach_notified_at?: string | null
+          arrival_detected_at?: string | null
+          arrival_override_at?: string | null
+          arrival_override_by?: string | null
+          arrived_at?: string | null
+          cargo_description?: string | null
+          cargo_dimensions?: string | null
+          cargo_package_type?: string | null
+          cargo_product?: string | null
+          cargo_type?: string | null
+          cargo_value?: number | null
+          cargo_value_declared?: number | null
+          cargo_volume_m3?: number | null
+          cargo_weight_kg?: number | null
+          client_amount?: number | null
+          client_id?: string | null
+          client_name?: string | null
+          code?: string | null
+          completed_at?: string | null
+          completeness_pending?: string[] | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          created_in_test_mode?: boolean | null
+          cte_number?: string | null
+          current_city?: string | null
+          current_lat?: number | null
+          current_lng?: number | null
+          deleted_at?: string | null
+          delivery_contact_name?: string | null
+          delivery_dock?: string | null
+          delivery_franchise_minutes?: number | null
+          delivery_gate?: string | null
+          delivery_instructions?: string | null
+          delivery_phone?: string | null
+          delivery_reference?: string | null
+          delivery_whatsapp?: string | null
+          delivery_window_end?: string | null
+          delivery_window_start?: string | null
+          destination_address?: string | null
+          destination_city?: string | null
+          destination_lat?: number | null
+          destination_lng?: number | null
+          destination_location_details?: Json | null
+          destination_neighborhood?: string | null
+          destination_number?: string | null
+          destination_state?: string | null
+          destination_zip?: string | null
+          distance_km?: number | null
+          distance_to_destination_km?: number | null
+          driver_amount?: number | null
+          driver_id?: string | null
+          estimated_minutes?: number | null
+          estimated_tolls?: number | null
+          eta_minutes?: number | null
+          fuel_cost?: number | null
+          helpers_count?: number | null
+          helpers_required?: boolean | null
+          id?: string | null
+          initial_distance_km?: number | null
+          invoice_number?: string | null
+          invoice_url?: string | null
+          invoice_value?: number | null
+          last_ping_at?: string | null
+          margin_amount?: number | null
+          mdfe_number?: string | null
+          near_notified_at?: string | null
+          notes?: string | null
+          offer_expires_minutes?: number | null
+          operation_type?: string | null
+          origin_address?: string | null
+          origin_city?: string | null
+          origin_lat?: number | null
+          origin_lng?: number | null
+          origin_location_details?: Json | null
+          origin_neighborhood?: string | null
+          origin_number?: string | null
+          origin_state?: string | null
+          origin_zip?: string | null
+          other_costs?: number | null
+          pickup_contact_name?: string | null
+          pickup_dock?: string | null
+          pickup_franchise_minutes?: number | null
+          pickup_gate?: string | null
+          pickup_instructions?: string | null
+          pickup_phone?: string | null
+          pickup_phone_name?: string | null
+          pickup_reference?: string | null
+          pickup_whatsapp?: string | null
+          pickup_window_end?: string | null
+          pickup_window_start?: string | null
+          price?: number | null
+          priority?: string | null
+          published_at?: string | null
+          purchase_order?: string | null
+          recorded_distance_km?: number | null
+          required_axles?: number | null
+          required_body_type?: string | null
+          required_capacity_kg?: number | null
+          required_vehicle_type?: string | null
+          route_geometry?: string | null
+          route_highways?: string | null
+          scheduled_at?: string | null
+          special_requirements?: string | null
+          started_at?: string | null
+          started_trip_at?: string | null
+          status?: Database["public"]["Enums"]["order_status"] | null
+          suggested_value?: number | null
+          tracking_code?: string | null
+          tracking_required?: boolean | null
+          updated_at?: string | null
+          vehicle_id?: string | null
+          volumes?: number | null
+          work_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_antt_rate_table_id_fkey"
+            columns: ["antt_rate_table_id"]
+            isOneToOne: false
+            referencedRelation: "antt_rate_tables"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "orders_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "orders_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_work_id_fkey"
+            columns: ["work_id"]
+            isOneToOne: false
+            referencedRelation: "works"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_tracking: {
         Row: {
           code: string | null

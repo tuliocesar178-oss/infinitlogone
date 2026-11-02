@@ -11,6 +11,11 @@ import { List, Plus, Search, X, Phone, MapPin, Truck } from "lucide-react";
 export const Route = createFileRoute("/_authenticated/ops/veiculos")({
   head: () => ({
     meta: [
+      { name: "description", content: 'Central da Frota — InfinitLog. Informações e acompanhamento na plataforma INFINITLOG VAPT VUPT.' },
+      { property: "og:title", content: 'Central da Frota — InfinitLog' },
+      { property: "og:description", content: 'Central da Frota — InfinitLog. Informações e acompanhamento na plataforma INFINITLOG VAPT VUPT.' },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Central da Frota — InfinitLog" },
       { name: "robots", content: "noindex" },
     ],

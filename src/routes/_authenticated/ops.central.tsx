@@ -1,3 +1,4 @@
+import { COMMERCIAL_ORDERS } from "@/lib/order-projections";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -60,7 +61,7 @@ function TorreDeControle() {
     queryKey: ["torre-orders"],
     queryFn: async () => {
       const { data: orders, error } = await supabase
-        .from("orders")
+        .from(COMMERCIAL_ORDERS)
         .select(`
           *,
           vehicle:vehicles(id, plate, model, photo_url)
@@ -288,7 +289,7 @@ function TorreDeControle() {
                                         )}
                                       </div>
                                       <div className="text-[10px] font-bold text-emerald-600">
-                                        {order.price ? formatBRL(order.price) : '—'}
+                                        {order.client_amount ? formatBRL(order.client_amount) : '—'}
                                       </div>
                                     </div>
                                   </div>

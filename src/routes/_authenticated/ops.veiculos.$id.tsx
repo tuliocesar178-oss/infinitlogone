@@ -1,3 +1,4 @@
+import { COMMERCIAL_ORDERS } from "@/lib/order-projections";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -9,7 +10,12 @@ import { vehicleStatusBadgeClass, vehicleStatusMeta, formatDate } from "@/lib/ve
 import { ArrowLeft, Truck, FileText, History, Package } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/ops/veiculos/$id")({
-  head: () => ({ meta: [{ title: "Veículo — InfinitLog" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [
+      { name: "description", content: 'Veículo — InfinitLog. Informações e acompanhamento na plataforma INFINITLOG VAPT VUPT.' },
+      { property: "og:title", content: 'Veículo — InfinitLog' },
+      { property: "og:description", content: 'Veículo — InfinitLog. Informações e acompanhamento na plataforma INFINITLOG VAPT VUPT.' },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Veículo — InfinitLog" }, { name: "robots", content: "noindex" }] }),
   component: VehicleDetail,
 });
 
@@ -129,8 +135,8 @@ function VehicleHistory({ vehicleId }: { vehicleId: string }) {
     queryKey: ["vehicle-orders", vehicleId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("orders")
-        .select("id, code, tracking_code, status, origin_city, destination_city, price, distance_km, created_at")
+        .from(COMMERCIAL_ORDERS)
+        .select("id, code, tracking_code, status, origin_city, destination_city, client_amount, distance_km, created_at")
         .eq("vehicle_id", vehicleId)
         .order("created_at", { ascending: false })
         .limit(50);
@@ -141,7 +147,7 @@ function VehicleHistory({ vehicleId }: { vehicleId: string }) {
 
   const rows = (q.data ?? []) as any[];
   const totalKm = rows.reduce((s, r) => s + Number(r.distance_km ?? 0), 0);
-  const totalRevenue = rows.reduce((s, r) => s + Number(r.price ?? 0), 0);
+  const totalRevenue = rows.reduce((s, r) => s + Number(r.client_amount ?? 0), 0);
 
   return (
     <div className="space-y-4">
@@ -176,7 +182,7 @@ function VehicleHistory({ vehicleId }: { vehicleId: string }) {
                   <td className="px-4 py-3 text-muted-foreground">{r.origin_city ?? "—"} → {r.destination_city ?? "—"}</td>
                   <td className="px-4 py-3 text-xs uppercase text-muted-foreground">{r.status}</td>
                   <td className="px-4 py-3 text-right text-muted-foreground">{r.distance_km ? `${r.distance_km} km` : "—"}</td>
-                  <td className="px-4 py-3 text-right">{r.price ? Number(r.price).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : "—"}</td>
+                  <td className="px-4 py-3 text-right">{r.client_amount ? Number(r.client_amount).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : "—"}</td>
                   <td className="px-4 py-3 text-right text-xs text-muted-foreground">{formatDate(r.created_at)}</td>
                 </tr>
               ))}

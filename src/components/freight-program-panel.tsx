@@ -70,7 +70,7 @@ export function FreightProgramPanel({ order }: { order: any }) {
   const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
-    if (q.data?.program) setForm(q.data.program);
+    if (q.data?.program) setForm({ ...q.data.program, freight_value: order.driver_amount });
   }, [q.data?.program]);
 
   const total = useMemo(
@@ -82,6 +82,10 @@ export function FreightProgramPanel({ order }: { order: any }) {
     if (!q.data?.program) return;
     setSaving(true);
     try {
+      const driverAmount = form.freight_value === '' || form.freight_value == null ? null : Number(form.freight_value);
+      if (driverAmount != null && (!Number.isFinite(driverAmount) || driverAmount <= 0)) throw new Error('Informe um valor válido para o motorista.');
+      const amountResult = await supabase.from('orders').update({ driver_amount: driverAmount }).eq('id', orderId);
+      if (amountResult.error) throw amountResult.error;
       const { error } = await supabase
         .from("freight_programs")
         .update({

@@ -4,7 +4,12 @@ import { VehicleForm } from "@/components/vehicle-form";
 import { ArrowLeft } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/ops/veiculos/novo")({
-  head: () => ({ meta: [{ title: "Novo veículo — InfinitLog" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [
+      { name: "description", content: 'Novo veículo — InfinitLog. Informações e acompanhamento na plataforma INFINITLOG VAPT VUPT.' },
+      { property: "og:title", content: 'Novo veículo — InfinitLog' },
+      { property: "og:description", content: 'Novo veículo — InfinitLog. Informações e acompanhamento na plataforma INFINITLOG VAPT VUPT.' },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Novo veículo — InfinitLog" }, { name: "robots", content: "noindex" }] }),
   component: NewVehicle,
 });
 

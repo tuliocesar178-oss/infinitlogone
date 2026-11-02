@@ -1,4 +1,5 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { DRIVER_ORDER_COLUMNS } from "@/lib/order-projections";
+import { createFileRoute, Link, useNavigate, Outlet, useRouterState } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,9 +11,19 @@ import { OfferRichCard } from "@/components/driver/offer-rich-card";
 import { DriverQuickChat } from "@/components/driver/quick-chat";
 
 export const Route = createFileRoute("/_authenticated/driver/ofertas")({
-  head: () => ({ meta: [{ title: "Ofertas — Motorista" }, { name: "robots", content: "noindex" }] }),
-  component: DriverOffers,
+  head: () => ({ meta: [
+      { name: "description", content: 'Ofertas — Motorista. Informações e acompanhamento na plataforma INFINITLOG VAPT VUPT.' },
+      { property: "og:title", content: 'Ofertas — Motorista' },
+      { property: "og:description", content: 'Ofertas — Motorista. Informações e acompanhamento na plataforma INFINITLOG VAPT VUPT.' },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Ofertas — Motorista" }, { name: "robots", content: "noindex" }] }),
+  component: DriverOffersRoute,
 });
+
+function DriverOffersRoute() {
+  const pathname = useRouterState({ select: state => state.location.pathname });
+  return pathname.replace(/\/$/, '') === '/driver/ofertas' ? <DriverOffers /> : <Outlet />;
+}
 
 type FilterKey = "novas" | "negociacao" | "expirando" | "favoritas" | "todas";
 
@@ -81,7 +92,7 @@ function DriverOffers() {
 
       const ids = offers.map((o) => o.order_id);
       const [{ data: orders }, { data: programs }] = await Promise.all([
-        supabase.from("orders").select("*, distance_km, estimated_minutes").in("id", ids),
+        supabase.from("orders").select(DRIVER_ORDER_COLUMNS).in("id", ids),
         supabase.from("freight_programs").select("*").in("order_id", ids),
       ]);
 

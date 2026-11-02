@@ -183,6 +183,13 @@
       "when": 1793198738993,
       "tag": "0025_fix_completeness_status_check",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1793648444659,
+      "tag": "0026_separate_freight_values_and_protect_commercial_reads",
+      "breakpoints": true
     }
   ]
 }

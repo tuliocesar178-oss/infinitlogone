@@ -39,7 +39,7 @@ export type Order = {
   cargo_type: string | null;
   cargo_weight_kg: number | null;
   volumes: number | null;
-  price: number | null;
+  driver_amount: number | null;
   distance_km?: number | null;
   distance_to_destination_km: number | null;
   eta_minutes: number | null;

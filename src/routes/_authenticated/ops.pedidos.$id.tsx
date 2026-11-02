@@ -1,3 +1,4 @@
+import { COMMERCIAL_ORDERS, COMMERCIAL_ORDER_EVENTS } from "@/lib/order-projections";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
@@ -46,7 +47,7 @@ function OrderDetail() {
     queryKey: ["order", id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("orders")
+        .from(COMMERCIAL_ORDERS)
         .select("*, chat_rooms!chat_rooms_order_id_fkey(id)")
         .eq("id", id)
         .single();
@@ -68,7 +69,7 @@ function OrderDetail() {
     queryKey: ["order-events", id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("order_events")
+        .from(COMMERCIAL_ORDER_EVENTS)
         .select("*")
         .eq("order_id", id)
         .order("created_at", { ascending: false });
@@ -209,7 +210,9 @@ function OrderDetail() {
                   <Info k="Peso" v={order.cargo_weight_kg ? `${order.cargo_weight_kg} kg` : null} />
                   <Info k="Volumes" v={order.volumes} />
                   <Info k="Valor da carga" v={order.cargo_value ? brl(order.cargo_value) : null} />
-                  <Info k="Valor negociado" v={order.price ? brl(order.price) : null} />
+                  <Info k="Valor do cliente" v={order.client_amount != null ? brl(order.client_amount) : 'Valor pendente'} />
+                  <Info k="Valor do motorista" v={order.driver_amount != null ? brl(order.driver_amount) : 'Valor pendente'} />
+                  <Info k="Margem bruta" v={order.margin_amount != null ? brl(order.margin_amount) : 'Valor pendente'} />
                   <Info k="Descrição" v={order.cargo_description} />
                   <Info k="Observações" v={order.notes} />
                 </Panel>
@@ -298,7 +301,7 @@ function OfferPanel({ order, onChanged }: { order: any; onChanged: () => void })
         order_id: order.id,
         driver_id: d.user_id,
         // Valor ofertado ao motorista (nunca o valor negociado com o cliente)
-        offered_price: order.driver_amount ?? order.price ?? 0,
+        offered_price: order.driver_amount ?? 0,
         expires_at: expiresAt,
       }));
       const { error: oErr } = await supabase.from("freight_offers").insert(rows);

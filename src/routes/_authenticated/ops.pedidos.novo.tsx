@@ -394,7 +394,7 @@ function NewOrderWizard() {
   const tolls = num(f.toll) ?? 0;
   const extraCosts = (num(f.fuel) ?? 0) + (num(f.escort) ?? 0) + (num(f.license) ?? 0) + (num(f.other_costs) ?? 0);
   const marginAmount = num(f.margin_amount) ?? 0;
-  const negotiated = num(f.driver_price) ?? num(f.price) ?? 0;
+  const negotiated = num(f.driver_price) ?? 0;
   const clientFreightValue = num(f.price) ?? 0;
   const suggestedValue = (antt?.minimum_freight ?? 0) + tolls + extraCosts + marginAmount;
   const belowFloor =
@@ -417,6 +417,7 @@ function NewOrderWizard() {
     try { testMode = await readTestMode(); } catch (error) { toast.error(error instanceof Error ? error.message : 'Não foi possível conferir as exigências.'); return; }
     if (!testMode) for(const type of ['origin','destination'] as const){const problem=addressError(addressValue(type));if(problem)return toast.error(`${type==='origin'?'Coleta':'Entrega'}: ${problem}`);}
     if(publish && !testMode && !routeInfo)return toast.error('Aguarde o cálculo da rota ou confira os pontos de coleta e entrega.');
+    if (publish && !(negotiated > 0)) return toast.error('Informe o valor destinado ao motorista antes de publicar.');
     // Bloqueio legal: não é permitido publicar carga lotação abaixo do piso mínimo ANTT.
     if (publish && belowFloor && antt?.minimum_freight != null) {
       return toast.error(
@@ -429,7 +430,7 @@ function NewOrderWizard() {
     setSaving(true);
     try {
       const { data: u } = await supabase.auth.getUser();
-      const canOffer = publish && routeInfo !== null && (num(f.driver_price) ?? num(f.price) ?? 0) > 0;
+      const canOffer = publish && routeInfo !== null && negotiated > 0;
       const payload = {
         client_id: selectedClientId || null,
         work_id: selectedWorkId || null,
@@ -450,7 +451,7 @@ function NewOrderWizard() {
         antt_calculated_at: antt?.status === "ok" ? antt.calculation_date : null,
         antt_rate_table_id: antt?.rate_table_id ?? null,
         suggested_value: antt?.minimum_freight != null && suggestedValue > 0 ? suggestedValue : null,
-        margin_amount: marginAmount || null,
+        margin_amount: num(f.price) != null && num(f.driver_price) != null ? Math.round(((num(f.price) ?? 0) - (num(f.driver_price) ?? 0)) * 100) / 100 : null,
         client_name: f.client_name || null,
         contact_name: f.contact_name || null,
         contact_phone: f.contact_phone || null,
@@ -623,7 +624,7 @@ function NewOrderWizard() {
       let offersSent = 0;
       if (canOffer) {
         offersSent = await sendOffersToEligibleDrivers(order.id, {
-          price: num(f.driver_price) ?? num(f.price) ?? 0,
+          price: negotiated,
           minutes: f.offer_minutes ? Number(f.offer_minutes) : 15,
           vehicleType: f.req_vehicle_type,
           capacityKg: num(f.req_capacity_kg),

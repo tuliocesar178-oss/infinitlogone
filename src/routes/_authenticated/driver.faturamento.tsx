@@ -1,3 +1,4 @@
+import { driverValueLabel } from "@/lib/freight-values";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -9,7 +10,12 @@ import { getDriverFinancials } from "@/lib/secure-driver-financials.functions";
 import { useServerFn } from "@tanstack/react-start";
 
 export const Route = createFileRoute("/_authenticated/driver/faturamento")({
-  head: () => ({ meta: [{ title: "Meu faturamento — Motorista" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [
+      { name: "description", content: 'Meu faturamento — Motorista. Informações e acompanhamento na plataforma INFINITLOG VAPT VUPT.' },
+      { property: "og:title", content: 'Meu faturamento — Motorista' },
+      { property: "og:description", content: 'Meu faturamento — Motorista. Informações e acompanhamento na plataforma INFINITLOG VAPT VUPT.' },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Meu faturamento — Motorista" }, { name: "robots", content: "noindex" }] }),
   component: DriverBilling,
 });
 
@@ -39,7 +45,7 @@ function DriverBilling() {
         .maybeSingle();
       let financials: Awaited<ReturnType<typeof loadFinancials>> = null;
       try {
-        financials = await loadFinancials({ data: { user_id: userId! } });
+        financials = await loadFinancials({ data: { user_id: userId } });
       } catch {
         financials = null;
       }
@@ -56,7 +62,7 @@ function DriverBilling() {
     queryFn: async () => {
       const { data } = await supabase
         .from("orders")
-        .select("id, code, status, price, created_at, updated_at, origin_city, destination_city")
+        .select("id, code, status, driver_amount, created_at, updated_at, origin_city, destination_city")
         .eq("driver_id", userId)
         .gte("updated_at", start)
         .lt("updated_at", end)
@@ -66,13 +72,26 @@ function DriverBilling() {
   });
 
   const orders = ordersQ.data ?? [];
+  const paymentsQ = useQuery({
+    enabled: !!userId,
+    queryKey: ['driver-payments', userId, start, end],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('driver_payments')
+        .select('order_id,status,gross_amount,net_amount,paid_amount,paid_at,created_at')
+        .eq('driver_id', userId).gte('created_at', start).lt('created_at', end);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+  const payments = paymentsQ.data ?? [];
   const done = orders.filter((o) => ["delivered", "finalized"].includes(o.status));
   const inProgress = orders.filter((o) => !["delivered", "finalized", "cancelled"].includes(o.status));
-  const awaitingPay = done.filter((o) => o.status === "delivered");
-  const paid = done.filter((o) => o.status === "finalized");
-  const total = done.reduce((s, o) => s + (Number(o.price) || 0), 0);
-  const toReceive = awaitingPay.reduce((s, o) => s + (Number(o.price) || 0), 0);
-  const received = paid.reduce((s, o) => s + (Number(o.price) || 0), 0);
+  const paidIds = new Set(payments.filter(p => p.status === 'pago').map(p => p.order_id));
+  const awaitingPay = done.filter((o) => !paidIds.has(o.id));
+  const paid = done.filter((o) => paidIds.has(o.id));
+  const total = done.reduce((s, o) => s + (Number(o.driver_amount) || 0), 0);
+  const toReceive = awaitingPay.reduce((s, o) => s + Number(payments.find(p => p.order_id === o.id && p.status !== 'cancelado')?.net_amount ?? o.driver_amount ?? 0), 0);
+  const received = payments.filter(p => p.status === 'pago').reduce((s, p) => s + Number(p.paid_amount ?? p.net_amount), 0);
 
   const MONTHS = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
   const years = [now.getFullYear() - 1, now.getFullYear()];
@@ -179,7 +198,7 @@ function FreightLine({ o }: { o: any }) {
         </div>
       </div>
       <div className="text-right">
-        <div className="font-semibold">{brl(o.price)}</div>
+        <div className="font-semibold">{driverValueLabel(o.driver_amount)}</div>
         <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
           {new Date(o.updated_at).toLocaleDateString("pt-BR")}
         </div>

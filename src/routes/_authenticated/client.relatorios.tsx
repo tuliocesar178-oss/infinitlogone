@@ -28,6 +28,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { STATUS_LABEL, statusBadgeClass } from "@/lib/order-status";
 
 export const Route = createFileRoute("/_authenticated/client/relatorios")({
+  head: () => ({ meta: [{ title: 'client · relatorios — INFINITLOG' }, { name: "description", content: 'client · relatorios — INFINITLOG. Informações e acompanhamento na plataforma INFINITLOG VAPT VUPT.' }, { property: "og:title", content: 'client · relatorios — INFINITLOG' }, { property: "og:description", content: 'client · relatorios — INFINITLOG. Informações e acompanhamento na plataforma INFINITLOG VAPT VUPT.' }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" } ] }),
   component: ClientReports,
 });
 

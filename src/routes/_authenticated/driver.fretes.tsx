@@ -1,3 +1,4 @@
+import { driverValueLabel } from "@/lib/freight-values";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -44,7 +45,7 @@ function DriverFreights() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("orders")
-        .select("id, code, tracking_code, status, origin_address, origin_city, destination_address, destination_city, origin_lat, origin_lng, destination_lat, destination_lng, current_lat, current_lng, price, distance_km, cargo_description, updated_at")
+        .select("id, code, tracking_code, status, origin_address, origin_city, destination_address, destination_city, origin_lat, origin_lng, destination_lat, destination_lng, current_lat, current_lng, driver_amount, distance_km, cargo_description, updated_at")
         .eq("driver_id", userId)
         .order("updated_at", { ascending: false })
         .limit(100);
@@ -118,7 +119,7 @@ function DriverFreights() {
                   <div className="grid grid-cols-3 gap-2 text-xs">
                     <div className="rounded-lg bg-surface p-2">
                       <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Valor</div>
-                      <div className="mt-0.5 font-semibold">{brl(o.price)}</div>
+                      <div className="mt-0.5 font-semibold">{driverValueLabel(o.driver_amount)}</div>
                     </div>
                     <div className="rounded-lg bg-surface p-2">
                       <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Distância</div>

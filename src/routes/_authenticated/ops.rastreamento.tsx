@@ -1,3 +1,4 @@
+import { COMMERCIAL_ORDERS } from "@/lib/order-projections";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -28,6 +29,10 @@ import {
 export const Route = createFileRoute("/_authenticated/ops/rastreamento")({
   head: () => ({
     meta: [
+      { property: "og:title", content: 'Rastreamento em Tempo Real — InfinitLog' },
+      { property: "og:description", content: 'Rastreamento em Tempo Real — InfinitLog. Informações e acompanhamento na plataforma INFINITLOG VAPT VUPT.' },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Rastreamento em Tempo Real — InfinitLog" },
       { name: "description", content: "Central de monitoramento de motoristas, veículos e operações em tempo real." },
       { name: "robots", content: "noindex" },
@@ -84,7 +89,7 @@ function TrackingCenter() {
     queryKey: ["tracking-center", role, userId],
     refetchInterval: 8000,
     queryFn: async () => {
-      let oq = supabase.from("orders").select("*, vehicle:vehicles(*)").is("deleted_at", null);
+      let oq = supabase.from(COMMERCIAL_ORDERS).select("*, vehicle:vehicles(*)").is("deleted_at", null);
       if (role === "client") oq = oq.eq("client_id", userId);
       if (role === "driver") oq = oq.eq("driver_id", userId);
       const { data: orders, error } = await oq.order("updated_at", { ascending: false }).limit(400);

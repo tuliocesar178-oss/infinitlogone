@@ -1,3 +1,4 @@
+import { COMMERCIAL_ORDERS } from "@/lib/order-projections";
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
@@ -23,9 +24,9 @@ export function OrderDrawer({ orderId, onClose }: { orderId: string | null; onCl
     queryFn: async () => {
       if (!orderId) return null;
       const { data, error } = await supabase
-        .from("orders")
+        .from(COMMERCIAL_ORDERS)
         .select(
-          "id, code, tracking_code, status, client_name, contact_phone, origin_city, origin_address, destination_city, destination_address, destination_lat, destination_lng, distance_km, distance_to_destination_km, initial_distance_km, eta_minutes, last_ping_at, price, cargo_description, cargo_weight_kg, volumes, driver_id, vehicle_id, delivery_window_end, created_at",
+          "id, code, tracking_code, status, client_name, contact_phone, origin_city, origin_address, destination_city, destination_address, destination_lat, destination_lng, distance_km, distance_to_destination_km, initial_distance_km, eta_minutes, last_ping_at, client_amount, cargo_description, cargo_weight_kg, volumes, driver_id, vehicle_id, delivery_window_end, created_at",
         )
         .eq("id", orderId)
         .maybeSingle();
@@ -126,7 +127,7 @@ export function OrderDrawer({ orderId, onClose }: { orderId: string | null; onCl
 
             <section className="grid grid-cols-2 gap-2">
               <Stat icon={<Clock className="h-3.5 w-3.5" />} label="ETA" value={o.eta_minutes != null && o.last_ping_at && Date.now()-Date.parse(o.last_ping_at)<=180000 ? `${o.eta_minutes} min` : "Sem previsão confiável"} />
-              <Stat icon={<Package className="h-3.5 w-3.5" />} label="Valor" value={formatBRL(o.price)} />
+              <Stat icon={<Package className="h-3.5 w-3.5" />} label="Valor" value={formatBRL(o.client_amount)} />
               <Stat icon={<Truck className="h-3.5 w-3.5" />} label="Motorista" value={q.data?.driver?.full_name ?? "—"} />
               <Stat icon={<Truck className="h-3.5 w-3.5" />} label="Veículo" value={q.data?.vehicle?.plate ?? "—"} />
             </section>

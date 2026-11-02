@@ -5,7 +5,12 @@ import { Clock, CheckCircle2, XCircle, AlertTriangle, LogOut } from "lucide-reac
 import { Logo } from "@/components/logo";
 
 export const Route = createFileRoute("/aguardando-aprovacao")({
-  head: () => ({ meta: [{ title: "Aguardando aprovação — InfinitLog" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [
+      { name: "description", content: 'Aguardando aprovação — InfinitLog. Informações e acompanhamento na plataforma INFINITLOG VAPT VUPT.' },
+      { property: "og:title", content: 'Aguardando aprovação — InfinitLog' },
+      { property: "og:description", content: 'Aguardando aprovação — InfinitLog. Informações e acompanhamento na plataforma INFINITLOG VAPT VUPT.' },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Aguardando aprovação — InfinitLog" }, { name: "robots", content: "noindex" }] }),
   component: PendingPage,
 });
 

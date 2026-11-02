@@ -10,7 +10,12 @@ export const Route = createFileRoute("/_authenticated/driver")({
     const target = areaGateTarget(await requireRoles(user.id), "driver");
     if (target) throw redirect({ to: target });
   },
-  head: () => ({ meta: [{ title: "Motorista — InfinitLog" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [
+      { name: "description", content: 'Motorista — InfinitLog. Informações e acompanhamento na plataforma INFINITLOG VAPT VUPT.' },
+      { property: "og:title", content: 'Motorista — InfinitLog' },
+      { property: "og:description", content: 'Motorista — InfinitLog. Informações e acompanhamento na plataforma INFINITLOG VAPT VUPT.' },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Motorista — InfinitLog" }, { name: "robots", content: "noindex" }] }),
   component: DriverLayout,
 });
 

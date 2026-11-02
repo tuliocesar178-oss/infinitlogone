@@ -1,3 +1,4 @@
+import { COMMERCIAL_ORDERS } from "@/lib/order-projections";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { monitoringSchema, DEFAULT_MONITORING, detectAlerts, type TelemetryPoint } from "@/lib/operation-board-monitor";
@@ -7,7 +8,7 @@ export async function getBoardAlertsForSync(db: SupabaseClient<Database>) {
   const config=await db.from("app_settings").select("value").eq("key","operation_board_monitoring").maybeSingle(); if(config.error) throw config.error;
   const parsed=monitoringSchema.safeParse(config.data?.value ?? {}); const settings=parsed.success ? parsed.data:DEFAULT_MONITORING;
   const rows=[];
-  for(let offset=0;;offset+=1000) { const r=await db.from("orders").select("*").is("deleted_at",null).in("status",ACTIVE_STATUSES as Database["public"]["Enums"]["order_status"][]).order("id").range(offset,offset+999); if(r.error) throw r.error; rows.push(...(r.data ?? [])); if((r.data?.length ?? 0)<1000) break; }
+  for(let offset=0;;offset+=1000) { const r=await db.from(COMMERCIAL_ORDERS).select("*").is("deleted_at",null).in("status",ACTIVE_STATUSES as Database["public"]["Enums"]["order_status"][]).order("id").range(offset,offset+999); if(r.error) throw r.error; rows.push(...(r.data ?? [])); if((r.data?.length ?? 0)<1000) break; }
   const alerts=[];
   const samplesByOrder=new Map<string,TelemetryPoint[]>();
   const existing: Pick<Database["public"]["Tables"]["incidents"]["Row"],"order_id"|"type"|"alert_key"|"resolved_at"|"alert_metadata">[]=[];

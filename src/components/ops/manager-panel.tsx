@@ -1,3 +1,4 @@
+import { COMMERCIAL_ORDERS } from "@/lib/order-projections";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { formatBRL } from "@/lib/ops-central";
@@ -15,8 +16,8 @@ export function ManagerPanel() {
     queryFn: async () => {
       const [ordersRes, costsRes, routesRes, vehiclesRes] = await Promise.all([
         supabase
-          .from("orders")
-          .select("id, price, distance_km, driver_id, client_name, vehicle_id, status, created_at")
+          .from(COMMERCIAL_ORDERS)
+          .select("id, client_amount, distance_km, driver_id, client_name, vehicle_id, status, created_at")
           .gte("created_at", monthISO)
           .is("deleted_at", null),
         supabase.from("freight_costs").select("amount, kind, created_at").gte("created_at", monthISO),
@@ -31,7 +32,7 @@ export function ManagerPanel() {
       const routes = routesRes.data ?? [];
       const vehicles = vehiclesRes.data ?? [];
 
-      const faturamento = orders.reduce((s, o) => s + (Number(o.price) || 0), 0);
+      const faturamento = orders.reduce((s, o) => s + (Number(o.client_amount) || 0), 0);
       const despesas = costs.reduce((s, c) => s + (Number(c.amount) || 0), 0);
       const lucro = faturamento - despesas;
       const totalKm = routes.reduce((s, r) => s + (Number(r.total_distance_km) || 0), 0);
@@ -44,7 +45,7 @@ export function ManagerPanel() {
         if (!o.driver_id) continue;
         const cur = byDriver.get(o.driver_id) ?? { deliveries: 0, revenue: 0 };
         cur.deliveries++;
-        cur.revenue += Number(o.price) || 0;
+        cur.revenue += Number(o.client_amount) || 0;
         byDriver.set(o.driver_id, cur);
       }
       const driverIds = Array.from(byDriver.keys());
@@ -62,7 +63,7 @@ export function ManagerPanel() {
       for (const o of orders) {
         const key = o.client_name ?? "—";
         const cur = byClient.get(key) ?? { revenue: 0, count: 0 };
-        cur.revenue += Number(o.price) || 0;
+        cur.revenue += Number(o.client_amount) || 0;
         cur.count++;
         byClient.set(key, cur);
       }

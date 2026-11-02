@@ -6,6 +6,8 @@ import { Logo } from "@/components/logo";
 export const Route = createFileRoute("/rastreio/")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Rastrear pedido — InfinitLog" },
       { name: "description", content: "Acompanhe sua carga em tempo real. Digite o código de rastreio ou o número do pedido." },
       { property: "og:title", content: "Rastrear pedido — InfinitLog" },
