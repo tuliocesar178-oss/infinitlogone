@@ -1,5 +1,12 @@
 # Roadmap
 
+## Integração do mapa operacional (02/11)
+- [x] Compartilhar consultas, atualizações e regras entre Rotas ativas e Rastreamento
+- [x] Adicionar filtros, indicadores, seleção e acompanhamento com GPS e trajetos reais
+- [x] 122 testes passaram; sessão administrativa confirmou seleção, acompanhamento, filtros e mapas nas três telas sem erro; tela 654x639 sem rolagem horizontal
+- [ ] Verificar deslocamento GPS em tempo real no celular — depende de motorista em operação com GPS ativo; registros disponíveis estavam desatualizados
+- [ ] Solicitar publicação após verificações
+
 ## Separação dos valores de frete (02/11)
 - [x] Corrigir criação, despacho, negociação, aceite e pagamentos com valores independentes
 - [x] Proteger consultas do motorista contra exposição comercial e sinalizar valores antigos pendentes

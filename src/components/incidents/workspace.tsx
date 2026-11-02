@@ -13,11 +13,11 @@ import { IncidentDetail } from './detail';
 import { IncidentCategories } from './categories';
 import { cn } from '@/lib/utils';
 
-export interface IncidentWorkspaceProps { driver?: boolean; orderId?: string; reportOnly?: boolean; onClose?: () => void; }
-export function IncidentWorkspace({ driver = false, orderId, reportOnly = false, onClose }: IncidentWorkspaceProps) {
+export interface IncidentWorkspaceProps { driver?: boolean; orderId?: string; reportOnly?: boolean; onClose?: () => void; initialIncidentId?: string; }
+export function IncidentWorkspace({ driver = false, orderId, reportOnly = false, onClose, initialIncidentId }: IncidentWorkspaceProps) {
   const read = useServerFn(getIncidentWorkspace), qc = useQueryClient();
   const q = useQuery({ queryKey: ['incident-workspace', driver], queryFn: () => read(), refetchInterval: 15000 });
-  const [report, setReport] = useState(reportOnly), [detail, setDetail] = useState<string | null>(null), [categories, setCategories] = useState(false);
+  const [report, setReport] = useState(reportOnly), [detail, setDetail] = useState<string | null>(initialIncidentId ?? null), [categories, setCategories] = useState(false);
   const [search, setSearch] = useState(''), [category, setCategory] = useState(''), [priority, setPriority] = useState(''), [status, setStatus] = useState('');
   const [from, setFrom] = useState(''), [to, setTo] = useState('');
   useEffect(() => {

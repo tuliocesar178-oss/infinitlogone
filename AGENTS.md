@@ -35,3 +35,4 @@
 - Empty vehicle plate means pending registration, with uniqueness enforced only for known plates; never generate a fictitious plate to persist incomplete vehicle details.
 - Never compare float8 coordinates with exact equality in API filters; reads may return fewer digits than stored, so use a 1e-6° tolerance range (~0.1 m) for route concurrency guards.
 - Keep commercial order reads behind an authorized read-only view, base-table driver reads column-limited, and driver payment sources independent; database acceptance and margin triggers enforce value integrity without rewriting legacy amounts.
+- Operational route maps reuse the authorized operation-board query, shared realtime hook and TrackingMap workspace; paired coordinate/timestamp precedence and configurable deadline rules prevent divergent tracking signals.

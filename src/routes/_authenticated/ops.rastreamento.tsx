@@ -1,3 +1,7 @@
+import { OperationalMapWorkspace } from "@/components/ops/operational-map-workspace";
+import { Button } from "@/components/ui/button";
+import { lazy, Suspense } from "react";
+import { ClientOnly } from "@tanstack/react-router";
 import { COMMERCIAL_ORDERS } from "@/lib/order-projections";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
@@ -5,7 +9,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/app-shell";
-import { TrackingMap, type MapPin, type MapUnit } from "@/components/ops/tracking-map";
+import type { MapPin, MapUnit } from "@/components/ops/tracking-map";
+const TrackingMap = lazy(() => import("@/components/ops/tracking-map").then(m => ({ default: m.TrackingMap })));
 import { fetchDrivingRoute } from "@/lib/tracking.functions";
 import { STATUS_LABEL } from "@/lib/order-status";
 import { haversineKm } from "@/lib/geo";
@@ -38,8 +43,14 @@ export const Route = createFileRoute("/_authenticated/ops/rastreamento")({
       { name: "robots", content: "noindex" },
     ],
   }),
-  component: TrackingCenter,
+  component: TrackingPage,
 });
+
+function TrackingPage() {
+  const [history, setHistory] = useState(false);
+  if (history) return <><div className="px-4 pt-4"><Button variant="outline" onClick={() => setHistory(false)}>Voltar às rotas ativas</Button></div><TrackingCenter /></>;
+  return <AppShell title="Rastreamento" subtitle="Monitoramento de motoristas, veículos e operações em tempo real" actions={<Button variant="outline" onClick={() => setHistory(true)}>Histórico e replay</Button>}><OperationalMapWorkspace /></AppShell>;
+}
 
 const ACTIVE_EXCLUDE = "(delivered,finalized,cancelled)";
 
@@ -537,7 +548,7 @@ function TrackingCenter() {
         )}
 
         <div className="relative flex h-[70vh] min-h-[520px] overflow-hidden rounded-2xl border border-border bg-surface">
-          <TrackingMap
+          <ClientOnly><Suspense fallback={<p>Carregando mapa…</p>}><TrackingMap
             className="flex-1"
             units={mapUnits}
             pins={pins}
@@ -547,7 +558,7 @@ function TrackingCenter() {
             onSelect={select}
             focusToken={focusToken}
             fitToken={fitToken}
-          />
+          /></Suspense></ClientOnly>
 
           <button
             onClick={() => setPanelOpen((o) => !o)}

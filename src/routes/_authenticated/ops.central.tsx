@@ -19,6 +19,7 @@ import { OrderDrawer } from "@/components/ops/order-drawer";
 import { formatBRL } from "@/lib/ops-central";
 import { DRIVER_COLUMNS } from "@/lib/driver-columns";
 import { Button } from '@/components/ui/button';
+import { OperationalMapWorkspace } from '@/components/ops/operational-map-workspace';
 
 export const Route = createFileRoute("/_authenticated/ops/central")({
   head: () => ({
@@ -223,6 +224,7 @@ function TorreDeControle() {
           ))}
         </div>
 
+        <OperationalMapWorkspace />
         <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
           {/* Kanban Board */}
           <div className="min-w-0 overflow-x-auto pb-4">

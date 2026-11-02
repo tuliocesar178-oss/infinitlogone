@@ -69,6 +69,7 @@ export function TrackingMap({
   fitToken,
   className,
   routes = [],
+  followSelected = false,
 }: {
   units: MapUnit[];
   pins?: MapPin[];
@@ -79,7 +80,8 @@ export function TrackingMap({
   focusToken?: number;
   fitToken?: number;
   className?: string;
-  routes?: { id: string; geometry: GeoJSON.LineString; critical?: boolean }[];
+  routes?: { id: string; geometry: GeoJSON.LineString; critical?: boolean; stale?: boolean }[];
+  followSelected?: boolean;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
@@ -136,7 +138,7 @@ export function TrackingMap({
     map.on("load", () => map.resize());
     map.on("idle", () => {
       if (!map.isStyleLoaded()) return;
-      if (!map.getLayer("board-routes-line") || !map.getLayer("planned-route") || !map.getLayer("traveled-route")) drawLines();
+      if (!map.getLayer("board-routes-line") || !map.getLayer("board-routes-stale") || !map.getLayer("planned-route") || !map.getLayer("traveled-route")) drawLines();
     });
     map.on("click", "board-routes-line", e => {
       const id = e.features?.[0]?.properties?.id;
@@ -247,16 +249,18 @@ export function TrackingMap({
     setLine("traveled-route", traveled ?? null, "#22c55e", 5);
     const map = mapRef.current;
     if (!map || !map.isStyleLoaded()) return;
-    const data: GeoJSON.FeatureCollection<GeoJSON.LineString> = { type: "FeatureCollection", features: routes.map(r => ({type:"Feature", geometry:r.geometry, properties:{id:r.id, selected:r.id===selectedId, muted:Boolean(selectedId && r.id!==selectedId),critical:Boolean(r.critical)}})) };
+    const palette = ["--brand", "--cyan", "--success", "--warning", "--primary"];
+    const data: GeoJSON.FeatureCollection<GeoJSON.LineString> = { type: "FeatureCollection", features: routes.map(r => ({type:"Feature", geometry:r.geometry, properties:{id:r.id, selected:r.id===selectedId, muted:Boolean(selectedId && r.id!==selectedId),critical:Boolean(r.critical),stale:Boolean(r.stale),colorIndex:Array.from(r.id).reduce((n,c)=>n+c.charCodeAt(0),0)%palette.length}})) };
     const src=map.getSource("board-routes") as mapboxgl.GeoJSONSource | undefined;
     if(src) src.setData(data); else map.addSource("board-routes",{type:"geojson",data});
     const resolveColor=(token:string)=>{const el=document.createElement("span"); el.style.color=`var(${token})`; containerRef.current?.appendChild(el); const color=getComputedStyle(el).color; const canvas=document.createElement("canvas"); const ctx=canvas.getContext("2d"); if(!ctx){el.remove();return color;} ctx.fillStyle=color;ctx.fillRect(0,0,1,1); const pixel=ctx.getImageData(0,0,1,1).data;el.remove();return `rgb(${pixel[0]}, ${pixel[1]}, ${pixel[2]})`;};
     if(!map.getLayer("board-routes-line")) {
-      map.addLayer({id:"board-routes-line",type:"line",source:"board-routes",layout:{"line-cap":"round","line-join":"round"},paint:{"line-color":["case",["get","critical"],resolveColor("--destructive"),resolveColor("--brand")],"line-width":["case",["get","selected"],8,4],"line-opacity":["case",["get","muted"],0.25,0.95]}});
+      map.addLayer({id:"board-routes-line",type:"line",source:"board-routes",layout:{"line-cap":"round","line-join":"round"},paint:{"line-color":["case",["get","critical"],resolveColor("--destructive"),["match",["get","colorIndex"],0,resolveColor(palette[0]),1,resolveColor(palette[1]),2,resolveColor(palette[2]),3,resolveColor(palette[3]),resolveColor(palette[4])]],"line-width":["case",["get","selected"],8,4],"line-opacity":["case",["get","muted"],0.55,0.95]}});
     }
-    const coordinates=routes.filter(r=>!selectedId || r.id===selectedId).flatMap(r=>r.geometry.coordinates);
+    if (!map.getLayer("board-routes-stale")) map.addLayer({id:"board-routes-stale",type:"line",source:"board-routes",filter:["==",["get","stale"],true],paint:{"line-color":resolveColor("--muted-foreground"),"line-width":3,"line-dasharray":[2,2]}});
+    const coordinates=routes.flatMap(r=>r.geometry.coordinates);
     if(coordinates.length && map.getSource("board-routes") && map.getLayer("board-routes-line")) {
-      const signature=routes.map(r=>r.id).join(",")+selectedId;
+      const signature=routes.map(r=>r.id).join(",");
       if(containerRef.current?.dataset.routeFit!==signature) {
         if(containerRef.current) containerRef.current.dataset.routeFit=signature;
         const bounds=new mapboxgl.LngLatBounds();for(const p of coordinates) bounds.extend([p[0],p[1]]);
@@ -341,6 +345,12 @@ export function TrackingMap({
       entry.badge.textContent = u.statusLabel ?? TRACK_KIND[u.kind].label;
       entry.badge.style.background = color;
       entry.el.title = `${u.title}${u.subtitle ? ` — ${u.subtitle}` : ""}`;
+      entry.el.setAttribute("role", "button");
+      entry.el.setAttribute("aria-label", `${u.title} — ${u.subtitle ?? u.statusLabel ?? "Rota"}`);
+      entry.el.tabIndex = 0;
+      entry.el.onkeydown = event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); selectRef.current?.(u.id); } };
+      if (u.heading != null && Number.isFinite(u.heading) && !u.avatarUrl) entry.media.style.rotate = `${u.heading}deg`;
+      else entry.media.style.rotate = "";
       entry.media.style.border = `3px solid ${color}`;
       entry.media.style.boxShadow = isSel
         ? `0 0 0 6px ${color}44, 0 4px 12px rgba(0,0,0,.35)`
@@ -363,6 +373,12 @@ export function TrackingMap({
         entry.marker.remove();
         markers.current.delete(id);
       }
+    }
+    if (units.length && !routes.length && containerRef.current?.dataset.unitFit !== units.map(u => u.id).join(",")) {
+      if (containerRef.current) containerRef.current.dataset.unitFit = units.map(u => u.id).join(",");
+      const bounds = new mapboxgl.LngLatBounds();
+      for (const u of units) if (Number.isFinite(u.lng) && Number.isFinite(u.lat)) bounds.extend([u.lng, u.lat]);
+      if (!bounds.isEmpty()) map.fitBounds(bounds, { padding: 70, maxZoom: 12, duration: 600 });
     }
   }, [units, selectedId, onSelect, mapLoaded]);
 
@@ -387,6 +403,12 @@ export function TrackingMap({
     if (u) map.flyTo({ center: [u.lng, u.lat], zoom: 13.5, duration: 1100, essential: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focusToken]);
+
+  useEffect(() => {
+    if (!followSelected || !selectedId) return;
+    const unit = units.find(u => u.id === selectedId);
+    if (unit) mapRef.current?.easeTo({ center: [unit.lng, unit.lat], duration: 900 });
+  }, [followSelected, selectedId, units]);
 
   // fit all
   useEffect(() => {

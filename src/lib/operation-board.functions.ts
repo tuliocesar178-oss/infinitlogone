@@ -5,6 +5,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { BOARD_ROLES, monitoringSchema, DEFAULT_MONITORING, detectAlerts, type TelemetryPoint } from "@/lib/operation-board-monitor";
 import type { BoardOrder } from "@/lib/operation-board";
 import type { Database } from "@/integrations/supabase/types";
+import { trackingPosition } from "@/lib/operational-tracking";
 
 export const getOperationBoard = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
   const db = context.supabase;
@@ -40,10 +41,23 @@ export const getOperationBoard = createServerFn({ method: "GET" }).middleware([r
     }
   }
   const profileMap=new Map(profiles.map(p=>[p.id,p]));
+  const driverIds = [...new Set(rawOrders.map(o => o.driver_id).filter((id): id is string => Boolean(id)))];
+  const drivers = [];
+  for (let i = 0; i < driverIds.length; i += 100) {
+    const r = await db.from("drivers").select("user_id,full_name,phone,photo_url,current_lat,current_lng,current_heading,last_seen_at").in("user_id", driverIds.slice(i, i + 100));
+    if (r.error) throw r.error;
+    drivers.push(...(r.data ?? []));
+  }
+  const driverMap = new Map(drivers.map(d => [d.user_id, d]));
   const completion=new Map<string,string>();
   for(const e of events) if(!completion.has(e.order_id)) completion.set(e.order_id,e.created_at);
   for(const d of deliveries) if(d.delivered_at) completion.set(d.order_id,d.delivered_at);
-  const orders: BoardOrder[]=rawOrders.map(o=>({ ...o, driver:o.driver_id ? {full_name:profileMap.get(o.driver_id)?.full_name ?? null,phone:profileMap.get(o.driver_id)?.phone ?? null,photo_url:profileMap.get(o.driver_id)?.avatar_url ?? null}:null, responsible:o.created_by ? profileMap.get(o.created_by)?.full_name ?? null:null, incident:incidents.find(i=>i.order_id===o.id && !i.resolved_at) ?? null, actual_delivery_at:o.completed_at ?? completion.get(o.id) ?? null }));
+  const orders: BoardOrder[]=rawOrders.map(o=>{
+    const d = o.driver_id ? driverMap.get(o.driver_id) : undefined;
+    const p = o.driver_id ? profileMap.get(o.driver_id) : undefined;
+    // A fallback uses the driver's coordinate pair and its matching timestamp, never a mixed point.
+    return { ...o, ...trackingPosition(o, d), tracking_heading:d?.current_heading ?? null, driver:o.driver_id ? {full_name:p?.full_name ?? d?.full_name ?? null,phone:p?.phone ?? d?.phone ?? null,photo_url:p?.avatar_url ?? d?.photo_url ?? null}:null, responsible:o.created_by ? profileMap.get(o.created_by)?.full_name ?? null:null, incident:incidents.find(i=>i.order_id===o.id && !i.resolved_at && !i.closed_at) ?? null, actual_delivery_at:o.completed_at ?? completion.get(o.id) ?? null };
+  });
   const activeIds=orders.filter(o=>!["delivered","finalized","cancelled"].includes(o.status)).map(o=>o.id);
   const samples=new Map<string,TelemetryPoint[]>();
   const since=new Date(Date.now()-Math.max(settings.stopMinutes+settings.gpsMinutes+5,settings.confirmationMinutes+5)*60_000).toISOString();
