@@ -249,7 +249,7 @@ export function TrackingMap({
     const { planned, traveled, routes, selectedId } = latestLines.current;
     const plannedCoords =
       planned && planned.type === "LineString" ? (planned.coordinates as [number, number][]) : null;
-    setLine("planned-route", plannedCoords, mapColor("--primary"), 7);
+    setLine("planned-route", plannedCoords, mapColor("--brand"), 7);
     setLine("traveled-route", traveled ?? null, mapColor("--success"), 5);
     const map = mapRef.current;
     // Updating a GeoJSON source makes isStyleLoaded temporarily false; do not
