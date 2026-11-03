@@ -9,6 +9,8 @@ import type { MapUnit } from "@/components/ops/tracking-map";
 import { OperationalMapDetail } from "./operational-map-detail";
 import { cn } from "@/lib/utils";
 import { STATUS_LABEL } from "@/lib/order-status";
+import { useSelectedTrackingRoute } from "@/hooks/use-selected-tracking-route";
+import { trackingPoint } from "@/lib/tracking-route-model";
 
 const TrackingMap = lazy(() => import("./tracking-map").then(m => ({ default: m.TrackingMap })));
 const FILTERS: { key: OperationalFilter; label: string }[] = [{ key: "all", label: "Rotas ativas" }, { key: "transit", label: "Em trânsito" }, { key: "late", label: "Atrasadas" }, { key: "incident", label: "Com ocorrência" }, { key: "stale", label: "GPS desatualizado" }];
@@ -25,7 +27,16 @@ export function OperationalMapWorkspace({ orders: scope, selectedId, connection,
   const scoped = active.filter(o => (!driver || o.driver_id === driver) && (!client || o.client_name === client) && (!work || o.work?.name === work) && (!status || o.status === status));
   const visible = filterTrackingOrders(scoped, filter, search, now, settings);
   const selectedOrder = visible.find(o => o.id === (selected ?? selectedId));
-  const routes = useMemo(() => trackingRoutes(visible, now, settings), [visible, now, settings]);
+  const selectedRoute = useSelectedTrackingRoute(selectedOrder);
+  const routes = useMemo(() => {
+    const existing = trackingRoutes(visible, now, settings);
+    if (!selectedOrder || !selectedRoute.data?.planned) return existing;
+    return [...existing.filter(r => r.id !== selectedOrder.id), { id: selectedOrder.id, geometry: selectedRoute.data.planned }];
+  }, [visible, now, settings, selectedOrder?.id, selectedRoute.data?.planned]);
+  const pins = useMemo(() => selectedOrder ? [
+    { point: trackingPoint(selectedOrder.origin_lat, selectedOrder.origin_lng), color: "var(--success)", label: `Coleta: ${selectedOrder.origin_address}` },
+    { point: trackingPoint(selectedOrder.destination_lat, selectedOrder.destination_lng), color: "var(--destructive)", label: `Entrega: ${selectedOrder.destination_address}` },
+  ].flatMap(p => p.point ? [{ lng: p.point[0], lat: p.point[1], color: p.color, label: p.label }] : []) : [], [selectedOrder?.id, selectedOrder?.origin_lat, selectedOrder?.origin_lng, selectedOrder?.destination_lat, selectedOrder?.destination_lng]);
   const units: MapUnit[] = visible.flatMap(o => {
     if (o.current_lat == null || o.current_lng == null || !Number.isFinite(o.current_lat) || !Number.isFinite(o.current_lng)) return [];
     const state = operationalState(o, now, settings);
@@ -52,7 +63,9 @@ export function OperationalMapWorkspace({ orders: scope, selectedId, connection,
       <Button size="sm" variant="ghost" onClick={() => { setFilter("all"); setSearch(""); setDriver(""); setClient(""); setWork(""); setStatus(""); setSelected(null); setFollowing(false); }}>Limpar</Button>
     </div>
     <div className={cn("grid min-w-0 gap-4", selectedOrder && "xl:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]")}>
-      <div className="min-w-0"><ClientOnly fallback={<MapLoading />}><Suspense fallback={<MapLoading />}><TrackingMap units={units} routes={routes} selectedId={selectedOrder?.id} onSelect={select} focusToken={focus} followSelected={following} className="h-[430px] min-w-0 border border-border" /></Suspense></ClientOnly>
+      <div className="min-w-0"><ClientOnly fallback={<MapLoading />}><Suspense fallback={<MapLoading />}><TrackingMap units={units} routes={routes} pins={pins} planned={selectedRoute.data?.approach} selectedId={selectedOrder?.id} onSelect={select} focusToken={focus} followSelected={following} className="h-[430px] min-w-0 border border-border" /></Suspense></ClientOnly>
+        {selectedRoute.isFetching && <p role="status" className="text-xs text-muted-foreground">Carregando trajeto selecionado…</p>}
+        {(selectedRoute.error || selectedRoute.data?.unavailable) && <p role="status" className="text-xs text-warning">{selectedRoute.error instanceof Error ? selectedRoute.error.message : selectedRoute.data?.unavailable}</p>}
         <div className="mt-2 flex flex-wrap gap-3 text-xs text-muted-foreground"><span className="text-brand">Rota ativa</span><span className="text-destructive">Atraso / ocorrência</span><span>Traçado pontilhado: GPS antigo</span></div>
         {visible.length > routes.length && <p className="text-xs text-warning">{visible.length - routes.length} frete(s) sem itinerário disponível.</p>}
         {visible.length > units.length && <p className="text-xs text-warning">{visible.length - units.length} frete(s) sem posição GPS conhecida.</p>}

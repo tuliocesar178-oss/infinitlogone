@@ -24,7 +24,9 @@ export function OperationalMapDetail({ order, now, settings, following, onFocus,
     </div>
     <FreightCard order={order} now={now} settings={settings} />
     <div className="space-y-2 text-sm">
+      {order.vehicle?.photo_url && <img src={order.vehicle.photo_url} alt="Veículo do frete" className="h-24 w-40 rounded-md object-cover" />}
       <p><b>Coleta:</b> {order.origin_address}</p><p><b>Entrega:</b> {order.destination_address}</p>
+      <p>Rota planejada: {order.distance_km != null ? `${order.distance_km.toLocaleString("pt-BR")} km` : "Indisponível"}</p>
       <p className="text-muted-foreground">Último GPS: {order.last_ping_at ? new Date(order.last_ping_at).toLocaleString("pt-BR") : "Não recebido"}</p>
       <p className="text-muted-foreground">Posição: {order.current_lat != null && order.current_lng != null ? `${order.current_lat.toFixed(6)}, ${order.current_lng.toFixed(6)}` : "Não disponível"}</p>
     </div>
