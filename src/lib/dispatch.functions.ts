@@ -9,6 +9,15 @@ const schema = z.object({
   order_id: z.string().uuid(),
   price: z.number().positive().max(10_000_000),
   minutes: z.number().int().min(1).max(1440),
+  mode: z.enum(["automatic", "manual"]).default("automatic"),
+  driver_id: z.string().uuid().optional(),
+}).superRefine((input, context) => {
+  if (input.mode === "manual" && !input.driver_id) {
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ["driver_id"], message: "Selecione um motorista para o despacho manual." });
+  }
+  if (input.mode === "automatic" && input.driver_id) {
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ["driver_id"], message: "O despacho automático não deve indicar um motorista específico." });
+  }
 });
 
 const normalize = (value: string | null | undefined) =>
@@ -72,15 +81,28 @@ export const dispatchOrderToEligibleDrivers = createServerFn({ method: "POST" })
       throw new Error("Esta rota já foi aceita por um motorista.");
     }
 
-    // Only approved registrations; do not add unrelated financial/vehicle restrictions.
+    // O servidor decide a elegibilidade; a lista da interface serve apenas para seleção.
     const { data: drivers, error: driversError } = await db
       .from("drivers")
-      .select("user_id,approval_status,deleted_at").eq('approval_status','active').is('deleted_at',null);
+      .select("user_id,approval_status,deleted_at,availability")
+      .eq("approval_status", "active")
+      .is("deleted_at", null)
+      .in("availability", ["disponivel", "em_frete"]);
     if (driversError) throw new Error(driversError.message);
 
-    const eligible = (drivers ?? []).filter((driver) => !!driver.user_id&&canReceiveOffer(driver.approval_status,driver.deleted_at));
+    const eligible = (drivers ?? []).filter((driver) =>
+      !!driver.user_id &&
+      canReceiveOffer(driver.approval_status, driver.deleted_at) &&
+      ["disponivel", "em_frete"].includes(driver.availability),
+    );
+    const selected = data.mode === "manual"
+      ? eligible.filter((driver) => driver.user_id === data.driver_id)
+      : eligible;
 
-    if (!eligible.length) return { count: 0, driverIds: [] as string[] };
+    if (data.mode === "manual" && selected.length !== 1) {
+      throw new Error("O motorista selecionado não está mais aprovado ou disponível. Atualize a lista.");
+    }
+    if (!selected.length) return { count: 0, driverIds: [] as string[] };
 
     // Persist the explicitly entered driver amount before offers are generated.
     // The commercial fields are never part of this update.
@@ -88,7 +110,7 @@ export const dispatchOrderToEligibleDrivers = createServerFn({ method: "POST" })
       .eq('id', order.id).is('driver_id', null).in('status', ['planning', 'created', 'preparing', 'awaiting_driver']).select('id').maybeSingle();
     if (amountSaved.error) throw amountSaved.error;
     if (!amountSaved.data) throw new Error('Este frete foi alterado. Atualize antes de despachar.');
-    const driverIds = eligible.map((driver) => driver.user_id as string);
+    const driverIds = selected.map((driver) => driver.user_id as string);
     const expiresAt = new Date(Date.now() + data.minutes * 60_000).toISOString();
     const rows = driverIds.map((driver_id) => ({
       order_id: order.id,
@@ -116,7 +138,13 @@ export const dispatchOrderToEligibleDrivers = createServerFn({ method: "POST" })
       from_status: order.status,
       to_status: "awaiting_driver",
       actor_id: context.userId,
-      payload: { drivers: driverIds.length, price: data.price, expires_in_min: data.minutes },
+      payload: {
+        drivers: driverIds.length,
+        price: data.price,
+        expires_in_min: data.minutes,
+        dispatch_mode: data.mode,
+        selected_driver_id: data.mode === "manual" ? driverIds[0] : null,
+      },
     });
     if (eventError) throw new Error(eventError.message);
 
