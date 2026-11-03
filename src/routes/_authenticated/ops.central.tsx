@@ -181,14 +181,14 @@ function TorreDeControle() {
       title="Torre de Controle" 
       subtitle="Monitoramento operacional 360° em tempo real"
       actions={
-        <div className="flex items-center gap-3">
-          <div className="relative">
+        <div className="flex max-w-full flex-wrap items-center gap-2">
+          <div className="relative min-w-0 flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <input 
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               placeholder="Buscar frete, placa, motorista..." 
-              className="h-10 w-64 rounded-xl border border-border bg-surface pl-10 pr-4 text-sm outline-none focus:border-brand"
+              className="h-10 w-full min-w-0 rounded-xl border border-border bg-surface pl-10 pr-4 text-sm outline-none focus:border-brand sm:w-64"
             />
           </div>
           <button 

@@ -2,7 +2,7 @@ import type { Database } from "@/integrations/supabase/types";
 
 export type BoardOrder = Database["public"]["Tables"]["orders"]["Row"] & {
   driver: { full_name: string | null; phone: string | null; photo_url?: string | null } | null;
-  vehicle: { id: string; plate: string; model: string | null; brand: string | null; current_lat: number | null; current_lng: number | null; status: string; vehicle_type?: string | null } | null;
+  vehicle: { id: string; plate: string; model: string | null; brand: string | null; current_lat: number | null; current_lng: number | null; status: string; vehicle_type?: string | null; photo_url?: string | null } | null;
   incident: { id: string; type: string; description: string | null; severity: string | null; created_at: string } | null;
   work?: { name: string } | null;
   responsible?: string | null;

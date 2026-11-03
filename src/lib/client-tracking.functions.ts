@@ -8,7 +8,7 @@ const ORDER_COLUMNS = [
   "origin_city", "destination_city", "origin_lat", "origin_lng",
   "destination_lat", "destination_lng", "current_lat", "current_lng",
   "distance_to_destination_km", "eta_minutes", "delivery_window_end",
-  "last_ping_at", "created_at", "updated_at",
+  "last_ping_at", "created_at", "updated_at", "origin_address", "destination_address", "route_geometry", "distance_km",
 ].join(",");
 
 export const getClientTrackingOrders = createServerFn({ method: "GET" })
@@ -41,7 +41,7 @@ export const getClientTrackingOrders = createServerFn({ method: "GET" })
       driverIds.length
         ? supabaseAdmin
             .from("drivers")
-            .select("user_id, status, availability, license_category, photo_url")
+            .select("user_id, full_name, status, availability, license_category, photo_url, current_heading")
             .in("user_id", driverIds)
         : Promise.resolve({ data: [], error: null }),
       vehicleIds.length
@@ -92,11 +92,12 @@ export const getClientTrackingOrders = createServerFn({ method: "GET" })
       const driver = order.driver_id ? drivers.get(order.driver_id) : undefined;
       return {
         ...order,
+        tracking_heading: driver?.current_heading ?? null,
         evidence_summary: evidenceByOrder.get(order.id) ?? { photos: 0, documents: 0 },
         driver: order.driver_id
           ? {
               id: order.driver_id,
-              name: profile?.full_name ?? null,
+              name: profile?.full_name ?? driver?.full_name ?? null,
               photo_url: profile?.avatar_url ?? driver?.photo_url ?? null,
               status: driver?.status ?? null,
               availability: driver?.availability ?? null,

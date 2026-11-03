@@ -1,5 +1,12 @@
 # Roadmap
 
+## Seleção de motorista e rota no rastreamento (03/11)
+- [x] Reutilizar TrackingMap na operação e no cliente com seleção por frete, pontos de coleta/entrega, detalhes, fechamento e preservação após atualização; motoristas sem frete aparecem sem trajeto na operação
+- [x] Reutilizar itinerários salvos e cálculo rodoviário com checagem de proprietário/permissão operacional; aproximação à coleta só com GPS recente, cache independe dos pings; corrigido retorno prematuro que impedia criar camadas
+- [x] 25 testes de seleção/rastreamento/navegação passaram; sessão administrativa conferiu rota rodoviária real, três marcadores, detalhes, seleção após atualização e fechamento; 390x844 sem rolagem horizontal; políticas reais de pedidos/GPS conferidas
+- [ ] Validar cliente ponta a ponta e tentativa direta de acesso a outro cliente — depende de conta de cliente autorizada com frete de teste; regra de acesso testada, políticas lidas, sem impersonar outro usuário
+- [ ] Validar aproximação à coleta, troca entre múltiplos fretes e GPS físico em movimento — único frete ativo disponível está em descarga com GPS antigo; não alterar operações reais
+
 ## Retirada de solicitações analisadas (03/11)
 - [x] Atualizar imediatamente a fila após aprovação ou reprovação confirmada, mantendo cadastro e histórico; ações bloqueadas durante envio e falhas não removem solicitações
 - [x] 12 testes de cadastro/remoção/cache passaram; build OK

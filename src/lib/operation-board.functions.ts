@@ -15,7 +15,7 @@ export const getOperationBoard = createServerFn({ method: "GET" }).middleware([r
   async function readOrders() {
     const result = [];
     for (let offset=0;;offset+=1000) {
-      const { data, error } = await db.from(COMMERCIAL_ORDERS).select("*, vehicle:vehicles(id,plate,model,brand,current_lat,current_lng,status,vehicle_type),work:works(name)").is("deleted_at",null).order("id").range(offset,offset+999);
+      const { data, error } = await db.from(COMMERCIAL_ORDERS).select("*, vehicle:vehicles(id,plate,model,brand,current_lat,current_lng,status,vehicle_type,photo_url),work:works(name)").is("deleted_at",null).order("id").range(offset,offset+999);
       if(error) throw error; result.push(...(data ?? [])); if((data?.length ?? 0)<1000) break;
     }
     return result;
@@ -49,6 +49,8 @@ export const getOperationBoard = createServerFn({ method: "GET" }).middleware([r
     drivers.push(...(r.data ?? []));
   }
   const driverMap = new Map(drivers.map(d => [d.user_id, d]));
+  const idleDriversResult = await db.from("drivers").select("user_id,full_name,photo_url,current_lat,current_lng,last_seen_at,current_heading").is("deleted_at", null);
+  if (idleDriversResult.error) throw idleDriversResult.error;
   const completion=new Map<string,string>();
   for(const e of events) if(!completion.has(e.order_id)) completion.set(e.order_id,e.created_at);
   for(const d of deliveries) if(d.delivered_at) completion.set(d.order_id,d.delivered_at);
@@ -69,7 +71,9 @@ export const getOperationBoard = createServerFn({ method: "GET" }).middleware([r
   }
   const detected=orders.flatMap(o=>detectAlerts(o,samples.get(o.id) ?? [],Date.now(),settings)).filter(a=>!incidents.some(i=>i.order_id===a.order_id && (i.alert_key===a.alert_key || (i.type===a.type && !i.resolved_at) || (i.type===a.type && i.resolved_at && Date.parse(a.metadata.started_at)<=Date.parse(i.resolved_at)))));
   const staffIds=new Set((rolesRes.data ?? []).map(r=>r.user_id));
-  return {orders,incidents,detected,settings,staff:profiles.filter(p=>staffIds.has(p.id)).map(p=>({id:p.id,name:p.full_name ?? "Equipe"})),isAdmin:(rolesRes.data ?? []).some(r=>r.user_id===context.userId && r.role==="admin"),updatedAt:new Date().toISOString()};
+  const activeDriverIds = new Set(orders.filter(o => !["delivered", "finalized", "cancelled", "awaiting_driver", "planning", "created", "preparing", "negotiating"].includes(o.status)).map(o => o.driver_id));
+  const idleDrivers = (idleDriversResult.data ?? []).filter(d => !activeDriverIds.has(d.user_id));
+  return {orders,incidents,detected,settings,idleDrivers,staff:profiles.filter(p=>staffIds.has(p.id)).map(p=>({id:p.id,name:p.full_name ?? "Equipe"})),isAdmin:(rolesRes.data ?? []).some(r=>r.user_id===context.userId && r.role==="admin"),updatedAt:new Date().toISOString()};
 });
 
 export const syncBoardAlerts = createServerFn({method:"POST"}).middleware([requireSupabaseAuth]).handler(async({context})=>{

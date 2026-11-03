@@ -9,7 +9,7 @@ import { AppShell } from "@/components/app-shell";
 import { DriverDetails, VehicleDetails } from "@/components/client/tracking-details";
 import { TrackingEvidence } from "@/components/client/tracking-evidence";
 import { ShareTracking } from "@/components/share-tracking";
-import { TripMap } from "@/components/trip-map";
+import { ClientTrackingMap } from "@/components/client/client-tracking-map";
 import { supabase } from "@/integrations/supabase/client";
 import { getClientTrackingOrders } from "@/lib/client-tracking.functions";
 import {
@@ -19,6 +19,7 @@ import {
   type ClientTrackingOrder,
 } from "@/lib/client-tracking";
 import { statusLabel } from "@/lib/order-status";
+import { selectedTrackingOrder } from "@/lib/tracking-route-model";
 
 export const Route = createFileRoute("/_authenticated/client/")({
   head: () => ({
@@ -65,7 +66,7 @@ function ClientTrackingHome() {
     [orders],
   );
   const selectedOrder = useMemo(
-    () => orders.find((order) => order.id === selectedOrderId) ?? activeOrders[0] ?? null,
+    () => selectedTrackingOrder(orders, selectedOrderId),
     [activeOrders, orders, selectedOrderId],
   );
 
@@ -114,6 +115,7 @@ function ClientTrackingHome() {
         </aside>
 
         <main className="min-w-0 space-y-6">
+          <ClientTrackingMap orders={activeOrders} selected={selectedOrder} onSelect={setSelectedOrderId} onClose={() => setSelectedOrderId(null)} />
           {selectedOrder ? <SelectedTracking order={selectedOrder} /> : <NoSelection />}
         </main>
       </div>
@@ -170,22 +172,6 @@ function SelectedTracking({ order }: { order: ClientTrackingOrder }) {
         <Metric label="Previsão" value={eta} />
         <Metric label="Distância restante" value={order.distance_to_destination_km != null ? `${order.distance_to_destination_km.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} km` : "Sob consulta"} />
         <Metric label="Motorista" value={order.driver?.name ?? "Aguardando definição"} />
-      </section>
-
-      <section className="relative h-[360px] overflow-hidden rounded-lg border bg-secondary sm:h-[500px]" aria-label="Mapa do rastreamento">
-        <TripMap
-          className="h-full w-full"
-          origin={point(order.origin_lat, order.origin_lng)}
-          destination={point(order.destination_lat, order.destination_lng)}
-          driver={point(order.current_lat, order.current_lng)}
-          driverLabel={order.driver?.name}
-          vehicleLabel={order.vehicle ? `${vehicleName(order.vehicle)} · ${order.vehicle.plate}` : null}
-          interactive
-        />
-        <div className="absolute bottom-4 left-4 rounded-lg border bg-background/95 px-3 py-2 shadow-lg backdrop-blur">
-          <p className="text-[10px] font-bold uppercase text-muted-foreground">Última atualização</p>
-          <p className="mt-1 flex items-center gap-2 text-xs font-semibold"><span className="h-2 w-2 rounded-full bg-success" />{relativeUpdate(order.last_ping_at ?? order.updated_at)}</p>
-        </div>
       </section>
 
       <div className="grid items-start gap-4 lg:grid-cols-2">

@@ -27,6 +27,11 @@ export interface ClientTrackingOrder {
   id: string;
   code: string;
   tracking_code: string;
+  origin_address: string;
+  destination_address: string;
+  route_geometry: string | null;
+  distance_km: number | null;
+  tracking_heading?: number | null;
   status: string;
   driver_id: string | null;
   vehicle_id: string | null;
