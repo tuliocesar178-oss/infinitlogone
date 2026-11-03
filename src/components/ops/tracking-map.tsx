@@ -252,7 +252,9 @@ export function TrackingMap({
     setLine("planned-route", plannedCoords, mapColor("--primary"), 7);
     setLine("traveled-route", traveled ?? null, mapColor("--success"), 5);
     const map = mapRef.current;
-    if (!map || !map.isStyleLoaded()) return;
+    // Updating a GeoJSON source makes isStyleLoaded temporarily false; do not
+    // abort here or the board source/layers are never installed.
+    if (!map) return;
     const palette = ["--brand", "--cyan", "--success", "--warning", "--primary"];
     const data: GeoJSON.FeatureCollection<GeoJSON.LineString> = { type: "FeatureCollection", features: routes.map(r => ({type:"Feature", geometry:r.geometry, properties:{id:r.id, selected:r.id===selectedId, muted:Boolean(selectedId && r.id!==selectedId),critical:Boolean(r.critical),stale:Boolean(r.stale),colorIndex:Array.from(r.id).reduce((n,c)=>n+c.charCodeAt(0),0)%palette.length}})) };
     const src=map.getSource("board-routes") as mapboxgl.GeoJSONSource | undefined;
