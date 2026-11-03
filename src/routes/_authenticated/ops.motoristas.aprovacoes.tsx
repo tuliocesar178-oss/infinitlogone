@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,6 +7,8 @@ import { toast } from "sonner";
 import { CheckCircle2, XCircle, AlertTriangle, FileText, Eye } from "lucide-react";
 import { reviewDriverSignup } from "@/lib/drivers.functions";
 import { useServerFn } from "@tanstack/react-start";
+import { Button } from "@/components/ui/button";
+import { applyConfirmedDriverReview, type ApprovalFilter } from "@/lib/driver-approval-cache";
 
 export const Route = createFileRoute("/_authenticated/ops/motoristas/aprovacoes")({
   head: () => ({ meta: [
@@ -25,6 +27,8 @@ type Row = {
 
 function DriverApprovalsPage() {
   const review_fn = useServerFn(reviewDriverSignup);
+  const queryClient = useQueryClient();
+  const [reviewingId, setReviewingId] = useState<string | null>(null);
   const [filter, setFilter] = useState<"pending" | "correction" | "rejected" | "all">("pending");
   const [selected, setSelected] = useState<Row | null>(null);
 
@@ -79,14 +83,26 @@ function DriverApprovalsPage() {
   });
 
   async function review(driverId: string, decision: "approve" | "reject" | "correction", reason?: string) {
+    if (reviewingId) return;
+    setReviewingId(driverId);
     try {
       await review_fn({ data: { driver_id: driverId, decision, reason: reason ?? null } });
+      // Cancel old reads before replacing every cached filter with the confirmed status.
+      await queryClient.cancelQueries({ queryKey: ["driver-approvals"] });
+      for (const cachedFilter of ["pending", "correction", "rejected", "all"] satisfies ApprovalFilter[]) {
+        queryClient.setQueryData<Row[]>(["driver-approvals", cachedFilter], (old) =>
+          applyConfirmedDriverReview(old, driverId, decision, cachedFilter));
+      }
       const msg = { approve: "Cadastro aprovado", reject: "Cadastro reprovado", correction: "Correção solicitada" }[decision];
       toast.success(msg);
       setSelected(null);
-      q.refetch();
+      void queryClient.invalidateQueries({ queryKey: ["driver-approvals"] });
+      void queryClient.invalidateQueries({ queryKey: ["drivers-list"] });
+      void queryClient.invalidateQueries({ queryKey: ["driver", driverId] });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro");
+    } finally {
+      setReviewingId(null);
     }
   }
 
@@ -134,21 +150,21 @@ function DriverApprovalsPage() {
               </button>
               {(r.approval_status === "pending" || r.approval_status === "correction") && (
                 <>
-                  <button onClick={() => review(r.user_id, "approve")} className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90">
-                    <CheckCircle2 className="h-3 w-3" /> Aprovar
-                  </button>
-                  <button onClick={() => {
+                  <Button size="sm" disabled={reviewingId !== null} onClick={() => review(r.user_id, "approve")}>
+                    <CheckCircle2 className="h-3 w-3" /> {reviewingId === r.user_id ? "Salvando…" : "Aprovar"}
+                  </Button>
+                  <Button size="sm" variant="secondary" disabled={reviewingId !== null} onClick={() => {
                     const reason = prompt("Motivo da correção:");
                     if (reason) review(r.user_id, "correction", reason);
-                  }} className="inline-flex items-center gap-1 rounded-full bg-amber-500 px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90">
+                  }}>
                     <AlertTriangle className="h-3 w-3" /> Correção
-                  </button>
-                  <button onClick={() => {
+                  </Button>
+                  <Button size="sm" variant="destructive" disabled={reviewingId !== null} onClick={() => {
                     const reason = prompt("Motivo da reprovação:");
                     if (reason) review(r.user_id, "reject", reason);
-                  }} className="inline-flex items-center gap-1 rounded-full bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90">
+                  }}>
                     <XCircle className="h-3 w-3" /> Reprovar
-                  </button>
+                  </Button>
                 </>
               )}
             </div>

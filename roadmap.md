@@ -1,5 +1,10 @@
 # Roadmap
 
+## Retirada de solicitações analisadas (03/11)
+- [x] Atualizar imediatamente a fila após aprovação ou reprovação confirmada, mantendo cadastro e histórico; ações bloqueadas durante envio e falhas não removem solicitações
+- [x] 12 testes de cadastro/remoção/cache passaram; build OK
+- [ ] Conferir aprovação e reprovação reais na tela — conta do solicitante tem perfil motorista e é redirecionada corretamente a /driver; depende de conta administrativa autorizada e solicitação de teste
+
 ## Categorias de fotos do motorista (02/11)
 - [x] Ampliar seleção existente com seis categorias, preservando opções originais e etapas
 - [x] Preservar múltiplos arquivos, autoria e visualização privada; 11 testes de categorias/upload e 11 de etapas/completude passaram; políticas de anexos e arquivos conferidas
