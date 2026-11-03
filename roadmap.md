@@ -1,5 +1,10 @@
 # Roadmap
 
+## Seleção de motorista e rota no rastreamento (03/11)
+- [ ] Reutilizar mapas da operação e do cliente com rota selecionada, coleta/entrega, informações e seleção persistente
+- [ ] Reutilizar itinerários salvos e cálculo rodoviário autorizado, sem misturar GPS com percurso planejado
+- [ ] Testar regras de seleção, acesso, falhas e atualização; conferir computador e celular
+
 ## Retirada de solicitações analisadas (03/11)
 - [x] Atualizar imediatamente a fila após aprovação ou reprovação confirmada, mantendo cadastro e histórico; ações bloqueadas durante envio e falhas não removem solicitações
 - [x] 12 testes de cadastro/remoção/cache passaram; build OK
