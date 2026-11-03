@@ -1,5 +1,9 @@
 # Roadmap
 
+## Retirada de solicitações analisadas (03/11)
+- [ ] Atualizar imediatamente a fila após aprovação ou reprovação confirmada, mantendo cadastro e histórico
+- [ ] Testar remoção, erros e sincronização dos filtros
+
 ## Categorias de fotos do motorista (02/11)
 - [x] Ampliar seleção existente com seis categorias, preservando opções originais e etapas
 - [x] Preservar múltiplos arquivos, autoria e visualização privada; 11 testes de categorias/upload e 11 de etapas/completude passaram; políticas de anexos e arquivos conferidas
