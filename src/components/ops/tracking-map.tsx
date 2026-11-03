@@ -243,6 +243,9 @@ export function TrackingMap({
   }
 
   function drawLines() {
+    const currentMap = mapRef.current;
+    if (!currentMap || !currentMap.isStyleLoaded()) return;
+    ready.current = true;
     const { planned, traveled, routes, selectedId } = latestLines.current;
     const plannedCoords =
       planned && planned.type === "LineString" ? (planned.coordinates as [number, number][]) : null;
@@ -271,6 +274,15 @@ export function TrackingMap({
   }
 
   useEffect(drawLines, [planned, traveled, routes, selectedId, mapLoaded]);
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      const map = mapRef.current;
+      if (map?.isStyleLoaded() && (!map.getLayer("board-routes-line") || !map.getLayer("planned-route"))) drawLines();
+    }, 1000);
+    return () => window.clearInterval(timer);
+    // Style readiness can precede the style.load callback or lag behind hydration.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // markers — created once, then animated to new positions
   useEffect(() => {
