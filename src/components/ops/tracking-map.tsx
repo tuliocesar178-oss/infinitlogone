@@ -6,6 +6,7 @@ import { TRACK_KIND, type TrackKind } from "@/lib/tracking-center";
 import { Layers, Maximize2, Crosshair, Route as RouteIcon, Satellite, TrafficCone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { mapColor } from "@/lib/map-color";
 
 const RAW_TOKEN = import.meta.env.VITE_LOVABLE_CONNECTOR_MAPBOX_PUBLIC_TOKEN as string | undefined;
 const TOKEN = RAW_TOKEN?.trim().replace(/^['"]|['"]$/g, "");
@@ -245,8 +246,8 @@ export function TrackingMap({
     const { planned, traveled, routes, selectedId } = latestLines.current;
     const plannedCoords =
       planned && planned.type === "LineString" ? (planned.coordinates as [number, number][]) : null;
-    setLine("planned-route", plannedCoords, "#2563eb", 5);
-    setLine("traveled-route", traveled ?? null, "#22c55e", 5);
+    setLine("planned-route", plannedCoords, mapColor("--primary"), 7);
+    setLine("traveled-route", traveled ?? null, mapColor("--success"), 5);
     const map = mapRef.current;
     if (!map || !map.isStyleLoaded()) return;
     const palette = ["--brand", "--cyan", "--success", "--warning", "--primary"];
@@ -259,7 +260,7 @@ export function TrackingMap({
     }
     if (!map.getLayer("board-routes-stale")) map.addLayer({id:"board-routes-stale",type:"line",source:"board-routes",filter:["==",["get","stale"],true],paint:{"line-color":resolveColor("--muted-foreground"),"line-width":3,"line-dasharray":[2,2]}});
     const coordinates=routes.flatMap(r=>r.geometry.coordinates);
-    if(coordinates.length && map.getSource("board-routes") && map.getLayer("board-routes-line")) {
+    if(!selectedId && coordinates.length && map.getSource("board-routes") && map.getLayer("board-routes-line")) {
       const signature=routes.map(r=>r.id).join(",");
       if(containerRef.current?.dataset.routeFit!==signature) {
         if(containerRef.current) containerRef.current.dataset.routeFit=signature;
@@ -374,7 +375,7 @@ export function TrackingMap({
         markers.current.delete(id);
       }
     }
-    if (units.length && !routes.length && containerRef.current?.dataset.unitFit !== units.map(u => u.id).join(",")) {
+    if (!selectedId && units.length && !routes.length && containerRef.current?.dataset.unitFit !== units.map(u => u.id).join(",")) {
       if (containerRef.current) containerRef.current.dataset.unitFit = units.map(u => u.id).join(",");
       const bounds = new mapboxgl.LngLatBounds();
       for (const u of units) if (Number.isFinite(u.lng) && Number.isFinite(u.lat)) bounds.extend([u.lng, u.lat]);
@@ -388,12 +389,29 @@ export function TrackingMap({
     if (!map) return;
     pinMarkers.current.forEach((m) => m.remove());
     pinMarkers.current = pins.map((p) =>
-      new mapboxgl.Marker({ color: p.color })
+      new mapboxgl.Marker({ color: mapColor(p.color) })
         .setLngLat([p.lng, p.lat])
         .setPopup(new mapboxgl.Popup({ offset: 18 }).setText(p.label))
         .addTo(map),
     );
   }, [pins, mapLoaded]);
+
+  const selectedRouteGeometry = routes.find(route => route.id === selectedId)?.geometry;
+  const selectedGeometrySignature = JSON.stringify(selectedRouteGeometry?.coordinates ?? planned ?? null);
+  // Selection fits the whole itinerary once; later GPS pings never reset the viewport.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapLoaded || !selectedId) return;
+    const bounds = new mapboxgl.LngLatBounds();
+    for (const coordinate of selectedRouteGeometry?.coordinates ?? []) bounds.extend([coordinate[0], coordinate[1]]);
+    if (planned?.type === "LineString") for (const coordinate of planned.coordinates) bounds.extend([coordinate[0], coordinate[1]]);
+    for (const pin of pins) bounds.extend([pin.lng, pin.lat]);
+    const unit = units.find(u => u.id === selectedId);
+    if (unit) bounds.extend([unit.lng, unit.lat]);
+    if (!bounds.isEmpty()) map.fitBounds(bounds, { padding: 70, maxZoom: 14, duration: 650 });
+    // Coordinates of live markers intentionally do not trigger another fit.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedId, selectedGeometrySignature, mapLoaded]);
 
   // focus selected
   useEffect(() => {
@@ -427,6 +445,18 @@ export function TrackingMap({
     map.fitBounds(b, { padding: 90, maxZoom: 11, duration: 700 });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fitToken]);
+
+  const lastSelection = useRef<string | null | undefined>(selectedId);
+  useEffect(() => {
+    const map = mapRef.current;
+    if (lastSelection.current && !selectedId && map) {
+      const bounds = new mapboxgl.LngLatBounds();
+      for (const route of routes) for (const p of route.geometry.coordinates) bounds.extend([p[0], p[1]]);
+      for (const unit of units) bounds.extend([unit.lng, unit.lat]);
+      if (!bounds.isEmpty()) map.fitBounds(bounds, { padding: 75, maxZoom: 13, duration: 650 });
+    }
+    lastSelection.current = selectedId;
+  }, [selectedId, routes, units]);
 
   if (!TOKEN) {
     return (
