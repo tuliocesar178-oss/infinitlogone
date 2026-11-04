@@ -40,7 +40,7 @@ export function OperationalMapWorkspace({ orders: scope, selectedId, connection,
   const units: MapUnit[] = visible.flatMap(o => {
     if (o.current_lat == null || o.current_lng == null || !Number.isFinite(o.current_lat) || !Number.isFinite(o.current_lng)) return [];
     const state = operationalState(o, now, settings);
-    return [{ id: o.id, lat: o.current_lat, lng: o.current_lng, kind: state.incident || state.late ? "incident" : state.stale ? "offline" : "in_transit", title: o.driver?.full_name ?? "Motorista", subtitle: [o.code, o.vehicle?.plate, o.vehicle?.vehicle_type].filter(Boolean).join(" · "), avatarUrl: o.driver?.photo_url, heading: o.tracking_heading, statusLabel: [state.incident ? "Ocorrência" : state.late ? "Em atraso" : STATUS_LABEL[o.status], state.stale ? "GPS antigo" : ""].filter(Boolean).join(" · ") }];
+    return [{ id: o.id, lat: o.current_lat, lng: o.current_lng, kind: state.incident || state.late ? "incident" : state.stale ? "offline" : "in_transit", title: o.driver?.full_name ?? "Motorista", subtitle: [o.code, o.vehicle?.plate, o.vehicle?.vehicle_type].filter(Boolean).join(" · "), avatarUrl: o.driver?.photo_url, heading: o.tracking_heading, statusLabel: [STATUS_LABEL[o.status] ?? o.status, state.incident ? "Ocorrência" : state.late ? "Em atraso" : "", state.stale ? "GPS antigo" : ""].filter(Boolean).join(" · ") }];
   });
   const idleDrivers = !scope && !client && !work && !status && filter === "all" ? (data?.idleDrivers ?? []).filter(d => (!driver || driver === d.user_id) && (!search || d.full_name?.toLocaleLowerCase("pt-BR").includes(search.toLocaleLowerCase("pt-BR")))) : [];
   const selectedIdleDriver = idleDrivers.find(d => `idle:${d.user_id}` === selected);
