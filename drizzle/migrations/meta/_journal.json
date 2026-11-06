@@ -190,6 +190,13 @@
       "when": 1793648444659,
       "tag": "0026_separate_freight_values_and_protect_commercial_reads",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1793972596158,
+      "tag": "0027_public_tracking_latest_point",
+      "breakpoints": true
     }
   ]
 }
