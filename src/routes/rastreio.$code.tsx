@@ -96,7 +96,9 @@ function TrackingPage() {
       const result = await fetchTracking({ data: { code: code.trim().toUpperCase() } });
       return (result as TrackingResult | null) ?? null;
     },
-    refetchInterval: 10_000,
+    refetchInterval: 5_000,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
   });
 
   useEffect(() => {
@@ -412,6 +414,28 @@ function TrackingPage() {
                       </div>
                     </div>
                   )}
+                {data.driver_lat != null && data.driver_lng != null && current.key !== "delivered" && (
+                  <div className="flex items-center justify-between gap-4 border-b border-border/60 px-6 py-3">
+                    <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-primary">
+                      <span className="relative flex h-2 w-2">
+                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/60" />
+                        <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+                      </span>
+                      Ao vivo
+                      {data.last_ping_at && (
+                        <span className="font-normal normal-case tracking-normal text-muted-foreground">
+                          · posição {relativeTime(data.last_ping_at)}
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-right">
+                      <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Velocidade</div>
+                      <div className="text-lg font-semibold tabular-nums">
+                        {data.driver_speed != null ? `${Math.max(0, Math.round(data.driver_speed))} km/h` : "—"}
+                      </div>
+                    </div>
+                  </div>
+                )}
                 <div className="h-80">
                   <TripMap
                     className="h-full w-full"
