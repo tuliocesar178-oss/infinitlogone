@@ -181,7 +181,7 @@ export const setDriverAvailability = createServerFn({ method: "POST" })
  */
 const setPasswordSchema = z.object({
   user_id: z.string().uuid(),
-  password: z.string().min(8, "A senha precisa ter pelo menos 8 caracteres.").max(72),
+  password: z.string().min(6, "A senha precisa ter pelo menos 6 caracteres.").max(72),
 });
 export const setDriverPasswordDirect = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

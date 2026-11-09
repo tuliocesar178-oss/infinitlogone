@@ -15,7 +15,8 @@ export function loginEmailFor(identifier: string): string {
   return value.includes('@') ? value.toLowerCase() : phoneLoginEmail(value);
 }
 
-export const PASSWORD_MIN = 8;
+/** Auth's own hard floor; no other strength rules are applied by request. */
+export const PASSWORD_MIN = 6;
 export const accessPasswordSchema = z.string().min(PASSWORD_MIN, `A senha precisa ter pelo menos ${PASSWORD_MIN} caracteres.`).max(72, 'A senha pode ter no máximo 72 caracteres.');
 
 /** Returns a user-facing error or null when password and confirmation are acceptable. */
