@@ -12,15 +12,16 @@ describe("mobile notification security", () => {
       expect(pushPreferencesSchema.parse({ [category]: false })[category]).toBe(false);
     }
   });
-  test("financial and chat events keep independent preferences", () => {
+  test("financial, chat, delivery and incident events keep separate preferences", () => {
     expect(pushCategory("payment_paid")).toBe("finance");
     expect(pushCategory("chat_message")).toBe("chat");
+    expect(pushCategory("evidence_uploaded")).toBe("deliveries");
     expect(pushCategory("critical_incident")).toBe("incidents");
   });
   test("lock screen receives no amount, document or arbitrary message", () => {
     expect(safePushContent("payment_paid", "/driver/faturamento", "event-1")).toEqual({
-      title: "Atualização financeira", body: "Abra a InfinitLog para consultar com segurança.",
-      url: "/driver/faturamento", tag: "event-1", requireInteraction: false,
+      title: "INFINITLOG | Atualização financeira", body: "Abra a InfinitLog para consultar com segurança.",
+      url: "/driver/faturamento", tag: "event-1", roomId: undefined, requireInteraction: false,
     });
   });
 });

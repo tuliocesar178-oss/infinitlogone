@@ -11,6 +11,8 @@ export type PushContent = {
   tag?: string;
   /** Mantém o alerta na tela até o usuário interagir (usado em ofertas). */
   requireInteraction?: boolean;
+  /** Identificador da conversa para abrir a sala certa no aplicativo. */
+  roomId?: string;
 };
 
 type Row = {

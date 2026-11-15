@@ -10,7 +10,7 @@ self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", (event) => event.waitUntil(self.clients.claim()));
 
 self.addEventListener("push", (event) => {
-  /** @type {{title?: string, body?: string, url?: string, tag?: string, requireInteraction?: boolean}} */
+  /** @type {{title?: string, body?: string, url?: string, tag?: string, roomId?: string, requireInteraction?: boolean}} */
   let payload = {};
   try {
     payload = event.data ? event.data.json() : {};
@@ -18,16 +18,16 @@ self.addEventListener("push", (event) => {
     payload = { body: event.data ? event.data.text() : "" };
   }
 
-  const title = payload.title || "InfinitLog Transportes";
+  const title = payload.title || "INFINITLOG VAPT VUPT";
   const options = {
     body: payload.body || "",
-    icon: "/pwa-192x192.png",
+    icon: "/pwa-512x512.png",
     badge: "/pwa-192x192.png",
     tag: payload.tag || "infinitlog",
     renotify: payload.requireInteraction === true,
     requireInteraction: payload.requireInteraction === true,
     vibrate: [220, 90, 220],
-    data: { url: payload.url || "/app" },
+    data: { url: payload.url || "/app", roomId: payload.roomId || null },
   };
 
   event.waitUntil(self.registration.showNotification(title, options));
@@ -47,11 +47,20 @@ self.addEventListener("notificationclick", (event) => {
       });
       // Reaproveita uma janela já aberta do app sempre que possível.
       for (const client of clientList) {
-        if (new URL(client.url).origin === self.location.origin) {
-          await client.focus();
-          if ("navigate" in client) await client.navigate(target);
-          return;
-        }
+        const clientUrl = new URL(client.url);
+        if (clientUrl.origin !== self.location.origin) continue;
+
+        const isOpenConversation =
+          payload.roomId &&
+          clientUrl.pathname.endsWith("/chat") &&
+          clientUrl.searchParams.get("roomId") === payload.roomId &&
+          client.visibilityState === "visible" &&
+          client.focused;
+        if (isOpenConversation) return;
+
+        await client.focus();
+        if ("navigate" in client) await client.navigate(target);
+        return;
       }
       await self.clients.openWindow(target);
     })(),

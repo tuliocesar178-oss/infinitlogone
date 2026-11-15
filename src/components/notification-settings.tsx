@@ -67,7 +67,8 @@ export function NotificationSettings({ className }: { className?: string }) {
   const blocked = status?.permission === "denied";
   const unsupported = status?.supported === false;
   const preferences: { key: keyof PushPreferences; label: string }[] = [
-    { key: "offers", label: "Ofertas e aceites" }, { key: "routes", label: "Coleta e entrega" },
+    { key: "offers", label: "Novos fretes e ofertas" }, { key: "routes", label: "Atualizações de fretes" },
+    { key: "deliveries", label: "Entregas e comprovantes" },
     { key: "chat", label: "Mensagens da equipe" }, { key: "incidents", label: "Ocorrências" },
     { key: "registrations", label: "Cadastros e aprovação" }, { key: "finance", label: "Avisos financeiros autorizados" },
   ];

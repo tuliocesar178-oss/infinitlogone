@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const pushPreferencesSchema = z.object({
   offers: z.boolean().default(true), routes: z.boolean().default(true),
-  chat: z.boolean().default(true), incidents: z.boolean().default(true),
+  deliveries: z.boolean().default(true), chat: z.boolean().default(true), incidents: z.boolean().default(true),
   registrations: z.boolean().default(true), finance: z.boolean().default(true),
 });
 export type PushPreferences = z.infer<typeof pushPreferencesSchema>;
@@ -24,17 +24,35 @@ export const subscriptionSchema = z.object({
   userAgent: z.string().max(300).optional(),
 });
 export function pushCategory(type: string): keyof PushPreferences {
-  if (type.includes("chat")) return "chat";
+  if (type.includes("chat") || type.includes("message")) return "chat";
   if (type.includes("incident")) return "incidents";
+  if (type.includes("evidence") || type.includes("delivery") || type.includes("proof")) return "deliveries";
   if (type.includes("payment") || type.includes("financial")) return "finance";
   if (type.includes("registration") || type.includes("driver_approved") || type.includes("driver_rejected") || type.includes("driver_correction")) return "registrations";
   if (type.includes("offer") || type === "new_offer" || type.includes("freight_accepted")) return "offers";
   return "routes";
 }
-export function safePushContent(type: string, url: string, tag: string) {
+export function safePushContent(
+  type: string,
+  url: string,
+  tag: string,
+  details: { title?: string; body?: string; roomId?: string } = {},
+) {
   const titles: Record<keyof PushPreferences, string> = {
-    offers: "Atualização de frete", routes: "Atualização da rota", chat: "Nova mensagem da operação",
-    incidents: "Ocorrência operacional", registrations: "Atualização de cadastro", finance: "Atualização financeira",
+    offers: "INFINITLOG | Novo frete disponível",
+    routes: "INFINITLOG | Atualização do frete",
+    deliveries: "INFINITLOG | Entrega e comprovante",
+    chat: "INFINITLOG | Nova mensagem",
+    incidents: "INFINITLOG | Ocorrência operacional",
+    registrations: "INFINITLOG | Atualização de cadastro",
+    finance: "INFINITLOG | Atualização financeira",
   };
-  return { title: titles[pushCategory(type)], body: "Abra a InfinitLog para consultar com segurança.", url, tag, requireInteraction: pushCategory(type) === "incidents" };
+  return {
+    title: details.title ?? titles[pushCategory(type)],
+    body: details.body ?? "Abra a InfinitLog para consultar com segurança.",
+    url,
+    tag,
+    roomId: details.roomId,
+    requireInteraction: pushCategory(type) === "incidents",
+  };
 }
