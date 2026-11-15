@@ -1,4 +1,4 @@
-import { lazy, Suspense, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { ClientOnly } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { useOperationalTracking } from "@/hooks/use-operational-tracking";
@@ -22,6 +22,12 @@ export function OperationalMapWorkspace({ orders: scope, selectedId, connection,
   const [selected, setSelected] = useState<string | null>(null), [following, setFollowing] = useState(false), [focus, setFocus] = useState(0);
   const data = query.data, settings = data?.settings ?? DEFAULT_MONITORING;
   const active = useMemo(() => activeTrackingOrders(scope ?? data?.orders ?? []), [scope, data?.orders]);
+  useEffect(() => {
+    if (selected && !active.some((order) => order.id === selected)) {
+      setSelected(null);
+      setFollowing(false);
+    }
+  }, [active, selected]);
   const scoped = active.filter(o => (!driver || o.driver_id === driver) && (!client || o.client_name === client) && (!work || o.work?.name === work) && (!status || o.status === status));
   const visible = filterTrackingOrders(scoped, filter, search, now, settings);
   const selectedOrder = visible.find(o => o.id === (selected ?? selectedId));

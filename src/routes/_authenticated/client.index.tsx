@@ -61,12 +61,12 @@ function ClientTrackingHome() {
     [orders],
   );
   const historyOrders = useMemo(
-    () => orders.filter((order) => ["delivered", "finalized"].includes(order.status)),
+    () => orders.filter((order) => ["delivered", "finalized", "completed"].includes(order.status)),
     [orders],
   );
   const selectedOrder = useMemo(
-    () => orders.find((order) => order.id === selectedOrderId) ?? activeOrders[0] ?? null,
-    [activeOrders, orders, selectedOrderId],
+    () => activeOrders.find((order) => order.id === selectedOrderId) ?? activeOrders[0] ?? null,
+    [activeOrders, selectedOrderId],
   );
 
   if (isLoading) return <TrackingLoading />;

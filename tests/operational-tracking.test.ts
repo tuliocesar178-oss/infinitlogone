@@ -7,7 +7,7 @@ function order(patch: Partial<BoardOrder> = {}): BoardOrder {
   return { id: "o1", driver_id: "d1", status: "in_transit", code: "PED-1", driver: { full_name: "Alessandro", phone: null }, vehicle: null, incident: null, last_ping_at: new Date(now).toISOString(), delivery_window_end: null, ...patch } as BoardOrder;
 }
 describe("mapa operacional compartilhado", () => {
-  it("exclui concluídos e cancelados de rotas ativas", () => expect(activeTrackingOrders([order(), order({ id: "o2", status: "delivered" }), order({ id: "o3", status: "finalized" }), order({ id: "o4", status: "cancelled" })]).map(o => o.id)).toEqual(["o1"]));
+  it("exclui concluídos, cancelados e finalizados legados de rotas ativas", () => expect(activeTrackingOrders([order(), order({ id: "o2", status: "delivered" }), order({ id: "o3", status: "finalized" }), order({ id: "o4", status: "cancelled" }), order({ id: "o5", status: "completed" })]).map(o => o.id)).toEqual(["o1"]));
   it("não conta fretes sem motorista nem duplicatas", () => expect(activeTrackingOrders([order(), order(), order({ id: "o2", driver_id: null })])).toHaveLength(1));
   it("GPS antigo não prova parada ou atraso confirmado", () => expect(operationalState(order({ last_ping_at: "2026-11-02T18:00:00Z", delivery_window_end: "2026-11-02T19:00:00Z" }), now, DEFAULT_MONITORING)).toEqual({ late: false, stale: true, incident: false }));
   it("atraso exige prazo vencido e GPS confiável", () => expect(filterTrackingOrders([order({ delivery_window_end: "2026-11-02T19:00:00Z" }), order({ id: "o2", last_ping_at: null })], "late", "", now, DEFAULT_MONITORING).map(o => o.id)).toEqual(["o1"]));

@@ -49,7 +49,7 @@ export interface ClientTrackingOrder {
   vehicle: TrackingVehicle | null;
 }
 
-export const CLOSED_STATUSES = ["delivered", "finalized", "cancelled"];
+export const CLOSED_STATUSES = ["delivered", "finalized", "cancelled", "completed"];
 
 export function vehicleName(vehicle: TrackingVehicle | null): string {
   if (!vehicle) return "Aguardando definição do veículo";
