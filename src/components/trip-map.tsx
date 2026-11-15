@@ -16,6 +16,7 @@ export type TripMapProps = {
   interactive?: boolean;
   driverLabel?: string | null;
   vehicleLabel?: string | null;
+  driverHeading?: number | null;
 };
 
 export function TripMap({
@@ -27,12 +28,14 @@ export function TripMap({
   interactive = true,
   driverLabel,
   vehicleLabel,
+  driverHeading,
 }: TripMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const driverMarker = useRef<mapboxgl.Marker | null>(null);
   const destMarker = useRef<mapboxgl.Marker | null>(null);
   const originMarker = useRef<mapboxgl.Marker | null>(null);
+  const driverAnimation = useRef<number | null>(null);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -53,6 +56,7 @@ export function TripMap({
     mapRef.current = map;
     map.on("load", () => setReady(true));
     return () => {
+      if (driverAnimation.current) cancelAnimationFrame(driverAnimation.current);
       map.remove();
       mapRef.current = null;
     };
@@ -87,13 +91,29 @@ export function TripMap({
         el.style.cssText =
           "font-size:24px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.3));transition:transform 300ms ease";
         const popupText = [driverLabel, vehicleLabel].filter(Boolean).join(" · ");
-        driverMarker.current = new mapboxgl.Marker({ element: el, anchor: "center" })
+        driverMarker.current = new mapboxgl.Marker({ element: el, anchor: "center", rotationAlignment: "map", rotation: driverHeading ?? 0 })
           .setLngLat([driver.lng, driver.lat])
           .setPopup(popupText ? new mapboxgl.Popup({ offset: 18 }).setText(popupText) : new mapboxgl.Popup().setText("Veículo em rota"))
           .addTo(map);
-      } else driverMarker.current.setLngLat([driver.lng, driver.lat]);
+      } else {
+        const marker = driverMarker.current;
+        const from = marker.getLngLat();
+        const startedAt = performance.now();
+        const to: [number, number] = [driver.lng, driver.lat];
+        if (driverAnimation.current) cancelAnimationFrame(driverAnimation.current);
+        const move = (now: number) => {
+          const progress = Math.min(1, (now - startedAt) / 800);
+          marker.setLngLat([
+            from.lng + (to[0] - from.lng) * progress,
+            from.lat + (to[1] - from.lat) * progress,
+          ]);
+          driverAnimation.current = progress < 1 ? requestAnimationFrame(move) : null;
+        };
+        driverAnimation.current = requestAnimationFrame(move);
+        if (driverHeading != null && Number.isFinite(driverHeading)) marker.setRotation(driverHeading);
+      }
     }
-  }, [driver, destination, origin, ready, driverLabel, vehicleLabel]);
+  }, [driver, destination, origin, ready, driverLabel, vehicleLabel, driverHeading]);
 
   // fit bounds
   useEffect(() => {
@@ -109,7 +129,7 @@ export function TripMap({
       new mapboxgl.LngLatBounds(pts[0], pts[0]),
     );
     map.fitBounds(bounds, { padding: 60, maxZoom: 14, duration: 800 });
-  }, [driver?.lat, driver?.lng, destination?.lat, destination?.lng, ready]);
+  }, [destination?.lat, destination?.lng, origin?.lat, origin?.lng, ready]);
 
   // route line
   useEffect(() => {

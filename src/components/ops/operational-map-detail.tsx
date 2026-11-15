@@ -25,6 +25,9 @@ export function OperationalMapDetail({ order, now, settings, following, onFocus,
     <FreightCard order={order} now={now} settings={settings} />
     <div className="space-y-2 text-sm">
       <p><b>Coleta:</b> {order.origin_address}</p><p><b>Entrega:</b> {order.destination_address}</p>
+      <p><b>Velocidade:</b> {order.tracking_speed_kmh != null ? `${Math.round(order.tracking_speed_kmh)} km/h` : "Indisponível"}</p>
+      <p><b>Direção:</b> {order.tracking_heading != null ? `${Math.round(order.tracking_heading)}°` : "Indisponível"}</p>
+      <p><b>Precisão do GPS:</b> {order.tracking_accuracy != null ? `±${Math.round(order.tracking_accuracy)} m` : "Indisponível"}</p>
       <p className="text-muted-foreground">Último GPS: {order.last_ping_at ? new Date(order.last_ping_at).toLocaleString("pt-BR") : "Não recebido"}</p>
       <p className="text-muted-foreground">Posição: {order.current_lat != null && order.current_lng != null ? `${order.current_lat.toFixed(6)}, ${order.current_lng.toFixed(6)}` : "Não disponível"}</p>
     </div>

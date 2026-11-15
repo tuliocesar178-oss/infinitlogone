@@ -35,7 +35,7 @@ export function OperationalMapWorkspace({ orders: scope, selectedId, connection,
   const units: MapUnit[] = visible.flatMap(o => {
     if (o.current_lat == null || o.current_lng == null || !Number.isFinite(o.current_lat) || !Number.isFinite(o.current_lng)) return [];
     const state = operationalState(o, now, settings);
-    return [{ id: o.id, lat: o.current_lat, lng: o.current_lng, kind: state.incident || state.late ? "incident" : state.stale ? "offline" : "in_transit", title: o.driver?.full_name ?? "Motorista", subtitle: [o.code, o.vehicle?.plate, o.vehicle?.vehicle_type].filter(Boolean).join(" · "), avatarUrl: o.driver?.photo_url, heading: o.tracking_heading, statusLabel: [state.incident ? "Ocorrência" : state.late ? "Em atraso" : STATUS_LABEL[o.status], state.stale ? "GPS antigo" : ""].filter(Boolean).join(" · ") }];
+    return [{ id: o.id, lat: o.current_lat, lng: o.current_lng, kind: state.incident || state.late ? "incident" : state.stale ? "offline" : "in_transit", title: o.driver?.full_name ?? "Motorista", subtitle: [o.code, o.vehicle?.plate, o.vehicle?.vehicle_type].filter(Boolean).join(" · "), avatarUrl: o.driver?.photo_url, heading: o.tracking_heading, speedKmh: o.tracking_speed_kmh, statusLabel: [state.incident ? "Ocorrência" : state.late ? "Em atraso" : STATUS_LABEL[o.status], state.stale ? "GPS antigo" : ""].filter(Boolean).join(" · ") }];
   });
   const select = (id: string) => { setSelected(id); setFollowing(false); };
   const options = [
@@ -65,7 +65,7 @@ export function OperationalMapWorkspace({ orders: scope, selectedId, connection,
       </div>
       {selectedOrder && <OperationalMapDetail order={selectedOrder} now={now} settings={settings} incidents={data?.incidents ?? []} following={following} onFocus={() => setFocus(v => v + 1)} onFollow={() => { setFollowing(v => !v); setFocus(v => v + 1); }} onClose={() => { setSelected(null); setFollowing(false); }} />}
     </div>
-    <div className="flex max-h-40 flex-wrap gap-2 overflow-y-auto">{visible.map(o => <Button key={o.id} variant={selected === o.id ? "default" : "outline"} size="sm" onClick={() => select(o.id)}>{o.code} · {o.driver?.full_name ?? "Motorista"} · {o.vehicle?.plate ?? "Sem placa"}</Button>)}{!query.isPending && !visible.length && <p className="py-3 text-sm text-muted-foreground">Nenhuma rota nesta seleção.</p>}</div>
+    <div className="flex max-h-40 flex-wrap gap-2 overflow-y-auto">{visible.map(o => <Button key={o.id} variant={selected === o.id ? "default" : "outline"} size="sm" onClick={() => select(o.id)}>{o.code} · {o.driver?.full_name ?? "Motorista"} · {o.vehicle?.plate ?? "Sem placa"}{o.tracking_speed_kmh != null ? ` · ${Math.round(o.tracking_speed_kmh)} km/h` : ""}</Button>)}{!query.isPending && !visible.length && <p className="py-3 text-sm text-muted-foreground">Nenhuma rota nesta seleção.</p>}</div>
   </section>;
 }
 function MapLoading() { return <div className="grid h-[430px] place-items-center bg-surface-2 text-muted-foreground">Carregando mapa…</div>; }

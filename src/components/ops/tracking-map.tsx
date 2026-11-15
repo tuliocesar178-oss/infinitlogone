@@ -21,6 +21,7 @@ export type MapUnit = {
   avatarUrl?: string | null;
   statusLabel?: string;
   heading?: number | null;
+  speedKmh?: number | null;
 };
 
 export type MapPin = { lng: number; lat: number; color: string; label: string };
@@ -341,7 +342,9 @@ export function TrackingMap({
       }
 
       const isSel = selectedId === u.id;
-      entry.bubble.textContent = u.title;
+      entry.bubble.textContent = u.speedKmh != null
+        ? `${u.title} · ${Math.round(u.speedKmh)} km/h`
+        : u.title;
       entry.badge.textContent = u.statusLabel ?? TRACK_KIND[u.kind].label;
       entry.badge.style.background = color;
       entry.el.title = `${u.title}${u.subtitle ? ` — ${u.subtitle}` : ""}`;

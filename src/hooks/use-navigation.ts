@@ -65,7 +65,7 @@ export function useNavigation(order: NavigationOrder) {
     updateNetwork();
     const syncLatest = async () => {
       const value = fix.current;
-      if (!value || canceled || !navigator.onLine || syncing || Date.now() - lastSync < 10000 || Date.now() - value.timestamp > 30000) return;
+      if (!value || canceled || !navigator.onLine || syncing || Date.now() - lastSync < 3000 || Date.now() - value.timestamp > 30000) return;
       const pos: Position = [value.coords.longitude, value.coords.latitude];
       const current = routeRef.current;
       const metrics = current ? routeProgress(current, pos) : null;
@@ -79,7 +79,7 @@ export function useNavigation(order: NavigationOrder) {
     const watch = navigator.geolocation.watchPosition(value => {
       if (canceled) return;
       const pos: Position = [value.coords.longitude, value.coords.latitude];
-      if (!validPosition(pos) || !Number.isFinite(value.coords.accuracy) || Date.now() - value.timestamp > 30000) { setGpsLost(true); setGpsError('GPS sem posição válida recente. Aguardando nova localização.'); return; }
+      if (!validPosition(pos) || !Number.isFinite(value.coords.accuracy) || value.coords.accuracy <= 0 || value.coords.accuracy > 100 || Date.now() - value.timestamp > 30000) { setGpsLost(true); setGpsError('GPS sem posição válida ou precisa recente. Aguardando nova localização.'); return; }
       fix.current = value; setGpsLost(false); setGpsError(null); setLastFixAt(value.timestamp);
       setHeading(value.coords.heading != null && Number.isFinite(value.coords.heading) && value.coords.heading >= 0 && value.coords.heading < 360 && (value.coords.speed ?? 0) > 1 && value.coords.accuracy <= 50 ? value.coords.heading : null);
       setPosition(pos);
@@ -89,7 +89,7 @@ export function useNavigation(order: NavigationOrder) {
       if ((!current && Date.now() - lastFetch.current > 15000) || Date.now() - lastFetch.current > 120000 || (offCount.current >= 2 && Date.now() - lastFetch.current > 15000)) void recalculateRef.current();
       void syncLatest();
     }, problem => { if (canceled) return; setGpsLost(true); setGpsError(problem.code === 1 ? 'Permita a localização nas configurações do navegador para navegar.' : 'Sinal GPS indisponível. Aguardando nova posição.'); }, { enableHighAccuracy: true, maximumAge: 3000, timeout: 15000 });
-    const interval = window.setInterval(() => { if (fix.current && Date.now() - fix.current.timestamp > 30000) setGpsLost(true); void syncLatest(); }, 5000);
+    const interval = window.setInterval(() => { if (fix.current && Date.now() - fix.current.timestamp > 30000) setGpsLost(true); void syncLatest(); }, 3000);
     const resume = () => { if (!document.hidden) { updateNetwork(); setGpsLost(!fix.current || Date.now() - fix.current.timestamp > 30000); } };
     window.addEventListener('online', updateNetwork); window.addEventListener('offline', updateNetwork); document.addEventListener('visibilitychange', resume);
     return () => { canceled = true; navigator.geolocation.clearWatch(watch); window.clearInterval(interval); window.removeEventListener('online', updateNetwork); window.removeEventListener('offline', updateNetwork); document.removeEventListener('visibilitychange', resume); };

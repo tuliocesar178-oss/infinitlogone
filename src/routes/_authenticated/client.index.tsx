@@ -40,10 +40,18 @@ function ClientTrackingHome() {
   const queryClient = useQueryClient();
   const fetchOrders = useServerFn(getClientTrackingOrders);
   const queryKey = ["client-tracking-orders"] as const;
+  const [livePoints, setLivePoints] = useState<Record<string, {
+    lat: number;
+    lng: number;
+    speed: number | null;
+    heading: number | null;
+    accuracy: number | null;
+    created_at: string;
+  }>>({});
   const { data: orders = [], isLoading, isError } = useQuery({
     queryKey,
     queryFn: async () => (await fetchOrders()) as ClientTrackingOrder[],
-    refetchInterval: 15_000,
+    refetchInterval: 60_000,
   });
 
   useEffect(() => {
@@ -51,7 +59,30 @@ function ClientTrackingHome() {
     const channel = supabase
       .channel("client-tracking-live")
       .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, refresh)
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "order_tracking_points" }, refresh)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "order_tracking_points" }, (payload) => {
+        const point = payload.new as {
+          order_id: string;
+          lat: number;
+          lng: number;
+          speed: number | null;
+          heading: number | null;
+          accuracy: number | null;
+          created_at: string;
+        };
+        const authorizedOrders = queryClient.getQueryData<ClientTrackingOrder[]>(queryKey) ?? [];
+        if (!authorizedOrders.some((order) => order.id === point.order_id)) return;
+        setLivePoints((previous) => ({
+          ...previous,
+          [point.order_id]: {
+            lat: point.lat,
+            lng: point.lng,
+            speed: point.speed,
+            heading: point.heading,
+            accuracy: point.accuracy,
+            created_at: point.created_at,
+          },
+        }));
+      })
       .subscribe();
     return () => { void supabase.removeChannel(channel); };
   }, [queryClient]);
@@ -114,7 +145,7 @@ function ClientTrackingHome() {
         </aside>
 
         <main className="min-w-0 space-y-6">
-          {selectedOrder ? <SelectedTracking order={selectedOrder} /> : <NoSelection />}
+          {selectedOrder ? <SelectedTracking order={selectedOrder} live={livePoints[selectedOrder.id] ?? null} /> : <NoSelection />}
         </main>
       </div>
     </AppShell>
@@ -158,7 +189,13 @@ function ActiveOrderButton({ order, selected, onSelect }: { order: ClientTrackin
   );
 }
 
-function SelectedTracking({ order }: { order: ClientTrackingOrder }) {
+function SelectedTracking({
+  order,
+  live,
+}: {
+  order: ClientTrackingOrder;
+  live: { lat: number; lng: number; speed: number | null; heading: number | null; accuracy: number | null; created_at: string } | null;
+}) {
   const eta = order.eta_minutes != null ? `~${order.eta_minutes} min` : order.delivery_window_end
     ? format(new Date(order.delivery_window_end), "HH:mm 'de' dd/MM", { locale: ptBR })
     : "Sob consulta";
@@ -170,6 +207,7 @@ function SelectedTracking({ order }: { order: ClientTrackingOrder }) {
         <Metric label="Previsão" value={eta} />
         <Metric label="Distância restante" value={order.distance_to_destination_km != null ? `${order.distance_to_destination_km.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} km` : "Sob consulta"} />
         <Metric label="Motorista" value={order.driver?.name ?? "Aguardando definição"} />
+        <Metric label="Velocidade" value={live?.speed != null ? `${Math.round(live.speed)} km/h` : "Indisponível"} />
       </section>
 
       <section className="relative h-[360px] overflow-hidden rounded-lg border bg-secondary sm:h-[500px]" aria-label="Mapa do rastreamento">
@@ -177,14 +215,16 @@ function SelectedTracking({ order }: { order: ClientTrackingOrder }) {
           className="h-full w-full"
           origin={point(order.origin_lat, order.origin_lng)}
           destination={point(order.destination_lat, order.destination_lng)}
-          driver={point(order.current_lat, order.current_lng)}
+          driver={point(live?.lat ?? order.current_lat, live?.lng ?? order.current_lng)}
           driverLabel={order.driver?.name}
           vehicleLabel={order.vehicle ? `${vehicleName(order.vehicle)} · ${order.vehicle.plate}` : null}
+          driverHeading={live?.heading}
           interactive
         />
         <div className="absolute bottom-4 left-4 rounded-lg border bg-background/95 px-3 py-2 shadow-lg backdrop-blur">
           <p className="text-[10px] font-bold uppercase text-muted-foreground">Última atualização</p>
-          <p className="mt-1 flex items-center gap-2 text-xs font-semibold"><span className="h-2 w-2 rounded-full bg-success" />{relativeUpdate(order.last_ping_at ?? order.updated_at)}</p>
+          <p className="mt-1 flex items-center gap-2 text-xs font-semibold"><span className={`h-2 w-2 rounded-full ${live ? "bg-success" : "bg-warning"}`} />{relativeUpdate(live?.created_at ?? order.last_ping_at ?? order.updated_at)}</p>
+          <p className="mt-1 text-[11px] text-muted-foreground">Precisão GPS: {live?.accuracy != null ? `±${Math.round(live.accuracy)} m` : "indisponível"}</p>
         </div>
       </section>
 

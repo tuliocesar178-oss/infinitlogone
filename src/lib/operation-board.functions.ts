@@ -44,7 +44,7 @@ export const getOperationBoard = createServerFn({ method: "GET" }).middleware([r
   const driverIds = [...new Set(rawOrders.map(o => o.driver_id).filter((id): id is string => Boolean(id)))];
   const drivers = [];
   for (let i = 0; i < driverIds.length; i += 100) {
-    const r = await db.from("drivers").select("user_id,full_name,phone,photo_url,current_lat,current_lng,current_heading,last_seen_at").in("user_id", driverIds.slice(i, i + 100));
+    const r = await db.from("drivers").select("user_id,full_name,phone,photo_url,current_lat,current_lng,current_heading,current_speed,current_accuracy,last_seen_at").in("user_id", driverIds.slice(i, i + 100));
     if (r.error) throw r.error;
     drivers.push(...(r.data ?? []));
   }
@@ -56,7 +56,7 @@ export const getOperationBoard = createServerFn({ method: "GET" }).middleware([r
     const d = o.driver_id ? driverMap.get(o.driver_id) : undefined;
     const p = o.driver_id ? profileMap.get(o.driver_id) : undefined;
     // A fallback uses the driver's coordinate pair and its matching timestamp, never a mixed point.
-    return { ...o, ...trackingPosition(o, d), tracking_heading:d?.current_heading ?? null, driver:o.driver_id ? {full_name:p?.full_name ?? d?.full_name ?? null,phone:p?.phone ?? d?.phone ?? null,photo_url:p?.avatar_url ?? d?.photo_url ?? null}:null, responsible:o.created_by ? profileMap.get(o.created_by)?.full_name ?? null:null, incident:incidents.find(i=>i.order_id===o.id && !i.resolved_at && !i.closed_at) ?? null, actual_delivery_at:o.completed_at ?? completion.get(o.id) ?? null };
+    return { ...o, ...trackingPosition(o, d), tracking_heading:d?.current_heading ?? null, tracking_speed_kmh:d?.current_speed ?? null, tracking_accuracy:d?.current_accuracy ?? null, driver:o.driver_id ? {full_name:p?.full_name ?? d?.full_name ?? null,phone:p?.phone ?? d?.phone ?? null,photo_url:p?.avatar_url ?? d?.photo_url ?? null}:null, responsible:o.created_by ? profileMap.get(o.created_by)?.full_name ?? null:null, incident:incidents.find(i=>i.order_id===o.id && !i.resolved_at && !i.closed_at) ?? null, actual_delivery_at:o.completed_at ?? completion.get(o.id) ?? null };
   });
   const activeIds=orders.filter(o=>!["delivered","finalized","cancelled"].includes(o.status)).map(o=>o.id);
   const samples=new Map<string,TelemetryPoint[]>();

@@ -8,6 +8,8 @@ export type BoardOrder = Database["public"]["Tables"]["orders"]["Row"] & {
   responsible?: string | null;
   actual_delivery_at?: string | null;
   tracking_heading?: number | null;
+  tracking_speed_kmh?: number | null;
+  tracking_accuracy?: number | null;
 };
 
 export type BoardFilter = "live" | "all" | "awaiting" | "pickup" | "transit" | "near" | "delivered" | "late" | "incident";
