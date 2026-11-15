@@ -40,8 +40,18 @@ export function OperationalMapDetail({ order, now, settings, following, onFocus,
         .select("id")
         .maybeSingle();
 
-      if (error || !data) {
-        setDeleteError("Não foi possível remover a rota. Verifique suas permissões e tente novamente.");
+      if (error) {
+        console.error("Falha ao remover rota do rastreamento:", error);
+        setDeleteError(
+          error.code === "42501"
+            ? "Seu perfil não tem permissão para remover esta rota."
+            : `Não foi possível remover a rota: ${error.message}`,
+        );
+        return;
+      }
+
+      if (!data) {
+        setDeleteError("A rota não foi alterada. Ela já pode ter sido removida ou seu perfil não tem permissão para removê-la.");
         return;
       }
 
