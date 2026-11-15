@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Camera, CheckCircle2, Circle, Clock3, Download, FileText, MapPin } from "lucide-react";
+import { Camera, CheckCircle2, ChevronLeft, ChevronRight, Circle, Clock3, Download, FileText, MapPin, ZoomIn, ZoomOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { EvidenceImage } from "@/components/client/evidence-image";
 import { getClientOrderEvidence } from "@/lib/client-tracking.functions";
 import { statusLabel } from "@/lib/order-status";
 import { Button } from "@/components/ui/button";
@@ -176,12 +177,90 @@ function Summary({ icon, label, value }: { icon: React.ReactNode; label: string;
 
 function EvidenceTile({ item, onOpen }: { item: ClientEvidenceItem; onOpen: () => void }) {
   const photo = isEvidencePhoto(item);
-  return <Button variant="outline" className="h-auto justify-start overflow-hidden p-0 text-left" onClick={onOpen}><div className="grid h-20 w-24 shrink-0 place-items-center bg-secondary/50">{photo && item.url ? <img src={item.url} alt={evidenceLabel(item)} className="h-full w-full object-cover" /> : <FileText className="h-6 w-6 text-muted-foreground" />}</div><div className="min-w-0 p-3"><p className="truncate font-semibold">{evidenceLabel(item)}</p><p className="mt-1 text-xs font-normal text-muted-foreground">{new Date(item.created_at).toLocaleString("pt-BR")}</p></div></Button>;
+  return (
+    <Button variant="outline" className="h-auto justify-start overflow-hidden p-0 text-left" onClick={onOpen}>
+      <div className="grid h-20 w-24 shrink-0 place-items-center overflow-hidden bg-secondary/50">
+        {photo ? (
+          <EvidenceImage attachmentId={item.id} orderId={item.order_id} initialUrl={item.url} alt={evidenceLabel(item)} className="h-full w-full object-cover" />
+        ) : <FileText className="h-6 w-6 text-muted-foreground" />}
+      </div>
+      <div className="min-w-0 p-3"><p className="truncate font-semibold">{evidenceLabel(item)}</p><p className="mt-1 text-xs font-normal text-muted-foreground">{new Date(item.created_at).toLocaleString("pt-BR")}</p></div>
+    </Button>
+  );
 }
 
 function EvidenceViewer({ item, items, onSelect, onClose }: { item: ClientEvidenceItem | null; items: ClientEvidenceItem[]; onSelect: (item: ClientEvidenceItem) => void; onClose: () => void }) {
+  const [imageUrl, setImageUrl] = useState<string | null>(item?.url ?? null);
+  const [zoom, setZoom] = useState(1);
   const related = item ? items.filter((candidate) => candidate.event_status === item.event_status && isEvidencePhoto(candidate)) : [];
-  return <Dialog open={Boolean(item)} onOpenChange={(open) => !open && onClose()}><DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto"><DialogHeader><DialogTitle>{item ? evidenceLabel(item) : "Evidência"}</DialogTitle></DialogHeader>{item && <div className="space-y-4">{item.url && item.mime_type?.startsWith("image/") ? <img src={item.url} alt={evidenceLabel(item)} className="max-h-[60vh] w-full rounded-md object-contain" /> : item.url && item.mime_type === "application/pdf" ? <iframe title={evidenceLabel(item)} src={item.url} className="h-[60vh] w-full rounded-md border" /> : <div className="grid min-h-52 place-items-center rounded-md border bg-secondary/30"><FileText className="h-10 w-10 text-muted-foreground" /></div>}{related.length > 1 && <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">{related.map((photo) => <button key={photo.id} type="button" onClick={() => onSelect(photo)} aria-label={`Abrir ${evidenceLabel(photo)}`} className={`aspect-square overflow-hidden rounded-md border ${photo.id === item.id ? "ring-2 ring-ring" : ""}`}>{photo.url && <img src={photo.url} alt="" className="h-full w-full object-cover" />}</button>)}</div>}<div className="grid gap-2 text-sm text-muted-foreground sm:grid-cols-2"><p>Enviado por: <span className="font-medium text-foreground">{item.uploader_name}</span></p><p>Data e hora: <span className="font-medium text-foreground">{new Date(item.created_at).toLocaleString("pt-BR")}</span></p>{item.latitude != null && item.longitude != null && <p className="flex items-center gap-1"><MapPin className="h-4 w-4" /> Local do registro disponível</p>}<p>Etapa: <span className="font-medium text-foreground">{statusLabel(item.event_status)}</span></p></div>{item.url && <Button asChild><a href={item.url} target="_blank" rel="noopener noreferrer"><Download />Visualizar / baixar</a></Button>}</div>}</DialogContent></Dialog>;
+  const relatedIndex = item ? related.findIndex((photo) => photo.id === item.id) : -1;
+
+  useEffect(() => {
+    setImageUrl(item?.url ?? null);
+    setZoom(1);
+  }, [item?.id, item?.url]);
+
+  function selectRelative(offset: number) {
+    if (!related.length) return;
+    onSelect(related[(relatedIndex + offset + related.length) % related.length]);
+  }
+
+  return (
+    <Dialog open={Boolean(item)} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
+        <DialogHeader><DialogTitle>{item ? evidenceLabel(item) : "Evidência"}</DialogTitle></DialogHeader>
+        {item && (
+          <div className="space-y-4">
+            {isEvidencePhoto(item) ? (
+              <>
+                <div className="max-h-[60vh] overflow-auto rounded-md bg-secondary/20 text-center">
+                  <EvidenceImage
+                    attachmentId={item.id}
+                    orderId={item.order_id}
+                    initialUrl={item.url}
+                    refreshOnMount
+                    onUrlChange={setImageUrl}
+                    alt={evidenceLabel(item)}
+                    className="mx-auto max-h-[60vh] w-full rounded-md object-contain transition-transform"
+                    style={{ transform: `scale(${zoom})` }}
+                  />
+                </div>
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  <Button variant="outline" size="sm" onClick={() => setZoom((value) => Math.max(1, value - 0.25))} aria-label="Reduzir zoom"><ZoomOut />Reduzir</Button>
+                  <Button variant="outline" size="sm" onClick={() => setZoom((value) => Math.min(3, value + 0.25))} aria-label="Ampliar zoom"><ZoomIn />Ampliar</Button>
+                  {related.length > 1 && <>
+                    <Button variant="outline" size="sm" onClick={() => selectRelative(-1)}><ChevronLeft />Anterior</Button>
+                    <span className="px-2 text-xs text-muted-foreground">{relatedIndex + 1} de {related.length}</span>
+                    <Button variant="outline" size="sm" onClick={() => selectRelative(1)}>Próxima<ChevronRight /></Button>
+                  </>}
+                </div>
+              </>
+            ) : item.url && item.mime_type === "application/pdf" ? (
+              <iframe title={evidenceLabel(item)} src={item.url} className="h-[60vh] w-full rounded-md border" />
+            ) : (
+              <div className="grid min-h-52 place-items-center rounded-md border bg-secondary/30"><FileText className="h-10 w-10 text-muted-foreground" /></div>
+            )}
+            {related.length > 1 && (
+              <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
+                {related.map((photo) => (
+                  <button key={photo.id} type="button" onClick={() => onSelect(photo)} aria-label={`Abrir ${evidenceLabel(photo)}`} className={`aspect-square overflow-hidden rounded-md border ${photo.id === item.id ? "ring-2 ring-ring" : ""}`}>
+                    <EvidenceImage attachmentId={photo.id} orderId={photo.order_id} initialUrl={photo.url} alt={evidenceLabel(photo)} className="h-full w-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
+            <div className="grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
+              <p>Enviado por: <span className="font-medium text-foreground">{item.uploader_name}</span></p>
+              <p>Data e hora: <span className="font-medium text-foreground">{new Date(item.created_at).toLocaleString("pt-BR")}</span></p>
+              {item.latitude != null && item.longitude != null && <p className="flex items-center gap-1"><MapPin className="h-4 w-4" /> Local do registro disponível</p>}
+              <p>Etapa: <span className="font-medium text-foreground">{statusLabel(item.event_status)}</span></p>
+            </div>
+            {imageUrl && <Button asChild><a href={imageUrl} download={item.label ?? undefined} target="_blank" rel="noopener noreferrer"><Download />Baixar imagem</a></Button>}
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
 }
 
 function groupEvidence(items: ClientEvidenceItem[]) {
