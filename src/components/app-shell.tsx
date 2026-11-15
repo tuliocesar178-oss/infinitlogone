@@ -284,6 +284,13 @@ export function AppShell({
               </button>
             </div>
             <div className="flex items-center gap-2">
+              {["admin", "logistics", "financeiro"].includes(me?.role ?? "") && (
+                <Button asChild variant="ghost" size="icon">
+                  <Link to={"/ops/chat" as any} aria-label="Abrir chat da operação" title="Chat da Operação">
+                    <MessageSquare className="h-5 w-5" />
+                  </Link>
+                </Button>
+              )}
               <NotificationSettingsDialog />
               <div className="flex items-center gap-3 rounded-full py-1 pl-1 pr-3 hover:bg-accent">
                 <span className="grid h-9 w-9 place-items-center rounded-full bg-brand text-[13px] font-semibold text-brand-foreground">
