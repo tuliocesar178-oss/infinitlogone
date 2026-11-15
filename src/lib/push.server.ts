@@ -13,6 +13,10 @@ export type PushContent = {
   requireInteraction?: boolean;
   /** Identificador da conversa para abrir a sala certa no aplicativo. */
   roomId?: string;
+  /** Mensagem que originou o aviso, para abrir a conversa no contexto correto. */
+  messageId?: string;
+  /** Horário original do evento exibido pelo sistema operacional. */
+  timestamp?: number;
 };
 
 type Row = {

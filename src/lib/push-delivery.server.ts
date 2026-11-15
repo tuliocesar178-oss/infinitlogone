@@ -32,44 +32,85 @@ export async function deliverNotification(notificationId: string) {
       ? `/driver/ocorrencias?incidentId=${encodeURIComponent(data.incident_id)}`
       : `/ops/ocorrencias?incidentId=${encodeURIComponent(data.incident_id)}`;
     if (authorized) {
-      const orderId = typeof incident.data?.order_id === "string" ? incident.data.order_id : null;
-      const { data: order } = orderId
-        ? await db.from("orders").select("code").eq("id", orderId).maybeSingle()
+      const incidentOrderId = typeof incident.data?.order_id === "string" ? incident.data.order_id : null;
+      const { data: order } = incidentOrderId
+        ? await db.from("orders").select("code").eq("id", incidentOrderId).maybeSingle()
         : { data: null };
-      pushTitle = notice.type === "driver_incident_update"
-        ? "INFINITLOG | Atualização de ocorrência"
-        : "INFINITLOG | Nova ocorrência";
-      pushBody = order?.code
-        ? `Frete ${order.code} — ocorrência registrada. Confira os detalhes.`
-        : "Uma ocorrência foi registrada. Confira os detalhes no aplicativo.";
+      const { data: reporter } = notice.type === "driver_incident_created" && incident.data?.reported_by
+        ? await db.from("profiles").select("full_name").eq("id", incident.data.reported_by).maybeSingle()
+        : { data: null };
+      const incidentLabel = String(incident.data?.type ?? "ocorrência").replace(/[_-]+/g, " ");
+      if (notice.type === "driver_incident_update") {
+        pushTitle = "INFINITLOG | Atualização de ocorrência";
+        pushBody = order?.code
+          ? `A ocorrência do frete ${order.code} foi atualizada pela equipe operacional.`
+          : "A ocorrência foi atualizada pela equipe operacional.";
+      } else if (notice.type === "driver_incident_created") {
+        pushTitle = "INFINITLOG | Ocorrência registrada";
+        pushBody = `${reporter?.full_name || "Motorista"} informou um problema${order?.code ? ` durante o frete ${order.code}` : ""}.`;
+      } else {
+        pushTitle = notice.type === "critical_incident"
+          ? "INFINITLOG | Ocorrência crítica"
+          : "INFINITLOG | Nova ocorrência";
+        pushBody = order?.code
+          ? `Frete ${order.code} — ${incidentLabel}. Verifique os detalhes.`
+          : `Uma ocorrência foi registrada: ${incidentLabel}. Confira os detalhes.`;
+      }
     }
   }
   else if (category === "chat" && roomId) {
     const { data: access, error: accessError } = await db.rpc("can_access_unified_chat", { _room: roomId, _user: notice.user_id });
     if (accessError) throw new Error("Falha ao verificar conversa.");
     authorized = access === true;
-    url = `${driver ? "/driver/chat" : "/ops/chat"}?roomId=${encodeURIComponent(roomId)}`;
+    const chatPath = driver ? "/driver/chat" : staff ? "/ops/chat" : "/client";
+    url = `${chatPath}?roomId=${encodeURIComponent(roomId)}`;
     chatRoomId = roomId;
     if (authorized) {
       const { data: message } = await db
         .from("messages")
-        .select("sender_id,kind,content,created_at")
+        .select("id,sender_id,kind,content,created_at")
         .eq("room_id", roomId)
-        .neq("sender_id", notice.user_id)
         .lte("created_at", notice.created_at)
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
-      if (message) {
-        const { data: sender } = await db.from("profiles").select("full_name").eq("id", message.sender_id).maybeSingle();
+      if (!message || message.sender_id === notice.user_id) {
+        authorized = false;
+      } else {
+        const [{ data: sender }, { data: room }] = await Promise.all([
+          db.from("profiles").select("full_name").eq("id", message.sender_id).maybeSingle(),
+          db.from("chat_rooms").select("order_id,driver_id,staff_a,staff_b").eq("id", roomId).maybeSingle(),
+        ]);
         const senderName = sender?.full_name || "Integrante da equipe";
+        const text = (message.content || notice.body || "Nova mensagem").slice(0, 180);
+        const groupName = typeof data.group_name === "string"
+          ? data.group_name
+          : typeof data.conversation_name === "string" ? data.conversation_name : null;
+        const isGroup = Boolean(groupName || data.is_group === true || (
+          room && !room.order_id && !room.driver_id && !room.staff_a && !room.staff_b
+        ));
         const preview = message.kind === "audio"
           ? `${senderName} enviou uma mensagem de voz.`
           : message.kind === "image" || message.kind === "photo"
             ? `${senderName} enviou uma foto.`
-            : `${senderName}: ${(message.content || notice.body || "Nova mensagem").slice(0, 180)}`;
-        pushTitle = "INFINITLOG | Nova mensagem";
-        pushBody = preview;
+            : `${senderName}: ${text}`;
+        pushTitle = isGroup
+          ? `INFINITLOG | ${groupName || "Grupo Operacional"}`
+          : message.kind === "audio"
+            ? "INFINITLOG | Novo áudio"
+            : message.kind === "image" || message.kind === "photo"
+              ? "INFINITLOG | Nova imagem"
+              : "INFINITLOG | Nova mensagem";
+        pushBody = isGroup && (message.kind === "audio" || message.kind === "image" || message.kind === "photo")
+          ? `${senderName}: ${preview.slice(senderName.length + 1)}`
+          : preview;
+        url = `${chatPath}?roomId=${encodeURIComponent(roomId)}&messageId=${encodeURIComponent(message.id)}`;
+        await import("@/lib/push-model").then(({ safePushContent }) => {
+          const timestamp = Date.parse(message.created_at);
+          if (Number.isFinite(timestamp)) {
+            pushTitle = pushTitle;
+          }
+        });
       }
     }
   } else if (category === "registrations") {
@@ -84,7 +125,7 @@ export async function deliverNotification(notificationId: string) {
     }
     url = driver ? "/driver/faturamento" : "/ops/financeiro";
   } else if (orderId) {
-    const { data: order, error: orderError } = await db.from("orders").select("driver_id,client_id,deleted_at,status,vehicle_id,required_vehicle_type,required_body_type,required_capacity_kg,required_axles").eq("id", orderId).maybeSingle();
+    const { data: order, error: orderError } = await db.from("orders").select("driver_id,client_id,deleted_at,status,vehicle_id,required_vehicle_type,required_body_type,required_capacity_kg,required_axles,code,pickup_window_start,delivery_window_end").eq("id", orderId).maybeSingle();
     if (orderError) throw new Error("Falha ao verificar frete.");
     if (order && !order.deleted_at) {
       authorized = staff || order.driver_id === notice.user_id ||
@@ -102,12 +143,22 @@ export async function deliverNotification(notificationId: string) {
         url = typeof offer?.id === "string" ? `/driver/ofertas/${offer.id}` : "/driver/ofertas";
         if (authorized) {
           const { data: details } = await db.from("orders")
-            .select("code,origin_city,origin_state,destination_city,destination_state")
+            .select("code,origin_city,origin_state,destination_city,destination_state,pickup_window_start,required_vehicle_type,required_body_type,required_capacity_kg,required_axles,cargo_weight_kg,volumes")
             .eq("id", orderId).maybeSingle();
           const origin = [details?.origin_city, details?.origin_state].filter(Boolean).join("/");
           const destination = [details?.destination_city, details?.destination_state].filter(Boolean).join("/");
-          pushTitle = `INFINITLOG | Novo frete${details?.code ? ` ${details.code}` : ""}`;
-          pushBody = `Nova oportunidade! ${origin || "Coleta"} → ${destination || "Entrega"}. Valor ao motorista: R$ ${Number(offer?.offered_price ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}.`;
+          const pickup = details?.pickup_window_start
+            ? new Date(details.pickup_window_start).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })
+            : null;
+          const vehicle = [details?.required_vehicle_type, details?.required_body_type].filter(Boolean).join(" / ");
+          const requirements = [
+            pickup ? `Coleta: ${pickup}` : null,
+            vehicle ? `Veículo: ${vehicle}` : null,
+            details?.cargo_weight_kg ? `Peso: ${details.cargo_weight_kg} kg` : null,
+            details?.volumes ? `Volumes: ${details.volumes}` : null,
+          ].filter(Boolean).join(" · ");
+          pushTitle = `INFINITLOG | Novo frete${details?.code ? ` ${details.code}` : " disponível"}`;
+          pushBody = `Nova oportunidade! ${origin || "Coleta"} → ${destination || "Entrega"}. ${requirements ? `${requirements}. ` : ""}Valor ao motorista: R$ ${Number(offer?.offered_price ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}.`;
         }
       } else {
         url = driver ? "/driver/fretes" : staff ? `/ops/pedidos/${orderId}` : "/client";
@@ -120,6 +171,26 @@ export async function deliverNotification(notificationId: string) {
         } else if (authorized && notice.type === "route_incident") {
           pushTitle = "INFINITLOG | Ocorrência no frete";
           pushBody = "Há uma ocorrência relacionada a este frete. Consulte os detalhes autorizados.";
+        } else if (authorized && notice.type === "freight_accepted") {
+          pushTitle = "INFINITLOG | Frete aceito";
+          pushBody = `Um motorista aceitou o frete ${order.code || ""}.`.trim();
+        } else if (authorized && notice.type === "route_update") {
+          const statusMessages: Record<string, { title: string; body: string }> = {
+            en_route_pickup: { title: "Coleta iniciada", body: "O motorista iniciou o deslocamento para a coleta." },
+            in_transit_to_pickup: { title: "Coleta iniciada", body: "O motorista está a caminho do local de coleta." },
+            picked_up: { title: "Carga coletada", body: "A carga foi coletada e o frete segue em andamento." },
+            loaded: { title: "Carga coletada", body: "A carga foi coletada e o frete segue em andamento." },
+            out_for_delivery: { title: "Saiu para entrega", body: "O frete saiu para a etapa de entrega." },
+            near_destination: { title: "Motorista próximo ao destino", body: "O motorista está próximo ao local de entrega." },
+            arriving_destination: { title: "Motorista próximo ao destino", body: "O motorista está chegando ao local de entrega." },
+            delivered: { title: "Entrega concluída", body: "A entrega do frete foi concluída." },
+            finalized: { title: "Entrega concluída", body: "A entrega do frete foi concluída." },
+          };
+          const statusMessage = statusMessages[order.status];
+          pushTitle = `INFINITLOG | ${statusMessage?.title || "Atualização do frete"}`;
+          pushBody = statusMessage
+            ? `${statusMessage.body}${order.code ? ` Frete ${order.code}.` : ""}`
+            : "O status ou os detalhes do frete foram atualizados.";
         } else if (authorized) {
           pushTitle = "INFINITLOG | Atualização do frete";
           pushBody = "O status ou os detalhes do frete foram atualizados.";
@@ -144,6 +215,8 @@ export async function deliverNotification(notificationId: string) {
       title: pushTitle,
       body: pushBody,
       roomId: chatRoomId,
+      messageId: typeof data.message_id === "string" ? data.message_id : undefined,
+      timestamp: Date.parse(notice.created_at),
     }),
     { notificationId: notice.id, deviceIds },
   );

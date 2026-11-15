@@ -69,7 +69,7 @@ export function NotificationSettings({ className }: { className?: string }) {
   const preferences: { key: keyof PushPreferences; label: string }[] = [
     { key: "offers", label: "Novos fretes e ofertas" }, { key: "routes", label: "Atualizações de fretes" },
     { key: "deliveries", label: "Entregas e comprovantes" },
-    { key: "chat", label: "Mensagens da equipe" }, { key: "incidents", label: "Ocorrências" },
+    { key: "chat", label: "Mensagens do chat" }, { key: "incidents", label: "Ocorrências" },
     { key: "registrations", label: "Cadastros e aprovação" }, { key: "finance", label: "Avisos financeiros autorizados" },
   ];
   async function changePreference(key: keyof PushPreferences, checked: boolean) {

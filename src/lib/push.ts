@@ -43,12 +43,46 @@ export function pushSupported(): boolean {
   );
 }
 
+const PUSH_SCOPE = "/push/";
+
+async function getPushRegistration(): Promise<ServiceWorkerRegistration | undefined> {
+  const registrations = await navigator.serviceWorker.getRegistrations();
+  return registrations.find((registration) => new URL(registration.scope).pathname === PUSH_SCOPE) ??
+    registrations.find((registration) => {
+      const script = registration.active?.scriptURL ?? registration.installing?.scriptURL ?? registration.waiting?.scriptURL;
+      return script ? new URL(script).pathname.endsWith("/push-sw.js") : false;
+    });
+}
+
+async function waitForPushWorker(registration: ServiceWorkerRegistration): Promise<ServiceWorkerRegistration> {
+  if (registration.active) return registration;
+  const worker = registration.installing ?? registration.waiting;
+  if (!worker) throw new Error("O serviço de notificações não iniciou. Tente novamente.");
+
+  await new Promise<void>((resolve, reject) => {
+    const timeout = window.setTimeout(() => reject(new Error("O dispositivo não concluiu a ativação. Tente novamente.")), 10000);
+    const onStateChange = () => {
+      if (worker.state === "activated") {
+        window.clearTimeout(timeout);
+        resolve();
+      } else if (worker.state === "redundant") {
+        window.clearTimeout(timeout);
+        reject(new Error("O serviço de notificações não pôde ser ativado."));
+      }
+    };
+    worker.addEventListener("statechange", onStateChange);
+    onStateChange();
+  });
+
+  return registration;
+}
+
 /** Estado atual: permissão do navegador e se há inscrição ativa. */
 export async function pushStatus() {
   if (!pushSupported()) {
     return { supported: false, permission: "unsupported", subscribed: false, preferences: defaultPushPreferences };
   }
-  const registration = await navigator.serviceWorker.getRegistration();
+  const registration = await getPushRegistration();
   const subscription = await registration?.pushManager.getSubscription();
   const settings = subscription ? await getDevicePushSettings({ data: { endpoint: subscription.endpoint } }) : null;
   return {
@@ -84,11 +118,11 @@ export async function enablePush(): Promise<
     return { ok: false, reason: "Permissão de notificação negada no dispositivo." };
   }
 
-  let registration = await navigator.serviceWorker.getRegistration();
-  if (!registration?.active) {
-    registration = await navigator.serviceWorker.register("/push-sw.js", { scope: "/" });
-    await Promise.race([navigator.serviceWorker.ready, new Promise<never>((_, reject) => globalThis.setTimeout(() => reject(new Error("O dispositivo não concluiu a ativação. Tente novamente.")), 10000))]);
+  let registration = await getPushRegistration();
+  if (!registration) {
+    registration = await navigator.serviceWorker.register("/push-sw.js", { scope: PUSH_SCOPE });
   }
+  registration = await waitForPushWorker(registration);
 
   const { publicKey } = await getVapidPublicKey();
   if (!publicKey) return { ok: false, reason: "Servidor sem chave de notificação configurada." };
@@ -116,7 +150,7 @@ export async function enablePush(): Promise<
 /** Desativa as notificações neste dispositivo. */
 export async function disablePush(): Promise<void> {
   if (!pushSupported()) return;
-  const registration = await navigator.serviceWorker.getRegistration();
+  const registration = await getPushRegistration();
   const subscription = await registration?.pushManager.getSubscription();
   if (!subscription) return;
   await removePushSubscription({ data: { endpoint: subscription.endpoint } });
@@ -125,13 +159,13 @@ export async function disablePush(): Promise<void> {
 
 /** Dispara uma notificação de teste para o próprio usuário. */
 export async function testPush() {
-  const registration = await navigator.serviceWorker.getRegistration();
+  const registration = await getPushRegistration();
   const subscription = await registration?.pushManager.getSubscription();
   if (!subscription) throw new Error("Ative as notificações neste dispositivo primeiro.");
   return sendTestPush({ data: { endpoint: subscription.endpoint } });
 }
 export async function updatePushPreferences(preferences: PushPreferences) {
-  const registration = await navigator.serviceWorker.getRegistration();
+  const registration = await getPushRegistration();
   const subscription = await registration?.pushManager.getSubscription();
   if (!subscription) throw new Error("Dispositivo não registrado.");
   return saveDevicePushSettings({ data: { endpoint: subscription.endpoint, preferences } });

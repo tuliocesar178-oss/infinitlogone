@@ -36,7 +36,7 @@ export function safePushContent(
   type: string,
   url: string,
   tag: string,
-  details: { title?: string; body?: string; roomId?: string } = {},
+  details: { title?: string; body?: string; roomId?: string; messageId?: string; timestamp?: number } = {},
 ) {
   const titles: Record<keyof PushPreferences, string> = {
     offers: "INFINITLOG | Novo frete disponível",
@@ -53,6 +53,8 @@ export function safePushContent(
     url,
     tag,
     roomId: details.roomId,
-    requireInteraction: pushCategory(type) === "incidents",
+    ...(details.messageId ? { messageId: details.messageId } : {}),
+    ...(details.timestamp ? { timestamp: details.timestamp } : {}),
+    requireInteraction: ["incidents", "offers"].includes(pushCategory(type)),
   };
 }
