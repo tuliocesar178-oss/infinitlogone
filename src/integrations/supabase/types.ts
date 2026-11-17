@@ -3698,6 +3698,7 @@ export type Database = {
         Returns: string
       }
       override_arrival: { Args: { _order_id: string }; Returns: undefined }
+      owns_client_registration: { Args: { _client: string }; Returns: boolean }
       respond_freight_counteroffer: {
         Args: { _decision: string; _negotiation_id: string }
         Returns: Json

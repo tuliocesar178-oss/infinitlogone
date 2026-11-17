@@ -1,4 +1,5 @@
 import { COMMERCIAL_ORDERS } from "@/lib/order-projections";
+import { getClientIdentityIds } from '@/lib/client-identity.functions';
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,6 +34,7 @@ function ClientOrdersList() {
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return [];
+      const clientIds = await getClientIdentityIds();
       const { data } = await supabase
         .from(COMMERCIAL_ORDERS)
         .select(`
@@ -40,7 +42,7 @@ function ClientOrdersList() {
           driver:profiles!orders_driver_id_fkey(full_name),
           vehicle:vehicles(plate, model)
         `)
-        .eq("client_id", user.id)
+        .in("client_id", clientIds)
         .order("created_at", { ascending: false });
       return data || [];
     }

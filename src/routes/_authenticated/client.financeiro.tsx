@@ -1,4 +1,5 @@
 import { COMMERCIAL_ORDERS } from "@/lib/order-projections";
+import { getClientIdentityIds } from '@/lib/client-identity.functions';
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
 import { useQuery } from "@tanstack/react-query";
@@ -26,12 +27,13 @@ function ClientFinanceiro() {
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return null;
+      const clientIds = await getClientIdentityIds();
 
       // Buscamos pedidos com valores financeiros reais
       const { data: orders } = await supabase
         .from(COMMERCIAL_ORDERS)
         .select("*")
-        .eq("client_id", user.id)
+        .in("client_id", clientIds)
         .not("client_amount", "is", null);
 
       if (!orders) return null;

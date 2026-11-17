@@ -1,0 +1,10 @@
+CREATE OR REPLACE FUNCTION public.owns_client_registration(_client uuid) RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$ SELECT auth.uid() IS NOT NULL AND EXISTS (SELECT 1 FROM public.operational_identities i JOIN public.clients c ON c.user_id=i.id WHERE i.id=_client AND (i.auth_user_id=auth.uid() OR i.id=auth.uid()) AND c.deleted_at IS NULL) $$;
+REVOKE ALL ON FUNCTION public.owns_client_registration(uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.owns_client_registration(uuid) TO authenticated, service_role;
+CREATE POLICY "Linked client reads registration" ON public.clients FOR SELECT TO authenticated USING (public.owns_client_registration(user_id));
+CREATE POLICY "Linked client reads orders" ON public.orders FOR SELECT TO authenticated USING (public.owns_client_registration(client_id));
+CREATE POLICY "Linked client reads works" ON public.works FOR SELECT TO authenticated USING (public.owns_client_registration(client_id));
+CREATE POLICY "Linked client reads events" ON public.order_events FOR SELECT TO authenticated USING (EXISTS (SELECT 1 FROM public.orders o WHERE o.id=order_events.order_id AND public.owns_client_registration(o.client_id)));
+CREATE POLICY "Linked client reads deliveries" ON public.deliveries FOR SELECT TO authenticated USING (EXISTS (SELECT 1 FROM public.orders o WHERE o.id=deliveries.order_id AND public.owns_client_registration(o.client_id)));
+CREATE POLICY "Linked client reads tracking" ON public.order_tracking_points FOR SELECT TO authenticated USING (EXISTS (SELECT 1 FROM public.orders o WHERE o.id=order_tracking_points.order_id AND public.owns_client_registration(o.client_id)));
+CREATE POLICY "Linked client reads attachments" ON public.order_attachments FOR SELECT TO authenticated USING (EXISTS (SELECT 1 FROM public.orders o WHERE o.id=order_attachments.order_id AND o.deleted_at IS NULL AND public.owns_client_registration(o.client_id)));

@@ -2,6 +2,7 @@ import { COMMERCIAL_ORDER_EVENTS } from "@/lib/order-projections";
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
+import { getClientIdentityIds } from './client-identity.functions';
 
 const ORDER_COLUMNS = [
   "id", "code", "tracking_code", "status", "driver_id", "vehicle_id",
@@ -14,12 +15,13 @@ const ORDER_COLUMNS = [
 export const getClientTrackingOrders = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    const clientIds = await getClientIdentityIds();
     // This first query is subject to RLS, proving every returned order belongs
     // to the signed-in client before privileged, field-limited lookups occur.
     const { data: orders, error: ordersError } = await context.supabase
       .from("orders")
       .select(ORDER_COLUMNS as "*")
-      .eq("client_id", context.userId)
+      .in("client_id", clientIds)
       .is("deleted_at", null)
       .order("created_at", { ascending: false });
 
@@ -125,10 +127,11 @@ export const getClientOrderEvidence = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: z.infer<typeof evidenceInput>) => evidenceInput.parse(input))
   .handler(async ({ data, context }) => {
+    const clientIds = await getClientIdentityIds();
     let ordersQuery = context.supabase
       .from("orders")
       .select("id, code, status, created_at")
-      .eq("client_id", context.userId)
+      .in("client_id", clientIds)
       .is("deleted_at", null)
       .order("created_at", { ascending: false });
 

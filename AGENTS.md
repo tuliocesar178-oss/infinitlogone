@@ -39,3 +39,4 @@
 - Driver evidence categories map onto existing attachment kinds with category metadata and unique per-photo IDs; camera/gallery selections append files while preserving existing stage confirmation and private storage permissions.
 - Push notifications use separate versioned full-color icons and transparent monochrome badges; update the existing messaging registration without replacing subscriptions so Android can render branding correctly.
 - Automatic address lookup uses per-field-group debounced identity guards and ordered address/postcode/neighborhood/city fallbacks; approximate results never confirm a route or overwrite typed fields.
+- Resolve client ownership through operational_identities in every portal query and restrictive linked-owner policies; Auth UUIDs can differ without moving registrations or historical orders.

@@ -121,20 +121,22 @@ function ClientReports() {
       const { data: userData } = await supabase.auth.getUser();
       const user = userData.user;
       if (!user) throw new Error("Usuário não autenticado.");
+      const { getClientIdentityIds } = await import('@/lib/client-identity.functions');
+      const clientIds = await getClientIdentityIds();
 
       const [{ data: works, error: worksError }, { data: orders, error: ordersError }] =
         await Promise.all([
           supabase
             .from("works")
             .select("id, name, code")
-            .eq("client_id", user.id)
+            .in("client_id", clientIds)
             .order("name"),
           supabase
             .from("orders")
             .select(
               "id, code, work_id, status, created_at, origin_city, origin_state, destination_city, destination_state, distance_km, recorded_distance_km, antt_distance_km, driver_id, vehicle_id",
             )
-            .eq("client_id", user.id)
+            .in("client_id", clientIds)
             .is("deleted_at", null)
             .gte("created_at", `${from}T00:00:00`)
             .lte("created_at", `${to}T23:59:59`)

@@ -1,5 +1,10 @@
 # Roadmap
 
+## Acesso da cliente Geisiane (17/11)
+- [ ] Vincular a conta existente somente ao cadastro geisiane sem duplicar ou alterar senha
+- [ ] Corrigir leituras e permissões para identidade operacional vinculada
+- [ ] Conferir portal autenticado e isolamento; confirmação do e-mail permanece necessária
+
 ## Mapa automático dos endereços (17/11)
 - [x] Localizar automaticamente coleta/entrega com debounce e alternativas CEP/bairro/cidade
 - [x] Abrir mapa em escala local, indicar precisão e preservar confirmação manual
