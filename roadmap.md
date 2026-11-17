@@ -5,6 +5,10 @@
 - [ ] Corrigir controle explícito e persistência sem alterar aprovação ou ofertas
 - [ ] Validar testes e alternância autenticada com leitura após recarregar
 
+## Publicação do frete (17/11)
+- [ ] Identificar erro atual ao publicar o frete
+- [ ] Corrigir causa e validar publicação sem enviar ofertas reais durante testes
+
 ## Resultado do teste push (17/11)
 - [x] Identificar testes aceitos pelo provedor marcados incorretamente como ignorados por concorrência
 - [x] Reutilizar resultado persistido sem reenviar nem sobrescrever sucesso
