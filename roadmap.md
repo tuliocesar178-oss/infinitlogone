@@ -1,9 +1,10 @@
 # Roadmap
 
 ## Acesso da cliente Geisiane (17/11)
-- [ ] Vincular a conta existente somente ao cadastro geisiane sem duplicar ou alterar senha
-- [ ] Corrigir leituras e permissões para identidade operacional vinculada
-- [ ] Conferir portal autenticado e isolamento; confirmação do e-mail permanece necessária
+- [x] Vincular a conta existente somente ao cadastro geisiane sem duplicar ou alterar senha
+- [x] Corrigir leituras e permissões para identidade operacional vinculada
+- [x] Seis testes passaram; portal abriu como Geisiane e leitura da Alfa foi negada
+- [ ] Entrar com senha no app publicado — depende da confirmação do e-mail pela cliente e da publicação; senha preservada
 
 ## Mapa automático dos endereços (17/11)
 - [x] Localizar automaticamente coleta/entrega com debounce e alternativas CEP/bairro/cidade

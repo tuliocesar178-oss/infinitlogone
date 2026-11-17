@@ -197,6 +197,13 @@
       "when": 1794940908151,
       "tag": "0027_linked_client_read_access",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1794941030219,
+      "tag": "0028_linked_client_commercial_view",
+      "breakpoints": true
     }
   ]
 }
