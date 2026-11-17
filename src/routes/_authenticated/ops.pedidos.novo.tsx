@@ -8,6 +8,7 @@ import { loadRegisteredClients } from "@/lib/registered-clients";
 import { toast } from "sonner";
 import { ArrowLeft, ArrowRight, Check, Upload, X, Copy, MessageCircle, Mail, MapPin, MessageSquare } from "lucide-react";
 import QRCode from "qrcode";
+import { Button } from '@/components/ui/button';
 import { shareMessage, trackingUrl } from "@/lib/order-status";
 import { AddressFields } from "@/components/addresses/address-fields";
 import { emptyAddress, fullAddress, addressError, type FreightAddress } from "@/lib/addresses/model";
@@ -1174,9 +1175,10 @@ function NewOrderWizard() {
                 ["Piso mínimo ANTT", antt?.minimum_freight != null ? brl(antt.minimum_freight) : "Não calculado"],
                 ["Pedágios", f.toll ? brl(tolls) : "Não informado"],
                 ["Valor sugerido", suggestedValue > 0 ? brl(suggestedValue) : "Não calculado"],
-                ["Valor negociado", f.price ? brl(Number(num(f.price))) : "Pendente"],
+                ["Valor do cliente", f.price ? brl(clientFreightValue) : "Pendente"],
+                ["Valor do motorista", f.driver_price ? brl(negotiated) : "Pendente"],
                 ["Situação ANTT", antt?.applicable && antt.minimum_freight != null
-                  ? (clientFreightValue >= antt.minimum_freight ? "Acima ou dentro do piso ANTT" : "Abaixo do piso ANTT")
+                  ? (negotiated >= antt.minimum_freight ? "Acima ou dentro do piso ANTT" : "Valor do motorista abaixo do piso ANTT")
                   : "Não aplicável"],
               ]} />
             </div>
@@ -1200,11 +1202,11 @@ function NewOrderWizard() {
               className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-5 py-2.5 text-sm font-semibold hover:bg-accent disabled:opacity-60">
               Salvar rascunho
             </button>
-            <button onClick={() => void save(true)} disabled={saving || belowFloor}
+            <Button onClick={() => void save(true)} disabled={saving}
               title={belowFloor ? "Valor abaixo do piso mínimo ANTT" : undefined}
               className="inline-flex items-center gap-2 rounded-full bg-brand px-6 py-2.5 text-sm font-semibold text-brand-foreground hover:opacity-90 disabled:opacity-60">
               <Check className="h-4 w-4" /> {saving ? "Publicando…" : mode.enabled ? "Salvar e continuar" : "Publicar frete"}
-            </button>
+            </Button>
           </div>
         )}
       </div>

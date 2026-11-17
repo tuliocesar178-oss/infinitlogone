@@ -8,6 +8,9 @@ import { applyTheme, readTheme, type ThemeMode } from "@/lib/driver-prefs";
 import { AlertTriangle, Bell, ChevronRight, Clock, LogOut, MapPin, Moon, Phone, Star, Sun, Truck, UserRound } from "lucide-react";
 import { NotificationSettings } from "@/components/notification-settings";
 import { DRIVER_COLUMNS } from "@/lib/driver-columns";
+import { useDriverAvailability } from '@/hooks/use-driver-availability';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 export const Route = createFileRoute("/_authenticated/driver/perfil")({
   head: () => ({ meta: [{ title: "Perfil e notificações do motorista — InfinitLog" }, { name: "description", content: "Perfil do motorista e preferências de notificações no celular." }, { property: "og:title", content: "Perfil do motorista — InfinitLog" }, { property: "og:description", content: "Preferências e notificações do dispositivo do motorista." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }] }),
@@ -18,6 +21,7 @@ function DriverProfile() {
   const qc = useQueryClient();
   const navigate = useNavigate();
   const [userId, setUserId] = useState("");
+  const availabilityMutation = useDriverAvailability(userId);
   const [theme, setTheme] = useState<ThemeMode>(() => (typeof window === "undefined" ? "light" : readTheme()));
   useEffect(() => {
     (async () => {
@@ -39,18 +43,6 @@ function DriverProfile() {
       return { profile, driver, vehicle, notifs: notifs ?? [] };
     },
   });
-
-  async function setAvailability(a: string) {
-    try {
-      const { error } = await supabase.from("drivers").update({ availability: a } as never).eq("user_id", userId);
-      if (error) throw error;
-      toast.success("Disponibilidade atualizada");
-      qc.invalidateQueries({ queryKey: ["driver-profile-page", userId] });
-      qc.invalidateQueries({ queryKey: ["driver-me"] });
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Erro");
-    }
-  }
 
   async function signOut() {
     await qc.cancelQueries();
@@ -99,16 +91,10 @@ function DriverProfile() {
         <SectionTitle>Disponibilidade</SectionTitle>
         <div className="flex flex-wrap gap-2">
           {AVAILABILITY.map((a) => (
-            <button key={a.value} onClick={() => setAvailability(a.value)}
-              className={`rounded-full px-3 py-1.5 text-xs font-medium ring-1 ring-inset transition ${
-                d?.availability === a.value
-                  ? "bg-brand text-brand-foreground ring-brand"
-                  : (d?.availability === ("available" as any) && a.value === "disponivel")
-                    ? "bg-brand text-brand-foreground ring-brand"
-                    : "bg-surface text-muted-foreground ring-border hover:bg-accent"
-              }`}>
+            <Button key={a.value} disabled={!d || availabilityMutation.isPending} size="sm" variant="outline" onClick={() => availabilityMutation.mutate(a.value)}
+              className={cn(d?.availability === a.value && 'bg-brand text-brand-foreground border-brand')}>
               {a.label}
-            </button>
+            </Button>
           ))}
         </div>
         <div className="mt-2 text-[11px] text-muted-foreground">Atual: {labelOf(AVAILABILITY as any, d?.availability)}</div>

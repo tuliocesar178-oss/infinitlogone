@@ -7,6 +7,7 @@ import { ActiveOrderPanel, OfferCard, type Order } from "@/components/driver/pan
 import { Truck, ChevronRight, Package, CircleDollarSign } from "lucide-react";
 import { brl } from "@/lib/pf";
 import { useBackgroundTracking } from "@/hooks/use-background-tracking";
+import { OnlineControl } from '@/components/driver/online-control';
 
 export const Route = createFileRoute("/_authenticated/driver/")({
   head: () => ({ meta: [
@@ -33,19 +34,6 @@ function DriverHome() {
       const n = p?.full_name ?? u.user.email ?? "Motorista";
       setFirstName(n.split(" ")[0]);
 
-      // Atualizar status e disponibilidade do motorista ao acessar o dashboard
-      await supabase
-        .from("drivers")
-        .update({ 
-          status: 'available' as any, 
-          availability: 'disponivel' as any, 
-          last_seen_at: new Date().toISOString() 
-        })
-        .eq("user_id", u.user.id);
-      
-      // Forçar atualização do dashboard após marcar como disponível
-      qc.invalidateQueries({ queryKey: ["driver-offers", u.user.id] });
-      qc.invalidateQueries({ queryKey: ["driver-home-stats", u.user.id] });
     })();
   }, []);
 
@@ -166,6 +154,7 @@ function DriverHome() {
         </div>
       </div>
 
+      <OnlineControl userId={userId} />
       <div className="grid grid-cols-3 gap-3">
         <StatCard label="Ganhos no mês" value={brl(statsQ.data?.totalMonth ?? 0)} icon={<CircleDollarSign className="h-4 w-4" />} />
         <StatCard label="Fretes no mês" value={String(statsQ.data?.countMonth ?? 0)} icon={<Truck className="h-4 w-4" />} />
