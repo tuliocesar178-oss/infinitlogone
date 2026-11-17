@@ -37,3 +37,4 @@
 - Keep commercial order reads behind an authorized read-only view, base-table driver reads column-limited, and driver payment sources independent; database acceptance and margin triggers enforce value integrity without rewriting legacy amounts.
 - Operational route maps reuse the authorized operation-board query, shared realtime hook and TrackingMap workspace; paired coordinate/timestamp precedence and configurable deadline rules prevent divergent tracking signals.
 - Driver evidence categories map onto existing attachment kinds with category metadata and unique per-photo IDs; camera/gallery selections append files while preserving existing stage confirmation and private storage permissions.
+- Push notifications use separate versioned full-color icons and transparent monochrome badges; update the existing messaging registration without replacing subscriptions so Android can render branding correctly.

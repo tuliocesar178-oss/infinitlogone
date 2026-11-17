@@ -23,6 +23,6 @@ export async function sendOffersToEligibleDrivers(
   orderId: string,
   opts: PublishOptions,
 ): Promise<number> {
-  const result = await dispatchOrderToEligibleDrivers({ data: { order_id: orderId, price: opts.price, minutes: opts.minutes } });
+  const result = await dispatchOrderToEligibleDrivers({ data: { order_id: orderId, price: opts.price, minutes: opts.minutes, mode: "automatic" } });
   return result.count;
 }

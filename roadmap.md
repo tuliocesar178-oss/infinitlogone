@@ -1,5 +1,11 @@
 # Roadmap
 
+## Ícone das notificações (17/11)
+- [x] Separar logo colorida e símbolo monocromático transparente para notificações
+- [x] Atualizar o worker existente sem apagar inscrições nem pedir nova permissão
+- [x] Cinco testes passaram; logo, símbolo e worker servidos corretamente; build sem erros
+- [ ] Conferir aparência final no Android — depende de celular físico; a identificação do Chrome é controlada pelo sistema
+
 ## Categorias de fotos do motorista (02/11)
 - [x] Ampliar seleção existente com seis categorias, preservando opções originais e etapas
 - [x] Preservar múltiplos arquivos, autoria e visualização privada; 11 testes de categorias/upload e 11 de etapas/completude passaram; políticas de anexos e arquivos conferidas

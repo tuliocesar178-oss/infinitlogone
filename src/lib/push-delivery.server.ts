@@ -91,17 +91,17 @@ export async function deliverNotification(notificationId: string) {
         ));
         const preview = message.kind === "audio"
           ? `${senderName} enviou uma mensagem de voz.`
-          : message.kind === "image" || message.kind === "photo"
+          : message.kind === "photo"
             ? `${senderName} enviou uma foto.`
             : `${senderName}: ${text}`;
         pushTitle = isGroup
           ? `INFINITLOG | ${groupName || "Grupo Operacional"}`
           : message.kind === "audio"
             ? "INFINITLOG | Novo áudio"
-            : message.kind === "image" || message.kind === "photo"
+            : message.kind === "photo"
               ? "INFINITLOG | Nova imagem"
               : "INFINITLOG | Nova mensagem";
-        pushBody = isGroup && (message.kind === "audio" || message.kind === "image" || message.kind === "photo")
+        pushBody = isGroup && (message.kind === "audio" || message.kind === "photo")
           ? `${senderName}: ${preview.slice(senderName.length + 1)}`
           : preview;
         url = `${chatPath}?roomId=${encodeURIComponent(roomId)}&messageId=${encodeURIComponent(message.id)}`;

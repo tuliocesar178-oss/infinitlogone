@@ -30,8 +30,9 @@ self.addEventListener("push", (event) => {
   const roomId = typeof payload.roomId === "string" ? payload.roomId : null;
   const options = {
     body: payload.body || "",
-    icon: "/pwa-512x512.png",
-    badge: "/pwa-192x192.png",
+    icon: new URL("/notification-icon-v2.png", self.location.origin).href,
+    // Android uses the alpha silhouette, not a full-color square app icon.
+    badge: new URL("/notification-badge-v2.png", self.location.origin).href,
     tag: payload.tag || "infinitlog",
     renotify: payload.requireInteraction === true,
     requireInteraction: payload.requireInteraction === true,

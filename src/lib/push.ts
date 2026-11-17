@@ -83,6 +83,11 @@ export async function pushStatus() {
     return { supported: false, permission: "unsupported", subscribed: false, preferences: defaultPushPreferences };
   }
   const registration = await getPushRegistration();
+  // Check the existing messaging worker without replacing its subscription or
+  // requesting permission again. Keep notification branding up to date.
+  if (registration && navigator.onLine) {
+    await registration.update().catch(() => undefined);
+  }
   const subscription = await registration?.pushManager.getSubscription();
   const settings = subscription ? await getDevicePushSettings({ data: { endpoint: subscription.endpoint } }) : null;
   return {
@@ -120,7 +125,9 @@ export async function enablePush(): Promise<
 
   let registration = await getPushRegistration();
   if (!registration) {
-    registration = await navigator.serviceWorker.register("/push-sw.js", { scope: PUSH_SCOPE });
+    registration = await navigator.serviceWorker.register("/push-sw.js", { scope: PUSH_SCOPE, updateViaCache: "none" });
+  } else {
+    await registration.update();
   }
   registration = await waitForPushWorker(registration);
 
