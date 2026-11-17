@@ -3,7 +3,8 @@
 ## Histórico de fretes do cliente (17/11)
 - [x] Identificar fretes concluídos do Tulio ocultos por exclusão operacional
 - [x] Preservar concluídos no histórico e comprovantes sem reativar rotas ou mudar propriedade
-- [ ] Conferir testes e portal autenticado do Tulio
+- [x] Seis testes passaram; consulta confirmou os dois fretes concluídos; atualização sem erros
+- [ ] Conferir visualização autenticada do Tulio — autorização para entrar na conta recusada; sessão própria não tem acesso aos fretes dele
 
 ## Acesso da cliente Geisiane (17/11)
 - [x] Vincular a conta existente somente ao cadastro geisiane sem duplicar ou alterar senha
