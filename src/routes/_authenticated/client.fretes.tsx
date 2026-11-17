@@ -1,5 +1,6 @@
 import { COMMERCIAL_ORDERS } from "@/lib/order-projections";
 import { getClientIdentityIds } from '@/lib/client-identity.functions';
+import { CLIENT_HISTORY_FILTER } from '@/lib/client-history';
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,21 +30,23 @@ export const Route = createFileRoute("/_authenticated/client/fretes")({
 function ClientOrdersList() {
   const [search, setSearch] = useState("");
   
-  const { data: orders, isLoading } = useQuery({
+  const { data: orders, isLoading, isError } = useQuery({
     queryKey: ["client-orders"],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return [];
       const clientIds = await getClientIdentityIds();
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from(COMMERCIAL_ORDERS)
         .select(`
           *,
-          driver:profiles!orders_driver_id_fkey(full_name),
+          driver:drivers!orders_driver_id_fkey(full_name),
           vehicle:vehicles(plate, model)
         `)
         .in("client_id", clientIds)
+        .or(CLIENT_HISTORY_FILTER)
         .order("created_at", { ascending: false });
+      if (error) throw error;
       return data || [];
     }
   });
@@ -106,6 +109,8 @@ function ClientOrdersList() {
                   <tr>
                     <td colSpan={6} className="py-10 text-center text-muted-foreground">Carregando fretes...</td>
                   </tr>
+                ) : isError ? (
+                  <tr><td colSpan={6} className="py-10 text-center text-destructive">Não foi possível carregar o histórico. Tente novamente.</td></tr>
                 ) : filteredOrders?.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="py-10 text-center text-muted-foreground">Nenhum frete encontrado.</td>
@@ -150,11 +155,11 @@ function ClientOrdersList() {
                         <div className="space-y-1">
                           <div className="flex items-center gap-1.5">
                             <User className="h-3.5 w-3.5 text-muted-foreground" />
-                            <span>{(order.driver as any)?.full_name || "A definir"}</span>
+                            <span>{order.driver?.full_name || "A definir"}</span>
                           </div>
                           <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
                             <Truck className="h-3.5 w-3.5" />
-                            <span>{(order.vehicle as any)?.plate || "—"}</span>
+                            <span>{order.vehicle?.plate || "—"}</span>
                           </div>
                         </div>
                       </td>

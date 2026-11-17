@@ -19,6 +19,7 @@ import {
   type ClientTrackingOrder,
 } from "@/lib/client-tracking";
 import { statusLabel } from "@/lib/order-status";
+import { isClientHistoryOrder } from "@/lib/client-history";
 
 export const Route = createFileRoute("/_authenticated/client/")({
   head: () => ({
@@ -92,7 +93,7 @@ function ClientTrackingHome() {
     [orders],
   );
   const historyOrders = useMemo(
-    () => orders.filter((order) => ["delivered", "finalized", "completed"].includes(order.status)),
+    () => orders.filter(isClientHistoryOrder),
     [orders],
   );
   const selectedOrder = useMemo(

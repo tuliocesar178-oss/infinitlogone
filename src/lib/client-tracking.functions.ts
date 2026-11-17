@@ -3,6 +3,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import { getClientIdentityIds } from './client-identity.functions';
+import { CLIENT_HISTORY_FILTER } from './client-history';
 
 const ORDER_COLUMNS = [
   "id", "code", "tracking_code", "status", "driver_id", "vehicle_id",
@@ -22,7 +23,7 @@ export const getClientTrackingOrders = createServerFn({ method: "GET" })
       .from("orders")
       .select(ORDER_COLUMNS as "*")
       .in("client_id", clientIds)
-      .is("deleted_at", null)
+      .or(CLIENT_HISTORY_FILTER)
       .order("created_at", { ascending: false });
 
     if (ordersError) throw ordersError;
@@ -132,7 +133,7 @@ export const getClientOrderEvidence = createServerFn({ method: "POST" })
       .from("orders")
       .select("id, code, status, created_at")
       .in("client_id", clientIds)
-      .is("deleted_at", null)
+      .or(CLIENT_HISTORY_FILTER)
       .order("created_at", { ascending: false });
 
     if (data.orderId) ordersQuery = ordersQuery.eq("id", data.orderId);
