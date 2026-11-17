@@ -1,11 +1,17 @@
 import { pushCategory, pushPreferencesSchema, safePushContent } from "@/lib/push-model";
+import { summarizePushDeliveries } from '@/lib/push-result';
 
 /** Re-evaluate recipient permissions using current rows, never browser lists. */
 export async function deliverNotification(notificationId: string) {
   const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
   const { data: notice, error } = await db.from("notifications").select("*").eq("id", notificationId).maybeSingle();
   if (error) throw new Error("Falha ao consultar aviso.");
-  if (!notice || ["accepted", "skipped"].includes(notice.push_status)) return { sent: 0, failed: 0 };
+  if (!notice) return { sent: 0, failed: 0, pending: 0 };
+  if (["accepted", "skipped"].includes(notice.push_status)) {
+    const previous = await db.from('push_deliveries').select('status').eq('notification_id', notice.id);
+    if (previous.error) throw new Error('Falha ao consultar resultado do envio.');
+    return summarizePushDeliveries(previous.data ?? []);
+  }
   const { data: roles, error: roleError } = await db.from("user_roles").select("role").eq("user_id", notice.user_id);
   if (roleError) throw new Error("Falha ao verificar permissões.");
   const roleNames = (roles ?? []).map((row) => row.role);
@@ -200,7 +206,7 @@ export async function deliverNotification(notificationId: string) {
   }
   if (!authorized) {
     await db.from("notifications").update({ push_status: "skipped", push_error: "Destinatário sem acesso atual", push_processed_at: new Date().toISOString() }).eq("id", notice.id);
-    return { sent: 0, failed: 0 };
+    return { sent: 0, failed: 0, pending: 0 };
   }
   const { data: devices, error: deviceError } = await db.from("push_subscriptions").select("id,preferences").eq("user_id", notice.user_id);
   if (deviceError) throw new Error("Falha ao consultar dispositivos.");
@@ -220,6 +226,14 @@ export async function deliverNotification(notificationId: string) {
     }),
     { notificationId: notice.id, deviceIds },
   );
-  await db.from("notifications").update({ push_status: result.failed ? "failed" : result.sent ? "accepted" : "skipped", push_error: result.failed ? "Serviço de push recusou o envio" : null, push_processed_at: new Date().toISOString() }).eq("id", notice.id);
-  return result;
+  // A zero-send attempt can mean the webhook already claimed this event.
+  // Read durable claims rather than replacing its accepted status with skipped.
+  const persisted = await db.from('push_deliveries').select('status').eq('notification_id', notice.id);
+  if (persisted.error) throw new Error('Falha ao consultar resultado do envio.');
+  const summary = summarizePushDeliveries(persisted.data ?? []);
+  const outcome = persisted.data?.length ? summary : { ...result, pending: 0, status: result.failed ? 'failed' : result.sent ? 'accepted' : 'skipped' };
+  if (!outcome.pending) {
+    await db.from('notifications').update({ push_status: outcome.status, push_error: outcome.failed ? 'Serviço de push recusou o envio' : null, push_processed_at: new Date().toISOString() }).eq('id', notice.id).neq('push_status', 'accepted');
+  }
+  return outcome;
 }

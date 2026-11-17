@@ -56,6 +56,7 @@ export function NotificationSettings({ className }: { className?: string }) {
     try {
       const result = await testPush();
       if (result.sent > 0) toast.success("Serviço de push aceitou o teste. Confira seu celular.");
+      else if (result.pending > 0) toast.info("O teste está sendo enviado. Aguarde a notificação no dispositivo.");
       else toast.warning("O teste não foi aceito pelo serviço de push.");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Falha no envio de teste.");

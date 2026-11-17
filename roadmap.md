@@ -1,5 +1,11 @@
 # Roadmap
 
+## Resultado do teste push (17/11)
+- [x] Identificar testes aceitos pelo provedor marcados incorretamente como ignorados por concorrência
+- [x] Reutilizar resultado persistido sem reenviar nem sobrescrever sucesso
+- [x] Sete testes passaram; teste real da conta autenticada retornou um envio aceito e zero falhas
+- [ ] Confirmar exibição no celular após publicação — depende do dispositivo físico
+
 ## Áudio no chat (17/11)
 - [x] Corrigir gravação real, prévia, envio e reprodução na conversa existente
 - [x] Preservar privacidade por participante com armazenamento privado, políticas restritivas e validação do vínculo
