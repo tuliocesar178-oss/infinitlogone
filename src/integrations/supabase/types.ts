@@ -3602,6 +3602,10 @@ export type Database = {
         Returns: boolean
       }
       can_manage_operation_board: { Args: { _user: string }; Returns: boolean }
+      can_use_chat_audio: {
+        Args: { _name: string; _write?: boolean }
+        Returns: boolean
+      }
       claim_push_delivery: {
         Args: { _notification: string; _subscription: string }
         Returns: string

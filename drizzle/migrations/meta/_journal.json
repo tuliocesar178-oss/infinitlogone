@@ -204,6 +204,13 @@
       "when": 1794941030219,
       "tag": "0028_linked_client_commercial_view",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1794941898018,
+      "tag": "0029_private_chat_audio",
+      "breakpoints": true
     }
   ]
 }

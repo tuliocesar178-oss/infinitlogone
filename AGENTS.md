@@ -41,3 +41,4 @@
 - Automatic address lookup uses per-field-group debounced identity guards and ordered address/postcode/neighborhood/city fallbacks; approximate results never confirm a route or overwrite typed fields.
 - Resolve client ownership through operational_identities in every portal query and restrictive linked-owner policies; Auth UUIDs can differ without moving registrations or historical orders.
 - Client history and evidence retain soft-deleted delivered/finalized orders through the same owner-scoped reads; deleted active/cancelled routes stay hidden and are never restored operationally.
+- Chat audio uses room/sender-scoped immutable private storage paths, participant-restricted policies and short-lived playback URLs; the existing message RPC links uploads and failed sends clean up unlinked files.

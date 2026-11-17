@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { 
-  Send, Image as ImageIcon, Paperclip, MapPin, Mic, Phone, 
+  Send, Image as ImageIcon, Paperclip, MapPin, Phone,
   Smile, MoreVertical, CheckCheck, Download, Trash2, 
   Search, Filter, FileText
 } from "lucide-react";
@@ -18,6 +18,8 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
+import { AudioRecorder } from '@/components/chat/audio-recorder';
+import { AudioMessage } from '@/components/chat/audio-message';
 
 interface ChatProps {
   roomId: string;
@@ -34,7 +36,6 @@ export function OrderChat({ roomId, orderId, title, subtitle, avatarUrl, onCallC
   const [text, setText] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const qc = useQueryClient();
-  const [isRecording, setIsRecording] = useState(false);
   const [me, setMe] = useState<{ id: string } | null>(null);
 
   useEffect(() => {
@@ -167,8 +168,9 @@ export function OrderChat({ roomId, orderId, title, subtitle, avatarUrl, onCallC
                   {msg.kind === 'system' && (
                     <div className="italic text-xs opacity-80">{msg.content}</div>
                   )}
-                  {msg.kind !== 'text' && msg.kind !== 'system' && msg.kind !== 'location' && <div className="whitespace-pre-wrap break-words">{msg.content}</div>}
-                  {(msg.attachment_url || typeof msg.metadata?.url === 'string') && <a className="mt-2 block text-sm underline" href={msg.attachment_url || String(msg.metadata.url)} target="_blank" rel="noopener noreferrer">Abrir arquivo</a>}
+                  {msg.kind === 'audio' && <AudioMessage path={typeof msg.metadata?.audio_path === 'string' ? msg.metadata.audio_path : undefined} legacyUrl={msg.attachment_url || (typeof msg.metadata?.url === 'string' ? msg.metadata.url : undefined)} />}
+                  {msg.kind !== 'audio' && msg.kind !== 'text' && msg.kind !== 'system' && msg.kind !== 'location' && <div className="whitespace-pre-wrap break-words">{msg.content}</div>}
+                  {msg.kind !== 'audio' && (msg.attachment_url || typeof msg.metadata?.url === 'string') && <a className="mt-2 block text-sm underline" href={msg.attachment_url || String(msg.metadata.url)} target="_blank" rel="noopener noreferrer">Abrir arquivo</a>}
                   {msg.order_id && msg.order_code && <div className="mt-2 border-t border-border/40 pt-2 text-xs">
                     <span className="block">Referência: {msg.order_code}</span>
                     <a className="underline" href={driverView ? `/driver/navegacao/${msg.order_id}` : `/ops/pedidos/${msg.order_id}`}>Ver frete</a>
@@ -187,7 +189,7 @@ export function OrderChat({ roomId, orderId, title, subtitle, avatarUrl, onCallC
 
       {/* Input */}
       {readOnly ? <div className="border-t bg-surface p-4 text-sm text-muted-foreground">Histórico operacional · Somente leitura</div> : <div className="p-4 bg-surface border-t shrink-0">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button variant="ghost" size="icon" className="rounded-full shrink-0">
             <Smile className="h-5 w-5" />
           </Button>
@@ -210,7 +212,7 @@ export function OrderChat({ roomId, orderId, title, subtitle, avatarUrl, onCallC
             </DropdownMenuContent>
           </DropdownMenu>
           
-          <div className="flex-1 relative">
+          <div className="min-w-0 flex-1 relative">
             <Input 
               value={text}
               onChange={(e) => setText(e.target.value)}
@@ -218,16 +220,7 @@ export function OrderChat({ roomId, orderId, title, subtitle, avatarUrl, onCallC
               placeholder="Digite uma mensagem..."
               className="rounded-full pr-12 h-11 border-border/60 bg-surface-2"
             />
-            {text.trim() === "" ? (
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className={`absolute right-1 top-1 rounded-full transition-colors ${isRecording ? 'text-destructive' : ''}`}
-                onClick={() => setIsRecording(!isRecording)}
-              >
-                <Mic className="h-5 w-5" />
-              </Button>
-            ) : (
+            {text.trim() !== "" && (
               <Button 
                 variant="default" 
                 size="icon" 
@@ -240,6 +233,10 @@ export function OrderChat({ roomId, orderId, title, subtitle, avatarUrl, onCallC
               </Button>
             )}
           </div>
+          <AudioRecorder roomId={roomId} orderId={orderId || undefined} onSent={() => {
+            void qc.invalidateQueries({ queryKey: ['chat-messages', roomId] });
+            void qc.invalidateQueries({ queryKey: ['unified-chat-directory'] });
+          }} />
         </div>
       </div>}
     </div>

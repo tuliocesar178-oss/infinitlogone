@@ -1,5 +1,12 @@
 # Roadmap
 
+## Áudio no chat (17/11)
+- [x] Corrigir gravação real, prévia, envio e reprodução na conversa existente
+- [x] Preservar privacidade por participante com armazenamento privado, políticas restritivas e validação do vínculo
+- [x] Oito testes passaram; áudio de microfone simulado enviado, reproduzido e lido após recarregar em conversa autenticada, sem erros
+- [ ] Validar microfone físico e fluxo completo no celular — depende de aparelho real; conferência móvel encontrou navegação lateral reduzindo a área do chat
+- [ ] Validar leitura pelo destinatário e rejeição de terceiro — depende de sessões autorizadas desses participantes
+
 ## Histórico de fretes do cliente (17/11)
 - [x] Identificar fretes concluídos do Tulio ocultos por exclusão operacional
 - [x] Preservar concluídos no histórico e comprovantes sem reativar rotas ou mudar propriedade
