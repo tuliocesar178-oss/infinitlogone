@@ -14,10 +14,10 @@ export function addressError(a: FreightAddress): string | null {
  return null;
 }
 export function changeAddress(a: FreightAddress, patch: Partial<FreightAddress>): FreightAddress {
- const keys: (keyof FreightAddress)[] = ['street','number','noNumber','neighborhood','city','state'];
+ const keys: (keyof FreightAddress)[] = ['zip','street','number','noNumber','neighborhood','city','state'];
  return { ...a,...patch,...(keys.some(k => k in patch && patch[k] !== a[k]) ? { lat:null,lng:null,precision:'unconfirmed' as const } : {}) };
 }
-export interface AddressSuggestion { id:string; label:string; street:string; number:string; neighborhood:string; city:string; state:string; zip:string; lat:number; lng:number; exact:boolean; }
+export interface AddressSuggestion { id:string; label:string; street:string; number:string; neighborhood:string; city:string; state:string; zip:string; lat:number; lng:number; exact:boolean; featureType?:string; }
 export function chooseSuggestion(a: FreightAddress,s: AddressSuggestion): FreightAddress {
  const number = a.number || s.number;
  const exact = !a.noNumber && s.exact && !!number && number.toLocaleLowerCase() === s.number.toLocaleLowerCase();

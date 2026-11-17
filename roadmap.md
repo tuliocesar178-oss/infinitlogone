@@ -1,5 +1,11 @@
 # Roadmap
 
+## Mapa automático dos endereços (17/11)
+- [x] Localizar automaticamente coleta/entrega com debounce e alternativas CEP/bairro/cidade
+- [x] Abrir mapa em escala local, indicar precisão e preservar confirmação manual
+- [x] 24 testes; Santa Luzia e Belo Horizonte localizados automaticamente sem erro em computador/celular
+- [ ] Testar arraste físico no celular — depende de aparelho real
+
 ## Ícone das notificações (17/11)
 - [x] Separar logo colorida e símbolo monocromático transparente para notificações
 - [x] Atualizar o worker existente sem apagar inscrições nem pedir nova permissão
