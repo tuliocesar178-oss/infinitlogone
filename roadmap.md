@@ -1,5 +1,10 @@
 # Roadmap
 
+## Disponibilidade do motorista (17/11)
+- [ ] Diagnosticar bloqueio ao ficar online e indicação desatualizada
+- [ ] Corrigir controle explícito e persistência sem alterar aprovação ou ofertas
+- [ ] Validar testes e alternância autenticada com leitura após recarregar
+
 ## Resultado do teste push (17/11)
 - [x] Identificar testes aceitos pelo provedor marcados incorretamente como ignorados por concorrência
 - [x] Reutilizar resultado persistido sem reenviar nem sobrescrever sucesso
